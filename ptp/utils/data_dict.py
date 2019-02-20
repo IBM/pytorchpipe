@@ -20,8 +20,6 @@ __author__ = "Vincent Marois, Tomasz Kornuta"
 import torch
 import collections
 
-
-
 class DataDict(collections.abc.MutableMapping):
     """
     - Mapping: A container object that supports arbitrary key lookups and implements the methods ``__getitem__``, \
@@ -62,19 +60,16 @@ class DataDict(collections.abc.MutableMapping):
 
         .. warning::
 
-            `addkey` is set to ``False`` by default as setting it to ``True`` removes flexibility of the\
-            ``DataDict``. Indeed, there are some cases where adding a key `on-the-fly` to a ``DataDict`` is\
-            useful (e.g. for plotting pre-processing).
-
-
+            `addkey` is set to ``False`` by default as setting it to ``True`` removes the constraints of the\
+            ``DataDict`` and enables it to become mutable.
         """
-        if addkey and key not in self.keys():
-            logger.error('KeyError: Cannot modify a non-existing key.')
-            raise KeyError('Cannot modify a non-existing key.')
+        if not addkey and key not in self.keys():
+            msg = 'Cannot modify a non-existing key "{}" in DataDict!'.format(key)
+            raise KeyError(msg)
         else:
             self.__dict__[key] = value
 
-    def extend(self, dict_to_add): #= None):
+    def extend(self, dict_to_add):
         """
         Extends a :py:class:`ptp.utils.DataDict` object by adding (keys,values) from data_definitions.
 
@@ -87,8 +82,11 @@ class DataDict(collections.abc.MutableMapping):
 
         """
         for (key,value) in dict_to_add.items():
-            assert key not in self.keys(), "Cannot extend DataDict, as {} already present in its keys!".format(key)
-            self[key] = value
+            if key in self.keys():
+                msg = "Cannot extend DataDict, as {} already present in its keys!".format(key)
+                raise KeyError(msg)
+            # Call setitem with "additional argument".
+            self.__setitem__(key, value, addkey=True)
 
     def __getitem__(self, key):
         """
@@ -101,24 +99,25 @@ class DataDict(collections.abc.MutableMapping):
         """
         return self.__dict__[key]
 
-    def __delitem__(self, key, override=False):
+    def __delitem__(self, key, delkey=False):
         """
         Delete a key:value pair.
 
+        :param delkey: Indicate whether or not it is authorized to add a delete the key `on-the-fly`.\
+        Default: ``False``.
+        :type delkey: bool
+
         .. warning::
 
-            By default, it is not authorized to delete an existing key. Set `override` to ``True`` to ignore this\
-            restriction.
+            By default, it is not authorized to delete an existing key. Set `delkey` to ``True`` to ignore this\
+            restriction and 
 
         :param key: Dict Key.
 
-        :param override: Indicate whether or not to lift the ban of non-deletion of any key.
-        :type override: bool
-
         """
-        if not override:
-            logger.error('KeyError: Not authorizing the deletion of a key.')
-            raise KeyError('Not authorizing the deletion of a key.')
+        if not delkey:
+            msg = 'Cannot delete key "{}" from DataDict!'.format(key)
+            raise KeyError(msg)
         else:
             del self.__dict__[key]
 
@@ -243,7 +242,7 @@ class DataDict(collections.abc.MutableMapping):
 
 
 if __name__ == '__main__':
-    """Tests for DataDict"""
+    """Use cases for DataDict"""
 
     data_definitions = {'inputs': {'size': [-1, -1], 'type': [torch.Tensor]},
                         'targets': {'size': [-1], 'type': [torch.Tensor]}
@@ -251,8 +250,12 @@ if __name__ == '__main__':
 
     datadict = DataDict({key: None for key in data_definitions.keys()})
 
-    #datadict['inputs'] = torch.ones([64, 20, 512]).type(torch.FloatTensor)
-    #datadict['targets'] = torch.ones([64, 20]).type(torch.FloatTensor)
+    # Set values.
+    datadict['inputs'] = 1.2
+    datadict['targets'] = "string"
+    # Extend.
+    datadict.extend({'predictions': 1})
 
+    # Print content.
     print(repr(datadict))
 

@@ -40,6 +40,7 @@ class AppState(metaclass=SingletonMetaClass):
         # Field storing global variables.
         self.globals = DataDict()
 
+
 if __name__ == '__main__':
 
     app_state = AppState()

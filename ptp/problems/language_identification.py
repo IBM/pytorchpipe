@@ -744,9 +744,7 @@ if __name__ == "__main__":
         'prediction_decoder': {
             'name': 'WordDecoder',
             'data_folder': '~/data/language_identification/dummy',
-            'source_files': 'y_training.txt,y_test.txt',
             'encodings_file': 'language_name_encodings.csv',
-            'decode': True, # Decoding mode!
             'keymappings' : {'inputs': 'encoded_predictions', 'outputs': 'predictions'}
         }
 
@@ -816,3 +814,6 @@ if __name__ == "__main__":
 
             loss_value.backward()
             optimizer.step()
+
+    # Print last batch.
+    print(batch)
