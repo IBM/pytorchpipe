@@ -79,9 +79,9 @@ if __name__ == '__main__':
 
     app_state = AppState()
 
-    app_state["global1"] = 1 
-    app_state["global2"] = 2
+    app_state["test1"] = 1 
+    app_state["test2"] = 2
 
-    print(app_state["global1"])
+    print(app_state["test1"])
 
     #print(repr(app_state.__globals))
