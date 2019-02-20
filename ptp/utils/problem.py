@@ -19,19 +19,16 @@ __author__ = "Tomasz Kornuta & Vincent Marois"
 
 import signal
 import torch
-import os
-import logging
-import urllib
-import time
-import sys
 import numpy as np
 from torch.utils.data import Dataset
 
 from ptp.utils.app_state import AppState
 from ptp.utils.data_dict import DataDict
 
+from ptp.utils.component import Component
 
-class Problem(Dataset):
+
+class Problem(Component, Dataset):
     """
     Class representing base class for all Problems.
 
@@ -42,37 +39,17 @@ class Problem(Dataset):
 
     """
 
-    def __init__(self, params_, name_='Problem'):
+    def __init__(self, name, params):
         """
         Initializes problem object.
 
-        :param params_: Dictionary of parameters (read from the configuration ``.yaml`` file).
-        :type params_: :py:class:`miprometheus.utils.ParamInterface`
+        :param params: Dictionary of parameters (read from the configuration ``.yaml`` file).
+        :type params: :py:class:`ptp.utils.ParamInterface`
 
-        :param name_: Problem name (DEFAULT: 'Problem').
-        :type name_: str
+        :param name: Problem name.
+        :type name: str
 
         This constructor:
-
-        - stores a pointer to ``params``:
-
-            >>> self.params = params_
-
-        - sets a problem name:
-
-            >>> self.name = name_
-
-        - sets a default loss function:
-
-            >>> self.loss_function = None
-
-        - initializes the size of the dataset:
-
-            >>> self.length = None
-
-        - initializes the logger.
-
-            >>> self.logger = logging.Logger(self.name)
 
         - initializes the data definitions: this is used for defining the ``DataDict`` keys.
 
@@ -104,23 +81,12 @@ class Problem(Dataset):
             >>> self.app_state = AppState()
 
         """
-        # Store pointer to params.
-        self.params = params_
-
-        # Problem name.
-        self.name = name_
+        # Call constructors of parent classes.
+        Component.__init__(self, name, params)
+        Dataset.__init__(self)
 
         # Empty curriculum learning params - for now.
         self.curriculum_params = {}
-
-        # Set default loss function.
-        self.loss_function = None
-
-        # Size of the dataset
-        self.length = None
-
-        # Initialize the logger.
-        self.logger = logging.getLogger(self.name)
 
         # data_definitions: this is used for defining the DataDict keys.
 
@@ -140,39 +106,31 @@ class Problem(Dataset):
         # Get access to AppState: for dtype, visualization flag etc.
         self.app_state = AppState()
 
-    def create_data_dict(self):
+    def create_data_dict(self, index, data_definitions = None):
         """
-        Returns a :py:class:`miprometheus.utils.DataDict` object with keys created on the \
+        Returns a :py:class:`ptp.utils.DataDict` object with keys created on the \
         problem data_definitions and empty values (None).
 
-        :return: new :py:class:`miprometheus.utils.DataDict` object.
+        :param data_definitions: Data definitions that will be used (DEFAULT: None, meaninng that self.data_definitions will be used)
 
+        :return: new :py:class:`ptp.utils.DataDict` object.
         """
-        return DataDict({key: None for key in self.data_definitions.keys()})
+        # Use self.data_definitions as default.
+        data_definitions = data_definitions if data_definitions is not None else self.data_definitions
+        # Add index.
+        data_definitions["index"] = None
+        data_dict = DataDict({key: None for key in data_definitions.keys()})
+        # Set index.
+        data_dict["index"] = index
+        return data_dict
 
-    def __len__(self):
-        """
-        :return: The size of the dataset.
 
-        """
-        return self.length
-
-    def set_loss_function(self, loss_function):
-        """
-        Sets loss function.
-
-        :param loss_function: Loss function (e.g. :py:class:`torch.nn.CrossEntropyLoss`) that will be set as \
-        the optimization criterion.
-
-        """
-        self.loss_function = loss_function
-
-    def collate_fn(self, batch):
+    def collate_fn(self, data_dict):
         """
         Generates a batch of samples from a list of individuals samples retrieved by :py:func:`__getitem__`.
 
-        The default collate_fn is :py:func:`torch.utils.data.dataloader.default_collate`.
-
+        The method calls :py:func:`torch.utils.data.dataloader.default_collate` for every item in data_dict !
+        
         .. note::
 
             This base :py:func:`collate_fn` method only calls the default \
@@ -184,14 +142,14 @@ class Problem(Dataset):
             override this default :py:func:`collate_fn`.
 
 
-        :param batch: :py:class:`miprometheus.utils.DataDict` retrieved by :py:func:`__getitem__`, each containing \
+        :param data_dict: :py:class:`ptp.utils.DataDict` retrieved by :py:func:`__getitem__`, each containing \
         tensors, numbers, dicts or lists.
         :type batch: list
 
         :return: DataDict containing the created batch.
 
         """
-        return torch.utils.data.dataloader.default_collate(batch)
+        return DataDict({key: torch.utils.data.dataloader.default_collate([d[key] for d in data_dict]) for key in data_dict[0]})
 
     def __getitem__(self, index):
         """
@@ -207,10 +165,10 @@ class Problem(Dataset):
 
             **The getter should return a DataDict: its keys should be defined by** ``self.data_definitions`` **keys.**
 
-            This ensures consistency of the content of the :py:class:`miprometheus.utils.DataDict` when processing \
-            to the `handshake` between the :py:class:`miprometheus.problems.Problem` class and the \
-            :py:class:`miprometheus.models.Model` class. For more information, please see\
-             :py:func:`miprometheus.models.Model.handshake_definitions`.
+            This ensures consistency of the content of the :py:class:`ptp.utils.DataDict` when processing \
+            to the `handshake` between the :py:class:`ptp.problems.Problem` class and the \
+            :py:class:`ptp.models.Model` class. For more information, please see\
+             :py:func:`ptp.models.Model.handshake_definitions`.
 
             e.g.:
 
@@ -268,34 +226,16 @@ class Problem(Dataset):
     def get_data_definitions(self):
         """
         Getter for the data_definitions dict so that it can be accessed by a ``worker`` to establish handshaking with
-        the :py:class:`miprometheus.models.Model` class.
+        the :py:class:`ptp.models.Model` class.
 
         :return: self.data_definitions()
 
         """
         return self.data_definitions
 
-    def evaluate_loss(self, data_dict, logits):
-        """
-        Calculates loss between the predictions / logits and targets (from ``data_dict``) using the selected \
-        loss function.
-
-        :param data_dict: DataDict containing (among others) inputs and targets.
-        :type data_dict: :py:class:`miprometheus.utils.DataDict`
-
-        :param logits: Predictions of the model.
-
-        :return: Loss.
-        """
-
-        # Compute loss using the provided loss function. 
-        loss = self.loss_function(logits, data_dict['targets'])
-
-        return loss
-
     def add_statistics(self, stat_col):
         """
-        Adds statistics to :py:class:`miprometheus.utils.StatisticsCollector`.
+        Adds statistics to :py:class:`ptp.utils.StatisticsCollector`.
 
         .. note::
 
@@ -303,7 +243,7 @@ class Problem(Dataset):
             Empty - To be redefined in inheriting classes.
 
 
-        :param stat_col: :py:class:`miprometheus.utils.StatisticsCollector`.
+        :param stat_col: :py:class:`ptp.utils.StatisticsCollector`.
 
         """
         pass
@@ -316,13 +256,13 @@ class Problem(Dataset):
 
 
             Empty - To be redefined in inheriting classes. The user has to ensure that the corresponding entry \
-            in the :py:class:`miprometheus.utils.StatisticsCollector` has been created with \
+            in the :py:class:`ptp.utils.StatisticsCollector` has been created with \
             :py:func:`add_statistics` beforehand.
 
-        :param stat_col: :py:class:`miprometheus.utils.StatisticsCollector`.
+        :param stat_col: :py:class:`ptp.utils.StatisticsCollector`.
 
         :param data_dict: ``DataDict`` containing inputs and targets.
-        :type data_dict: :py:class:`miprometheus.utils.DataDict`
+        :type data_dict: :py:class:`ptp.utils.DataDict`
 
         :param logits: Predictions being output of the model (:py:class:`torch.Tensor`).
 
@@ -331,22 +271,22 @@ class Problem(Dataset):
 
     def add_aggregators(self, stat_agg):
         """
-        Adds statistical aggregators to :py:class:`miprometheus.utils.StatisticsAggregator`.
+        Adds statistical aggregators to :py:class:`ptp.utils.StatisticsAggregator`.
 
         .. note::
 
             Empty - To be redefined in inheriting classes.
 
 
-        :param stat_agg: :py:class:`miprometheus.utils.StatisticsAggregator`.
+        :param stat_agg: :py:class:`ptp.utils.StatisticsAggregator`.
 
         """
         pass
 
     def aggregate_statistics(self, stat_col, stat_agg):
         """
-        Aggregates the statistics collected by :py:class:`miprometheus.utils.StatisticsCollector` and adds the \
-        results to :py:class:`miprometheus.utils.StatisticsAggregator`.
+        Aggregates the statistics collected by :py:class:`ptp.utils.StatisticsCollector` and adds the \
+        results to :py:class:`ptp.utils.StatisticsAggregator`.
 
          .. note::
 
@@ -355,9 +295,9 @@ class Problem(Dataset):
             :py:func:`aggregate_statistics` to collect basic statistical aggregators (if set).
 
 
-        :param stat_col: :py:class:`miprometheus.utils.StatisticsCollector`.
+        :param stat_col: :py:class:`ptp.utils.StatisticsCollector`.
 
-        :param stat_agg: :py:class:`miprometheus.utils.StatisticsAggregator`.
+        :param stat_agg: :py:class:`ptp.utils.StatisticsAggregator`.
 
         """
         pass
@@ -394,26 +334,6 @@ class Problem(Dataset):
         """
         pass
 
-    def plot_preprocessing(self, data_dict, logits):
-        """
-        Allows for some data preprocessing before the model creates a plot for visualization during training or
-        inference.
-
-        .. note::
-
-
-            Empty - To be redefined in inheriting classes.
-
-
-        :param data_dict: ``DataDict``.
-        :type data_dict: :py:class:`miprometheus.utils.DataDict`
-
-        :param logits: Predictions of the model (:py:class:`torch.Tensor`).
-
-        :return: data_dict, logits after preprocessing.
-
-        """
-        return data_dict, logits
 
     def curriculum_learning_initialize(self, curriculum_params):
         """
@@ -425,7 +345,7 @@ class Problem(Dataset):
 
 
         :param curriculum_params: Interface to parameters accessing curriculum learning view of the registry tree.
-        :type param: :py:class:`miprometheus.utils.ParamInterface`
+        :type param: :py:class:`ptp.utils.ParamInterface`
 
 
         """
@@ -449,59 +369,14 @@ class Problem(Dataset):
 
         return True
 
-    # Function to make check and download easier
-    def check_and_download(self, file_folder_to_check, url=None, download_name='~/data/downloaded'):
-        """
-        Checks whether a file or folder exists at given path (relative to storage folder), \
-        otherwise downloads files from the given URL.
-
-        :param file_folder_to_check: Relative path to a file or folder to check to see if it exists.
-        :type file_folder_to_check: str
-
-        :param url: URL to download files from.
-        :type url: str
-
-        :param download_name: What to name the downloaded file. (DEFAULT: "downloaded").
-        :type download_name: str
-
-        :return: False if file was found, True if a download was necessary.
-
-        """
-
-        file_folder_to_check = os.path.expanduser(file_folder_to_check)
-        if not (os.path.isfile(file_folder_to_check) or os.path.isdir(file_folder_to_check)):
-            if url is not None:
-                self.logger.info('Downloading {}'.format(url))
-                urllib.request.urlretrieve(url, os.path.expanduser(download_name), reporthook)
-                return True
-            else:
-                return True
-        else:
-            self.logger.info('Dataset found at {}'.format(file_folder_to_check))
-            return False
-
-# Progress bar function
-def reporthook(count, block_size, total_size):
-    global start_time
-    if count == 0:
-            start_time = time.time()
-            return
-    duration = time.time() - start_time
-    progress_size = int(count * block_size)
-    speed = int(progress_size / (1024 * duration))
-    percent = int(count * block_size * 100 / total_size)
-    sys.stdout.write("\r...%d%%, %d MB, %d KB/s, %d seconds passed" %
-                     (percent, progress_size / (1024 * 1024), speed, duration))
-    sys.stdout.flush()
-
 
 if __name__ == '__main__':
     """Unit test for Problem and DataDict"""
-    from miprometheus.utils.param_interface import ParamInterface
+    from ptp.utils.param_interface import ParamInterface
 
     params = ParamInterface()
 
-    problem = Problem(params)
+    problem = Problem("test", params)
     problem.data_definitions = {'inputs': {'size': [-1, -1], 'type': [torch.Tensor]},
                                 'targets': {'size': [-1], 'type': [torch.Tensor]}
                                 }

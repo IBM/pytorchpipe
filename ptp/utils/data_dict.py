@@ -24,7 +24,7 @@ import collections
 logger = logging.Logger('DataDict')
 
 
-class DataDict(collections.MutableMapping):
+class DataDict(collections.abc.MutableMapping):
     """
     - Mapping: A container object that supports arbitrary key lookups and implements the methods ``__getitem__``, \
     ``__iter__`` and ``__len__``.
@@ -33,7 +33,7 @@ class DataDict(collections.MutableMapping):
 
     DataDict: Dict used for storing batches of data by problems.
 
-    **This is the main object class used to share data between a problem class and a model class through a worker.**
+    **This is the main object class used to share data between all components through a worker, starting from problem to loss and visualization.**
     """
 
     def __init__(self, *args, **kwargs):
@@ -75,6 +75,22 @@ class DataDict(collections.MutableMapping):
             raise KeyError('Cannot modify a non-existing key.')
         else:
             self.__dict__[key] = value
+
+    def extend(self, dict_to_add): #= None):
+        """
+        Extends a :py:class:`ptp.utils.DataDict` object by adding (keys,values) from data_definitions.
+
+        .. warning::
+            This is in-place operation, i.e. extends existing object, does not return a new one.
+
+        :param data_dict: :py:class:`ptp.utils.DataDict` object to be extended.
+
+        :param data_definitions: key-value pairs.
+
+        """
+        for (key,value) in dict_to_add.items():
+            assert key not in self.keys(), "Cannot extend DataDict, as {} already present in its keys!".format(key)
+            self[key] = value
 
     def __getitem__(self, key):
         """
