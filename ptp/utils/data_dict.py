@@ -18,10 +18,8 @@
 __author__ = "Vincent Marois, Tomasz Kornuta"
 
 import torch
-import logging
 import collections
 
-logger = logging.Logger('DataDict')
 
 
 class DataDict(collections.abc.MutableMapping):
@@ -245,7 +243,7 @@ class DataDict(collections.abc.MutableMapping):
 
 
 if __name__ == '__main__':
-    """Unit test for DataDict"""
+    """Tests for DataDict"""
 
     data_definitions = {'inputs': {'size': [-1, -1], 'type': [torch.Tensor]},
                         'targets': {'size': [-1], 'type': [torch.Tensor]}

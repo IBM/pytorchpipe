@@ -22,9 +22,7 @@ import torch
 import numpy as np
 from torch.utils.data import Dataset
 
-from ptp.utils.app_state import AppState
 from ptp.utils.data_dict import DataDict
-
 from ptp.utils.component import Component
 
 
@@ -76,10 +74,6 @@ class Problem(Component, Dataset):
 
                 >>> self.default_values = {}
 
-        - sets the access to ``AppState``: for dtype, visualization flag etc.
-
-            >>> self.app_state = AppState()
-
         """
         # Call constructors of parent classes.
         Component.__init__(self, name, params)
@@ -102,9 +96,6 @@ class Problem(Component, Dataset):
         # The user can fill in those values in this dict, which will be passed to the model in its  `__init__`  . The
         # model will then be able to fill it its missing parameters values, either from params or this dict.
         self.default_values = {}
-
-        # Get access to AppState: for dtype, visualization flag etc.
-        self.app_state = AppState()
 
     def create_data_dict(self, index, data_definitions = None):
         """

@@ -54,16 +54,18 @@ class SoftmaxClassifier(nn.Module, Component):
         self.key_inputs = self.mapkey("inputs")
         self.key_predictions = self.mapkey("predictions")
 
-        # Retrieve input (vocabulary) size and number of classes from default params.
-        self.input_size = 26 # TODO!   input_default_values['encoded_input_size']
-        self.num_classes = 2 # TODO! input_default_values['num_classes']
-
+        # Retrieve input and output (prediction) sizes from global params.
+        self.key_input_size = self.mapkey("input_size")
+        self.key_prediction_size = self.mapkey("prediction_size")
+        self.input_size = self.app_state.globals[self.key_input_size]
+        self.prediction_size = self.app_state.globals[self.key_prediction_size]
+        
         # Simple classifier.
-        self.linear = nn.Linear(self.input_size, self.num_classes)
+        self.linear = nn.Linear(self.input_size, self.prediction_size)
         
         # Set default data_definitions dict.
         # Encoded with BoW its is [BATCH_SIZE x NUM_CLASSES] !
-        self.data_definitions = {self.key_predictions: {'size': [-1, self.num_classes], 'type': [torch.Tensor]} }
+        self.data_definitions = {self.key_predictions: {'size': [-1, self.prediction_size], 'type': [torch.Tensor]} }
 
     def forward(self, data_dict):
         """
@@ -250,9 +252,6 @@ class DummyLanguageIdentification(LanguageIdentification):
         # Load files.
         self.inputs = load_list_from_txt_file(self.data_folder, inputs_file)
         self.targets = load_list_from_txt_file(self.data_folder, targets_file)
-
-        print("Inputs =", self.inputs)
-        print("Targets =", self.targets)
 
         # Assert that they are equal in size!
         assert len(self.inputs) == len(self.targets), "Number of inputs loaded from {} not equal to number of targets loaded from {}!".format(inputs_file, targets_file)
@@ -459,6 +458,7 @@ class TokenEncoder(Component):
             # Load encodings.
             self.word_to_ix = load_dict_from_csv_file(self.data_folder, self.encodings_file)
             assert (len(self.word_to_ix) > 0), "The loaded encodings list is empty!"
+
         # Ok, we are ready to go!
 
     def create_encodings(self, data_folder, source_files):
@@ -499,6 +499,12 @@ class WordEncoder(TokenEncoder):
         # Call constructors of parent classes.
         TokenEncoder.__init__(self, name, params)
 
+        # Export token size to global params.
+        self.key_token_size = self.mapkey("word_token_size")
+        self.app_state.globals.extend({
+            self.key_token_size: len(self.word_to_ix)
+            })
+
     def __call__(self, data_dict):
         """
         Encodes "inputs" in the format of a single word.
@@ -522,7 +528,6 @@ class WordEncoder(TokenEncoder):
         # Create the returned dict.
         data_dict.extend({self.key_outputs: outputs_list})
 
-
 class SentenceEncoder(TokenEncoder):
     """
     class responsible for encoding of samples being sequences of words.
@@ -530,6 +535,12 @@ class SentenceEncoder(TokenEncoder):
     def __init__(self, name, params):
         # Call constructors of parent classes.
         TokenEncoder.__init__(self, name, params)
+
+        # Export token size to global params.
+        self.key_token_size = self.mapkey("sentence_token_size")
+        self.app_state.globals.extend({
+            self.key_token_size: len(self.word_to_ix)
+            })
 
     def __call__(self, data_dict):
         """
@@ -615,8 +626,10 @@ class BOWEncoder(Component):
         self.key_inputs = self.mapkey("inputs")
         self.key_outputs = self.mapkey("outputs")
 
-        # Size of a single encoded item.
-        self.item_size = 26#len(self.word_to_ix)
+        # Retrieve input and output (prediction) sizes from global params.
+        print(self.app_state.globals)
+        self.key_input_size = self.mapkey("input_size")
+        self.input_size = self.app_state.globals[self.key_input_size]
 
         # Define the default_values dict: holds parameters values that a model may need.
         #self.default_values = {'encoded_input_size': self.item_size}
@@ -656,7 +669,7 @@ class BOWEncoder(Component):
         :return: torch.LongTensor [ITEM_SIZE]
         """
         # Create empty vector.
-        output = torch.zeros(self.item_size)
+        output = torch.zeros(self.input_size)
         # "Adds" tokens.
         for token in list_of_tokens:
             output[token] += 1
@@ -689,11 +702,18 @@ if __name__ == "__main__":
             'data_folder': '~/data/language_identification/dummy',
             'source_files': 'x_training.txt,x_test.txt',
             'encodings_file': 'word_encodings.csv',
-            'keymappings' : {'inputs': 'tokenized_sentences', 'outputs': 'encoded_sentences'}
+            'keymappings' : {
+                'inputs': 'tokenized_sentences',
+                'outputs': 'encoded_sentences'
+                }
         },
         'bow_encoder': {
             'name': 'BOWEncoder',
-            'keymappings' : {'inputs': 'encoded_sentences', 'outputs': 'bow_sencentes'}
+            'keymappings' : {
+                'inputs': 'encoded_sentences',
+                'outputs': 'bow_sencentes',
+                'input_size': 'sentence_token_size' # Set by sentence_encoder.
+                }
         },
         # Targets encoding.
         'target_encoder': {
@@ -701,11 +721,19 @@ if __name__ == "__main__":
             'data_folder': '~/data/language_identification/dummy',
             'source_files': 'y_training.txt,y_test.txt',
             'encodings_file': 'language_name_encodings.csv',
-            'keymappings' : {'inputs': 'languages', 'outputs': 'encoded_languages'}
+            'keymappings' : {
+                'inputs': 'languages',
+                'outputs': 'encoded_languages'
+                }
         },
         # Model
         'model': {
-            'keymappings' : {'inputs': 'bow_sencentes', 'predictions': 'encoded_predictions'}
+            'keymappings' : {
+                'inputs': 'bow_sencentes',
+                'predictions': 'encoded_predictions',
+                'input_size': 'sentence_token_size', # Set by sentence_encoder.
+                'prediction_size': 'word_token_size' # Set by target_encoder.
+                }
         },
         # Loss
         'nllloss': {

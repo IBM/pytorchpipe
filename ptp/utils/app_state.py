@@ -18,8 +18,10 @@
 
 __author__ = "Alexis Asseman, Tomasz Kornuta"
 
-from ptp.utils.singleton import SingletonMetaClass
 import torch
+
+from ptp.utils.singleton import SingletonMetaClass
+from ptp.utils.data_dict import DataDict
 
 
 class AppState(metaclass=SingletonMetaClass):
@@ -35,7 +37,8 @@ class AppState(metaclass=SingletonMetaClass):
         """
         # Disable visualization by default.
         self.visualize = False
-
+        # Field storing global variables.
+        self.globals = DataDict()
 
 if __name__ == '__main__':
 

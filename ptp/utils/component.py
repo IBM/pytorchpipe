@@ -24,6 +24,7 @@ import sys
 import logging
 
 from ptp.utils.data_dict import DataDict
+from ptp.utils.app_state import AppState
 
 
 class Component(object):
@@ -45,21 +46,31 @@ class Component(object):
 
             >>> self.logger = logging.getLogger(self.name)        
 
+        - sets the access to ``AppState``: for dtype, visualization flag etc.
+
+            >>> self.app_state = AppState()
+
         :param name: Name of the component.
 
         :param params: Dictionary of parameters (read from configuration ``.yaml`` file).
         """
         self.name = name
         self.params = params
+
         # Initialize logger.
         self.logger = logging.getLogger(self.name)        
 
         # Set default (empty) data definitions and default_values.
         self.data_definitions = {}
         self.default_values =  {}
+
         # Initialize the "name mapping facility".
         params.add_default_params({"keymappings": {}})
         self.keymappings = params["keymappings"]
+
+        # Get access to AppState: for globals, visualization flag etc.
+        self.app_state = AppState()
+
 
     def mapkey(self, key_name):
         """
