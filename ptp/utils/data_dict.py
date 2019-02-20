@@ -64,7 +64,7 @@ class DataDict(collections.abc.MutableMapping):
             ``DataDict`` and enables it to become mutable.
         """
         if not addkey and key not in self.keys():
-            msg = 'Cannot modify a non-existing key "{}" in DataDict!'.format(key)
+            msg = 'Cannot modify a non-existing key "{}" in DataDict'.format(key)
             raise KeyError(msg)
         else:
             self.__dict__[key] = value
@@ -83,7 +83,7 @@ class DataDict(collections.abc.MutableMapping):
         """
         for (key,value) in dict_to_add.items():
             if key in self.keys():
-                msg = "Cannot extend DataDict, as {} already present in its keys!".format(key)
+                msg = "Cannot extend DataDict, as {} already present in its keys".format(key)
                 raise KeyError(msg)
             # Call setitem with "additional argument".
             self.__setitem__(key, value, addkey=True)
@@ -116,7 +116,7 @@ class DataDict(collections.abc.MutableMapping):
 
         """
         if not delkey:
-            msg = 'Cannot delete key "{}" from DataDict!'.format(key)
+            msg = 'Cannot delete key "{}" from DataDict'.format(key)
             raise KeyError(msg)
         else:
             del self.__dict__[key]

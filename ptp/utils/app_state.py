@@ -38,9 +38,50 @@ class AppState(metaclass=SingletonMetaClass):
         # Disable visualization by default.
         self.visualize = False
         # Field storing global variables.
-        self.globals = DataDict()
+        self.__globals = dict()
+
+
+    def __setitem__(self, key, value):
+        """
+        Adds global variable. 
+
+        :param key: Dict Key.
+
+        :param value: Associated value.
+
+
+        .. warning::
+            Once global variable is set, its value cannot be changed (it becomes immutable).
+        """
+        if key in self.__globals.keys():
+            msg = 'Cannot add or modify key "{}" as it is already present in global variables'.format(key)
+            raise KeyError(msg)
+        else:
+            self.__globals[key] = value
+
+
+    def __getitem__(self, key):
+        """
+        Value getter function.
+
+        :param key: Dict Key.
+
+        :return: Associated Value.
+        """
+        if key not in self.__globals.keys():
+            msg = 'Key "{}" not present in global variables'.format(key)
+            raise KeyError(msg)
+        else:
+            return self.__globals[key]
 
 
 if __name__ == '__main__':
 
     app_state = AppState()
+
+    app_state["global1"] = 1 
+    app_state["global2"] = 2
+
+    print(app_state["global1"])
+
+    #print(repr(app_state.__globals))

@@ -57,8 +57,9 @@ class SoftmaxClassifier(nn.Module, Component):
         # Retrieve input and output (prediction) sizes from global params.
         self.key_input_size = self.mapkey("input_size")
         self.key_prediction_size = self.mapkey("prediction_size")
-        self.input_size = self.app_state.globals[self.key_input_size]
-        self.prediction_size = self.app_state.globals[self.key_prediction_size]
+        # Retrieve global params.
+        self.input_size = self.app_state[self.key_input_size]
+        self.prediction_size = self.app_state[self.key_prediction_size]
         
         # Simple classifier.
         self.linear = nn.Linear(self.input_size, self.prediction_size)
@@ -501,9 +502,7 @@ class WordEncoder(TokenEncoder):
 
         # Export token size to global params.
         self.key_token_size = self.mapkey("word_token_size")
-        self.app_state.globals.extend({
-            self.key_token_size: len(self.word_to_ix)
-            })
+        self.app_state[self.key_token_size] = len(self.word_to_ix)
 
     def __call__(self, data_dict):
         """
@@ -538,9 +537,7 @@ class SentenceEncoder(TokenEncoder):
 
         # Export token size to global params.
         self.key_token_size = self.mapkey("sentence_token_size")
-        self.app_state.globals.extend({
-            self.key_token_size: len(self.word_to_ix)
-            })
+        self.app_state[self.key_token_size] = len(self.word_to_ix)
 
     def __call__(self, data_dict):
         """
@@ -627,9 +624,8 @@ class BOWEncoder(Component):
         self.key_outputs = self.mapkey("outputs")
 
         # Retrieve input and output (prediction) sizes from global params.
-        print(self.app_state.globals)
         self.key_input_size = self.mapkey("input_size")
-        self.input_size = self.app_state.globals[self.key_input_size]
+        self.input_size = self.app_state[self.key_input_size]
 
         # Define the default_values dict: holds parameters values that a model may need.
         #self.default_values = {'encoded_input_size': self.item_size}
