@@ -37,6 +37,9 @@ before_install:
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pytorch scipy -c pytorch
   - source activate test-environment
 
+install:
+  - python setup.py install
+
 script:
   # Test plake8 compatibility.
   #- python3 -m flake8 --version  # flake8 3.6.0 on CPython 3.6.5 on Linux
@@ -45,7 +48,7 @@ script:
   # exit-zero treats all errors as warnings.  The GitHub editor is 127 chars wide
   #- python3 -m flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
   # Run unittests.
-  - cd ptp
+  - pwd
   - python -m unittest discover
   # Build documentation.
   # TODO.
