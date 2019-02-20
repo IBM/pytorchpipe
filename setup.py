@@ -165,10 +165,12 @@ setup(
     # dependencies to specific versions, or to specify sub-dependencies
     # (i.e. dependencies of your dependencies). This is overly-restrictive,
     # and prevents the user from gaining the benefit of dependency upgrades.
-    install_requires=['torchvision', 
-                      'torchtext',
-                      # 'torch==1.0.0',  # can't install pytorch from pip, use conda
-                      ],
+    install_requires=[
+        'torchvision', 
+        'torchtext',
+        'torch',
+        'yaml'
+        ],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). Users will be able to install these using the "extras"

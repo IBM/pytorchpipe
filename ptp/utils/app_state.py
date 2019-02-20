@@ -18,8 +18,6 @@
 
 __author__ = "Alexis Asseman, Tomasz Kornuta"
 
-import torch
-
 from ptp.utils.singleton import SingletonMetaClass
 from ptp.utils.data_dict import DataDict
 
