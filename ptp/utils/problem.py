@@ -124,7 +124,7 @@ class Problem(Component, Dataset):
 
         :return: new :py:class:`ptp.utils.DataDict` object.
         """
-        # Use self.data_definitions as default.
+        # Use self.output_data_definitions() if required
         data_definitions = data_definitions if data_definitions is not None else self.output_data_definitions()
         # Add index.
         data_definitions["index"] = None
