@@ -60,16 +60,16 @@ class TestHandshaking(unittest.TestCase):
         """ Tests handskaking of input definition keys. """
         # Both inputs missing.
         all_defs = {}
-        self.assertEqual(self.component.handshake_input_definitions( all_defs ), 3)
+        self.assertEqual(self.component.handshake_input_definitions( all_defs, log_errors=False ), 3)
 
         # One input missing.
         all_defs["input1"] = DataDefinition([-1, 1], [list, int], "comment")
-        self.assertEqual(self.component.handshake_input_definitions( all_defs ), 2)
+        self.assertEqual(self.component.handshake_input_definitions( all_defs, log_errors=False ), 2)
 
         # All inputs ok.
         all_defs["input2"] = DataDefinition([-1, -1, -1], [list, list, str], "comment2")
         all_defs["input3"] = DataDefinition([-1, -1], [float], "comment3")
-        self.assertEqual(self.component.handshake_input_definitions( all_defs ), 0)
+        self.assertEqual(self.component.handshake_input_definitions( all_defs, log_errors=False ), 0)
 
 
     def test_handshake_input_definitions_dimensions(self):
@@ -80,15 +80,15 @@ class TestHandshaking(unittest.TestCase):
 
         # One input with wrong number of dimensions.
         all_defs["input1"] = DataDefinition([-1, 10], [list, int], "comment")
-        self.assertEqual(self.component.handshake_input_definitions( all_defs ), 1)
+        self.assertEqual(self.component.handshake_input_definitions( all_defs, log_errors=False ), 1)
 
         # One input with wrong number of dimensions, but with dynamic size provided while we expect fixed.
         all_defs["input1"] = DataDefinition([-1, -1], [list, int], "comment")
-        self.assertEqual(self.component.handshake_input_definitions( all_defs ), 1)
+        self.assertEqual(self.component.handshake_input_definitions( all_defs, log_errors=False ), 1)
 
         # One input with wrong number of dimensions, but it is the "agnostic" one.
         all_defs["input1"] = DataDefinition([1, 1], [list, int], "comment")
-        self.assertEqual(self.component.handshake_input_definitions( all_defs ), 0)
+        self.assertEqual(self.component.handshake_input_definitions( all_defs, log_errors=False ), 0)
 
 
     def test_handshake_input_definitions_types(self):
@@ -99,11 +99,11 @@ class TestHandshaking(unittest.TestCase):
 
         # One input with wrong number of types.
         all_defs["input1"] = DataDefinition([-1, 1], [list], "comment")
-        self.assertEqual(self.component.handshake_input_definitions( all_defs ), 1)
+        self.assertEqual(self.component.handshake_input_definitions( all_defs, log_errors=False ), 1)
 
         # One input with one wrong type.
         all_defs["input1"] = DataDefinition([-1, 1], [list, str], "comment")
-        self.assertEqual(self.component.handshake_input_definitions( all_defs ), 1)
+        self.assertEqual(self.component.handshake_input_definitions( all_defs, log_errors=False ), 1)
 
 
 if __name__ == '__main__':
