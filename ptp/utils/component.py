@@ -18,6 +18,7 @@
 __author__ = "Tomasz Kornuta"
 
 import os
+import abc
 import urllib
 import time
 import sys
@@ -27,7 +28,7 @@ from ptp.utils.data_dict import DataDict
 from ptp.utils.app_state import AppState
 
 
-class Component(object):
+class Component(abc.ABC):
     def __init__(self, name, params):
         """
         Initializes the component.
@@ -71,6 +72,26 @@ class Component(object):
         # Get access to AppState: for globals, visualization flag etc.
         self.app_state = AppState()
 
+    @abc.abstractmethod
+    def input_data_definitions(self):
+        """ 
+        Function returns a dictionary with definitions of input data that are required by the component.
+        Abstract, must be implemented by all derived classes.
+
+        :return: dictionary containing input data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
+        """
+        pass
+
+    @abc.abstractmethod
+    def output_data_definitions(self):
+        """ 
+        Function returns a dictionary with definitions of output data produced the component.
+        Abstract, must be implemented by all derived classes.
+
+        :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
+        """
+        pass
+
 
     def mapkey(self, key_name):
         """
@@ -82,11 +103,13 @@ class Component(object):
         """
         return self.keymappings.get(key_name, key_name)
 
+    @abc.abstractmethod
     def __call__(self, data_dict):
         """
         Method responsible for processing the data dict.
+        Abstract, must be implemented by all derived classes.
 
-        :param data_dict: :py:class:`ptp.utils.DataDict` object containing data to encode and that will be extended with encoded results.
+        :param data_dict: :py:class:`ptp.utils.DataDict` object containing both input data to be proces and that will be extended by the results.
         """
         pass
 

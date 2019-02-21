@@ -31,6 +31,7 @@ import torch.optim as optim
 
 from ptp.utils.component import Component
 from ptp.utils.problem import Problem
+from ptp.utils.data_definition import DataDefinition
 
 
 #torch.manual_seed(1)
@@ -64,9 +65,27 @@ class SoftmaxClassifier(nn.Module, Component):
         # Simple classifier.
         self.linear = nn.Linear(self.input_size, self.prediction_size)
         
-        # Set default data_definitions dict.
-        # Encoded with BoW its is [BATCH_SIZE x NUM_CLASSES] !
-        self.data_definitions = {self.key_predictions: {'size': [-1, self.prediction_size], 'type': [torch.Tensor]} }
+
+    def input_data_definitions(self):
+        """ 
+        Function returns a dictionary with definitions of input data that are required by the component.
+
+        :return: dictionary containing input data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
+        """
+        return {
+            self.key_inputs: DataDefinition([-1, self.input_size], [torch.Tensor], "Batch of inputs, each represented as index [BATCH_SIZE x INPUT_SIZE]"),
+            }
+
+
+    def output_data_definitions(self):
+        """ 
+        Function returns a dictionary with definitions of output data produced the component.
+
+        :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
+        """
+        return {
+            self.key_predictions: DataDefinition([-1, self.prediction_size], [torch.Tensor], "Batch of predictions, each represented as probability distribution over classes [BATCH_SIZE x PREDICTION_SIZE]")
+            }
 
     def forward(self, data_dict):
         """
@@ -200,12 +219,18 @@ class LanguageIdentification(Problem):
         # Retrieve parameters from the dictionary.
         self.use_train_data = self.params['use_train_data']
 
-        # Set default data_definitions dict.
-        self.data_definitions = {self.key_inputs: {'size': [-1, 1], 'type': [list, str]}, 
-                                # [BATCH x SENTENCE (list of words as a single string)]
-                                self.key_targets: {'size': [-1, 1], 'type': [list, str]}
-                                # [BATCH x WORD (word as a single string)]
-                                }
+
+    def output_data_definitions(self):
+        """ 
+        Function returns a dictionary with definitions of output data produced the component.
+
+        :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
+        """
+        return {
+            self.key_inputs: DataDefinition([-1, 1], [list, str], "Batch of sentences, each being a single string (many words) [BATCH_SIZE x SENTENCE]"),
+            self.key_targets: DataDefinition([-1, 1], [list, str], "Batch of targets, each being a single label (word) BATCH_SIZE x WORD]")
+            }
+
 
     def __getitem__(self, index):
         """
@@ -322,6 +347,29 @@ class NLLLoss(Component):
         self.loss_function = nn.NLLLoss()
 
 
+    def input_data_definitions(self):
+        """ 
+        Function returns a dictionary with definitions of input data that are required by the component.
+
+        :return: dictionary containing input data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
+        """
+        return {
+            self.key_targets: DataDefinition([-1, 1], [list, int], "Batch of targets, each represented as index [BATCH] x [int]"),
+            self.key_predictions: DataDefinition([-1, -1], [list, str], "Batch of predictions, each represented as probability distribution over classes [BATCH_SIZE x NUM_CLASSES]")
+            }
+
+
+    def output_data_definitions(self):
+        """ 
+        Function returns a dictionary with definitions of output data produced the component.
+
+        :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
+        """
+        return {
+            self.key_loss: DataDefinition([1], [torch.Tensor], "Loss value (scalar, i.e. 1D tensor)")
+            }
+
+
     def __call__(self, data_dict):
         """
         Calculates loss (negative log-likelihood) and adds it to data dict.
@@ -375,6 +423,26 @@ class SentenceTokenizer(Component):
             self.processor = self.tokenize_sample
         # Ok, we are ready to go!
 
+    def input_data_definitions(self):
+        """ 
+        Function returns a dictionary with definitions of input data that are required by the component.
+
+        :return: dictionary containing input data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
+        """
+        return {
+            self.key_inputs: DataDefinition([-1, 1], [list, str], "Batch of sentences, each represented as a single string [BATCH] x [string]"),
+            }
+
+    def output_data_definitions(self):
+        """ 
+        Function returns a dictionary with definitions of output data produced the component.
+
+        :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
+        """
+        return {
+            self.key_outputs: DataDefinition([-1, -1, 1], [list, list, str], "Batch of tokenized sentences, each represented as a list of words [BATCH] x [SEQ_LENGTH] x [string]")
+            }
+
     def tokenize_sample(self, sample):
         """
         Changes sample (sentence) into list of tokens (words).
@@ -393,7 +461,7 @@ class SentenceTokenizer(Component):
 
         :return: sentence (string).
         """
-        return ''.join([str(x) for x in sample])
+        return ' '.join([str(x) for x in sample])
 
     def __call__(self, data_dict):
         """
@@ -492,17 +560,37 @@ class TokenEncoder(Component):
         return word_to_ix
 
 
-class WordEncoder(TokenEncoder):
+class LabelEncoder(TokenEncoder):
     """
-    class responsible for encoding of samples consisting of single words.
+    Class responsible for encoding of samples consisting of labels (into indices, that can be latter used for loss calculation, PyTorch-style).
     """
     def __init__(self, name, params):
         # Call constructors of parent classes.
         TokenEncoder.__init__(self, name, params)
 
         # Export token size to global params.
-        self.key_token_size = self.mapkey("word_token_size")
+        self.key_token_size = self.mapkey("label_token_size")
         self.app_state[self.key_token_size] = len(self.word_to_ix)
+
+    def input_data_definitions(self):
+        """ 
+        Function returns a dictionary with definitions of input data that are required by the component.
+
+        :return: dictionary containing input data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
+        """
+        return {
+            self.key_inputs: DataDefinition([-1, 1], [list, str], "Batch of labels (words), each represented as a single string [BATCH] x [string]"),
+            }
+
+    def output_data_definitions(self):
+        """ 
+        Function returns a dictionary with definitions of output data produced the component.
+
+        :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
+        """
+        return {
+            self.key_outputs: DataDefinition([-1, 1], [list, int], "Batch of labels, each represented as a single index [BATCH] x [index]")
+            }
 
     def __call__(self, data_dict):
         """
@@ -527,17 +615,94 @@ class WordEncoder(TokenEncoder):
         # Create the returned dict.
         data_dict.extend({self.key_outputs: outputs_list})
 
+
+class WordDecoder(TokenEncoder):
+    """
+    Class responsible for decoding of samples encoded in the form of vectors ("probability distributions").
+    """
+    def __init__(self, name, params):
+        # Call constructors of parent classes.
+        TokenEncoder.__init__(self, name, params)
+        # Construct reverse mapping for faster processing.
+        self.ix_to_word = dict((v,k) for k,v in self.word_to_ix.items())
+
+    def input_data_definitions(self):
+        """ 
+        Function returns a dictionary with definitions of input data that are required by the component.
+
+        :return: dictionary containing input data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
+        """
+        return {
+            self.key_inputs: DataDefinition([-1, -1], [torch.Tensor], "Batch of words, each represented as a vector (probability distribution) [BATCH_SIZE x ITEM_SIZE] (agnostic to item size)"),
+            }
+
+    def output_data_definitions(self):
+        """ 
+        Function returns a dictionary with definitions of output data produced the component.
+
+        :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
+        """
+        return {
+            self.key_outputs: DataDefinition([-1, 1], [list, str], "Batch of words, each represented as a single string [BATCH] x [string]")
+            }
+
+    def __call__(self, data_dict):
+        """
+        Encodes "inputs" in the format of a single word.
+        Stores result in "outputs" field of in data_dict.
+
+        :param data_dict: :py:class:`ptp.utils.DataDict` object containing (among others):
+
+            - "inputs": expected input field containing tensor [BATCH_SIZE x ITEM_SIZE]
+
+            - "outputs": added output field containing list of words [BATCH_SIZE] x [string] 
+        """
+        # Get inputs to be encoded.
+        inputs = data_dict[self.key_inputs]
+        outputs_list = []
+        # Process samples 1 by 1.
+        for sample in inputs.chunk(inputs.size(0), 0):
+            # Process single token.
+            max_index = sample.squeeze(0).argmax(dim=0).item() 
+            output_sample = self.ix_to_word[max_index]
+            outputs_list.append(output_sample)
+        # Create the returned dict.
+        data_dict.extend({self.key_outputs: outputs_list})
+
+
+
 class SentenceEncoder(TokenEncoder):
     """
-    class responsible for encoding of samples being sequences of words.
+    Class responsible for encoding of samples being sequences of words (1-hot encoding).
     """
     def __init__(self, name, params):
         # Call constructors of parent classes.
         TokenEncoder.__init__(self, name, params)
 
-        # Export token size to global params.
+        # Export output token size to global params.
+        self.output_size = len(self.word_to_ix)
         self.key_token_size = self.mapkey("sentence_token_size")
-        self.app_state[self.key_token_size] = len(self.word_to_ix)
+        self.app_state[self.key_token_size] = self.output_size
+
+    def input_data_definitions(self):
+        """ 
+        Function returns a dictionary with definitions of input data that are required by the component.
+
+        :return: dictionary containing input data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
+        """
+        return {
+            self.key_inputs: DataDefinition([-1, -1, 1], [list, list, int], "Batch of sentences, each represented as a list of indices [BATCH] x [SEQ_LENGTH] x [index]"),
+            }
+
+    def output_data_definitions(self):
+        """ 
+        Function returns a dictionary with definitions of output data produced the component.
+
+        :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
+        """
+        return {
+            self.key_outputs: DataDefinition([-1, -1, self.output_size], [list, list, torch.Tensor], "Batch of sentences, each represented as a list of vectors [BATCH] x [SEQ_LENGTH] x [OUTPUT_SIZE]"),
+            }
 
     def __call__(self, data_dict):
         """
@@ -560,44 +725,13 @@ class SentenceEncoder(TokenEncoder):
             output_sample = []
             # Encode sample (list of words)
             for token in sample:
-                output_token = self.word_to_ix[token]
+                # Create empty vector.
+                output_token = torch.zeros(self.output_size)
+                # Add one for given word
+                output_token[self.word_to_ix[token]] += 1
                 # Add to outputs.
                 output_sample.append( output_token )
 
-            outputs_list.append(output_sample)
-        # Create the returned dict.
-        data_dict.extend({self.key_outputs: outputs_list})
-
-
-class WordDecoder(TokenEncoder):
-    """
-    class responsible for decoding of samples encoded in the form of vectors ("probability distributions").
-    """
-    def __init__(self, name, params):
-        # Call constructors of parent classes.
-        TokenEncoder.__init__(self, name, params)
-        # Construct reverse mapping for faster processing.
-        self.ix_to_word = dict((v,k) for k,v in self.word_to_ix.items())
-
-    def __call__(self, data_dict):
-        """
-        Encodes "inputs" in the format of a single word.
-        Stores result in "outputs" field of in data_dict.
-
-        :param data_dict: :py:class:`ptp.utils.DataDict` object containing (among others):
-
-            - "inputs": expected input field containing tensor [BATCH_SIZE x NUM_CLASSES]
-
-            - "outputs": added output field containing list of words [BATCH_SIZE] x [string] 
-        """
-        # Get inputs to be encoded.
-        inputs = data_dict[self.key_inputs]
-        outputs_list = []
-        # Process samples 1 by 1.
-        for sample in inputs.chunk(inputs.size(0), 0):
-            # Process single token.
-            max_index = sample.squeeze(0).argmax(dim=0).item() 
-            output_sample = self.ix_to_word[max_index]
             outputs_list.append(output_sample)
         # Create the returned dict.
         data_dict.extend({self.key_outputs: outputs_list})
@@ -623,15 +757,25 @@ class BOWEncoder(Component):
         self.key_inputs = self.mapkey("inputs")
         self.key_outputs = self.mapkey("outputs")
 
-        # Retrieve input and output (prediction) sizes from global params.
-        self.key_input_size = self.mapkey("input_size")
-        self.input_size = self.app_state[self.key_input_size]
+    def input_data_definitions(self):
+        """ 
+        Function returns a dictionary with definitions of input data that are required by the component.
 
-        # Define the default_values dict: holds parameters values that a model may need.
-        #self.default_values = {'encoded_input_size': self.item_size}
-        # Set default data_definitions dict.
-        # Encoded with BoW its is [BATCH_SIZE x VOCAB_SIZE] !
-        #self.data_definitions = {self.key_encoded_inputs: {'size': [-1, -1], 'type': [torch.Tensor]} }
+        :return: dictionary containing input data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
+        """
+        return {
+            self.key_inputs: DataDefinition([-1, -1, -1], [list, list, torch.Tensor], "Batch of sentences, each represented as a list of vectors [BATCH] x [SEQ_LENGTH] x [ITEM_SIZE] (agnostic to item size)")
+            }
+
+    def output_data_definitions(self):
+        """ 
+        Function returns a dictionary with definitions of output data produced the component.
+
+        :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
+        """
+        return {
+            self.key_outputs: DataDefinition([-1, -1], [list, torch.Tensor], "Batch of sentences, each represented as a single vector [BATCH] x [ITEM_SIZE] (agnostic to item size)")
+            }
 
     def __call__(self, data_dict):
         """
@@ -664,11 +808,11 @@ class BOWEncoder(Component):
         :param list_of_tokens: List of tokens [SEQ_LENGTH] x [ITEM_SIZE]
         :return: torch.LongTensor [ITEM_SIZE]
         """
-        # Create empty vector.
-        output = torch.zeros(self.input_size)
+        # Create output.
+        output = list_of_tokens[0]
         # "Adds" tokens.
-        for token in list_of_tokens:
-            output[token] += 1
+        for token in list_of_tokens[1:]:
+            output += token
         return output
 
 
@@ -707,13 +851,12 @@ if __name__ == "__main__":
             'name': 'BOWEncoder',
             'keymappings' : {
                 'inputs': 'encoded_sentences',
-                'outputs': 'bow_sencentes',
-                'input_size': 'sentence_token_size' # Set by sentence_encoder.
+                'outputs': 'bow_sencentes'
                 }
         },
         # Targets encoding.
-        'target_encoder': {
-            'name': 'WordEncoder',
+        'label_encoder': {
+            'name': 'LabelEncoder',
             'data_folder': '~/data/language_identification/dummy',
             'source_files': 'y_training.txt,y_test.txt',
             'encodings_file': 'language_name_encodings.csv',
@@ -728,7 +871,7 @@ if __name__ == "__main__":
                 'inputs': 'bow_sencentes',
                 'predictions': 'encoded_predictions',
                 'input_size': 'sentence_token_size', # Set by sentence_encoder.
-                'prediction_size': 'word_token_size' # Set by target_encoder.
+                'prediction_size': 'label_token_size' # Set by target_encoder.
                 }
         },
         # Loss
@@ -748,6 +891,8 @@ if __name__ == "__main__":
 
     batch_size = 2
 
+
+    #### "Configuration" ####
     # Create problem.
     problem  = DummyLanguageIdentification("problem", params["problem"])
 
@@ -757,7 +902,7 @@ if __name__ == "__main__":
     bow_encoder = BOWEncoder("bow_encoder", params["bow_encoder"])
 
     # Target encoder.
-    target_encoder = WordEncoder("target_encoder", params["target_encoder"])
+    target_encoder = LabelEncoder("label_encoder", params["label_encoder"])
 
     # Model.
     model = SoftmaxClassifier("model", params["model"])
@@ -767,6 +912,10 @@ if __name__ == "__main__":
 
     # Decoder.
     prediction_decoder  = WordDecoder("prediction_decoder", params["prediction_decoder"])
+
+    #### "Handshaking" ####
+    #problem.fly()
+
 
     # Constructd dataloader.
     from torch.utils.data import DataLoader

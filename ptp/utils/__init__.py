@@ -1,6 +1,7 @@
 from .app_state import AppState
 from .component import Component
 from .data_dict import DataDict
+from .data_definition import DataDefinition
 from .param_interface import ParamInterface
 from .param_registry import ParamRegistry
 from .problem import Problem

@@ -97,17 +97,35 @@ class Problem(Component, Dataset):
         # model will then be able to fill it its missing parameters values, either from params or this dict.
         self.default_values = {}
 
+    def __call__(self, data_dict):
+        """
+        Method responsible for processing the data dict. Empty for all problem-derived classes.
+
+        :param data_dict: :py:class:`ptp.utils.DataDict` object containing both input data to be proces and that will be extended by the results.
+        """
+        pass
+
+    def input_data_definitions(self):
+        """ 
+        Function returns a dictionary with definitions of input data that are required by the component.
+        As there is assumption made (problems do not accept inputs) it returns empty dictionary.
+
+        :return: Empty dictionary.
+        """
+        return {}
+
+
     def create_data_dict(self, index, data_definitions = None):
         """
         Returns a :py:class:`ptp.utils.DataDict` object with keys created on the \
         problem data_definitions and empty values (None).
 
-        :param data_definitions: Data definitions that will be used (DEFAULT: None, meaninng that self.data_definitions will be used)
+        :param data_definitions: Data definitions that will be used (DEFAULT: None, meaninng that self.output_data_definitions() will be used)
 
         :return: new :py:class:`ptp.utils.DataDict` object.
         """
         # Use self.data_definitions as default.
-        data_definitions = data_definitions if data_definitions is not None else self.data_definitions
+        data_definitions = data_definitions if data_definitions is not None else self.output_data_definitions()
         # Add index.
         data_definitions["index"] = None
         data_dict = DataDict({key: None for key in data_definitions.keys()})
