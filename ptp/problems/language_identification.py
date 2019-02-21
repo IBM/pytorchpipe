@@ -354,8 +354,8 @@ class NLLLoss(Component):
         :return: dictionary containing input data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
         """
         return {
-            self.key_targets: DataDefinition([-1, 1], [list, int], "Batch of targets, each represented as index [BATCH] x [int]"),
-            self.key_predictions: DataDefinition([-1, -1], [list, torch.Tensor], "Batch of predictions, each represented as probability distribution over classes [BATCH_SIZE x NUM_CLASSES]")
+            self.key_targets: DataDefinition([-1, 1], [list, int], "Batch of targets, each represented as index [BATCH_SIZE] x [int]"),
+            self.key_predictions: DataDefinition([-1, -1], [torch.Tensor], "Batch of predictions, represented as tensor with probability distribution over classes [BATCH_SIZE x NUM_CLASSES]")
             }
 
 
@@ -430,7 +430,7 @@ class SentenceTokenizer(Component):
         :return: dictionary containing input data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
         """
         return {
-            self.key_inputs: DataDefinition([-1, 1], [list, str], "Batch of sentences, each represented as a single string [BATCH] x [string]"),
+            self.key_inputs: DataDefinition([-1, 1], [list, str], "Batch of sentences, each represented as a single string [BATCH_SIZE] x [string]"),
             }
 
     def output_data_definitions(self):
@@ -440,7 +440,7 @@ class SentenceTokenizer(Component):
         :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
         """
         return {
-            self.key_outputs: DataDefinition([-1, -1, 1], [list, list, str], "Batch of tokenized sentences, each represented as a list of words [BATCH] x [SEQ_LENGTH] x [string]")
+            self.key_outputs: DataDefinition([-1, -1, 1], [list, list, str], "Batch of tokenized sentences, each represented as a list of words [BATCH_SIZE] x [SEQ_LENGTH] x [string]")
             }
 
     def tokenize_sample(self, sample):
@@ -579,7 +579,7 @@ class LabelEncoder(TokenEncoder):
         :return: dictionary containing input data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
         """
         return {
-            self.key_inputs: DataDefinition([-1, 1], [list, str], "Batch of labels (words), each represented as a single string [BATCH] x [string]"),
+            self.key_inputs: DataDefinition([-1, 1], [list, str], "Batch of labels (words), each represented as a single string [BATCH_SIZE] x [string]"),
             }
 
     def output_data_definitions(self):
@@ -589,7 +589,7 @@ class LabelEncoder(TokenEncoder):
         :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
         """
         return {
-            self.key_outputs: DataDefinition([-1, 1], [list, int], "Batch of labels, each represented as a single index [BATCH] x [index]")
+            self.key_outputs: DataDefinition([-1, 1], [list, int], "Batch of labels, each represented as a single index [BATCH_SIZE] x [index]")
             }
 
     def __call__(self, data_dict):
@@ -643,7 +643,7 @@ class WordDecoder(TokenEncoder):
         :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
         """
         return {
-            self.key_outputs: DataDefinition([-1, 1], [list, str], "Batch of words, each represented as a single string [BATCH] x [string]")
+            self.key_outputs: DataDefinition([-1, 1], [list, str], "Batch of words, each represented as a single string [BATCH_SIZE] x [string]")
             }
 
     def __call__(self, data_dict):
@@ -691,7 +691,7 @@ class SentenceEncoder(TokenEncoder):
         :return: dictionary containing input data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
         """
         return {
-            self.key_inputs: DataDefinition([-1, -1, 1], [list, list, int], "Batch of sentences, each represented as a list of indices [BATCH] x [SEQ_LENGTH] x [index]"),
+            self.key_inputs: DataDefinition([-1, -1, 1], [list, list, str], "Batch of sentences, each represented as a list of words [BATCH_SIZE] x [SEQ_LENGTH] x [string]"),
             }
 
     def output_data_definitions(self):
@@ -701,7 +701,7 @@ class SentenceEncoder(TokenEncoder):
         :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
         """
         return {
-            self.key_outputs: DataDefinition([-1, -1, self.output_size], [list, list, torch.Tensor], "Batch of sentences, each represented as a list of vectors [BATCH] x [SEQ_LENGTH] x [OUTPUT_SIZE]"),
+            self.key_outputs: DataDefinition([-1, -1, self.output_size], [list, list, torch.Tensor], "Batch of sentences, each represented as a list of vectors [BATCH_SIZE] x [SEQ_LENGTH] x [OUTPUT_SIZE]"),
             }
 
     def __call__(self, data_dict):
@@ -756,6 +756,10 @@ class BOWEncoder(Component):
         # Default name mappings for all encoders.
         self.key_inputs = self.mapkey("inputs")
         self.key_outputs = self.mapkey("outputs")
+        self.key_input_size = self.mapkey("input_size")
+
+        # Retrieve input size from global params.
+        self.input_size = self.app_state[self.key_input_size]
 
     def input_data_definitions(self):
         """ 
@@ -764,7 +768,7 @@ class BOWEncoder(Component):
         :return: dictionary containing input data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
         """
         return {
-            self.key_inputs: DataDefinition([-1, -1, -1], [list, list, torch.Tensor], "Batch of sentences, each represented as a list of vectors [BATCH] x [SEQ_LENGTH] x [ITEM_SIZE] (agnostic to item size)")
+            self.key_inputs: DataDefinition([-1, -1, -1], [list, list, torch.Tensor], "Batch of sentences, each represented as a list of vectors [BATCH_SIZE] x [SEQ_LENGTH] x [ITEM_SIZE] (agnostic to item size)")
             }
 
     def output_data_definitions(self):
@@ -774,7 +778,7 @@ class BOWEncoder(Component):
         :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
         """
         return {
-            self.key_outputs: DataDefinition([-1, -1], [list, torch.Tensor], "Batch of sentences, each represented as a single vector [BATCH] x [ITEM_SIZE] (agnostic to item size)")
+            self.key_outputs: DataDefinition([-1, self.input_size], [torch.Tensor], "Batch of sentences, each represented as a single vector [BATCH_SIZE x ITEM_SIZE] (agnostic to item size)")
             }
 
     def __call__(self, data_dict):
@@ -851,7 +855,8 @@ if __name__ == "__main__":
             'name': 'BOWEncoder',
             'keymappings' : {
                 'inputs': 'encoded_sentences',
-                'outputs': 'bow_sencentes'
+                'outputs': 'bow_sencentes',
+                'input_size': 'sentence_token_size', # Set by sentence_encoder.
                 }
         },
         # Targets encoding.
@@ -869,7 +874,7 @@ if __name__ == "__main__":
         'model': {
             'keymappings' : {
                 'inputs': 'bow_sencentes',
-                'predictions': 'encoded_predictions',
+                #'predictions': 'encoded_predictions',
                 'input_size': 'sentence_token_size', # Set by sentence_encoder.
                 'prediction_size': 'label_token_size' # Set by target_encoder.
                 }
@@ -877,14 +882,18 @@ if __name__ == "__main__":
         # Loss
         'nllloss': {
             'name': 'NLLLoss',
-            'keymappings' : {'targets': 'encoded_languages', 'predictions': 'encoded_predictions', 'loss': 'loss' }
+            'keymappings' : {
+                'targets': 'encoded_languages',
+                #'predictions': 'encoded_predictions',
+                'loss': 'loss'
+                }
         },
         # Predictions decoder.
         'prediction_decoder': {
             'name': 'WordDecoder',
             'data_folder': '~/data/language_identification/dummy',
             'encodings_file': 'language_name_encodings.csv',
-            'keymappings' : {'inputs': 'encoded_predictions', 'outputs': 'predictions'}
+            'keymappings' : {'inputs': 'predictions', 'outputs': 'predicted_labels'}
         }
 
         })
@@ -915,7 +924,7 @@ if __name__ == "__main__":
 
     #### "Handshaking" ####
     all_definitions = problem.output_data_definitions()
-    print(all_definitions)
+    #print(all_definitions)
     errors = 0
 
     errors += sentence_tokenizer.handshake_input_definitions(all_definitions)
@@ -926,6 +935,9 @@ if __name__ == "__main__":
     
     errors += bow_encoder.handshake_input_definitions(all_definitions)
     errors += bow_encoder.export_output_definitions(all_definitions)
+
+    errors += target_encoder.handshake_input_definitions(all_definitions)
+    errors += target_encoder.export_output_definitions(all_definitions)
 
     errors += model.handshake_input_definitions(all_definitions)
     errors += model.export_output_definitions(all_definitions)
@@ -972,7 +984,7 @@ if __name__ == "__main__":
             # Decoder.
             prediction_decoder(batch)
 
-            print("sequences: {} targets: {} \t\t  -> model predictions: {}".format(batch["sentences"], batch["languages"], batch["predictions"]))
+            print("sequences: {} \t\t targets: {}  ->  predictions: {}".format(batch["sentences"], batch["languages"], batch["predicted_labels"]))
 
             # Step 4. Compute the loss, gradients, and update the parameters by
             # calling optimizer.step()

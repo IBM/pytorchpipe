@@ -101,7 +101,6 @@ class Component(abc.ABC):
         :return: number of detected errors.
         """
         errors = 0
-        print(all_definitions)
         for (key,id) in self.input_data_definitions().items():
             # Check presence of key.
             if key not in all_definitions.keys():
@@ -111,25 +110,25 @@ class Component(abc.ABC):
             # Check number of dimensions.
             dd = all_definitions[key]
             if len(id.dimensions) != len (dd.dimensions):
-                self.logger.error("Input definition: field '{}' in DataDict has dimensions different from expected ({} vs {})".format(key, id.dimensions, dd.dimensions))
+                self.logger.error("Input definition: field '{}' in DataDict has different dimensions from expected (expected {} while received {})".format(key, id.dimensions, dd.dimensions))
                 errors += 1
             else: 
                 # Check dimensions one by one.
                 for index, (did, ddd) in enumerate(zip(id.dimensions, dd.dimensions)):
                     # -1 means that it can handle different values here.
                     if did != -1 and did != ddd:
-                        self.logger.error("Input definition: field '{}' in DataDict has dimension {} different from expected ({} vs {})".format(key,index, id.dimensions, dd.dimensions))
+                        self.logger.error("Input definition: field '{}' in DataDict has dimension {} different from expected (expected {} while received {})".format(key,index, id.dimensions, dd.dimensions))
                         errors += 1
             # Check number of types.
             if len(id.types) != len (dd.types):
-                self.logger.error("Input definition: field '{}' in DataDict has number of types different from expected ({} vs {})".format(key, id.types, dd.types))
+                self.logger.error("Input definition: field '{}' in DataDict has number of types different from expected (expected {} while received {})".format(key, id.types, dd.types))
                 errors += 1
             else: 
                 # Check types one by one.
                 for index, (tid, tdd) in enumerate(zip(id.types, dd.types)):
                     # -1 means that it can handle different values here.
                     if tid != tdd:
-                        self.logger.error("Input definition: field '{}' in DataDict has type {} different from expected ({} vs {})".format(key,index, id.types, dd.types))
+                        self.logger.error("Input definition: field '{}' in DataDict has type {} different from expected (expected {} while received {})".format(key,index, id.types, dd.types))
                         errors += 1
 
         return errors
