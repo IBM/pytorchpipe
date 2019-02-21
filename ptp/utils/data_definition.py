@@ -19,23 +19,19 @@
 __author__ = "Tomasz Kornuta"
 
 import torch
-import collections
+from collections import namedtuple
 from torch.nn import Module
 
 
-# Helper collection type.
-__DataDefinition = collections.namedtuple(
-    'DataDefinition',
-    (
-        'size',
-        'type',
-        'description'
-    ))
-
-
-class DataDefinition(__DataDefinition):
-    """
-    Tuple used by for storing definitinos of fields of DataDict.
-    Used for DataDict initialization, handshaking and debugging.
-    """
+class DataDefinition(namedtuple("DataDefinition", 'dimensions types description')):
     __slots__ = ()
+
+
+
+if __name__ == '__main__':
+    dd = DataDefinition([1], [int], "Value (scalar)")
+    print(dd.dimensions)
+    print(dd.types)
+    print(dd.description)
+    
+    #dd.description = 'new desc' # Error

@@ -92,6 +92,68 @@ class Component(abc.ABC):
         """
         pass
 
+    def handshake_input_definitions(self, all_definitions):
+        """ 
+        Checks whether all_definitions contain fields required by the given component.
+
+        :param all_definitions: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
+
+        :return: number of detected errors.
+        """
+        errors = 0
+        print(all_definitions)
+        for (key,id) in self.input_data_definitions().items():
+            # Check presence of key.
+            if key not in all_definitions.keys():
+                self.logger.error("Input definition: expected field '{}' not found in DataDict keys ({})".format(key, all_definitions.keys()))
+                errors += 1
+                continue
+            # Check number of dimensions.
+            dd = all_definitions[key]
+            if len(id.dimensions) != len (dd.dimensions):
+                self.logger.error("Input definition: field '{}' in DataDict has dimensions different from expected ({} vs {})".format(key, id.dimensions, dd.dimensions))
+                errors += 1
+            else: 
+                # Check dimensions one by one.
+                for index, (did, ddd) in enumerate(zip(id.dimensions, dd.dimensions)):
+                    # -1 means that it can handle different values here.
+                    if did != -1 and did != ddd:
+                        self.logger.error("Input definition: field '{}' in DataDict has dimension {} different from expected ({} vs {})".format(key,index, id.dimensions, dd.dimensions))
+                        errors += 1
+            # Check number of types.
+            if len(id.types) != len (dd.types):
+                self.logger.error("Input definition: field '{}' in DataDict has number of types different from expected ({} vs {})".format(key, id.types, dd.types))
+                errors += 1
+            else: 
+                # Check types one by one.
+                for index, (tid, tdd) in enumerate(zip(id.types, dd.types)):
+                    # -1 means that it can handle different values here.
+                    if tid != tdd:
+                        self.logger.error("Input definition: field '{}' in DataDict has type {} different from expected ({} vs {})".format(key,index, id.types, dd.types))
+                        errors += 1
+
+        return errors
+    
+    def export_output_definitions(self, all_definitions):
+        """ 
+        Exports output definitinos to all_definitions, checking errors (e.g. if output field is already present in all_definitions).
+
+        :param all_definitions: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
+
+        :return: number of detected errors.
+        """
+        errors = 0
+        for (key,od) in self.output_data_definitions().items():
+            # Check presence of key.
+            if key in all_definitions.keys():
+                self.logger.error("Output definition error: field '{}' cannot be added to DataDict, as it is already present in its keys ({})".format(key, all_definitions.keys()))
+                errors += 1
+            else:
+                # Add field to definitions.
+                all_definitions[key] = od
+
+        return  errors
+
 
     def mapkey(self, key_name):
         """

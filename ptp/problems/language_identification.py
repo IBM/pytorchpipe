@@ -355,7 +355,7 @@ class NLLLoss(Component):
         """
         return {
             self.key_targets: DataDefinition([-1, 1], [list, int], "Batch of targets, each represented as index [BATCH] x [int]"),
-            self.key_predictions: DataDefinition([-1, -1], [list, str], "Batch of predictions, each represented as probability distribution over classes [BATCH_SIZE x NUM_CLASSES]")
+            self.key_predictions: DataDefinition([-1, -1], [list, torch.Tensor], "Batch of predictions, each represented as probability distribution over classes [BATCH_SIZE x NUM_CLASSES]")
             }
 
 
@@ -914,10 +914,32 @@ if __name__ == "__main__":
     prediction_decoder  = WordDecoder("prediction_decoder", params["prediction_decoder"])
 
     #### "Handshaking" ####
-    #problem.fly()
+    all_definitions = problem.output_data_definitions()
+    print(all_definitions)
+    errors = 0
 
+    errors += sentence_tokenizer.handshake_input_definitions(all_definitions)
+    errors += sentence_tokenizer.export_output_definitions(all_definitions)
 
-    # Constructd dataloader.
+    errors += sentence_encoder.handshake_input_definitions(all_definitions)
+    errors += sentence_encoder.export_output_definitions(all_definitions)
+    
+    errors += bow_encoder.handshake_input_definitions(all_definitions)
+    errors += bow_encoder.export_output_definitions(all_definitions)
+
+    errors += model.handshake_input_definitions(all_definitions)
+    errors += model.export_output_definitions(all_definitions)
+
+    errors += loss.handshake_input_definitions(all_definitions)
+    errors += loss.export_output_definitions(all_definitions)
+
+    errors += prediction_decoder.handshake_input_definitions(all_definitions)
+    errors += prediction_decoder.export_output_definitions(all_definitions)
+
+    if errors > 0:
+        exit(1)
+    
+    # Construct dataloader.
     from torch.utils.data import DataLoader
     dataloader = DataLoader(dataset=problem, collate_fn=problem.collate_fn,
                             batch_size=batch_size, shuffle=True, num_workers=0)
