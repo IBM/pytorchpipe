@@ -20,7 +20,7 @@ __author__ = "Alexis Asseman, Tomasz Kornuta"
 import copy
 from abc import ABCMeta
 from collections import Mapping
-from miprometheus.utils.singleton import SingletonMetaClass
+from ptp.utils.singleton import SingletonMetaClass
 
 
 class MetaSingletonABC(SingletonMetaClass, ABCMeta):

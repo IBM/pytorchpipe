@@ -19,7 +19,7 @@ __author__ = "Alexis Asseman, Tomasz Kornuta"
 
 import yaml
 from collections import Mapping
-from miprometheus.utils.param_registry import ParamRegistry
+from ptp.utils.param_registry import ParamRegistry
 
 
 class ParamInterface(Mapping):
