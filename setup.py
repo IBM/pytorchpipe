@@ -166,7 +166,7 @@ setup(
     # (i.e. dependencies of your dependencies). This is overly-restrictive,
     # and prevents the user from gaining the benefit of dependency upgrades.
     install_requires=[
-        'torchvision', 
+        'torchvision',
         'torchtext',
         'torch',
         'PyYAML'
@@ -190,7 +190,7 @@ setup(
     #
     # If using Python 2.6 or earlier, then these have to be included in
     # MANIFEST.in as well.
-    package_data={ },
+    package_data={},
 
     include_package_data=True,
 
@@ -224,4 +224,3 @@ setup(
         'Source': 'https://github.com/tkornut/pytorchpipe/',
     },
 )
-

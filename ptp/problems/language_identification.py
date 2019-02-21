@@ -951,6 +951,9 @@ if __name__ == "__main__":
     if errors > 0:
         exit(1)
     
+    # Log final definition.
+    print("Final, handskaked definitions of DataDict used in pipeline: \n{}\n".format(all_definitions))
+
     # Construct dataloader.
     from torch.utils.data import DataLoader
     dataloader = DataLoader(dataset=problem, collate_fn=problem.collate_fn,
