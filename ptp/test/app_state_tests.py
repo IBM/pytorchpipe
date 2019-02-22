@@ -49,6 +49,3 @@ class TestAppState(unittest.TestCase):
         with self.assertRaises(KeyError):
             AppState()["global1"] = 2
 
-
-if __name__ == '__main__':
-    unittest.main()

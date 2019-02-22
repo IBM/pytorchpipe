@@ -18,6 +18,7 @@
 __author__ = "Tomasz Kornuta"
 
 import unittest
+from unittest.mock import patch
 
 from ptp.utils.component import Component
 from ptp.utils.data_definition import DataDefinition
@@ -44,15 +45,14 @@ class MockupComponent (Component):
             }
 
 
-    def __call__(self, data_dict):
-        pass
-
-
 class TestHandshaking(unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         super(TestHandshaking, self).__init__(*args, **kwargs)
-        # Create mockup component.
+
+        # Overwrite abc abstract methods.
+        MockupComponent.__abstractmethods__=set()
+        # Create mockup component
         self.component = MockupComponent()
 
 
@@ -106,5 +106,16 @@ class TestHandshaking(unittest.TestCase):
         self.assertEqual(self.component.handshake_input_definitions( all_defs, log_errors=False ), 1)
 
 
-if __name__ == '__main__':
-    unittest.main()
+    def test_extension_definitions(self):
+        """ Tests extension of output definition keys. """
+        all_defs = {} 
+
+        # Key not existing in output definitions - ADD.
+        all_defs["output2"] = DataDefinition([-1, -1, -1], [list, list, str], "comment")
+        self.assertEqual(self.component.export_output_definitions( all_defs, log_errors=False ), 0)
+
+        # Key already existing in output definitions.
+        all_defs["output"] = DataDefinition([-1, -1, -1], [list, list, str], "comment")
+        self.assertEqual(self.component.export_output_definitions( all_defs, log_errors=False ), 1)
+
+

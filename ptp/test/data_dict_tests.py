@@ -61,6 +61,3 @@ class TestDataDict(unittest.TestCase):
         self.data_dict.extend( {"predictions": 12 } )
         self.assertEqual(self.data_dict['predictions'], 12)
 
-
-if __name__ == '__main__':
-    unittest.main()
