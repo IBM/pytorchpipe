@@ -47,33 +47,16 @@ class Problem(Component, Dataset):
         :param name: Problem name.
         :type name: str
 
-        This constructor:
-
-        - initializes the data definitions: this is used for defining the ``DataDict`` keys.
-
-        .. note::
-
-            This dict contains information about the DataDict produced by the current problem class.
-
-            This object will be used during handshaking between the model and the problem class to ensure that the model
-            can accept the batches produced by the problem.
-
-            This dict should at least contains the `targets` field:
-
-                >>> self.data_definitions = {'targets': {'size': [-1, 1], 'type': [torch.Tensor]}}
-
-        - initializes the default values: this is used to pass missing parameters values to the model.
 
         .. note::
 
             It is likely to encounter a case where the model needs a parameter value only known when the problem has been
             instantiated, like the size of a vocabulary set or the number of marker bits.
 
-            The user can fill in those values in this dict, which will be passed to the model in its  `__init__`  . The
-            model will then be able to fill it its missing parameters values, either from params or this dict.
+            The user can pass those values in this app_state. All objects will be able to access it later:
 
-                >>> self.default_values = {}
-
+                >>> self.app_state["new_global_value"] = 1 # Sets global value.
+                >>> val = self.app_state["new_global_value" # Gets global value.
         """
         # Call constructors of parent classes.
         Component.__init__(self, name, params)
@@ -82,20 +65,6 @@ class Problem(Component, Dataset):
         # Empty curriculum learning params - for now.
         self.curriculum_params = {}
 
-        # data_definitions: this is used for defining the DataDict keys.
-
-        # This dict contains information about the DataDict produced by the current problem class.
-        # This object will be used during handshaking between the model and the problem class to ensure that the model
-        # can accept the batches produced by the problem.
-        self.data_definitions = {}
-
-        # default_values: this is used to pass missing parameters values to the model.
-
-        # It is likely to encounter a case where the model needs a parameter value only known when the problem has been
-        # instantiated, like the size of a vocabulary set or the number of marker bits.
-        # The user can fill in those values in this dict, which will be passed to the model in its  `__init__`  . The
-        # model will then be able to fill it its missing parameters values, either from params or this dict.
-        self.default_values = {}
 
     def __call__(self, data_dict):
         """
@@ -160,54 +129,6 @@ class Problem(Component, Dataset):
         """
         return DataDict({key: torch.utils.data.dataloader.default_collate([d[key] for d in data_dict]) for key in data_dict[0]})
 
-    def __getitem__(self, index):
-        """
-        Getter that returns an individual sample from the problem's associated dataset (that can be generated \
-        `on-the-fly`, or retrieved from disk. It can also possibly be composed of several files.).
-
-        .. note::
-
-            **To be redefined in subclasses.**
-
-
-        .. note::
-
-            **The getter should return a DataDict: its keys should be defined by** ``self.data_definitions`` **keys.**
-
-            This ensures consistency of the content of the :py:class:`ptp.utils.DataDict` when processing \
-            to the `handshake` between the :py:class:`ptp.problems.Problem` class and the \
-            :py:class:`ptp.models.Model` class. For more information, please see\
-             :py:func:`ptp.models.Model.handshake_definitions`.
-
-            e.g.:
-
-                >>> data_dict = DataDict({key: None for key in self.data_definitions.keys()})
-                >>> # you can now access each value by its key and assign the corresponding object (e.g. `torch.tensor` etc)
-                >>> ...
-                >>> return data_dict
-
-
-
-        .. warning::
-
-            `Mi-Prometheus` supports multiprocessing for data loading (through the use of\
-             :py:class:`torch.utils.data.DataLoader`).
-
-            To construct a batch (say 64 samples), the indexes are distributed among several workers (say 4, so that
-            each worker has 16 samples to retrieve). It is best that samples can be accessed individually in the dataset
-            folder so that there is no mutual exclusion between the workers and the performance is not degraded.
-
-            If each sample is generated `on-the-fly`, this shouldn't cause a problem. There may be an issue with \
-            randomness. Please refer to the official PyTorch documentation for this.
-
-
-        :param index: index of the sample to return.
-        :type index: int
-
-        :return: Empty ``DataDict``, having the same key as ``self.data_definitions``.
-
-        """
-        return DataDict({key: None for key in self.data_definitions.keys()})
 
     def worker_init_fn(self, worker_id):
         """
@@ -232,15 +153,6 @@ class Problem(Component, Dataset):
         # https://discuss.pytorch.org/t/dataloader-multiple-workers-and-keyboardinterrupt/9740/2
         signal.signal(signal.SIGINT, signal.SIG_IGN)
 
-    def get_data_definitions(self):
-        """
-        Getter for the data_definitions dict so that it can be accessed by a ``worker`` to establish handshaking with
-        the :py:class:`ptp.models.Model` class.
-
-        :return: self.data_definitions()
-
-        """
-        return self.data_definitions
 
     def add_statistics(self, stat_col):
         """
@@ -256,7 +168,8 @@ class Problem(Component, Dataset):
 
         """
         pass
-        
+
+
     def collect_statistics(self, stat_col, data_dict, logits):
         """
         Base statistics collection.
@@ -278,6 +191,7 @@ class Problem(Component, Dataset):
         """
         pass
 
+
     def add_aggregators(self, stat_agg):
         """
         Adds statistical aggregators to :py:class:`ptp.utils.StatisticsAggregator`.
@@ -291,6 +205,7 @@ class Problem(Component, Dataset):
 
         """
         pass
+
 
     def aggregate_statistics(self, stat_col, stat_agg):
         """
@@ -310,6 +225,7 @@ class Problem(Component, Dataset):
 
         """
         pass
+
 
     def initialize_epoch(self, epoch):
         """
@@ -361,6 +277,7 @@ class Problem(Component, Dataset):
         # Save params.
         self.curriculum_params = curriculum_params
 
+
     def curriculum_learning_update_params(self, episode):
         """
         Updates problem parameters according to curriculum learning.
@@ -377,25 +294,3 @@ class Problem(Component, Dataset):
         """
 
         return True
-
-
-if __name__ == '__main__':
-    """Unit test for Problem and DataDict"""
-    from ptp.utils.param_interface import ParamInterface
-
-    params = ParamInterface()
-
-    problem = Problem("test", params)
-    problem.data_definitions = {'inputs': {'size': [-1, -1], 'type': [torch.Tensor]},
-                                'targets': {'size': [-1], 'type': [torch.Tensor]}
-                                }
-    problem.loss_function = torch.nn.CrossEntropyLoss()  # torch.nn.L1Loss, torch.nn.TripletMarginLoss
-
-    datadict = DataDict({key: None for key in problem.data_definitions.keys()})
-
-    # datadict['inputs'] = torch.ones([64, 20, 512]).type(torch.FloatTensor)
-    # datadict['targets'] = torch.ones([64, 20]).type(torch.FloatTensor)
-
-    # print(repr(datadict))
-
-
