@@ -24,7 +24,6 @@ import time
 import sys
 import logging
 
-from ptp.utils.data_dict import DataDict
 from ptp.utils.app_state import AppState
 
 

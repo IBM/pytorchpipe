@@ -18,14 +18,11 @@
 
 __author__ = "Tomasz Kornuta"
 
-import torch
 from collections import namedtuple
-from torch.nn import Module
 
 
 class DataDefinition(namedtuple("DataDefinition", 'dimensions types description')):
     __slots__ = ()
-
 
 
 if __name__ == '__main__':

@@ -19,7 +19,6 @@
 __author__ = "Alexis Asseman, Tomasz Kornuta"
 
 from ptp.utils.singleton import SingletonMetaClass
-from ptp.utils.data_dict import DataDict
 
 
 class AppState(metaclass=SingletonMetaClass):
