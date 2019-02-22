@@ -180,6 +180,17 @@ class ParamRegistry(Mapping, metaclass=MetaSingletonABC):
         """
         return len(self._params)
 
+    def __eq__(self, other):
+        """
+        Check whether two registrys are equal (just for the purpose of compatibility with base Mapping class).
+        """
+        if isinstance(other, self.__class__):
+            # As this is singleton class - the follwing is always True.
+            return self._params == other._params
+        else:
+            return False
+
+            
     def update_dict_recursively(self, current_node, update_node):
         """
         Recursively update the ``current_node`` of the :py:class:`ParamRegistry` with the values of \

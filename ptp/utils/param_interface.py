@@ -162,6 +162,17 @@ class ParamInterface(Mapping):
         """
         return iter(self._lookup())
 
+    def __eq__(self, other):
+        """
+        Check whether two interfaces are equal (just for the purpose of compatibility with base Mapping class).
+        """
+        if isinstance(other, self.__class__):
+
+            return self._param_registry == other._param_registry and self._keys_path == other._keys_path
+        else:
+            return False
+
+            
     def leafs(self):
         """
         Yields the leafs of the current :py:class:`ParamInterface`.
