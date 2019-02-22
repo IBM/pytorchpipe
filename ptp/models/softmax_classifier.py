@@ -18,8 +18,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from ptp.utils.component import Component
-from ptp.utils.data_definition import DataDefinition
+from ptp.core_types.component import Component
+from ptp.core_types.data_definition import DataDefinition
 
 
 class SoftmaxClassifier(nn.Module, Component): 

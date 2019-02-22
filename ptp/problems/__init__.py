@@ -1,9 +1,8 @@
-# Other imports.
-#from .problem import Problem
-#from .problem_factory import ProblemFactory
-#from .language_identification import Problem
+from .dummy_language_identification import DummyLanguageIdentification
+from .language_identification import LanguageIdentification
+#from .willy_language_identification import 
 
-#__all__ = [
-#    'Problem',
-#    'ProblemFactory'
-#    ]
+__all__ = [
+    'DummyLanguageIdentification',
+    'LanguageIdentification'
+    ]

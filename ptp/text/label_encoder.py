@@ -15,7 +15,7 @@
 __author__ = "Tomasz Kornuta"
 
 from ptp.text.token_encoder import TokenEncoder
-from ptp.utils.data_definition import DataDefinition
+from ptp.core_types.data_definition import DataDefinition
 
 
 class LabelEncoder(TokenEncoder):

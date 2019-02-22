@@ -20,8 +20,8 @@ __author__ = "Tomasz Kornuta"
 import unittest
 from unittest.mock import patch
 
-from ptp.utils.component import Component
-from ptp.utils.data_definition import DataDefinition
+from ptp.core_types.component import Component
+from ptp.core_types.data_definition import DataDefinition
 from ptp.utils.param_interface import ParamInterface
 
 

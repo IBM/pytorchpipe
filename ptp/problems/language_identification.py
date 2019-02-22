@@ -16,8 +16,8 @@ __author__ = "Tomasz Kornuta"
 
 import os
 
-from ptp.utils.problem import Problem
-from ptp.utils.data_definition import DataDefinition
+from ptp.core_types.problem import Problem
+from ptp.core_types.data_definition import DataDefinition
 
 
 class LanguageIdentification(Problem):

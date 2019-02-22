@@ -16,9 +16,9 @@ __author__ = "Tomasz Kornuta"
 
 import unittest
 
-from ptp.utils.data_definition import DataDefinition
+from ptp.core_types.problem import Problem
+from ptp.core_types.data_definition import DataDefinition
 from ptp.utils.param_interface import ParamInterface
-from ptp.utils.problem import Problem
 
 
 class MockupProblem (Problem):

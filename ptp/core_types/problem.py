@@ -22,8 +22,8 @@ import torch
 import numpy as np
 from torch.utils.data import Dataset
 
-from ptp.utils.data_dict import DataDict
-from ptp.utils.component import Component
+from ptp.core_types.component import Component
+from ptp.core_types.data_dict import DataDict
 
 
 class Problem(Component, Dataset):
