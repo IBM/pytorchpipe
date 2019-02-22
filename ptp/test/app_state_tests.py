@@ -48,4 +48,3 @@ class TestAppState(unittest.TestCase):
         """ Tests whether you can overwrite existing key. """
         with self.assertRaises(KeyError):
             AppState()["global1"] = 2
-

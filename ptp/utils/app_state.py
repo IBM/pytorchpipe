@@ -23,7 +23,20 @@ from ptp.utils.singleton import SingletonMetaClass
 
 class AppState(metaclass=SingletonMetaClass):
     """
-    Represents the application state. For now, really naive, only visualization.
+    Represents the application state. A singleton that can be accessed by calling:
+
+        >>> app_state = AppState()
+
+    Contains global variables that can be accessed with standard setted/getter methods:
+
+        >>> app_state["test1"] = 1 
+        >>> app_state["test2"] = 2
+        >>> print(app_state["test1"])
+
+    .. warning::
+        It is assumed that global variables are immutable, i.e. once a variable is set, it cannot be changed        
+
+            >>> app_state["test1"] = 3 # Raises AtributeError
     """
 
     def __init__(self):
@@ -70,15 +83,3 @@ class AppState(metaclass=SingletonMetaClass):
             raise KeyError(msg)
         else:
             return self.__globals[key]
-
-
-if __name__ == '__main__':
-
-    app_state = AppState()
-
-    app_state["test1"] = 1 
-    app_state["test2"] = 2
-
-    print(app_state["test1"])
-
-    #print(repr(app_state.__globals))
