@@ -23,12 +23,3 @@ from collections import namedtuple
 
 class DataDefinition(namedtuple("DataDefinition", 'dimensions types description')):
     __slots__ = ()
-
-
-if __name__ == '__main__':
-    dd = DataDefinition([1], [int], "Value (scalar)")
-    print(dd.dimensions)
-    print(dd.types)
-    print(dd.description)
-    
-    #dd.description = 'new desc' # Error
