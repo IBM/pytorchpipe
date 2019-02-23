@@ -22,6 +22,7 @@ import os.path
 import logging
 import inspect
 
+import ptp
 from ptp.utils.io_utils import get_project_root
 
 
@@ -67,8 +68,8 @@ class Pipeline(object):
             # Expand.
             sections_to_skip = [*sections_to_skip, *self.params["skip"].split(",")]
 
-        for c_key, c_params in self.params.iteritems():
-            # Section "key" will be used as "component" name.
+        for c_key, c_params in self.params.items():
+            # The section "key" will be used as "component" name.
 
             # Skip "special" sections.
             if c_key in sections_to_skip:
@@ -92,7 +93,7 @@ class Pipeline(object):
                 class_obj = getattr(ptp, c_type)
 
             # Instantiate component.
-            component = class_obj(c_params)
+            component = class_obj(c_key, c_params)
             #print( isinstance(c_type, types.ClassType) )
 
             self.components.append(component)

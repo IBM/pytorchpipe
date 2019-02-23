@@ -19,14 +19,22 @@ __author__ = "Tomasz Kornuta"
 import unittest
 
 import ptp
-from ptp.utils.pipeline import Pipeline
+
 from ptp.utils.param_interface import ParamInterface
+from ptp.utils.app_state import AppState
+from ptp.utils.pipeline import Pipeline
 
 class TestPipeline(unittest.TestCase):
 
+    def __init__(self, *args, **kwargs):
+        super(TestPipeline, self).__init__(*args, **kwargs)
+        # Set required globals.
+        app_state = AppState()
+        app_state.__setitem__("input_size", 10, override=True)
+ 
     def test_create_component_full_type(self):
-        """ Tests whether component can be created when using full module 'path' """
-
+        """ Tests whether component can be created when using full module name with 'path'. """
+        # Instantiate.
         params = ParamInterface()
         params.add_default_params({
             'bow_encoders' : 
@@ -34,21 +42,31 @@ class TestPipeline(unittest.TestCase):
                     'type': 'ptp.text.bow_encoder.BOWEncoder'
                 }
             })
-
+        # Build object.
         pipe = Pipeline(params)
         pipe.build()
-        print(pipe.components[0])
+
+        # Assert type.
+        self.assertEqual(type(pipe.components[0]).__name__, "BOWEncoder")
+
 
     def test_create_component_type(self):
-        import ptp
-        #c_name = "ptp.text.bow_encoder.BOWEncoder"
-        c_name = "BOWEncoder"
+        """ Tests whether component can be created when using only module name. """
+        # Instantiate.
+        params = ParamInterface()
+        params.add_default_params({
+            'bow_encoders' : 
+                {
+                    'type': 'BOWEncoder'
+                }
+            })
+        # Build object.
+        pipe = Pipeline(params)
+        pipe.build()
 
-        if c_name.find("ptp.") != -1:
-            # Try to evaluate it directly.
-            class_obj = eval(c_name)
-        else:
-            # Try to find it in the main "ptp" namespace.
-            class_obj = getattr(ptp, c_name)
+        # Assert type.
+        self.assertEqual(type(pipe.components[0]).__name__, "BOWEncoder")
 
-        print(class_obj)
+
+if __name__ == "__main__":
+    unittest.main()

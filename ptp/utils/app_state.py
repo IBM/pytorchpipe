@@ -51,7 +51,7 @@ class AppState(metaclass=SingletonMetaClass):
         self.__globals = dict()
 
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key, value, override=False):
         """
         Adds global variable. 
 
@@ -59,11 +59,14 @@ class AppState(metaclass=SingletonMetaClass):
 
         :param value: Associated value.
 
+        :param override: Indicate whether or not it is authorized to override the existing key.\
+        Default: ``False``.
+        :type override: bool
 
         .. warning::
             Once global variable is set, its value cannot be changed (it becomes immutable).
         """
-        if key in self.__globals.keys():
+        if not override and key in self.__globals.keys():
             msg = 'Cannot add or modify key "{}" as it is already present in global variables'.format(key)
             raise KeyError(msg)
         else:
