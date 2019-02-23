@@ -15,8 +15,13 @@
 __author__ = "Tomasz Kornuta"
 
 import os
+import sys
+import time
 import errno
 import csv
+import urllib
+from pathlib import Path
+
 
 
 def save_list_to_txt_file(folder, filename, data):
@@ -104,3 +109,57 @@ def save_dict_to_csv_file(folder, filename, word_to_ix, fieldnames = []):
         for (k,v) in word_to_ix.items():
             #print("{} : {}".format(k,v))
             writer.writerow({fieldnames[0]:k, fieldnames[1]: v})
+
+
+def get_project_root() -> Path:
+    """
+    Returns project root folder.
+    """
+    return Path(__file__).parent.parent
+
+
+
+# Function to make check and download easier
+def check_and_download(file_folder_to_check, url=None, download_name='~/data/downloaded'):
+    """
+    Checks whether a file or folder exists at given path (relative to storage folder), \
+    otherwise downloads files from the given URL.
+
+    :param file_folder_to_check: Relative path to a file or folder to check to see if it exists.
+    :type file_folder_to_check: str
+
+    :param url: URL to download files from.
+    :type url: str
+
+    :param download_name: What to name the downloaded file. (DEFAULT: "downloaded").
+    :type download_name: str
+
+    :return: False if file was found, True if a download was necessary.
+
+    """
+
+    file_folder_to_check = os.path.expanduser(file_folder_to_check)
+    if not (os.path.isfile(file_folder_to_check) or os.path.isdir(file_folder_to_check)):
+        if url is not None:
+            #self.logger.info('Downloading {}'.format(url))
+            urllib.request.urlretrieve(url, os.path.expanduser(download_name), reporthook)
+            return True
+        else:
+            return True
+    else:
+        #self.logger.info('Dataset found at {}'.format(file_folder_to_check))
+        return False
+
+# Progress bar function
+def reporthook(count, block_size, total_size):
+    global start_time
+    if count == 0:
+            start_time = time.time()
+            return
+    duration = time.time() - start_time
+    progress_size = int(count * block_size)
+    speed = int(progress_size / (1024 * duration))
+    percent = int(count * block_size * 100 / total_size)
+    sys.stdout.write("\r...%d%%, %d MB, %d KB/s, %d seconds passed" %
+                     (percent, progress_size / (1024 * 1024), speed, duration))
+    sys.stdout.flush()

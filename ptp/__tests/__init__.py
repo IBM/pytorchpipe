@@ -2,6 +2,7 @@ from .app_state_tests import TestAppState
 from .data_dict_tests import TestDataDict
 from .data_definition_tests import TestDataDefinition
 from .handshaking_tests import TestHandshaking
+from .pipeline_tests import TestPipeline
 from .problem_tests import TestProblem
 
 __all__ = [
@@ -9,5 +10,6 @@ __all__ = [
     'TestDataDict',
     'TestDataDefinition',
     'TestHandshaking',
+    'TestPipeline',
     'TestProblem'
     ]

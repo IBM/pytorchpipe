@@ -69,11 +69,21 @@ class ParamRegistry(Mapping, metaclass=MetaSingletonABC):
         super(ParamRegistry, self).__init__()
         # Default parameters set in the code.
 
+        self._clear_registry()
+
+    def _clear_registry(self):
+        """
+        Removes the content of the registry
+
+        .. warning::
+            Use with caution!
+        """
         self._default_params = {}
         # Parameters read from configuration files.
         self._superseding_config_params = {}
         # Resulting parameters.
-        self._params = dict()
+        self._params = {}
+
 
     def _update_params(self):
         """

@@ -19,7 +19,7 @@ python: 3.6
 branches:
   only:
     - master
-    - develop
+#    - develop
 
 #install:
 #  - pip3 install -r requirements.txt

@@ -17,11 +17,10 @@ __author__ = "Tomasz Kornuta"
 import torch
 import torch.nn as nn
 
-from ptp.core_types.component import Component
-from ptp.core_types.data_definition import DataDefinition
+from ptp.core_types.loss import Loss
 
 
-class NLLLoss(Component):
+class NLLLoss(Loss):
     """
     Component calculating the negative log likelihood loss.
     """
@@ -34,39 +33,10 @@ class NLLLoss(Component):
 
         """
         # Call constructors of parent classes.
-        Component.__init__(self, name, params)
-
-        # Set key mappings.
-        self.key_targets = self.mapkey("targets")
-        self.key_predictions = self.mapkey("predictions")
-        self.key_loss = self.mapkey("loss")
+        Loss.__init__(self, name, params)
 
         # Set loss.
         self.loss_function = nn.NLLLoss()
-
-
-    def input_data_definitions(self):
-        """ 
-        Function returns a dictionary with definitions of input data that are required by the component.
-
-        :return: dictionary containing input data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
-        """
-        return {
-            self.key_targets: DataDefinition([-1, 1], [list, int], "Batch of targets, each represented as index [BATCH_SIZE] x [int]"),
-            self.key_predictions: DataDefinition([-1, -1], [torch.Tensor], "Batch of predictions, represented as tensor with probability distribution over classes [BATCH_SIZE x NUM_CLASSES]")
-            }
-
-
-    def output_data_definitions(self):
-        """ 
-        Function returns a dictionary with definitions of output data produced the component.
-
-        :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
-        """
-        return {
-            self.key_loss: DataDefinition([1], [torch.Tensor], "Loss value (scalar, i.e. 1D tensor)")
-            }
-
 
     def __call__(self, data_dict):
         """
