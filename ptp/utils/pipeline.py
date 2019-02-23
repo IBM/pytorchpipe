@@ -18,12 +18,10 @@
 __author__ = "Tomasz Kornuta"
 
 
-import os.path
 import logging
 import inspect
 
 import ptp
-from ptp.utils.io_utils import get_project_root
 
 
 class Pipeline(object):
@@ -124,7 +122,7 @@ class Pipeline(object):
                     p_inherits = True
                     break
             if p_inherits:
-                if self.problem == None:
+                if self.problem is None:
                     # Perfect!
                     self.problem = component
                     # Do not add it to list of components!

@@ -16,16 +16,13 @@
 
 __author__ = "Tomasz Kornuta & Vincent Marois"
 
-import logging
 import numpy as np
 from datetime import datetime
-from abc import abstractmethod
 
 import torch
 from torch.nn import Module
 
 from ptp.core_types.component import Component
-from ptp.utils.app_state import AppState
 
 
 class Model(Module, Component):

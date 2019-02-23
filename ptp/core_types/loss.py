@@ -16,10 +16,7 @@
 
 __author__ = "Tomasz Kornuta"
 
-import signal
 import torch
-import numpy as np
-from torch.utils.data import Dataset
 
 from ptp.core_types.component import Component
 from ptp.core_types.data_definition import DataDefinition
