@@ -1,44 +1,24 @@
 
+import logging
+
 import torch.optim as optim
 from torch.utils.data import DataLoader
 
-
+from ptp.utils.param_interface import ParamInterface
 from ptp.utils.pipeline import Pipeline
-
-# Problems.
-from ptp.problems.dummy_language_identification import DummyLanguageIdentification
-
-# Sentence encoders.
-from ptp.text.sentence_tokenizer import SentenceTokenizer
-from ptp.text.sentence_encoder import SentenceEncoder
-from ptp.text.bow_encoder import BOWEncoder
-
-# Target encoder.
-from ptp.text.label_encoder import LabelEncoder
-
-# Model.
-from ptp.models.softmax_classifier import SoftmaxClassifier
-
-# Loss.
-from ptp.loss.nll_loss import NLLLoss
-
-# Decoder.
-from ptp.text.word_decoder import WordDecoder
 
 
 
 if __name__ == "__main__":
     """ Tests sequence generator - generates and displays a random sample"""
     # Set logging.
-    import logging
     logging.basicConfig(level=logging.INFO)
 
-    from ptp.utils.param_interface import ParamInterface
     # "Simulate" configuration.
     params = ParamInterface()
     params.add_config_params({
         'problem': {
-            'type': 'LanguageIdentification',
+            'type': 'DummyLanguageIdentification',
             'priority': 1,
             'data_folder': '~/data/language_identification/dummy',
             'use_train_data': True,
@@ -116,63 +96,24 @@ if __name__ == "__main__":
 
     batch_size = 2
 
+    #### Pipeline "configuration" ####
     pipeline = Pipeline(params)
-    pipeline.build()
+    # Build pipeline.
+    errors = pipeline.build()
     print(pipeline.summarize())
 
-    exit(1)
-    #### "Configuration" ####
-    # Create problem.
-    problem  = DummyLanguageIdentification("problem", params["problem"])
+    # Handshake definitions.
+    errors += pipeline.handshake()
 
-    # Input (sentence) encoder.
-    sentence_tokenizer = SentenceTokenizer("sentence_tokenizer", params["sentence_tokenizer"])
-    sentence_encoder = SentenceEncoder("sentence_encoder", params["sentence_encoder"])
-    bow_encoder = BOWEncoder("bow_encoder", params["bow_encoder"])
-
-    # Target encoder.
-    target_encoder = LabelEncoder("label_encoder", params["label_encoder"])
-
-    # Model.
-    model = SoftmaxClassifier("model", params["model"])
-
-    # Loss.
-    loss = NLLLoss("nllloss", params["nllloss"])
-
-    # Decoder.
-    prediction_decoder  = WordDecoder("prediction_decoder", params["prediction_decoder"])
-
-    #### "Handshaking" ####
-    all_definitions = problem.output_data_definitions()
-    #print(all_definitions)
-    errors = 0
-
-    errors += sentence_tokenizer.handshake_input_definitions(all_definitions)
-    errors += sentence_tokenizer.export_output_definitions(all_definitions)
-
-    errors += sentence_encoder.handshake_input_definitions(all_definitions)
-    errors += sentence_encoder.export_output_definitions(all_definitions)
-    
-    errors += bow_encoder.handshake_input_definitions(all_definitions)
-    errors += bow_encoder.export_output_definitions(all_definitions)
-
-    errors += target_encoder.handshake_input_definitions(all_definitions)
-    errors += target_encoder.export_output_definitions(all_definitions)
-
-    errors += model.handshake_input_definitions(all_definitions)
-    errors += model.export_output_definitions(all_definitions)
-
-    errors += loss.handshake_input_definitions(all_definitions)
-    errors += loss.export_output_definitions(all_definitions)
-
-    errors += prediction_decoder.handshake_input_definitions(all_definitions)
-    errors += prediction_decoder.export_output_definitions(all_definitions)
-
+    # Check errors.
     if errors > 0:
         exit(1)
+
+    # Get problem, model and loss.
+    problem  = pipeline.problem
+    model = pipeline.models[0]
+    loss = pipeline.losses[0]
     
-    # Log final definition.
-    print("Final, handskaked definitions of DataDict used in pipeline: \n{}\n".format(all_definitions))
 
     # Construct dataloader.
     dataloader = DataLoader(dataset=problem, collate_fn=problem.collate_fn,
@@ -189,22 +130,8 @@ if __name__ == "__main__":
             # We need to clear them out before each instance
             model.zero_grad()
 
-            # Input (sentence) encoder.
-            sentence_tokenizer(batch)
-            sentence_encoder(batch)
-            bow_encoder(batch)
-
-            # Target encoder.
-            target_encoder(batch)
-
-            # Model.
-            model(batch)
-
-            # Loss.
-            loss(batch)
-
-            # Decoder.
-            prediction_decoder(batch)
+            # Process batch.
+            pipeline(batch)
 
             print("sequences: {} \t\t targets: {}  ->  predictions: {}".format(batch["sentences"], batch["languages"], batch["predicted_labels"]))
 
@@ -217,4 +144,4 @@ if __name__ == "__main__":
             optimizer.step()
 
     # Print last batch.
-    print(batch)
+    # print(batch)

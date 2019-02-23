@@ -175,7 +175,7 @@ class Component(abc.ABC):
         Method responsible for processing the data dict.
         Abstract, must be implemented by all derived classes.
 
-        :param data_dict: :py:class:`ptp.utils.DataDict` object containing both input data to be proces and that will be extended by the results.
+        :param data_dict: :py:class:`ptp.utils.DataDict` object containing both input data to be processed and that will be extended by the results.
         """
         pass
 

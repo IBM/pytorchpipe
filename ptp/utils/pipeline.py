@@ -256,3 +256,49 @@ class Pipeline(object):
         summary_str += '=' * 80 + '\n'
 
         return summary_str
+
+    def handshake(self, log=True):
+        """
+        Performs handshaking of inputs and outputs definitions of all components in the pipeline.
+
+        :param log: Logs the detected errors and info (DEFAULT: TRUE)
+
+        :return: Number of detected errors.
+        """
+        errors = 0
+        # Get initial definitions from problem.
+        all_definitions = self.problem.output_data_definitions()
+        #print(all_definitions)
+
+        for prio in self.__priorities:
+            # Get component
+            comp = self.__components[prio]
+            # Handshake inputs and outputs.
+            errors += comp.handshake_input_definitions(all_definitions, log)
+            errors += comp.export_output_definitions(all_definitions, log)
+
+        # Log final definition.
+        if errors == 0 and log:
+            self.logger.info("Handshake successfull")
+            def_str = "Final definition of DataDict used in pipeline:"
+            def_str += '\n' + '='*80 + '\n'
+            def_str += '{}'.format(all_definitions)
+            def_str += '\n' + '='*80 + '\n'
+            self.logger.info(def_str)
+
+        return errors
+
+    def __call__(self, data_dict):
+        """
+        Method responsible for processing the data dict, using all components in the components queue.
+
+        :param data_dict: :py:class:`ptp.utils.DataDict` object containing both input data to be processed and that will be extended by the results.
+
+        """
+
+        for prio in self.__priorities:
+            # Get component
+            comp = self.__components[prio]
+            # Forward step.
+            comp(data_dict)
+
