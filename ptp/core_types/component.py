@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) IBM Corporation 2019
@@ -168,6 +167,7 @@ class Component(abc.ABC):
         :return: Mapped name or original key name (if it does not exist in mappings list).
         """
         return self.keymappings.get(key_name, key_name)
+
 
     @abc.abstractmethod
     def __call__(self, data_dict):

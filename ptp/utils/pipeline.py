@@ -46,24 +46,32 @@ class Pipeline(object):
         # Set initial values of all pipeline elements.
         # Single problem.
         self.problem = None
-        # Empty list of all components.
-        self.components = []
+        # Empty list of all components, sorted by their priorities.
+        self.__components = {}
         # Empty list of all models - it will contain only "references" to objects stored in the components list.
         self.models = []
         # Empty list of all losses - it will contain only "references" to objects stored in the components list.
         self.losses = []
+        # Empty list of all loss keys. Those keys will be used to find objects that will be roots for backpropagation of gradients.
+        #self.loss_keys = []
 
 
-    def build(self):
+    def build(self, log_errors=True):
         """
-        Static method creating pipeline:
-            - list components ordered by the priority.
+        Method creating the pipeline, consisting of:
+            - a list components ordered by the priority (dictionary).
             - problem (as a separate "link" to object in the list of components, instance of a class derrived from Problem class)
-            - models (separate list )
+            - models (separate list with link to objects in components dict)
+            - losses (selarate list with links to objects in components dict)
 
+        :param log_errors: Logs the detected errors (DEFAULT: TRUE)
+
+        :return: number of detected errors.
         """
+        errors = 0
+
         # Check "skip" section.
-        sections_to_skip = "optimizer gradient_clipping terminal_conditions seed_torch seed_numpy".split()
+        sections_to_skip = "skip optimizer gradient_clipping terminal_conditions seed_torch seed_numpy".split()
         if "skip" in self.params:
             # Expand.
             sections_to_skip = [*sections_to_skip, *self.params["skip"].split(",")]
@@ -76,10 +84,12 @@ class Pipeline(object):
                 self.logger.info("Skipping section {}".format(c_key))
                 continue
     
-            # Check presence of the type.
+            # Check presence of type.
             if 'type' not in c_params:
-                self.logger.error("Section {} does not contain the key 'type' defining the component type".format(c_key))
-                exit(-1)
+                if log_errors:
+                    self.logger.error("Section {} does not contain the key 'type' defining the component type".format(c_key))
+                errors += 1
+                continue
 
             # Get the class type.
             c_type = c_params["type"]
@@ -99,12 +109,13 @@ class Pipeline(object):
                     c_inherits = True
                     break
             if not c_inherits:
-                self.logger.warning("The specified class '{}' is not derived from the Component class".format(c_type))
+                if log_errors:
+                    self.logger.warning("The specified class '{}' is not derived from the Component class".format(c_type))
+                errors += 1
                 continue
 
             # Instantiate component.
             component = class_obj(c_key, c_params)
-            self.components.append(component)
 
             # Check if class is derived (even indirectly) from Problem.
             p_inherits = False
@@ -116,11 +127,41 @@ class Pipeline(object):
                 if self.problem == None:
                     # Perfect!
                     self.problem = component
+                    # Do not add it to list of components!
+                    continue
                 else:
                     # Oo, two problems?
-                    self.logger.error("Pipeline cannot contain more than one problem !(here: {}, {})".format(
-                        type(self.problem).__name__, c_type))
-                    exit(1)
+                    if log_errors:
+                        self.logger.error("Pipeline definition contains more than one problem! (here: {}, {})".format(
+                            self.problem.name, c_key))
+                    errors += 1
+                    continue
+
+            # Check presence of priority.
+            if 'priority' not in c_params:
+                if log_errors:
+                    self.logger.error("Section {} does not contain the key 'priority' defining the pipeline order".format(c_key))
+                errors += 1
+                continue
+
+            # Get the priority.
+            try:
+                c_priority = float(c_params["priority"])
+            except ValueError:
+                if log_errors:
+                    self.logger.error("Priority {} in section {} is not a floating point number".format(c_params["priority"], c_key))
+                errors += 1
+                continue
+
+            # Check uniqueness of the priority.
+            if c_priority in self.__components.keys():
+                if log_errors:
+                    self.logger.error("Found more than one component with the same priority ({})".format(c_priority))
+                errors += 1
+                continue
+
+            # Add it to dict.
+            self.__components[c_priority] = component
 
             # Check if class is derived (even indirectly) from Model.
             m_inherits = False
@@ -132,5 +173,43 @@ class Pipeline(object):
                 # Add to list.
                 self.models.append(component)
 
-        # Returns problem!
-        return self.problem
+            # Check if class is derived (even indirectly) from Loss.
+            l_inherits = False
+            for c in inspect.getmro(class_obj):
+                if c.__name__ == ptp.Loss.__name__:
+                    l_inherits = True
+                    break
+            if l_inherits:
+                # Add to list.
+                self.losses.append(component)
+
+        # List of priorities.
+        self.__priorities=sorted(self.__components.keys())        
+
+        # Return detected errors.
+        return errors
+
+
+    def __getitem__(self, number):
+        """
+        Returns the component, using the enumeration resulting from priorities.
+
+        :param number: Number of the component in the pipeline.
+        :type key: str
+
+        :return: object of type :py:class:`Component`.
+
+        """
+        return self.__components[self.__priorities[number]]
+
+
+    def __len__(self):
+        """
+        Returns the number of objects in the pipeline (all components + 1 for problem)
+        :return: Length of the :py:class:`Pipeline`.
+
+        """
+        length = len(self.__priorities) 
+        if self.problem is not None:
+            length += 1
+        return length

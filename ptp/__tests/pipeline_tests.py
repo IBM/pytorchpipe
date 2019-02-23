@@ -18,9 +18,8 @@ __author__ = "Tomasz Kornuta"
 
 import unittest
 
-import ptp
-
 from ptp.utils.param_interface import ParamInterface
+from ptp.utils.param_registry import ParamRegistry
 from ptp.utils.app_state import AppState
 from ptp.utils.pipeline import Pipeline
 
@@ -31,15 +30,18 @@ class TestPipeline(unittest.TestCase):
         # Set required globals.
         app_state = AppState()
         app_state.__setitem__("input_size", 10, override=True)
+        
  
     def test_create_component_full_type(self):
         """ Tests whether component can be created when using full module name with 'path'. """
         # Instantiate.
+        ParamRegistry()._clear_registry()
         params = ParamInterface()
         params.add_default_params({
-            'bow_encoders' : 
+            'bow_encoder' : 
                 {
-                    'type': 'ptp.text.bow_encoder.BOWEncoder'
+                    'type': 'ptp.text.bow_encoder.BOWEncoder',
+                    'priority': 1.1
                 }
             })
         # Build object.
@@ -47,17 +49,19 @@ class TestPipeline(unittest.TestCase):
         pipe.build()
 
         # Assert type.
-        self.assertEqual(type(pipe.components[0]).__name__, "BOWEncoder")
+        self.assertEqual(type(pipe[0]).__name__, "BOWEncoder")
 
 
     def test_create_component_type(self):
         """ Tests whether component can be created when using only module name. """
         # Instantiate.
+        ParamRegistry()._clear_registry()
         params = ParamInterface()
         params.add_default_params({
-            'bow_encoders' : 
+            'bow_encoder' : 
                 {
-                    'type': 'BOWEncoder'
+                    'type': 'BOWEncoder',
+                    'priority': 1.2
                 }
             })
         # Build object.
@@ -65,8 +69,56 @@ class TestPipeline(unittest.TestCase):
         pipe.build()
 
         # Assert type.
-        self.assertEqual(type(pipe.components[0]).__name__, "BOWEncoder")
+        self.assertEqual(type(pipe[0]).__name__, "BOWEncoder")
 
 
-if __name__ == "__main__":
-    unittest.main()
+    def test_skip_section(self):
+        """ Tests whether skipping works properly. """
+        # Set param registry.
+        ParamRegistry()._clear_registry()
+        params = ParamInterface()
+        params.add_default_params({
+            'skip': 'bow_encoder',
+            'bow_encoder' : 
+                {
+                    'type': 'BOWEncoder',
+                    'priority': 1
+                }
+            })
+        # Build object.
+        pipe = Pipeline(params)
+        pipe.build()
+
+        # Assert no components were created.
+        self.assertEqual(len(pipe), 0)
+
+
+    def test_priorities(self):
+        """ Tests component priorities. """
+        # Instantiate.
+        ParamRegistry()._clear_registry()
+        params = ParamInterface()
+        params.add_default_params({
+            'bow_encoder2' : 
+                {
+                    'type': 'BOWEncoder',
+                    'priority': 2.1
+                },
+            'bow_encoder1' : 
+                {
+                    'type': 'BOWEncoder',
+                    'priority': 0.1
+                }
+            })
+        # Build object.
+        pipe = Pipeline(params)
+        pipe.build()
+
+        # Assert the right order of components.
+        self.assertEqual(len(pipe), 2)
+        self.assertEqual(pipe[0].name, 'bow_encoder1')
+        self.assertEqual(pipe[1].name, 'bow_encoder2')
+
+
+#if __name__ == "__main__":
+#    unittest.main()
