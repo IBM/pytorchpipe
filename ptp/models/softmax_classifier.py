@@ -18,11 +18,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from ptp.core_types.component import Component
+from ptp.core_types.model import Model
 from ptp.core_types.data_definition import DataDefinition
 
 
-class SoftmaxClassifier(nn.Module, Component): 
+class SoftmaxClassifier(Model): 
     """
     Simple Classifier consisting of fully connected layer with log softmax non-linearity.
     """
@@ -33,8 +33,8 @@ class SoftmaxClassifier(nn.Module, Component):
         :param params: Dictionary of parameters (read from configuration ``.yaml`` file).
         """
         # Call constructors of parent classes.
-        Component.__init__(self, name, params)
-        nn.Module.__init__(self)
+        #super(Model, self).__init__(name, params))
+        Model.__init__(self, name, params)
 
         # Set key mappings.
         self.key_inputs = self.mapkey("inputs")

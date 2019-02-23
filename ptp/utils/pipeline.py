@@ -92,43 +92,45 @@ class Pipeline(object):
                 # Try to find it in the main "ptp" namespace.
                 class_obj = getattr(ptp, c_type)
 
+            # Check if class is derived (even indirectly) from Component.
+            c_inherits = False
+            for c in inspect.getmro(class_obj):
+                if c.__name__ == ptp.Component.__name__:
+                    c_inherits = True
+                    break
+            if not c_inherits:
+                self.logger.warning("The specified class '{}' is not derived from the Component class".format(c_type))
+                continue
+
             # Instantiate component.
             component = class_obj(c_key, c_params)
-            #print( isinstance(c_type, types.ClassType) )
-
             self.components.append(component)
 
+            # Check if class is derived (even indirectly) from Problem.
+            p_inherits = False
+            for c in inspect.getmro(class_obj):
+                if c.__name__ == ptp.Problem.__name__:
+                    p_inherits = True
+                    break
+            if p_inherits:
+                if self.problem == None:
+                    # Perfect!
+                    self.problem = component
+                else:
+                    # Oo, two problems?
+                    self.logger.error("Pipeline cannot contain more than one problem !(here: {}, {})".format(
+                        type(self.problem).__name__, c_type))
+                    exit(1)
+
+            # Check if class is derived (even indirectly) from Model.
+            m_inherits = False
+            for c in inspect.getmro(class_obj):
+                if c.__name__ == ptp.Model.__name__:
+                    m_inherits = True
+                    break
+            if m_inherits:
+                # Add to list.
+                self.models.append(component)
+
         # Returns problem!
-        return None
-
-#class BOWEncoder(object):
-#    pass
-
-if __name__ == "__main__":
-    #from miprometheus.utils.param_interface import ParamInterface
-    #params = ParamInterface()
-    #params.add_default_params({
-    #    'encoders' : [ # LIST!
-    #        {
-    #            'name': 'Encoder1'
-    #        },{
-    #            'name': 'Encoder2'
-    #        }
-    #        ]
-    #    })
-    #encoders = EncoderFactory.build(params)
-    #for encoder in encoders:
-    #    print(type(encoder))
-
-    import ptp
-    #c_name = "ptp.text.bow_encoder.BOWEncoder"
-    c_name = "BOWEncoder"
-
-    if c_name.find("ptp.") != -1:
-        # Try to evaluate it directly.
-        class_obj = eval(c_name)
-    else:
-        # Try to find it in the main "ptp" namespace.
-        class_obj = getattr(ptp, c_name)
-
-    print(class_obj)
+        return self.problem

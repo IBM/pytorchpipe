@@ -41,12 +41,11 @@ class Problem(Component, Dataset):
         """
         Initializes problem object.
 
-        :param params: Dictionary of parameters (read from the configuration ``.yaml`` file).
-        :type params: :py:class:`ptp.utils.ParamInterface`
-
         :param name: Problem name.
         :type name: str
 
+        :param params: Dictionary of parameters (read from the configuration ``.yaml`` file).
+        :type params: :py:class:`ptp.utils.ParamInterface`
 
         .. note::
 
@@ -152,79 +151,6 @@ class Problem(Component, Dataset):
         # Ignores SIGINT signal - what enables "nice" termination of dataloader worker threads.
         # https://discuss.pytorch.org/t/dataloader-multiple-workers-and-keyboardinterrupt/9740/2
         signal.signal(signal.SIGINT, signal.SIG_IGN)
-
-
-    def add_statistics(self, stat_col):
-        """
-        Adds statistics to :py:class:`ptp.utils.StatisticsCollector`.
-
-        .. note::
-
-
-            Empty - To be redefined in inheriting classes.
-
-
-        :param stat_col: :py:class:`ptp.utils.StatisticsCollector`.
-
-        """
-        pass
-
-
-    def collect_statistics(self, stat_col, data_dict, logits):
-        """
-        Base statistics collection.
-
-         .. note::
-
-
-            Empty - To be redefined in inheriting classes. The user has to ensure that the corresponding entry \
-            in the :py:class:`ptp.utils.StatisticsCollector` has been created with \
-            :py:func:`add_statistics` beforehand.
-
-        :param stat_col: :py:class:`ptp.utils.StatisticsCollector`.
-
-        :param data_dict: ``DataDict`` containing inputs and targets.
-        :type data_dict: :py:class:`ptp.utils.DataDict`
-
-        :param logits: Predictions being output of the model (:py:class:`torch.Tensor`).
-
-        """
-        pass
-
-
-    def add_aggregators(self, stat_agg):
-        """
-        Adds statistical aggregators to :py:class:`ptp.utils.StatisticsAggregator`.
-
-        .. note::
-
-            Empty - To be redefined in inheriting classes.
-
-
-        :param stat_agg: :py:class:`ptp.utils.StatisticsAggregator`.
-
-        """
-        pass
-
-
-    def aggregate_statistics(self, stat_col, stat_agg):
-        """
-        Aggregates the statistics collected by :py:class:`ptp.utils.StatisticsCollector` and adds the \
-        results to :py:class:`ptp.utils.StatisticsAggregator`.
-
-         .. note::
-
-            Empty - To be redefined in inheriting classes.
-            The user can override this function in subclasses but should call \
-            :py:func:`aggregate_statistics` to collect basic statistical aggregators (if set).
-
-
-        :param stat_col: :py:class:`ptp.utils.StatisticsCollector`.
-
-        :param stat_agg: :py:class:`ptp.utils.StatisticsAggregator`.
-
-        """
-        pass
 
 
     def initialize_epoch(self, epoch):

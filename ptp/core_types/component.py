@@ -17,11 +17,7 @@
 
 __author__ = "Tomasz Kornuta"
 
-import os
 import abc
-import urllib
-import time
-import sys
 import logging
 
 from ptp.utils.app_state import AppState
@@ -183,47 +179,75 @@ class Component(abc.ABC):
         """
         pass
 
-    # Function to make check and download easier
-    def check_and_download(self, file_folder_to_check, url=None, download_name='~/data/downloaded'):
+
+    def add_statistics(self, stat_col):
         """
-        Checks whether a file or folder exists at given path (relative to storage folder), \
-        otherwise downloads files from the given URL.
+        Adds statistics to :py:class:`ptp.utils.StatisticsCollector`.
 
-        :param file_folder_to_check: Relative path to a file or folder to check to see if it exists.
-        :type file_folder_to_check: str
+        .. note::
 
-        :param url: URL to download files from.
-        :type url: str
 
-        :param download_name: What to name the downloaded file. (DEFAULT: "downloaded").
-        :type download_name: str
+            Empty - To be redefined in inheriting classes.
 
-        :return: False if file was found, True if a download was necessary.
+
+        :param stat_col: :py:class:`ptp.utils.StatisticsCollector`.
 
         """
+        pass
 
-        file_folder_to_check = os.path.expanduser(file_folder_to_check)
-        if not (os.path.isfile(file_folder_to_check) or os.path.isdir(file_folder_to_check)):
-            if url is not None:
-                self.logger.info('Downloading {}'.format(url))
-                urllib.request.urlretrieve(url, os.path.expanduser(download_name), reporthook)
-                return True
-            else:
-                return True
-        else:
-            self.logger.info('Dataset found at {}'.format(file_folder_to_check))
-            return False
 
-# Progress bar function
-def reporthook(count, block_size, total_size):
-    global start_time
-    if count == 0:
-            start_time = time.time()
-            return
-    duration = time.time() - start_time
-    progress_size = int(count * block_size)
-    speed = int(progress_size / (1024 * duration))
-    percent = int(count * block_size * 100 / total_size)
-    sys.stdout.write("\r...%d%%, %d MB, %d KB/s, %d seconds passed" %
-                     (percent, progress_size / (1024 * 1024), speed, duration))
-    sys.stdout.flush()
+    def collect_statistics(self, stat_col, data_dict, logits):
+        """
+        Base statistics collection.
+
+         .. note::
+
+
+            Empty - To be redefined in inheriting classes. The user has to ensure that the corresponding entry \
+            in the :py:class:`ptp.utils.StatisticsCollector` has been created with \
+            :py:func:`add_statistics` beforehand.
+
+        :param stat_col: :py:class:`ptp.utils.StatisticsCollector`.
+
+        :param data_dict: ``DataDict`` containing inputs and targets.
+        :type data_dict: :py:class:`ptp.utils.DataDict`
+
+        :param logits: Predictions being output of the model (:py:class:`torch.Tensor`).
+
+        """
+        pass
+
+
+    def add_aggregators(self, stat_agg):
+        """
+        Adds statistical aggregators to :py:class:`ptp.utils.StatisticsAggregator`.
+
+        .. note::
+
+            Empty - To be redefined in inheriting classes.
+
+
+        :param stat_agg: :py:class:`ptp.utils.StatisticsAggregator`.
+
+        """
+        pass
+
+
+    def aggregate_statistics(self, stat_col, stat_agg):
+        """
+        Aggregates the statistics collected by :py:class:`ptp.utils.StatisticsCollector` and adds the \
+        results to :py:class:`ptp.utils.StatisticsAggregator`.
+
+         .. note::
+
+            Empty - To be redefined in inheriting classes.
+            The user can override this function in subclasses but should call \
+            :py:func:`aggregate_statistics` to collect basic statistical aggregators (if set).
+
+
+        :param stat_col: :py:class:`ptp.utils.StatisticsCollector`.
+
+        :param stat_agg: :py:class:`ptp.utils.StatisticsAggregator`.
+
+        """
+        pass
