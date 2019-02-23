@@ -67,7 +67,7 @@ class Pipeline(object):
             # Expand.
             sections_to_skip = [*sections_to_skip, *self.params["skip"].split(",")]
 
-        for (c_key, c_params) in self.params:
+        for c_key, c_params in self.params.iteritems():
             # Section "key" will be used as "component" name.
 
             # Skip "special" sections.
@@ -91,11 +91,14 @@ class Pipeline(object):
                 # Try to find it in the main "ptp" namespace.
                 class_obj = getattr(ptp, c_type)
 
+            # Instantiate component.
+            component = class_obj(c_params)
+            #print( isinstance(c_type, types.ClassType) )
 
-            print( isinstance(c_type, types.ClassType) )
+            self.components.append(component)
 
-        # return the list
-        return []
+        # Returns problem!
+        return None
 
 #class BOWEncoder(object):
 #    pass

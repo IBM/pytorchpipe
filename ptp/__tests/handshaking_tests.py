@@ -1,7 +1,6 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) IBM Corporation, tkornuta 2019
+# Copyright (C) tkornuta, IBM Corporation 2019
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,7 +17,6 @@
 __author__ = "Tomasz Kornuta"
 
 import unittest
-from unittest.mock import patch
 
 from ptp.core_types.component import Component
 from ptp.core_types.data_definition import DataDefinition
