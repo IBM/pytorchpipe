@@ -18,7 +18,6 @@ import os
 import ptp.utils.io_utils as io
 
 from ptp.core_types.component import Component
-from ptp.core_types.data_definition import DataDefinition
 
 
 class TokenEncoder(Component):
