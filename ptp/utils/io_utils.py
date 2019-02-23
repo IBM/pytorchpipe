@@ -17,6 +17,8 @@ __author__ = "Tomasz Kornuta"
 import os
 import errno
 import csv
+from pathlib import Path
+
 
 
 def save_list_to_txt_file(folder, filename, data):
@@ -104,3 +106,10 @@ def save_dict_to_csv_file(folder, filename, word_to_ix, fieldnames = []):
         for (k,v) in word_to_ix.items():
             #print("{} : {}".format(k,v))
             writer.writerow({fieldnames[0]:k, fieldnames[1]: v})
+
+
+def get_project_root() -> Path:
+    """
+    Returns project root folder.
+    """
+    return Path(__file__).parent.parent
