@@ -213,3 +213,46 @@ class Pipeline(object):
         if self.problem is not None:
             length += 1
         return length
+
+    def summarize(self):
+        """
+        Summarizes the pipeline by showing all its components (including problem).
+
+        :return: Summary as a str.
+
+        """
+        # add name of the current module
+        summary_str = '\n' + '='*80 + '\n'
+        summary_str += 'Pipeline\n'
+        summary_str += '  + Component name (type) [priority]\n'
+        summary_str += '      Inputs:\n' 
+        summary_str += '        key: dims, types, description\n'
+        summary_str += '      Outputs:\n' 
+        summary_str += '        key: dims, types, description\n'
+        summary_str += '=' * 80 + '\n'
+
+        # Print problem.
+        if self.problem is None:
+            summary_str += "  + Problem (None) [-1]:\n"
+        else:
+            summary_str += "  + {} ({}) [-1]\n".format(self.problem.name, type(self.problem).__name__)
+            # Get outputs.
+            summary_str += '      Outputs:\n' 
+            for key,value in self.problem.output_data_definitions().items():
+                summary_str += '        {}: {}, {}, {}\n'.format(key, value.dimensions, value.types, value. description)
+
+        for prio in self.__priorities:
+            # Get component
+            comp = self.__components[prio]
+            summary_str += "  + {} {} [{}] \n".format(comp.name, type(comp).__name__, prio)
+            # Get inputs
+            summary_str += '      Inputs:\n' 
+            for key,value in comp.input_data_definitions().items():
+                summary_str += '        {}: {}, {}, {}\n'.format(key, value.dimensions, value.types, value. description)
+            # Get outputs.
+            summary_str += '      Outputs:\n' 
+            for key,value in comp.output_data_definitions().items():
+                summary_str += '        {}: {}, {}, {}\n'.format(key, value.dimensions, value.types, value. description)
+        summary_str += '=' * 80 + '\n'
+
+        return summary_str

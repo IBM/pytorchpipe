@@ -4,6 +4,7 @@ from .sentence_encoder import SentenceEncoder
 from .sentence_tokenizer import SentenceTokenizer
 from .token_encoder import TokenEncoder
 from .label_encoder import LabelEncoder
+from .word_decoder import WordDecoder
 
 __all__ = [
     'BOWEncoder',
@@ -11,5 +12,6 @@ __all__ = [
     'SentenceEncoder',
     'SentenceTokenizer',
     'TokenEncoder',
-    'LabelEncoder'
+    'LabelEncoder',
+    'WordDecoder'
     ]

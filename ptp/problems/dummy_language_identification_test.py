@@ -3,6 +3,8 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 
 
+from ptp.utils.pipeline import Pipeline
+
 # Problems.
 from ptp.problems.dummy_language_identification import DummyLanguageIdentification
 
@@ -36,18 +38,21 @@ if __name__ == "__main__":
     params = ParamInterface()
     params.add_config_params({
         'problem': {
-            'name': 'LanguageIdentification',
+            'type': 'LanguageIdentification',
+            'priority': 1,
             'data_folder': '~/data/language_identification/dummy',
             'use_train_data': True,
             'keymappings' : {'inputs': 'sentences', 'targets': 'languages'}
         },
         # Sentences encoding.
         'sentence_tokenizer': {
-            'name': 'SentenceTokenizer',
+            'type': 'SentenceTokenizer',
+            'priority': 2,
             'keymappings' : {'inputs': 'sentences', 'outputs': 'tokenized_sentences'}
         },
         'sentence_encoder': {
-            'name': 'SentenceEncoder',
+            'type': 'SentenceEncoder',
+            'priority': 3,
             'data_folder': '~/data/language_identification/dummy',
             'source_files': 'x_training.txt,x_test.txt',
             'encodings_file': 'word_encodings.csv',
@@ -57,7 +62,8 @@ if __name__ == "__main__":
                 }
         },
         'bow_encoder': {
-            'name': 'BOWEncoder',
+            'type': 'BOWEncoder',
+            'priority': 4,
             'keymappings' : {
                 'inputs': 'encoded_sentences',
                 'outputs': 'bow_sencentes',
@@ -66,7 +72,8 @@ if __name__ == "__main__":
         },
         # Targets encoding.
         'label_encoder': {
-            'name': 'LabelEncoder',
+            'type': 'LabelEncoder',
+            'priority': 5,
             'data_folder': '~/data/language_identification/dummy',
             'source_files': 'y_training.txt,y_test.txt',
             'encodings_file': 'language_name_encodings.csv',
@@ -77,6 +84,8 @@ if __name__ == "__main__":
         },
         # Model
         'model': {
+            'type': 'SoftmaxClassifier',
+            'priority': 6,
             'keymappings' : {
                 'inputs': 'bow_sencentes',
                 #'predictions': 'encoded_predictions',
@@ -86,7 +95,8 @@ if __name__ == "__main__":
         },
         # Loss
         'nllloss': {
-            'name': 'NLLLoss',
+            'priority': 7,
+            'type': 'NLLLoss',
             'keymappings' : {
                 'targets': 'encoded_languages',
                 #'predictions': 'encoded_predictions',
@@ -95,7 +105,8 @@ if __name__ == "__main__":
         },
         # Predictions decoder.
         'prediction_decoder': {
-            'name': 'WordDecoder',
+            'priority': 8,
+            'type': 'WordDecoder',
             'data_folder': '~/data/language_identification/dummy',
             'encodings_file': 'language_name_encodings.csv',
             'keymappings' : {'inputs': 'predictions', 'outputs': 'predicted_labels'}
@@ -105,7 +116,11 @@ if __name__ == "__main__":
 
     batch_size = 2
 
+    pipeline = Pipeline(params)
+    pipeline.build()
+    print(pipeline.summarize())
 
+    exit(1)
     #### "Configuration" ####
     # Create problem.
     problem  = DummyLanguageIdentification("problem", params["problem"])
