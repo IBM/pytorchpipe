@@ -14,21 +14,21 @@
 
 __author__ = "Tomasz Kornuta"
 
-import torch
-
-from ptp.text.token_encoder import TokenEncoder
+from ptp.components.text.token_encoder import TokenEncoder
 from ptp.core_types.data_definition import DataDefinition
 
 
-class WordDecoder(TokenEncoder):
+class LabelEncoder(TokenEncoder):
     """
-    Class responsible for decoding of samples encoded in the form of vectors ("probability distributions").
+    Class responsible for encoding of samples consisting of labels (into indices, that can be latter used for loss calculation, PyTorch-style).
     """
     def __init__(self, name, params):
         # Call constructors of parent classes.
         TokenEncoder.__init__(self, name, params)
-        # Construct reverse mapping for faster processing.
-        self.ix_to_word = dict((v,k) for k,v in self.word_to_ix.items())
+
+        # Export token size to global params.
+        self.key_token_size = self.mapkey("label_token_size")
+        self.app_state[self.key_token_size] = len(self.word_to_ix)
 
     def input_data_definitions(self):
         """ 
@@ -37,7 +37,7 @@ class WordDecoder(TokenEncoder):
         :return: dictionary containing input data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
         """
         return {
-            self.key_inputs: DataDefinition([-1, -1], [torch.Tensor], "Batch of words, each represented as a vector (probability distribution) [BATCH_SIZE x ITEM_SIZE] (agnostic to item size)"),
+            self.key_inputs: DataDefinition([-1, 1], [list, str], "Batch of labels (words), each represented as a single string [BATCH_SIZE] x [string]"),
             }
 
     def output_data_definitions(self):
@@ -47,7 +47,7 @@ class WordDecoder(TokenEncoder):
         :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
         """
         return {
-            self.key_outputs: DataDefinition([-1, 1], [list, str], "Batch of words, each represented as a single string [BATCH_SIZE] x [string]")
+            self.key_outputs: DataDefinition([-1, 1], [list, int], "Batch of labels, each represented as a single index [BATCH_SIZE] x [index]")
             }
 
     def __call__(self, data_dict):
@@ -57,19 +57,18 @@ class WordDecoder(TokenEncoder):
 
         :param data_dict: :py:class:`ptp.utils.DataDict` object containing (among others):
 
-            - "inputs": expected input field containing tensor [BATCH_SIZE x ITEM_SIZE]
+            - "inputs": expected input field containing list of words [BATCH_SIZE] x x [string]
 
-            - "outputs": added output field containing list of words [BATCH_SIZE] x [string] 
+            - "outputs": added output field containing list of indices  [BATCH_SIZE] x [1] 
         """
         # Get inputs to be encoded.
         inputs = data_dict[self.key_inputs]
         outputs_list = []
         # Process samples 1 by 1.
-        for sample in inputs.chunk(inputs.size(0), 0):
+        for sample in inputs:
+            assert not isinstance(sample, (list,)), 'This encoder requires input sample to contain a single word'
             # Process single token.
-            max_index = sample.squeeze(0).argmax(dim=0).item() 
-            output_sample = self.ix_to_word[max_index]
+            output_sample = self.word_to_ix[sample]
             outputs_list.append(output_sample)
         # Create the returned dict.
         data_dict.extend({self.key_outputs: outputs_list})
-

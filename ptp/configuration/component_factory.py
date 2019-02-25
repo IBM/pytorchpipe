@@ -22,7 +22,7 @@ import inspect
 
 import ptp
 
-from ptp.utils.configuration_error import ConfigurationError
+from ptp.configuration.configuration_error import ConfigurationError
 
 
 class ComponentFactory(object):

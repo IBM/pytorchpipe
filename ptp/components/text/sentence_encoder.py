@@ -14,21 +14,24 @@
 
 __author__ = "Tomasz Kornuta"
 
-from ptp.text.token_encoder import TokenEncoder
+import torch
+
+from ptp.components.text.token_encoder import TokenEncoder
 from ptp.core_types.data_definition import DataDefinition
 
 
-class LabelEncoder(TokenEncoder):
+class SentenceEncoder(TokenEncoder):
     """
-    Class responsible for encoding of samples consisting of labels (into indices, that can be latter used for loss calculation, PyTorch-style).
+    Class responsible for encoding of samples being sequences of words (1-hot encoding).
     """
     def __init__(self, name, params):
         # Call constructors of parent classes.
         TokenEncoder.__init__(self, name, params)
 
-        # Export token size to global params.
-        self.key_token_size = self.mapkey("label_token_size")
-        self.app_state[self.key_token_size] = len(self.word_to_ix)
+        # Export output token size to global params.
+        self.output_size = len(self.word_to_ix)
+        self.key_token_size = self.mapkey("sentence_token_size")
+        self.app_state[self.key_token_size] = self.output_size
 
     def input_data_definitions(self):
         """ 
@@ -37,7 +40,7 @@ class LabelEncoder(TokenEncoder):
         :return: dictionary containing input data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
         """
         return {
-            self.key_inputs: DataDefinition([-1, 1], [list, str], "Batch of labels (words), each represented as a single string [BATCH_SIZE] x [string]"),
+            self.key_inputs: DataDefinition([-1, -1, 1], [list, list, str], "Batch of sentences, each represented as a list of words [BATCH_SIZE] x [SEQ_LENGTH] x [string]"),
             }
 
     def output_data_definitions(self):
@@ -47,28 +50,37 @@ class LabelEncoder(TokenEncoder):
         :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
         """
         return {
-            self.key_outputs: DataDefinition([-1, 1], [list, int], "Batch of labels, each represented as a single index [BATCH_SIZE] x [index]")
+            self.key_outputs: DataDefinition([-1, -1, self.output_size], [list, list, torch.Tensor], "Batch of sentences, each represented as a list of vectors [BATCH_SIZE] x [SEQ_LENGTH] x [OUTPUT_SIZE]"),
             }
 
     def __call__(self, data_dict):
         """
-        Encodes "inputs" in the format of a single word.
-        Stores result in "outputs" field of in data_dict.
+        Encodes "inputs" in the format of list of tokens (for a single sample)
+        Stores result in "encoded_inputs" field of in data_dict.
 
         :param data_dict: :py:class:`ptp.utils.DataDict` object containing (among others):
 
-            - "inputs": expected input field containing list of words [BATCH_SIZE] x x [string]
+            - "inputs": expected input field containing list of words [BATCH_SIZE] x [SEQ_SIZE] x [string]
 
-            - "outputs": added output field containing list of indices  [BATCH_SIZE] x [1] 
+            - "encoded_targets": added output field containing list of indices [BATCH_SIZE] x [SEQ_SIZE] x [1] 
         """
         # Get inputs to be encoded.
         inputs = data_dict[self.key_inputs]
         outputs_list = []
-        # Process samples 1 by 1.
+        # Process samples 1 by one.
         for sample in inputs:
-            assert not isinstance(sample, (list,)), 'This encoder requires input sample to contain a single word'
-            # Process single token.
-            output_sample = self.word_to_ix[sample]
+            assert isinstance(sample, (list,)), 'This encoder requires input sample to contain a list of words'
+            # Process list.
+            output_sample = []
+            # Encode sample (list of words)
+            for token in sample:
+                # Create empty vector.
+                output_token = torch.zeros(self.output_size)
+                # Add one for given word
+                output_token[self.word_to_ix[token]] += 1
+                # Add to outputs.
+                output_sample.append( output_token )
+
             outputs_list.append(output_sample)
         # Create the returned dict.
         data_dict.extend({self.key_outputs: outputs_list})

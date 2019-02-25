@@ -22,8 +22,8 @@ import inspect
 
 import ptp
 
-from ptp.utils.configuration_error import ConfigurationError
-from ptp.utils.component_factory import ComponentFactory
+from ptp.configuration.configuration_error import ConfigurationError
+from ptp.configuration.component_factory import ComponentFactory
 
 class PipelineManager(object):
     """

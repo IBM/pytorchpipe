@@ -17,6 +17,7 @@
 __author__ = "Tomasz Kornuta"
 
 import os.path
+import signal
 import logging
 import inspect
 
@@ -24,9 +25,9 @@ from torch.utils.data import DataLoader
 
 import ptp
 
-from ptp.utils.configuration_error import ConfigurationError
-from ptp.utils.component_factory import ComponentFactory
-from ptp.utils.sampler_factory import SamplerFactory
+from ptp.configuration.configuration_error import ConfigurationError
+from ptp.configuration.component_factory import ComponentFactory
+from ptp.configuration.sampler_factory import SamplerFactory
 
 
 class ProblemManager(object):
@@ -164,3 +165,34 @@ class ProblemManager(object):
         while True:
             for x in iterable:
                 yield x
+
+
+    def get_epoch_size(self):
+        """
+        Compute the number of iterations ('episodes') to run given the size of the dataset and the batch size to cover
+        the entire dataset once.
+
+        Takes into account whether one used sampler or not.
+
+        .. note::
+
+            If the last batch is incomplete we are counting it in when ``drop_last`` in ``DataLoader()`` is set to Ttrue.
+
+        .. warning::
+
+            Leaving this method 'just in case', in most cases one might simply use ''len(dataloader)''.
+
+        :return: Number of iterations to perform to go though the entire dataset once.
+
+        """
+        # "Estimate" dataset size.
+        if (self.sampler is not None):
+            problem_size = len(self.sampler)
+        else:
+            problem_size = len(self.problem)
+
+        # If problem_size is a multiciplity of batch_size OR drop last is set.
+        if (problem_size % self.loader.batch_size) == 0 or self.loader.drop_last:
+            return problem_size // self.loader.batch_size
+        else:
+            return (problem_size // self.loader.batch_size) + 1

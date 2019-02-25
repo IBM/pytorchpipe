@@ -5,11 +5,12 @@ from .loss import Loss
 from .model import Model
 from .problem import Problem
 
+
 __all__ = [
     'Component',
     'DataDict',
     'DataDefinition',
     'Loss',
     'Model',
-    'Problem'
+    'Problem',
     ]

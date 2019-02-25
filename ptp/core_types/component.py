@@ -19,7 +19,7 @@ __author__ = "Tomasz Kornuta"
 import abc
 import logging
 
-from ptp.utils.app_state import AppState
+from ptp.configuration.app_state import AppState
 
 
 class Component(abc.ABC):

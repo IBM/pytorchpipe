@@ -16,7 +16,6 @@
 
 __author__ = "Tomasz Kornuta & Vincent Marois"
 
-import signal
 import torch
 import numpy as np
 from torch.utils.data import Dataset

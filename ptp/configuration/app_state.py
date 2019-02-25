@@ -18,7 +18,7 @@
 
 __author__ = "Alexis Asseman, Tomasz Kornuta"
 
-from ptp.utils.singleton import SingletonMetaClass
+from ptp.configuration.singleton import SingletonMetaClass
 
 
 class AppState(metaclass=SingletonMetaClass):
