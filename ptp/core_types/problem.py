@@ -64,6 +64,22 @@ class Problem(Component, Dataset):
         self.curriculum_params = {}
 
 
+    def summarize_io(self, priority = -1):
+        """
+        Summarizes the problem by showing its name, type and output definitions.
+
+        :param priority: Problem priority (DEFAULT: -1)
+
+        :return: Summary as a str.
+
+        """
+        summary_str = "  + {} ({}) [{}]\n".format(self.name, type(self).__name__, priority)
+        # Get outputs.
+        summary_str += '      Outputs:\n' 
+        for key,value in self.output_data_definitions().items():
+            summary_str += '        {}: {}, {}, {}\n'.format(key, value.dimensions, value.types, value. description)
+        return summary_str
+
     def __call__(self, data_dict):
         """
         Method responsible for processing the data dict. Empty for all problem-derived classes.

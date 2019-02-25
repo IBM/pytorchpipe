@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader
 
 from ptp.utils.param_interface import ParamInterface
 from ptp.utils.pipeline import Pipeline
+from ptp.utils.problem_factory import ProblemFactory
 
 
 
@@ -100,24 +101,32 @@ if __name__ == "__main__":
 
 
     #### Pipeline "configuration" ####
-    pipeline = Pipeline()
+    errors = 0
 
     # Build problem.
-    errors = pipeline.create_problem("problem", params["problem"])
+    problem = ProblemFactory.build("problem", params["problem"])
+    if (problem == None):
+        errors += 1
+
     # Build pipeline.
+    pipeline = Pipeline()
     errors += pipeline.build_pipeline(params["pipeline"])
 
-    print(pipeline.summarize())
+    # Show pipeline.
+    summary_str = pipeline.summarize_io_header()
+    summary_str += problem.summarize_io()
+    summary_str += pipeline.summarize_io()
+    print(summary_str)
 
     # Handshake definitions.
-    errors += pipeline.handshake()
+    defs = problem.output_data_definitions()
+    errors += pipeline.handshake(defs)
 
     # Check errors.
     if errors > 0:
         exit(1)
 
     # Get problem, model and loss.
-    problem  = pipeline.problem
     model = pipeline.models[0]
     loss = pipeline.losses[0]
     

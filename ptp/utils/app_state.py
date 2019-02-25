@@ -47,6 +47,9 @@ class AppState(metaclass=SingletonMetaClass):
         """
         # Disable visualization by default.
         self.visualize = False
+        # Disable GPU/CUDA by default.
+        self.use_gpu = False
+
         # Field storing global variables.
         self.__globals = dict()
 

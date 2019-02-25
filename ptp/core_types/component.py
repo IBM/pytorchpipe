@@ -68,6 +68,29 @@ class Component(abc.ABC):
         # Get access to AppState: for globals, visualization flag etc.
         self.app_state = AppState()
 
+
+    def summarize_io(self, priority = -1):
+        """
+        Summarizes the component by showing its name, type and input/output definitions.
+
+        :param priority: Component priority (DEFAULT: -1)
+
+        :return: Summary as a str.
+
+        """
+        summary_str = "  + {} {} [{}] \n".format(self.name, type(self).__name__, priority)
+        # Get inputs
+        summary_str += '      Inputs:\n' 
+        for key,value in self.input_data_definitions().items():
+            summary_str += '        {}: {}, {}, {}\n'.format(key, value.dimensions, value.types, value. description)
+        # Get outputs.
+        summary_str += '      Outputs:\n' 
+        for key,value in self.output_data_definitions().items():
+            summary_str += '        {}: {}, {}, {}\n'.format(key, value.dimensions, value.types, value. description)
+        # Return string.
+        return summary_str
+
+
     @abc.abstractmethod
     def input_data_definitions(self):
         """ 

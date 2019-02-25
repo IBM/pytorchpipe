@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) IBM tkornuta, Corporation 2019
@@ -23,16 +22,8 @@ import inspect
 
 import ptp
 
-class ConfigurationError(Exception):
-    """ Error thrown when encountered a configuration issue. """
-    def __init__(self, msg):
-        """ Stores message """
-        self.msg = msg
-
-    def __str__(self):
-        """ Prints the message """
-        return repr(self.msg)
-
+from ptp.utils.configuration_error import ConfigurationError
+from ptp.utils.component_factory import ComponentFactory
 
 class Pipeline(object):
     """
@@ -48,8 +39,6 @@ class Pipeline(object):
         self.logger = logging.getLogger("Pipeline")
 
         # Set initial values of all pipeline elements.
-        # Single problem.
-        self.problem = None
         # Empty list of all components, sorted by their priorities.
         self.__components = {}
         # Empty list of all models - it will contain only "references" to objects stored in the components list.
@@ -58,85 +47,6 @@ class Pipeline(object):
         self.losses = []
         # Empty list of all loss keys. Those keys will be used to find objects that will be roots for backpropagation of gradients.
         #self.loss_keys = []
-
-
-    def create_component(self, name, params):
-        """
-        Method creates a single component on the basis of configuration section.
-        Raises ComponentError exception when encountered issues.
-
-        :param name: Name of the section/component.
-
-        :param params: Parameters used to instantiate all components.
-        :type params: ``utils.param_interface.ParamInterface``
-
-        :return: tuple (component, component class).
-        """
-
-        # Check presence of type.
-        if 'type' not in params:
-            raise ConfigurationError("Section {} does not contain the key 'type' defining the component type".format(name))
-
-        # Get the class type.
-        c_type = params["type"]
-
-        # Get class object.
-        if c_type.find("ptp.") != -1:
-            # Try to evaluate it directly.
-            class_obj = eval(c_type)
-        else:
-            # Try to find it in the main "ptp" namespace.
-            class_obj = getattr(ptp, c_type)
-
-        # Check if class is derived (even indirectly) from Component.
-        c_inherits = False
-        for c in inspect.getmro(class_obj):
-            if c.__name__ == ptp.Component.__name__:
-                c_inherits = True
-                break
-        if not c_inherits:
-            raise ConfigurationError("Class '{}' is not derived from the Component class".format(c_type))
-
-        # Instantiate component.
-        component = class_obj(name, params)
-
-        return component, class_obj
-
-
-    def create_problem(self, name, params, log_errors=True):
-        """
-        Method creates a problem on the basis of configuration section.
-
-        :param name: Name of the section/component.
-
-        :param params: Parameters used to instantiate the problem class.
-        :type params: ``utils.param_interface.ParamInterface``
-
-        :param log_errors: Logs the detected errors (DEFAULT: TRUE)
-
-        :return: number of detected errors.
-        """
-        try: 
-            # Create component.
-            component, class_obj = self.create_component(name, params)
-
-            # Check if class is derived (even indirectly) from Problem.
-            p_inherits = False
-            for c in inspect.getmro(class_obj):
-                if c.__name__ == ptp.Problem.__name__:
-                    p_inherits = True
-                    break
-            if not p_inherits:
-                raise ConfigurationError("Class '{}' is not derived from the Problem class!".format(class_obj.__name__))            
-            # Ok, set problem.
-            self.problem = component
-            # Return zero errors.
-            return 0 # errors
-
-        except ConfigurationError as e:
-            if log_errors:
-                self.logger.error(e)
-            return 1 # error
 
 
     def build_pipeline(self, params, log_errors=True):
@@ -150,7 +60,7 @@ class Pipeline(object):
         :param params: Parameters used to instantiate all components.
         :type params: ``utils.param_interface.ParamInterface``
 
-        :param log_errors: Logs the detected errors (DEFAULT: TRUE)
+        :param log_errors: Logs the detected errors (DEFAULT: True)
 
         :return: number of detected errors.
         """
@@ -171,13 +81,12 @@ class Pipeline(object):
                     continue
         
                 # Create component.
-                component, class_obj = self.create_component(c_key, c_params)
+                component, class_obj = ComponentFactory.build(c_key, c_params)
 
                 # Check if class is derived (even indirectly) from Problem.
-                for c in inspect.getmro(class_obj):
-                    if c.__name__ == ptp.Problem.__name__:
-                        raise ConfigurationError("Object '{}' cannot be instantiated as part of pipeline, \
-                            as its class type '{}' is derived from Problem class!".format(c_key, class_obj.__name__))
+                if ComponentFactory.check_inheritance(class_obj, ptp.Problem.__name__):
+                    raise ConfigurationError("Object '{}' cannot be instantiated as part of pipeline, \
+                        as its class type '{}' is derived from Problem class!".format(c_key, class_obj.__name__))
 
                 # Check presence of priority.
                 if 'priority' not in c_params:
@@ -197,24 +106,15 @@ class Pipeline(object):
                 self.__components[c_priority] = component
 
                 # Check if class is derived (even indirectly) from Model.
-                m_inherits = False
-                for c in inspect.getmro(class_obj):
-                    if c.__name__ == ptp.Model.__name__:
-                        m_inherits = True
-                        break
-                if m_inherits:
+                if ComponentFactory.check_inheritance(class_obj, ptp.Model.__name__):
                     # Add to list.
                     self.models.append(component)
 
                 # Check if class is derived (even indirectly) from Loss.
-                l_inherits = False
-                for c in inspect.getmro(class_obj):
-                    if c.__name__ == ptp.Loss.__name__:
-                        l_inherits = True
-                        break
-                if l_inherits:
+                if ComponentFactory.check_inheritance(class_obj, ptp.Loss.__name__):
                     # Add to list.
                     self.losses.append(component)
+
             except ConfigurationError as e:
                 if log_errors:
                     self.logger.error(e)
@@ -244,23 +144,20 @@ class Pipeline(object):
 
     def __len__(self):
         """
-        Returns the number of objects in the pipeline (all components + 1 for problem)
+        Returns the number of objects in the pipeline (excluding problems)
         :return: Length of the :py:class:`Pipeline`.
 
         """
         length = len(self.__priorities) 
-        if self.problem is not None:
-            length += 1
         return length
 
-    def summarize(self):
-        """
-        Summarizes the pipeline by showing all its components (including problem).
 
-        :return: Summary as a str.
-
+    def summarize_io_header(self):
         """
-        # add name of the current module
+        Creates the summary header.
+
+        :return: Summary header as a str.
+        """
         summary_str = '\n' + '='*80 + '\n'
         summary_str += 'Pipeline\n'
         summary_str += '  + Component name (type) [priority]\n'
@@ -269,59 +166,50 @@ class Pipeline(object):
         summary_str += '      Outputs:\n' 
         summary_str += '        key: dims, types, description\n'
         summary_str += '=' * 80 + '\n'
+        return summary_str
 
-        # Print problem.
-        if self.problem is None:
-            summary_str += "  + Problem (None) [-1]:\n"
-        else:
-            summary_str += "  + {} ({}) [-1]\n".format(self.problem.name, type(self.problem).__name__)
-            # Get outputs.
-            summary_str += '      Outputs:\n' 
-            for key,value in self.problem.output_data_definitions().items():
-                summary_str += '        {}: {}, {}, {}\n'.format(key, value.dimensions, value.types, value. description)
 
+    def summarize_io(self):
+        """
+        Summarizes the pipeline by showing all its components (excluding problem).
+
+        :return: Summary as a str.
+        """
+        summary_str = '' 
         for prio in self.__priorities:
             # Get component
             comp = self.__components[prio]
-            summary_str += "  + {} {} [{}] \n".format(comp.name, type(comp).__name__, prio)
-            # Get inputs
-            summary_str += '      Inputs:\n' 
-            for key,value in comp.input_data_definitions().items():
-                summary_str += '        {}: {}, {}, {}\n'.format(key, value.dimensions, value.types, value. description)
-            # Get outputs.
-            summary_str += '      Outputs:\n' 
-            for key,value in comp.output_data_definitions().items():
-                summary_str += '        {}: {}, {}, {}\n'.format(key, value.dimensions, value.types, value. description)
+            print(comp)
+            summary_str += comp.summarize_io(prio)
         summary_str += '=' * 80 + '\n'
-
         return summary_str
 
-    def handshake(self, log=True):
+
+    def handshake(self, data_dict, log=True):
         """
         Performs handshaking of inputs and outputs definitions of all components in the pipeline.
 
-        :param log: Logs the detected errors and info (DEFAULT: TRUE)
+        :param data_dict: Initial datadict returned by the problem.
+
+        :param log: Logs the detected errors and info (DEFAULT: True)
 
         :return: Number of detected errors.
         """
         errors = 0
-        # Get initial definitions from problem.
-        all_definitions = self.problem.output_data_definitions()
-        #print(all_definitions)
 
         for prio in self.__priorities:
             # Get component
             comp = self.__components[prio]
             # Handshake inputs and outputs.
-            errors += comp.handshake_input_definitions(all_definitions, log)
-            errors += comp.export_output_definitions(all_definitions, log)
+            errors += comp.handshake_input_definitions(data_dict, log)
+            errors += comp.export_output_definitions(data_dict, log)
 
         # Log final definition.
         if errors == 0 and log:
             self.logger.info("Handshake successfull")
             def_str = "Final definition of DataDict used in pipeline:"
             def_str += '\n' + '='*80 + '\n'
-            def_str += '{}'.format(all_definitions)
+            def_str += '{}'.format(data_dict)
             def_str += '\n' + '='*80 + '\n'
             self.logger.info(def_str)
 
