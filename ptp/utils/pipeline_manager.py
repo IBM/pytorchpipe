@@ -216,7 +216,7 @@ class PipelineManager(object):
 
         return errors
 
-    def __call__(self, data_dict):
+    def forward(self, data_dict):
         """
         Method responsible for processing the data dict, using all components in the components queue.
 
@@ -230,3 +230,43 @@ class PipelineManager(object):
             # Forward step.
             comp(data_dict)
 
+    def zero_grad(self):
+        """ 
+        Resets gradients in all trainable components of the pipeline.
+        """
+        for model in self.models:
+            model.zero_grad()
+
+
+    def backward(self, data_dict):
+        """
+        Propagates gradients backwards, starting from losses returned by every loss component in the pipeline.
+        If using many losses the components derived from loss must overwrite the ''loss_keys()'' method.
+
+        :param data_dict: :py:class:`ptp.utils.DataDict` object containing both input data to be processed and that will be extended by the results.
+
+        """
+        for loss in self.losses:
+            for key in loss.loss_keys():
+                data_dict[key].backward()
+
+
+    def parameters(self, recurse=True):
+        """Returns an iterator over parameters of all trainable components.
+
+        This is typically passed to an optimizer.
+
+        Args:
+            recurse (bool): if True, then yields parameters of this module
+                and all submodules. Otherwise, yields only parameters that
+                are direct members of this module.
+
+        Yields:
+            Parameter: module parameter
+
+        Example::
+
+        """
+        for model in self.models:
+            for name, param in model.named_parameters(recurse=recurse):
+                yield param

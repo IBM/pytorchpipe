@@ -149,3 +149,18 @@ class ProblemManager(object):
         # Ignores SIGINT signal - what enables "nice" termination of dataloader worker threads.
         # https://discuss.pytorch.org/t/dataloader-multiple-workers-and-keyboardinterrupt/9740/2
         signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+
+    def cycle(self, iterable):
+        """
+        Cycle an iterator to prevent its exhaustion.
+        This function is used in the (online) trainer to reuse the same ``DataLoader`` for a number of episodes\
+        > len(dataset)/batch_size.
+
+        :param iterable: iterable.
+        :type iterable: iter
+
+        """
+        while True:
+            for x in iterable:
+                yield x

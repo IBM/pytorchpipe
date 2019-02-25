@@ -126,15 +126,11 @@ if __name__ == "__main__":
     if errors > 0:
         exit(1)
 
-    # Get problem, model and loss.
-    model = pipe_mgr.models[0]
-    loss = pipe_mgr.losses[0]
-    
 
     # Get dataloader.
     dataloader = prob_mgr.loader
 
-    optimizer = optim.SGD(model.parameters(), lr=0.1)
+    optimizer = optim.SGD(pipe_mgr.parameters(), lr=0.1)
 
     # Usually you want to pass over the training data several times.
     # 100 is much bigger than on a real data set, but real datasets have more than
@@ -143,19 +139,15 @@ if __name__ == "__main__":
         for i, batch in enumerate(dataloader):
             # Step 1. Remember that PyTorch accumulates gradients.
             # We need to clear them out before each instance
-            model.zero_grad()
+            pipe_mgr.zero_grad()
 
             # Process batch.
-            pipe_mgr(batch)
+            pipe_mgr.forward(batch)
 
             print("sequences: {} \t\t targets: {}  ->  predictions: {}".format(batch["sentences"], batch["languages"], batch["predicted_labels"]))
 
             # Step 4. Compute the loss, gradients, and update the parameters by
-            # calling optimizer.step()
-            loss_value = batch["loss"]
-            #print("Loss = ", loss)
-
-            loss_value.backward()
+            pipe_mgr.backward(batch)
             optimizer.step()
 
     # Print last batch.
