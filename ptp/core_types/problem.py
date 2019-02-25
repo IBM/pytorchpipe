@@ -144,30 +144,6 @@ class Problem(Component, Dataset):
         return DataDict({key: torch.utils.data.dataloader.default_collate([d[key] for d in data_dict]) for key in data_dict[0]})
 
 
-    def worker_init_fn(self, worker_id):
-        """
-        Function to be called by :py:class:`torch.utils.data.DataLoader` on each worker subprocess, \
-        after seeding and before data loading. (default: ``None``).
-
-        .. note::
-
-            Set the ``NumPy`` random seed of the worker equal to the previous NumPy seed + its ``worker_id``\
-             to avoid having all workers returning the same random numbers.
-
-
-        :param worker_id: the worker id (in [0, :py:class:`torch.utils.data.DataLoader`.num_workers - 1])
-        :type worker_id: int
-
-        :return: ``None`` by default
-        """
-        # Set random seed of a worker.
-        np.random.seed(seed=np.random.get_state()[1][0] + worker_id)
-
-        # Ignores SIGINT signal - what enables "nice" termination of dataloader worker threads.
-        # https://discuss.pytorch.org/t/dataloader-multiple-workers-and-keyboardinterrupt/9740/2
-        signal.signal(signal.SIGINT, signal.SIG_IGN)
-
-
     def initialize_epoch(self, epoch):
         """
         Function called to initialize a new epoch.

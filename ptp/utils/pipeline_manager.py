@@ -25,18 +25,22 @@ import ptp
 from ptp.utils.configuration_error import ConfigurationError
 from ptp.utils.component_factory import ComponentFactory
 
-class Pipeline(object):
+class PipelineManager(object):
     """
     Class responsible for instantiating the pipeline consisting of several components.
     """
 
-
-    def __init__(self):
+    def __init__(self, params):
         """
         Initializes the pipeline object.
+
+        :param params: Parameters used to instantiate all required components.
+        :type params: ``utils.param_interface.ParamInterface``
+
         """
         # Initialize the logger.
-        self.logger = logging.getLogger("Pipeline")
+        self.logger = logging.getLogger("PipelineManager")
+        self.params = params
 
         # Set initial values of all pipeline elements.
         # Empty list of all components, sorted by their priorities.
@@ -49,16 +53,13 @@ class Pipeline(object):
         #self.loss_keys = []
 
 
-    def build_pipeline(self, params, log_errors=True):
+    def build(self, log_errors=True):
         """
         Method creating the pipeline, consisting of:
             - a list components ordered by the priority (dictionary).
             - problem (as a separate "link" to object in the list of components, instance of a class derrived from Problem class)
             - models (separate list with link to objects in components dict)
             - losses (selarate list with links to objects in components dict)
-
-        :param params: Parameters used to instantiate all components.
-        :type params: ``utils.param_interface.ParamInterface``
 
         :param log_errors: Logs the detected errors (DEFAULT: True)
 
@@ -68,11 +69,11 @@ class Pipeline(object):
 
         # Check "skip" section.
         sections_to_skip = "skip optimizer gradient_clipping terminal_conditions seed_torch seed_numpy".split()
-        if "skip" in params:
+        if "skip" in self.params:
             # Expand.
-            sections_to_skip = [*sections_to_skip, *params["skip"].split(",")]
+            sections_to_skip = [*sections_to_skip, *self.params["skip"].split(",")]
 
-        for c_key, c_params in params.items():
+        for c_key, c_params in self.params.items():
             # The section "key" will be used as "component" name.
             try:
                 # Skip "special" sections.

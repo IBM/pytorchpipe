@@ -5,8 +5,8 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 
 from ptp.utils.param_interface import ParamInterface
-from ptp.utils.pipeline import Pipeline
-from ptp.utils.problem_factory import ProblemFactory
+from ptp.utils.problem_manager import ProblemManager
+from ptp.utils.pipeline_manager import PipelineManager
 
 
 
@@ -18,12 +18,15 @@ if __name__ == "__main__":
     # "Simulate" configuration.
     params = ParamInterface()
     params.add_config_params({
-        'problem': {
-            'type': 'DummyLanguageIdentification',
-            'priority': 1,
-            'data_folder': '~/data/language_identification/dummy',
-            'use_train_data': True,
-            'keymappings' : {'inputs': 'sentences', 'targets': 'languages'}
+        'training': {
+            'problem': {
+                'type': 'DummyLanguageIdentification',
+                'priority': 1,
+                'data_folder': '~/data/language_identification/dummy',
+                'use_train_data': True,
+                'keymappings' : {'inputs': 'sentences', 'targets': 'languages'},
+                'batch_size': 2
+            }
         },
         'pipeline': {
             #'skip': 'sentence_tokenizer',
@@ -97,43 +100,39 @@ if __name__ == "__main__":
         } #: pipeline
         })
 
-    batch_size = 2
-
 
     #### Pipeline "configuration" ####
     errors = 0
 
     # Build problem.
-    problem = ProblemFactory.build("problem", params["problem"])
-    if (problem == None):
-        errors += 1
+    prob_mgr = ProblemManager("training", params["training"])
+    errors += prob_mgr.build("problem")
 
     # Build pipeline.
-    pipeline = Pipeline()
-    errors += pipeline.build_pipeline(params["pipeline"])
+    pipe_mgr = PipelineManager(params["pipeline"])
+    errors += pipe_mgr.build()
 
     # Show pipeline.
-    summary_str = pipeline.summarize_io_header()
-    summary_str += problem.summarize_io()
-    summary_str += pipeline.summarize_io()
+    summary_str = pipe_mgr.summarize_io_header()
+    summary_str += prob_mgr.problem.summarize_io()
+    summary_str += pipe_mgr.summarize_io()
     print(summary_str)
 
     # Handshake definitions.
-    defs = problem.output_data_definitions()
-    errors += pipeline.handshake(defs)
+    defs = prob_mgr.problem.output_data_definitions()
+    errors += pipe_mgr.handshake(defs)
 
     # Check errors.
     if errors > 0:
         exit(1)
 
     # Get problem, model and loss.
-    model = pipeline.models[0]
-    loss = pipeline.losses[0]
+    model = pipe_mgr.models[0]
+    loss = pipe_mgr.losses[0]
     
 
-    # Construct dataloader.
-    dataloader = DataLoader(dataset=problem, collate_fn=problem.collate_fn,
-                            batch_size=batch_size, shuffle=True, num_workers=0)
+    # Get dataloader.
+    dataloader = prob_mgr.loader
 
     optimizer = optim.SGD(model.parameters(), lr=0.1)
 
@@ -147,7 +146,7 @@ if __name__ == "__main__":
             model.zero_grad()
 
             # Process batch.
-            pipeline(batch)
+            pipe_mgr(batch)
 
             print("sequences: {} \t\t targets: {}  ->  predictions: {}".format(batch["sentences"], batch["languages"], batch["predicted_labels"]))
 
