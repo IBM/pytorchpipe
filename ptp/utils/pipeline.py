@@ -23,6 +23,16 @@ import inspect
 
 import ptp
 
+class ConfigurationError(Exception):
+    """ Error thrown when encountered a configuration issue. """
+    def __init__(self, msg):
+        """ Stores message """
+        self.msg = msg
+
+    def __str__(self):
+        """ Prints the message """
+        return repr(self.msg)
+
 
 class Pipeline(object):
     """
@@ -30,14 +40,10 @@ class Pipeline(object):
     """
 
 
-    def __init__(self, params):
+    def __init__(self):
         """
-        Initializes problem object.
-
-        :param params: Parameters used to instantiate all components.
-        :type params: ``utils.param_interface.ParamInterface``
+        Initializes the pipeline object.
         """
-        self.params = params
         # Initialize the logger.
         self.logger = logging.getLogger("Pipeline")
 
@@ -54,13 +60,95 @@ class Pipeline(object):
         #self.loss_keys = []
 
 
-    def build(self, log_errors=True):
+    def create_component(self, name, params):
+        """
+        Method creates a single component on the basis of configuration section.
+        Raises ComponentError exception when encountered issues.
+
+        :param name: Name of the section/component.
+
+        :param params: Parameters used to instantiate all components.
+        :type params: ``utils.param_interface.ParamInterface``
+
+        :return: tuple (component, component class).
+        """
+
+        # Check presence of type.
+        if 'type' not in params:
+            raise ConfigurationError("Section {} does not contain the key 'type' defining the component type".format(name))
+
+        # Get the class type.
+        c_type = params["type"]
+
+        # Get class object.
+        if c_type.find("ptp.") != -1:
+            # Try to evaluate it directly.
+            class_obj = eval(c_type)
+        else:
+            # Try to find it in the main "ptp" namespace.
+            class_obj = getattr(ptp, c_type)
+
+        # Check if class is derived (even indirectly) from Component.
+        c_inherits = False
+        for c in inspect.getmro(class_obj):
+            if c.__name__ == ptp.Component.__name__:
+                c_inherits = True
+                break
+        if not c_inherits:
+            raise ConfigurationError("Class '{}' is not derived from the Component class".format(c_type))
+
+        # Instantiate component.
+        component = class_obj(name, params)
+
+        return component, class_obj
+
+
+    def create_problem(self, name, params, log_errors=True):
+        """
+        Method creates a problem on the basis of configuration section.
+
+        :param name: Name of the section/component.
+
+        :param params: Parameters used to instantiate the problem class.
+        :type params: ``utils.param_interface.ParamInterface``
+
+        :param log_errors: Logs the detected errors (DEFAULT: TRUE)
+
+        :return: number of detected errors.
+        """
+        try: 
+            # Create component.
+            component, class_obj = self.create_component(name, params)
+
+            # Check if class is derived (even indirectly) from Problem.
+            p_inherits = False
+            for c in inspect.getmro(class_obj):
+                if c.__name__ == ptp.Problem.__name__:
+                    p_inherits = True
+                    break
+            if not p_inherits:
+                raise ConfigurationError("Class '{}' is not derived from the Problem class!".format(class_obj.__name__))            
+            # Ok, set problem.
+            self.problem = component
+            # Return zero errors.
+            return 0 # errors
+
+        except ConfigurationError as e:
+            if log_errors:
+                self.logger.error(e)
+            return 1 # error
+
+
+    def build_pipeline(self, params, log_errors=True):
         """
         Method creating the pipeline, consisting of:
             - a list components ordered by the priority (dictionary).
             - problem (as a separate "link" to object in the list of components, instance of a class derrived from Problem class)
             - models (separate list with link to objects in components dict)
             - losses (selarate list with links to objects in components dict)
+
+        :param params: Parameters used to instantiate all components.
+        :type params: ``utils.param_interface.ParamInterface``
 
         :param log_errors: Logs the detected errors (DEFAULT: TRUE)
 
@@ -70,117 +158,70 @@ class Pipeline(object):
 
         # Check "skip" section.
         sections_to_skip = "skip optimizer gradient_clipping terminal_conditions seed_torch seed_numpy".split()
-        if "skip" in self.params:
+        if "skip" in params:
             # Expand.
-            sections_to_skip = [*sections_to_skip, *self.params["skip"].split(",")]
+            sections_to_skip = [*sections_to_skip, *params["skip"].split(",")]
 
-        for c_key, c_params in self.params.items():
+        for c_key, c_params in params.items():
             # The section "key" will be used as "component" name.
-
-            # Skip "special" sections.
-            if c_key in sections_to_skip:
-                self.logger.info("Skipping section {}".format(c_key))
-                continue
-    
-            # Check presence of type.
-            if 'type' not in c_params:
-                if log_errors:
-                    self.logger.error("Section {} does not contain the key 'type' defining the component type".format(c_key))
-                errors += 1
-                continue
-
-            # Get the class type.
-            c_type = c_params["type"]
-
-            # Get class object.
-            if c_type.find("ptp.") != -1:
-                # Try to evaluate it directly.
-                class_obj = eval(c_type)
-            else:
-                # Try to find it in the main "ptp" namespace.
-                class_obj = getattr(ptp, c_type)
-
-            # Check if class is derived (even indirectly) from Component.
-            c_inherits = False
-            for c in inspect.getmro(class_obj):
-                if c.__name__ == ptp.Component.__name__:
-                    c_inherits = True
-                    break
-            if not c_inherits:
-                if log_errors:
-                    self.logger.warning("The specified class '{}' is not derived from the Component class".format(c_type))
-                errors += 1
-                continue
-
-            # Instantiate component.
-            component = class_obj(c_key, c_params)
-
-            # Check if class is derived (even indirectly) from Problem.
-            p_inherits = False
-            for c in inspect.getmro(class_obj):
-                if c.__name__ == ptp.Problem.__name__:
-                    p_inherits = True
-                    break
-            if p_inherits:
-                if self.problem is None:
-                    # Perfect!
-                    self.problem = component
-                    # Do not add it to list of components!
-                    continue
-                else:
-                    # Oo, two problems?
-                    if log_errors:
-                        self.logger.error("Pipeline definition contains more than one problem! (here: {}, {})".format(
-                            self.problem.name, c_key))
-                    errors += 1
-                    continue
-
-            # Check presence of priority.
-            if 'priority' not in c_params:
-                if log_errors:
-                    self.logger.error("Section {} does not contain the key 'priority' defining the pipeline order".format(c_key))
-                errors += 1
-                continue
-
-            # Get the priority.
             try:
-                c_priority = float(c_params["priority"])
-            except ValueError:
+                # Skip "special" sections.
+                if c_key in sections_to_skip:
+                    self.logger.info("Skipping section '{}'".format(c_key))
+                    continue
+        
+                # Create component.
+                component, class_obj = self.create_component(c_key, c_params)
+
+                # Check if class is derived (even indirectly) from Problem.
+                for c in inspect.getmro(class_obj):
+                    if c.__name__ == ptp.Problem.__name__:
+                        raise ConfigurationError("Object '{}' cannot be instantiated as part of pipeline, \
+                            as its class type '{}' is derived from Problem class!".format(c_key, class_obj.__name__))
+
+                # Check presence of priority.
+                if 'priority' not in c_params:
+                    raise ConfigurationError("Section '{}' does not contain the key 'priority' defining the pipeline order".format(c_key))
+
+                # Get the priority.
+                try:
+                    c_priority = float(c_params["priority"])
+                except ValueError:
+                    raise ConfigurationError("Priority '{}' in section '{}' is not a floating point number".format(c_params["priority"], c_key))
+
+                # Check uniqueness of the priority.
+                if c_priority in self.__components.keys():
+                    raise ConfigurationError("Found more than one component with the same priority ('{}')".format(c_priority))
+
+                # Add it to dict.
+                self.__components[c_priority] = component
+
+                # Check if class is derived (even indirectly) from Model.
+                m_inherits = False
+                for c in inspect.getmro(class_obj):
+                    if c.__name__ == ptp.Model.__name__:
+                        m_inherits = True
+                        break
+                if m_inherits:
+                    # Add to list.
+                    self.models.append(component)
+
+                # Check if class is derived (even indirectly) from Loss.
+                l_inherits = False
+                for c in inspect.getmro(class_obj):
+                    if c.__name__ == ptp.Loss.__name__:
+                        l_inherits = True
+                        break
+                if l_inherits:
+                    # Add to list.
+                    self.losses.append(component)
+            except ConfigurationError as e:
                 if log_errors:
-                    self.logger.error("Priority {} in section {} is not a floating point number".format(c_params["priority"], c_key))
+                    self.logger.error(e)
                 errors += 1
                 continue
-
-            # Check uniqueness of the priority.
-            if c_priority in self.__components.keys():
-                if log_errors:
-                    self.logger.error("Found more than one component with the same priority ({})".format(c_priority))
-                errors += 1
-                continue
-
-            # Add it to dict.
-            self.__components[c_priority] = component
-
-            # Check if class is derived (even indirectly) from Model.
-            m_inherits = False
-            for c in inspect.getmro(class_obj):
-                if c.__name__ == ptp.Model.__name__:
-                    m_inherits = True
-                    break
-            if m_inherits:
-                # Add to list.
-                self.models.append(component)
-
-            # Check if class is derived (even indirectly) from Loss.
-            l_inherits = False
-            for c in inspect.getmro(class_obj):
-                if c.__name__ == ptp.Loss.__name__:
-                    l_inherits = True
-                    break
-            if l_inherits:
-                # Add to list.
-                self.losses.append(component)
-
+                # end try/else
+            # end for
         # List of priorities.
         self.__priorities=sorted(self.__components.keys())        
 
