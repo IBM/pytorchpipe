@@ -45,8 +45,8 @@ class TestPipeline(unittest.TestCase):
                 }
             })
         # Build object.
-        pipe = Pipeline(params)
-        pipe.build()
+        pipe = Pipeline()
+        pipe.build_pipeline(params)
 
         # Assert type.
         self.assertEqual(type(pipe[0]).__name__, "BOWEncoder")
@@ -65,8 +65,8 @@ class TestPipeline(unittest.TestCase):
                 }
             })
         # Build object.
-        pipe = Pipeline(params)
-        pipe.build()
+        pipe = Pipeline()
+        pipe.build_pipeline(params)
 
         # Assert type.
         self.assertEqual(type(pipe[0]).__name__, "BOWEncoder")
@@ -86,8 +86,8 @@ class TestPipeline(unittest.TestCase):
                 }
             })
         # Build object.
-        pipe = Pipeline(params)
-        pipe.build()
+        pipe = Pipeline()
+        pipe.build_pipeline(params)
 
         # Assert no components were created.
         self.assertEqual(len(pipe), 0)
@@ -111,8 +111,8 @@ class TestPipeline(unittest.TestCase):
                 }
             })
         # Build object.
-        pipe = Pipeline(params)
-        pipe.build()
+        pipe = Pipeline()
+        pipe.build_pipeline(params)
 
         # Assert the right order of components.
         self.assertEqual(len(pipe), 2)
@@ -120,5 +120,5 @@ class TestPipeline(unittest.TestCase):
         self.assertEqual(pipe[1].name, 'bow_encoder2')
 
 
-#if __name__ == "__main__":
-#    unittest.main()
+if __name__ == "__main__":
+    unittest.main()

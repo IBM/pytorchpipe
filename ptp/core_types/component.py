@@ -48,6 +48,8 @@ class Component(abc.ABC):
         :param name: Name of the component.
 
         :param params: Dictionary of parameters (read from configuration ``.yaml`` file).
+        :type params: ``utils.param_interface.ParamInterface``
+
         """
         self.name = name
         self.params = params

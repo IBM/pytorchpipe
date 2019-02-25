@@ -24,82 +24,89 @@ if __name__ == "__main__":
             'use_train_data': True,
             'keymappings' : {'inputs': 'sentences', 'targets': 'languages'}
         },
-        # Sentences encoding.
-        'sentence_tokenizer': {
-            'type': 'SentenceTokenizer',
-            'priority': 2,
-            'keymappings' : {'inputs': 'sentences', 'outputs': 'tokenized_sentences'}
-        },
-        'sentence_encoder': {
-            'type': 'SentenceEncoder',
-            'priority': 3,
-            'data_folder': '~/data/language_identification/dummy',
-            'source_files': 'x_training.txt,x_test.txt',
-            'encodings_file': 'word_encodings.csv',
-            'keymappings' : {
-                'inputs': 'tokenized_sentences',
-                'outputs': 'encoded_sentences'
-                }
-        },
-        'bow_encoder': {
-            'type': 'BOWEncoder',
-            'priority': 4,
-            'keymappings' : {
-                'inputs': 'encoded_sentences',
-                'outputs': 'bow_sencentes',
-                'input_size': 'sentence_token_size', # Set by sentence_encoder.
-                }
-        },
-        # Targets encoding.
-        'label_encoder': {
-            'type': 'LabelEncoder',
-            'priority': 5,
-            'data_folder': '~/data/language_identification/dummy',
-            'source_files': 'y_training.txt,y_test.txt',
-            'encodings_file': 'language_name_encodings.csv',
-            'keymappings' : {
-                'inputs': 'languages',
-                'outputs': 'encoded_languages'
-                }
-        },
-        # Model
-        'model': {
-            'type': 'SoftmaxClassifier',
-            'priority': 6,
-            'keymappings' : {
-                'inputs': 'bow_sencentes',
-                #'predictions': 'encoded_predictions',
-                'input_size': 'sentence_token_size', # Set by sentence_encoder.
-                'prediction_size': 'label_token_size' # Set by target_encoder.
-                }
-        },
-        # Loss
-        'nllloss': {
-            'priority': 7,
-            'type': 'NLLLoss',
-            'keymappings' : {
-                'targets': 'encoded_languages',
-                #'predictions': 'encoded_predictions',
-                'loss': 'loss'
-                }
-        },
-        # Predictions decoder.
-        'prediction_decoder': {
-            'priority': 8,
-            'type': 'WordDecoder',
-            'data_folder': '~/data/language_identification/dummy',
-            'encodings_file': 'language_name_encodings.csv',
-            'keymappings' : {'inputs': 'predictions', 'outputs': 'predicted_labels'}
-        }
-
+        'pipeline': {
+            #'skip': 'sentence_tokenizer',
+            # Sentences encoding.
+            'sentence_tokenizer': {
+                'type': 'SentenceTokenizer',
+                'priority': 2,
+                'keymappings' : {'inputs': 'sentences', 'outputs': 'tokenized_sentences'}
+            },
+            'sentence_encoder': {
+                'type': 'SentenceEncoder',
+                'priority': 3,
+                'data_folder': '~/data/language_identification/dummy',
+                'source_files': 'x_training.txt,x_test.txt',
+                'encodings_file': 'word_encodings.csv',
+                'keymappings' : {
+                    'inputs': 'tokenized_sentences',
+                    'outputs': 'encoded_sentences'
+                    }
+            },
+            'bow_encoder': {
+                'type': 'BOWEncoder',
+                'priority': 4,
+                'keymappings' : {
+                    'inputs': 'encoded_sentences',
+                    'outputs': 'bow_sencentes',
+                    'input_size': 'sentence_token_size', # Set by sentence_encoder.
+                    }
+            },
+            # Targets encoding.
+            'label_encoder': {
+                'type': 'LabelEncoder',
+                'priority': 5,
+                'data_folder': '~/data/language_identification/dummy',
+                'source_files': 'y_training.txt,y_test.txt',
+                'encodings_file': 'language_name_encodings.csv',
+                'keymappings' : {
+                    'inputs': 'languages',
+                    'outputs': 'encoded_languages'
+                    }
+            },
+            # Model
+            'model': {
+                'type': 'SoftmaxClassifier',
+                'priority': 6,
+                'keymappings' : {
+                    'inputs': 'bow_sencentes',
+                    #'predictions': 'encoded_predictions',
+                    'input_size': 'sentence_token_size', # Set by sentence_encoder.
+                    'prediction_size': 'label_token_size' # Set by target_encoder.
+                    }
+            },
+            # Loss
+            'nllloss': {
+                'priority': 7,
+                'type': 'NLLLoss',
+                'keymappings' : {
+                    'targets': 'encoded_languages',
+                    #'predictions': 'encoded_predictions',
+                    'loss': 'loss'
+                    }
+            },
+            # Predictions decoder.
+            'prediction_decoder': {
+                'priority': 8,
+                'type': 'WordDecoder',
+                'data_folder': '~/data/language_identification/dummy',
+                'encodings_file': 'language_name_encodings.csv',
+                'keymappings' : {'inputs': 'predictions', 'outputs': 'predicted_labels'}
+            }
+        } #: pipeline
         })
 
     batch_size = 2
 
+
     #### Pipeline "configuration" ####
-    pipeline = Pipeline(params)
+    pipeline = Pipeline()
+
+    # Build problem.
+    errors = pipeline.create_problem("problem", params["problem"])
     # Build pipeline.
-    errors = pipeline.build()
+    errors += pipeline.build_pipeline(params["pipeline"])
+
     print(pipeline.summarize())
 
     # Handshake definitions.
