@@ -4,9 +4,9 @@ import logging
 import torch.optim as optim
 from torch.utils.data import DataLoader
 
-from ptp.utils.param_interface import ParamInterface
-from ptp.utils.problem_manager import ProblemManager
-from ptp.utils.pipeline_manager import PipelineManager
+from ptp.configuration.param_interface import ParamInterface
+from ptp.configuration.problem_manager import ProblemManager
+from ptp.configuration.pipeline_manager import PipelineManager
 
 
 
