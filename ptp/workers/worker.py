@@ -108,9 +108,9 @@ class Worker(object):
             self.parser.add_argument('--expdir',
                                      dest='expdir',
                                      type=str,
-                                     default="./experiments",
+                                     default="~/experiments",
                                      help='Path to the directory where the experiment(s) folders are/will be stored.'
-                                          ' (DEFAULT: ./experiments)')
+                                          ' (DEFAULT: ~/experiments)')
 
             self.parser.add_argument('--savetag',
                                      dest='savetag',
