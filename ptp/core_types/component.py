@@ -48,7 +48,7 @@ class Component(abc.ABC):
         :param name: Name of the component.
 
         :param params: Dictionary of parameters (read from configuration ``.yaml`` file).
-        :type params: ``utils.param_interface.ParamInterface``
+        :type params: ``configuration.param_interface.ParamInterface``
 
         """
         self.name = name
@@ -97,7 +97,7 @@ class Component(abc.ABC):
         Function returns a dictionary with definitions of input data that are required by the component.
         Abstract, must be implemented by all derived classes.
 
-        :return: dictionary containing input data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
+        :return: dictionary containing input data definitions (each of type :py:class:`ptp.configuration.DataDefinition`).
         """
         pass
 
@@ -107,7 +107,7 @@ class Component(abc.ABC):
         Function returns a dictionary with definitions of output data produced the component.
         Abstract, must be implemented by all derived classes.
 
-        :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
+        :return: dictionary containing output data definitions (each of type :py:class:`ptp.configuration.DataDefinition`).
         """
         pass
 
@@ -115,7 +115,7 @@ class Component(abc.ABC):
         """ 
         Checks whether all_definitions contain fields required by the given component.
 
-        :param all_definitions: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
+        :param all_definitions: dictionary containing output data definitions (each of type :py:class:`ptp.configuration.DataDefinition`).
 
         :param log_errors: Logs the detected errors (DEFAULT: TRUE)
 
@@ -163,7 +163,7 @@ class Component(abc.ABC):
         """ 
         Exports output definitinos to all_definitions, checking errors (e.g. if output field is already present in all_definitions).
 
-        :param all_definitions: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
+        :param all_definitions: dictionary containing output data definitions (each of type :py:class:`ptp.configuration.DataDefinition`).
 
         :param log_errors: Logs the detected errors (DEFAULT: TRUE)
 
@@ -200,44 +200,39 @@ class Component(abc.ABC):
         Method responsible for processing the data dict.
         Abstract, must be implemented by all derived classes.
 
-        :param data_dict: :py:class:`ptp.utils.DataDict` object containing both input data to be processed and that will be extended by the results.
+        :param data_dict: :py:class:`ptp.core_types.DataDict` object containing both input data to be processed and that will be extended by the results.
         """
         pass
 
 
     def add_statistics(self, stat_col):
         """
-        Adds statistics to :py:class:`ptp.utils.StatisticsCollector`.
+        Adds statistics to :py:class:`ptp.configuration.StatisticsCollector`.
 
         .. note::
 
-
             Empty - To be redefined in inheriting classes.
 
-
-        :param stat_col: :py:class:`ptp.utils.StatisticsCollector`.
+        :param stat_col: :py:class:`ptp.configuration.StatisticsCollector`.
 
         """
         pass
 
 
-    def collect_statistics(self, stat_col, data_dict, logits):
+    def collect_statistics(self, stat_col, data_dict):
         """
         Base statistics collection.
 
          .. note::
 
-
             Empty - To be redefined in inheriting classes. The user has to ensure that the corresponding entry \
-            in the :py:class:`ptp.utils.StatisticsCollector` has been created with \
+            in the :py:class:`ptp.configuration.StatisticsCollector` has been created with \
             :py:func:`add_statistics` beforehand.
 
-        :param stat_col: :py:class:`ptp.utils.StatisticsCollector`.
+        :param stat_col: :py:class:`ptp.configuration.StatisticsCollector`.
 
-        :param data_dict: ``DataDict`` containing inputs and targets.
-        :type data_dict: :py:class:`ptp.utils.DataDict`
-
-        :param logits: Predictions being output of the model (:py:class:`torch.Tensor`).
+        :param data_dict: ``DataDict`` containing inputs, targets etc.
+        :type data_dict: :py:class:`ptp.core_types.DataDict`
 
         """
         pass
@@ -245,14 +240,13 @@ class Component(abc.ABC):
 
     def add_aggregators(self, stat_agg):
         """
-        Adds statistical aggregators to :py:class:`ptp.utils.StatisticsAggregator`.
+        Adds statistical aggregators to :py:class:`ptp.configuration.StatisticsAggregator`.
 
         .. note::
 
             Empty - To be redefined in inheriting classes.
 
-
-        :param stat_agg: :py:class:`ptp.utils.StatisticsAggregator`.
+        :param stat_agg: :py:class:`ptp.configuration.StatisticsAggregator`.
 
         """
         pass
@@ -260,8 +254,8 @@ class Component(abc.ABC):
 
     def aggregate_statistics(self, stat_col, stat_agg):
         """
-        Aggregates the statistics collected by :py:class:`ptp.utils.StatisticsCollector` and adds the \
-        results to :py:class:`ptp.utils.StatisticsAggregator`.
+        Aggregates the statistics collected by :py:class:`ptp.configuration.StatisticsCollector` and adds the \
+        results to :py:class:`ptp.configuration.StatisticsAggregator`.
 
          .. note::
 
@@ -269,10 +263,9 @@ class Component(abc.ABC):
             The user can override this function in subclasses but should call \
             :py:func:`aggregate_statistics` to collect basic statistical aggregators (if set).
 
+        :param stat_col: :py:class:`ptp.configuration.StatisticsCollector`.
 
-        :param stat_col: :py:class:`ptp.utils.StatisticsCollector`.
-
-        :param stat_agg: :py:class:`ptp.utils.StatisticsAggregator`.
+        :param stat_agg: :py:class:`ptp.configuration.StatisticsAggregator`.
 
         """
         pass

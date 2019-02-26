@@ -20,6 +20,7 @@ import os.path
 import signal
 import logging
 import inspect
+import numpy as np
 
 from torch.utils.data import DataLoader
 
@@ -100,7 +101,7 @@ class ProblemManager(object):
                 self.params['dataloader'].add_config_params({'shuffle': False})
 
             # build the DataLoader on top of the validation problem
-            self.loader = DataLoader(dataset=self.problem,
+            self.dataloader = DataLoader(dataset=self.problem,
                                 batch_size=self.params['problem']['batch_size'],
                                 shuffle=self.params['dataloader']['shuffle'],
                                 sampler=self.sampler,
@@ -192,7 +193,22 @@ class ProblemManager(object):
             problem_size = len(self.problem)
 
         # If problem_size is a multiciplity of batch_size OR drop last is set.
-        if (problem_size % self.loader.batch_size) == 0 or self.loader.drop_last:
-            return problem_size // self.loader.batch_size
+        if (problem_size % self.dataloader.batch_size) == 0 or self.dataloader.drop_last:
+            return problem_size // self.dataloader.batch_size
         else:
-            return (problem_size // self.loader.batch_size) + 1
+            return (problem_size // self.dataloader.batch_size) + 1
+
+
+    def __len__(self):
+        """
+        Returns total number of samples, calculated depending on the settings (batch size, dataloader, drop last etc.).
+        """
+        if self.dataloader.drop_last:
+            # if we are supposed to drop the last (incomplete) batch.
+            total_num_samples = len(self.dataloader) * self.dataloader.batch_size
+        elif self.sampler is not None:
+            total_num_samples = len(self.sampler)
+        else:
+            total_num_samples = len(self.problem)
+
+        return total_num_samples

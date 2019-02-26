@@ -24,13 +24,14 @@ import ptp
 
 from ptp.configuration.configuration_error import ConfigurationError
 from ptp.configuration.component_factory import ComponentFactory
+from ptp.configuration.app_state import AppState
 
 class PipelineManager(object):
     """
     Class responsible for instantiating the pipeline consisting of several components.
     """
 
-    def __init__(self, params):
+    def __init__(self, name, params):
         """
         Initializes the pipeline object.
 
@@ -39,8 +40,10 @@ class PipelineManager(object):
 
         """
         # Initialize the logger.
-        self.logger = logging.getLogger("PipelineManager")
+        self.name = name
         self.params = params
+        self.app_state = AppState()
+        self.logger = logging.getLogger(name)
 
         # Set initial values of all pipeline elements.
         # Empty list of all components, sorted by their priorities.
@@ -216,6 +219,7 @@ class PipelineManager(object):
 
         return errors
 
+
     def forward(self, data_dict):
         """
         Method responsible for processing the data dict, using all components in the components queue.
@@ -223,12 +227,32 @@ class PipelineManager(object):
         :param data_dict: :py:class:`ptp.utils.DataDict` object containing both input data to be processed and that will be extended by the results.
 
         """
+        # TODO: Convert to gpu/CUDA.
+        #if self.app_state.use_gpu:
+        #    data_dict = data_dict.cuda()
 
         for prio in self.__priorities:
             # Get component
             comp = self.__components[prio]
             # Forward step.
             comp(data_dict)
+            # TODO: Move to gpu!
+
+    def eval(self):
+        """ 
+        Sets evaluation mode for all models in the pipeline.
+        """
+        for model in self.models:
+            model.eval()
+
+
+    def train(self):
+        """ 
+        Sets evaluation mode for all models in the pipeline.
+        """
+        for model in self.models:
+            model.train()
+
 
     def zero_grad(self):
         """ 
@@ -252,7 +276,8 @@ class PipelineManager(object):
 
 
     def parameters(self, recurse=True):
-        """Returns an iterator over parameters of all trainable components.
+        """
+        Returns an iterator over parameters of all trainable components.
 
         This is typically passed to an optimizer.
 
@@ -268,5 +293,67 @@ class PipelineManager(object):
 
         """
         for model in self.models:
-            for name, param in model.named_parameters(recurse=recurse):
+            for _, param in model.named_parameters(recurse=recurse):
                 yield param
+
+
+    def named_parameters(self, recurse=True):
+        """
+        Returns an iterator over all named parameters of all trainable components.
+        """
+        for model in self.models:
+            for name, param in model.named_parameters(recurse=recurse):
+                yield name, param
+
+
+    def add_statistics(self, stat_col):
+        """
+        Adds statistics for every component in the pipeline.
+
+        :param stat_col: ``StatisticsCollector``.
+
+        """
+        for prio in self.__priorities:
+            comp = self.__components[prio]
+            comp.add_statistics(stat_col)
+
+
+    def collect_statistics(self, stat_col, data_dict):
+        """
+        Collects statistics for every component in the pipeline.
+
+        :param stat_col: :py:class:`ptp.utils.StatisticsCollector`.
+
+        :param data_dict: ``DataDict`` containing inputs, targets etc.
+        :type data_dict: :py:class:`ptp.core_types.DataDict`
+
+        """
+        for prio in self.__priorities:
+            comp = self.__components[prio]
+            comp.collect_statistics(stat_col, data_dict)
+
+
+    def add_aggregators(self, stat_agg):
+        """
+        Aggregates statistics by calling adequate aggregation method of every component in the pipeline.
+
+        :param stat_agg: ``StatisticsAggregator``.
+
+        """
+        for prio in self.__priorities:
+            comp = self.__components[prio]
+            comp.add_aggregators(stat_agg)
+
+
+    def aggregate_statistics(self, stat_col, stat_agg):
+        """
+        Aggregates statistics by calling adequate aggregation method of every component in the pipeline.
+
+        :param stat_col: ``StatisticsCollector``
+
+        :param stat_agg: ``StatisticsAggregator``
+
+        """
+        for prio in self.__priorities:
+            comp = self.__components[prio]
+            comp.aggregate_statistics(stat_col, stat_agg)

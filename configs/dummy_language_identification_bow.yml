@@ -22,13 +22,14 @@ training:
 
 # Validation parameters:
 validation:
-  problem: &problem
+  problem: *problem
 
 # Testing parameters:
 testing:
-  problem: &problem
+  problem: *problem
 
 pipeline:
+  name: language_classifier
   #skip: sentence_tokenizer
   # Sentences encoding.
   sentence_tokenizer:
@@ -53,6 +54,7 @@ pipeline:
         inputs: encoded_sentences
         outputs: bow_sencentes
         input_size: sentence_token_size # Set by sentence_encoder.
+  
   # Targets encoding.
   label_encoder:
       type: LabelEncoder
@@ -63,6 +65,7 @@ pipeline:
       keymappings:
         inputs: languages
         outputs: encoded_languages
+  
   # Model
   classifier:
     type: SoftmaxClassifier
@@ -72,6 +75,7 @@ pipeline:
       #predictions: encoded_predictions
       input_size: sentence_token_size # Set by sentence_encoder.
       prediction_size: label_token_size # Set by target_encoder.
+  
   # Loss
   nllloss:
     type: NLLLoss

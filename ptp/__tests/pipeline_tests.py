@@ -45,7 +45,7 @@ class TestPipeline(unittest.TestCase):
                 }
             })
         # Build object.
-        pipe = PipelineManager(params)
+        pipe = PipelineManager('testpm', params)
         pipe.build(False)
 
         # Assert type.
@@ -65,7 +65,7 @@ class TestPipeline(unittest.TestCase):
                 }
             })
         # Build object.
-        pipe = PipelineManager(params)
+        pipe = PipelineManager('testpm', params)
         pipe.build(False)
 
         # Assert type.
@@ -86,7 +86,7 @@ class TestPipeline(unittest.TestCase):
                 }
             })
         # Build object.
-        pipe = PipelineManager(params)
+        pipe = PipelineManager('testpm', params)
         pipe.build(False)
 
         # Assert no components were created.
@@ -110,8 +110,7 @@ class TestPipeline(unittest.TestCase):
                     'priority': 0.1
                 }
             })
-        # Build object.
-        pipe = PipelineManager(params)
+        pipe = PipelineManager('testpm', params)
         pipe.build(False)
 
         # Assert the right order of components.
