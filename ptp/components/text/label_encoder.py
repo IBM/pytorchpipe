@@ -14,6 +14,8 @@
 
 __author__ = "Tomasz Kornuta"
 
+import torch
+
 from ptp.components.text.token_encoder import TokenEncoder
 from ptp.core_types.data_definition import DataDefinition
 
@@ -47,7 +49,7 @@ class LabelEncoder(TokenEncoder):
         :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
         """
         return {
-            self.key_outputs: DataDefinition([-1, 1], [list, int], "Batch of labels, each represented as a single index [BATCH_SIZE] x [index]")
+            self.key_outputs: DataDefinition([-1], [torch.Tensor], "Batch of labels, each represented as a single index [BATCH_SIZE] x [index]")
             }
 
     def __call__(self, data_dict):
@@ -59,7 +61,7 @@ class LabelEncoder(TokenEncoder):
 
             - "inputs": expected input field containing list of words [BATCH_SIZE] x x [string]
 
-            - "outputs": added output field containing list of indices  [BATCH_SIZE] x [1] 
+            - "outputs": added output field containing list of indices  [BATCH_SIZE] 
         """
         # Get inputs to be encoded.
         inputs = data_dict[self.key_inputs]
@@ -70,5 +72,7 @@ class LabelEncoder(TokenEncoder):
             # Process single token.
             output_sample = self.word_to_ix[sample]
             outputs_list.append(output_sample)
+        # Transform to tensor.
+        output_tensor = torch.tensor(outputs_list)
         # Create the returned dict.
-        data_dict.extend({self.key_outputs: outputs_list})
+        data_dict.extend({self.key_outputs: output_tensor})
