@@ -17,7 +17,9 @@
 __author__ = "Tomasz Kornuta"
 
 
+import torch
 import logging
+from datetime import datetime
 from numpy import inf
 
 import ptp
@@ -148,6 +150,108 @@ class PipelineManager(object):
         return errors
 
 
+    def save(self, chkpt_dir, training_status, loss, episode, epoch):
+        """
+        Generic method saving the parameters of all models in the pipeline to a file.
+
+        :param chkpt_dir: Directory where the model will be saved.
+        :type chkpt_dir: str
+
+        :param training_status: String representing the current status of training.
+        :type training_status: str
+
+
+        :return: True if this is currently the best model (until the current episode, considering the loss).
+
+        """
+        # Checkpoint to be saved.
+        chkpt = {'name': self.name,
+                 'timestamp': datetime.now(),
+                 'episode': episode,
+                 'loss': loss,
+                 'status': training_status,
+                 'status_timestamp': datetime.now(),
+                }
+        
+        model_str = ''
+        # Save state dicts of all models.
+        for model in self.models:
+            chkpt[model.name] = model.state_dict()
+            model_str += "  + Model '{}' [{}] params saved \n".format(model.name, type(model).__name__)
+
+        # Save the intermediate checkpoint.
+        if self.app_state.args.save_intermediate:
+            filename = chkpt_dir + self.name + '_episode_{:05d}.pt'.format(episode)
+            torch.save(chkpt, filename)
+            log_str = "Exporting pipeline '{}' parameters to checkpoint {}:\n".format(self.name, filename)
+            log_str += model_str
+            self.logger.info(log_str)
+
+        # Save the best "model".
+        # loss = loss.cpu()  # moving loss value to cpu type to allow (initial) comparison with numpy type
+        if loss < self.best_loss:
+            # Save best loss and status.
+            self.best_loss = loss
+            self.best_status = training_status
+            # Save checkpoint.
+            filename = chkpt_dir + self.name + '_best.pt'
+            torch.save(chkpt, filename)
+            log_str = "Exporting pipeline '{}' parameters to checkpoint {}:\n".format(self.name, filename)
+            log_str += model_str
+            self.logger.info(log_str)
+            return True
+        elif self.best_status != training_status:
+            filename = chkpt_dir + self.name + '_best.pt'
+            # Load checkpoint.
+            chkpt_loaded = torch.load(filename, map_location=lambda storage, loc: storage)
+            # Update status and status time.
+            chkpt_loaded['status'] = training_status
+            chkpt_loaded['status_timestamp'] = datetime.now()
+            # Save updated checkpoint.
+            torch.save(chkpt_loaded, filename)
+            self.logger.info("Updated training status in checkpoint {}".format(filename))
+        # Else: that was not the best "model".
+        return False
+
+    def load(self, checkpoint_file):
+        """
+        Loads parameters of models in the pipeline from the specified checkpoint file.
+
+        :param checkpoint_file: File containing dictionary with states of all models in the pipeline with some additional checkpoint statistics.
+
+        """
+        # Load checkpoint
+        # This is to be able to load a CUDA-trained model on CPU
+        chkpt = torch.load(checkpoint_file, map_location=lambda storage, loc: storage)
+
+        log_str = "Importing pipeline '{}' parameters from checkpoint from {} (episode: {}, loss: {}, status: {}):\n".format(
+                chkpt['name'],
+                chkpt['timestamp'],
+                chkpt['episode'],
+                chkpt['loss'],
+                chkpt['status']
+                )
+        model_str = ''
+        warning = False
+        # Save state dicts of all models.
+        for model in self.models:
+            if model.name in chkpt.keys():
+                # Load model.
+                model.load_state_dict(chkpt[model.name])
+                model_str += "  + Model '{}' [{}] params loaded\n".format(model.name, type(model).__name__)
+            else:
+                model_str += "  + Model '{}' [{}] params not found in checkpoint!\n".format(model.name, type(model).__name__)
+                warning = True
+
+        # Log results.
+        log_str += model_str
+        if warning:
+            self.logger.warning(log_str)
+        else:
+            self.logger.info(log_str)
+
+
+
     def __getitem__(self, number):
         """
         Returns the component, using the enumeration resulting from priorities.
@@ -171,13 +275,14 @@ class PipelineManager(object):
         return length
 
 
-    def summarize_io_header(self):
+    def summarize_all_components_header(self):
         """
-        Creates the summary header.
+        Creates the summary header containing components with inputs-outputs definitions.
 
         :return: Summary header as a str.
         """
-        summary_str = '\n' + '='*80 + '\n'
+        summary_str  = 'Summary of the created pipeline:\n'
+        summary_str += '='*80 + '\n'
         summary_str += 'Pipeline\n'
         summary_str += '  + Component name (type) [priority]\n'
         summary_str += '      Inputs:\n' 
@@ -188,7 +293,7 @@ class PipelineManager(object):
         return summary_str
 
 
-    def summarize_io(self):
+    def summarize_all_components(self):
         """
         Summarizes the pipeline by showing all its components (excluding problem).
 
@@ -200,6 +305,33 @@ class PipelineManager(object):
             comp = self.__components[prio]
             summary_str += comp.summarize_io(prio)
         summary_str += '=' * 80 + '\n'
+        return summary_str
+
+    def summarize_models_header(self):
+        """
+        Creates the summary header containing details of models.
+
+        :return: Summary header as a str.
+        """
+        summary_str  = 'Summary of the models in the pipeline:\n'
+        summary_str += '='*80 + '\n'
+        summary_str += 'Model name (Type) \n'
+        summary_str += '  + Submodule name (Type) \n'
+        summary_str += '      Matrices: [(name, dims), ...]\n'
+        summary_str += '      Trainable Params: #\n'
+        summary_str += '      Non-trainable Params: #\n'
+        summary_str += '=' * 80 + '\n'
+        return summary_str
+
+    def summarize_models(self):
+        """
+        Summarizes the pipeline by showing all its components (excluding problem).
+
+        :return: Summary as a str.
+        """
+        summary_str = '' 
+        for model in self.models:
+            summary_str += model.summarize()
         return summary_str
 
 

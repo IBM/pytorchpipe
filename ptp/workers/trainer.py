@@ -236,42 +236,16 @@ class Trainer(Worker):
         errors += self.pipeline.build()
 
         # Show pipeline.
-        summary_str = self.pipeline.summarize_io_header()
+        summary_str = self.pipeline.summarize_all_components_header()
         summary_str += self.training.problem.summarize_io("training")
         summary_str += self.validation.problem.summarize_io("validation")
-        summary_str += self.pipeline.summarize_io()
+        summary_str += self.pipeline.summarize_all_components()
         self.logger.info(summary_str)
         
         # Check errors.
         if errors > 0:
             self.logger.error('Found {} errors, terminating execution'.format(errors))
             exit(-2)
-
-        # Load the pretrained models params from checkpoint.
-        #try: 
-        #    # Check command line arguments, then check load option in config.
-        #    if self.flags.model != "":
-        #        pipeline_name = self.flags.model
-        #        msg = "command line (--m)"
-        #    elif "load" in self.params['model']:
-        #        pipeline_name = self.params['model']['load']
-        #        msg = "model section of the configuration file"
-        #    else:
-        #        pipeline_name = ""
-        #    # Try to load the model.
-        #    if pipeline_name != "":
-        #        if os.path.isfile(pipeline_name):
-        #            # Load parameters from checkpoint.
-        #            self.model.load(pipeline_name)
-        #        else:
-        #            raise Exception("Couldn't load the checkpoint {} indicated in the {}: file does not exist".format(pipeline_name, msg))
-        #except KeyError:
-        #    self.logger.error("File {} indicated in the {} seems not to be a valid model checkpoint".format(pipeline_name, msg))
-        #    exit(-5)
-        #except Exception as e:
-        #    self.logger.error(e)
-        #    # Exit by following the logic: if user wanted to load the model but failed, then continuing the experiment makes no sense.
-        #    exit(-6)
 
         # Handshake definitions.
         self.logger.info("Handshaking training pipeline")
@@ -287,15 +261,38 @@ class Trainer(Worker):
             self.logger.error('Found {} errors, terminating execution'.format(errors))
             exit(-2)
 
-        # Show pipeline.
-        summary_str = self.pipeline.summarize_io_header()
-        summary_str += self.training.problem.summarize_io()
-        summary_str += self.pipeline.summarize_io()
-        self.logger.info(summary_str)
+
+        # Load the pretrained models params from checkpoint.
+        try: 
+            # Check command line arguments, then check load option in config.
+            if self.app_state.args.load_checkpoint != "":
+                pipeline_name = self.app_state.args.load_checkpoint
+                msg = "command line (--load)"
+            elif "load" in self.params['pipeline']:
+                pipeline_name = self.params['pipeline']['load']
+                msg = "'pipeline' section of the configuration file"
+            else:
+                pipeline_name = ""
+            # Try to load the model.
+            if pipeline_name != "":
+                if os.path.isfile(pipeline_name):
+                    # Load parameters from checkpoint.
+                    self.pipeline.load(pipeline_name)
+                else:
+                    raise Exception("Couldn't load the checkpoint {} indicated in the {}: file does not exist".format(pipeline_name, msg))
+        except KeyError:
+            self.logger.error("File {} indicated in the {} seems not to be a valid model checkpoint".format(pipeline_name, msg))
+            exit(-5)
+        except Exception as e:
+            self.logger.error(e)
+            # Exit by following the logic: if user wanted to load the model but failed, then continuing the experiment makes no sense.
+            exit(-6)
+
 
         # Log the model summaries.
-        for model in self.pipeline.models:
-            self.logger.info(model.summarize())
+        summary_str = self.pipeline.summarize_models_header()
+        summary_str += self.pipeline.summarize_models()
+        self.logger.info(summary_str)
 
         # Move the models in the pipeline to GPU.
         if self.app_state.args.use_gpu:
