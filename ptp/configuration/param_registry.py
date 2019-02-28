@@ -195,7 +195,7 @@ class ParamRegistry(Mapping, metaclass=MetaSingletonABC):
         Check whether two registrys are equal (just for the purpose of compatibility with base Mapping class).
         """
         if isinstance(other, self.__class__):
-            # As this is singleton class - the follwing is always True.
+            # As this is singleton class - the following is always True.
             return self._params == other._params
         else:
             return False

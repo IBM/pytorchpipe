@@ -101,6 +101,16 @@ class StatisticsCollector(Mapping):
         """
         return self.statistics.__iter__()
 
+    def __eq__(self, other):
+        """
+        Check whether two collectors are equal (just for the purpose of compatibility with the base Mapping class).
+        """
+        if isinstance(other, self.__class__):
+            # Check statistics and formatting.
+            return self.statistics == other.statistics and self.formatting == other.formatting
+        else:
+            return False
+
     def empty(self):
         """
         Empty the list associated to the keys of the current statistics collector.
