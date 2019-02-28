@@ -3,5 +3,3 @@ from .models import *
 from .problems import *
 from .text import *
 
-
-__all__ = [ ]

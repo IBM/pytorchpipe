@@ -72,13 +72,13 @@ class TestPipeline(unittest.TestCase):
         self.assertEqual(type(pipe[0]).__name__, "BOWEncoder")
 
 
-    def test_skip_section(self):
-        """ Tests whether skipping works properly. """
+    def test_disable_component(self):
+        """ Tests whether skipping (disable) works properly. """
         # Set param registry.
         ParamRegistry()._clear_registry()
         params = ParamInterface()
         params.add_default_params({
-            'skip': 'bow_encoder',
+            'disable': 'bow_encoder',
             'bow_encoder' : 
                 {
                     'type': 'BOWEncoder',

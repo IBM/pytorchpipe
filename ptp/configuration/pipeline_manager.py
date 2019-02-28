@@ -79,7 +79,7 @@ class PipelineManager(object):
         if "disable" in self.params:
             disabled_components = [*disabled_components, *self.params["disable"].split(",")]
         # Add components to disable by the ones from command line arguments.
-        if self.app_state.args.disable != '':
+        if (self.app_state.args is not None) and (self.app_state.args.disable != ''):
             disabled_components = [*disabled_components, *self.app_state.args.disable.split(",")]
 
         for c_key, c_params in self.params.items():
