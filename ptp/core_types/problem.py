@@ -16,9 +16,7 @@
 
 __author__ = "Tomasz Kornuta & Vincent Marois"
 
-import signal
 import torch
-import numpy as np
 from torch.utils.data import Dataset
 
 from ptp.core_types.component import Component
@@ -63,6 +61,22 @@ class Problem(Component, Dataset):
         # Empty curriculum learning params - for now.
         self.curriculum_params = {}
 
+
+    def summarize_io(self, priority = -1):
+        """
+        Summarizes the problem by showing its name, type and output definitions.
+
+        :param priority: Problem priority (DEFAULT: -1)
+
+        :return: Summary as a str.
+
+        """
+        summary_str = "  + {} ({}) [{}]\n".format(self.name, type(self).__name__, priority)
+        # Get outputs.
+        summary_str += '      Outputs:\n' 
+        for key,value in self.output_data_definitions().items():
+            summary_str += '        {}: {}, {}, {}\n'.format(key, value.dimensions, value.types, value. description)
+        return summary_str
 
     def __call__(self, data_dict):
         """
@@ -126,30 +140,6 @@ class Problem(Component, Dataset):
 
         """
         return DataDict({key: torch.utils.data.dataloader.default_collate([d[key] for d in data_dict]) for key in data_dict[0]})
-
-
-    def worker_init_fn(self, worker_id):
-        """
-        Function to be called by :py:class:`torch.utils.data.DataLoader` on each worker subprocess, \
-        after seeding and before data loading. (default: ``None``).
-
-        .. note::
-
-            Set the ``NumPy`` random seed of the worker equal to the previous NumPy seed + its ``worker_id``\
-             to avoid having all workers returning the same random numbers.
-
-
-        :param worker_id: the worker id (in [0, :py:class:`torch.utils.data.DataLoader`.num_workers - 1])
-        :type worker_id: int
-
-        :return: ``None`` by default
-        """
-        # Set random seed of a worker.
-        np.random.seed(seed=np.random.get_state()[1][0] + worker_id)
-
-        # Ignores SIGINT signal - what enables "nice" termination of dataloader worker threads.
-        # https://discuss.pytorch.org/t/dataloader-multiple-workers-and-keyboardinterrupt/9740/2
-        signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 
     def initialize_epoch(self, epoch):

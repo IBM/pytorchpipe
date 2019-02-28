@@ -19,8 +19,8 @@ __author__ = "Alexis Asseman, Tomasz Kornuta"
 
 import copy
 from abc import ABCMeta
-from collections import Mapping
-from ptp.utils.singleton import SingletonMetaClass
+from collections.abc import Mapping
+from ptp.configuration.singleton import SingletonMetaClass
 
 
 class MetaSingletonABC(SingletonMetaClass, ABCMeta):
@@ -195,7 +195,7 @@ class ParamRegistry(Mapping, metaclass=MetaSingletonABC):
         Check whether two registrys are equal (just for the purpose of compatibility with base Mapping class).
         """
         if isinstance(other, self.__class__):
-            # As this is singleton class - the follwing is always True.
+            # As this is singleton class - the following is always True.
             return self._params == other._params
         else:
             return False

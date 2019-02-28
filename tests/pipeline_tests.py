@@ -18,10 +18,10 @@ __author__ = "Tomasz Kornuta"
 
 import unittest
 
-from ptp.utils.param_interface import ParamInterface
-from ptp.utils.param_registry import ParamRegistry
-from ptp.utils.app_state import AppState
-from ptp.utils.pipeline import Pipeline
+from ptp.configuration.param_interface import ParamInterface
+from ptp.configuration.param_registry import ParamRegistry
+from ptp.configuration.app_state import AppState
+from ptp.configuration.pipeline_manager import PipelineManager
 
 class TestPipeline(unittest.TestCase):
 
@@ -40,13 +40,13 @@ class TestPipeline(unittest.TestCase):
         params.add_default_params({
             'bow_encoder' : 
                 {
-                    'type': 'ptp.text.bow_encoder.BOWEncoder',
+                    'type': 'ptp.components.text.bow_encoder.BOWEncoder',
                     'priority': 1.1
                 }
             })
         # Build object.
-        pipe = Pipeline()
-        pipe.build_pipeline(params)
+        pipe = PipelineManager('testpm', params)
+        pipe.build(False)
 
         # Assert type.
         self.assertEqual(type(pipe[0]).__name__, "BOWEncoder")
@@ -65,20 +65,20 @@ class TestPipeline(unittest.TestCase):
                 }
             })
         # Build object.
-        pipe = Pipeline()
-        pipe.build_pipeline(params)
+        pipe = PipelineManager('testpm', params)
+        pipe.build(False)
 
         # Assert type.
         self.assertEqual(type(pipe[0]).__name__, "BOWEncoder")
 
 
-    def test_skip_section(self):
-        """ Tests whether skipping works properly. """
+    def test_disable_component(self):
+        """ Tests whether skipping (disable) works properly. """
         # Set param registry.
         ParamRegistry()._clear_registry()
         params = ParamInterface()
         params.add_default_params({
-            'skip': 'bow_encoder',
+            'disable': 'bow_encoder',
             'bow_encoder' : 
                 {
                     'type': 'BOWEncoder',
@@ -86,8 +86,8 @@ class TestPipeline(unittest.TestCase):
                 }
             })
         # Build object.
-        pipe = Pipeline()
-        pipe.build_pipeline(params)
+        pipe = PipelineManager('testpm', params)
+        pipe.build(False)
 
         # Assert no components were created.
         self.assertEqual(len(pipe), 0)
@@ -110,9 +110,8 @@ class TestPipeline(unittest.TestCase):
                     'priority': 0.1
                 }
             })
-        # Build object.
-        pipe = Pipeline()
-        pipe.build_pipeline(params)
+        pipe = PipelineManager('testpm', params)
+        pipe.build(False)
 
         # Assert the right order of components.
         self.assertEqual(len(pipe), 2)
@@ -120,5 +119,5 @@ class TestPipeline(unittest.TestCase):
         self.assertEqual(pipe[1].name, 'bow_encoder2')
 
 
-if __name__ == "__main__":
-    unittest.main()
+#if __name__ == "__main__":
+#    unittest.main()

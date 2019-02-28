@@ -18,8 +18,8 @@
 __author__ = "Alexis Asseman, Tomasz Kornuta"
 
 import yaml
-from collections import Mapping
-from ptp.utils.param_registry import ParamRegistry
+from collections.abc import Mapping
+from ptp.configuration.param_registry import ParamRegistry
 
 
 class ParamInterface(Mapping):

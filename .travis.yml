@@ -51,7 +51,7 @@ script:
   #- python3 -m flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
   # Run unittests in ptp/test.
   #- python -m unittest ptp
-  - coverage run -m unittest discover -s ptp
+  - coverage run -m unittest #discover -s ptp
   # Build documentation.
   # TODO.
 
