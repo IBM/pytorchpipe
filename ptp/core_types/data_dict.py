@@ -88,6 +88,21 @@ class DataDict(collections.abc.MutableMapping):
             # Call setitem with "additional argument".
             self.__setitem__(key, value, addkey=True)
 
+    def clear(self, dict_to_leave):
+        """
+        Removes all keys (and associated values) from DatDict EXCEPT the ones passed in ``dict_to_leave``.
+        """
+        # Keys to remove.
+        rem_keys =  [key for key in self.keys() if key not in dict_to_leave.keys()]
+        # Leave index.
+        if 'index' in rem_keys:
+            rem_keys.remove('index')
+        # Remove.
+        for key in rem_keys:
+            self.__delitem__(key, delkey=True)
+
+
+
     def __getitem__(self, key):
         """
         Value getter function.
@@ -193,7 +208,7 @@ class DataDict(collections.abc.MutableMapping):
 
     def cuda(self, device=None, non_blocking=False):
         """
-        Returns a copy of this object in CUDA memory.
+        Returns a copy of this object in GPU/CUDA memory.
 
         .. note::
 
@@ -239,23 +254,3 @@ class DataDict(collections.abc.MutableMapping):
                 detached_datadict[key] = self[key]
 
         return detached_datadict
-
-
-if __name__ == '__main__':
-    """Use cases for DataDict"""
-
-    data_definitions = {'inputs': {'size': [-1, -1], 'type': [torch.Tensor]},
-                        'targets': {'size': [-1], 'type': [torch.Tensor]}
-                        }
-
-    datadict = DataDict({key: None for key in data_definitions.keys()})
-
-    # Set values.
-    datadict['inputs'] = 1.2
-    datadict['targets'] = "string"
-    # Extend.
-    datadict.extend({'predictions': 1})
-
-    # Print content.
-    print(repr(datadict))
-

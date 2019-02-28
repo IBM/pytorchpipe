@@ -29,6 +29,7 @@ if __name__ == "__main__":
             }
         },
         'pipeline': {
+            'name': "language_identification_bow",
             #'skip': 'sentence_tokenizer',
             # Sentences encoding.
             'sentence_tokenizer': {
@@ -109,7 +110,7 @@ if __name__ == "__main__":
     errors += prob_mgr.build("problem")
 
     # Build pipeline.
-    pipe_mgr = PipelineManager(params["pipeline"])
+    pipe_mgr = PipelineManager(params["pipeline"]["name"], params["pipeline"])
     errors += pipe_mgr.build()
 
     # Show pipeline.

@@ -71,17 +71,25 @@ class PipelineManager(object):
         errors = 0
 
         # Check "skip" section.
-        sections_to_skip = "skip optimizer gradient_clipping terminal_conditions seed_torch seed_numpy".split()
-        if "skip" in self.params:
-            # Expand.
-            sections_to_skip = [*sections_to_skip, *self.params["skip"].split(",")]
+        sections_to_skip = "name disabled".split()
+        disabled_components = ''
+        # Add components to disable by the ones from configuration file.
+        if "disabled" in self.params:
+            disabled_components = [*disabled_components, *self.params["disabled"].split(",")]
+        # Add components to disable by the ones from command line arguments.
+        if self.app_state.args.disabled != '':
+            disabled_components = [*disabled_components, *self.app_state.args.disabled.split(",")]
 
         for c_key, c_params in self.params.items():
             # The section "key" will be used as "component" name.
             try:
                 # Skip "special" sections.
                 if c_key in sections_to_skip:
-                    self.logger.info("Skipping section '{}'".format(c_key))
+                    #self.logger.info("Skipping section '{}'".format(c_key))
+                    continue
+                # Skip "disabled" components.
+                if c_key in disabled_components:
+                    self.logger.info("Disabling component '{}'".format(c_key))
                     continue
         
                 # Create component.
@@ -94,7 +102,7 @@ class PipelineManager(object):
 
                 # Check presence of priority.
                 if 'priority' not in c_params:
-                    raise ConfigurationError("Section '{}' does not contain the key 'priority' defining the pipeline order".format(c_key))
+                    raise KeyError("Section '{}' does not contain the key 'priority' defining the pipeline order".format(c_key))
 
                 # Get the priority.
                 try:
@@ -120,6 +128,11 @@ class PipelineManager(object):
                     self.losses.append(component)
 
             except ConfigurationError as e:
+                if log_errors:
+                    self.logger.error(e)
+                errors += 1
+                continue
+            except KeyError as e:
                 if log_errors:
                     self.logger.error(e)
                 errors += 1
@@ -183,7 +196,6 @@ class PipelineManager(object):
         for prio in self.__priorities:
             # Get component
             comp = self.__components[prio]
-            print(comp)
             summary_str += comp.summarize_io(prio)
         summary_str += '=' * 80 + '\n'
         return summary_str
@@ -245,13 +257,20 @@ class PipelineManager(object):
         for model in self.models:
             model.eval()
 
-
     def train(self):
         """ 
         Sets evaluation mode for all models in the pipeline.
         """
         for model in self.models:
             model.train()
+
+    def cuda(self):
+        """ 
+        Moves all models to GPU.
+        """
+        self.logger.info("Moving model(s) to GPU")
+        for model in self.models:
+            model.cuda()
 
 
     def zero_grad(self):
@@ -270,9 +289,28 @@ class PipelineManager(object):
         :param data_dict: :py:class:`ptp.utils.DataDict` object containing both input data to be processed and that will be extended by the results.
 
         """
+        if (len(self.losses) == 0):
+            raise ConfigurationError("Cannot train using backpropagation as there are no 'Loss' components")
         for loss in self.losses:
             for key in loss.loss_keys():
                 data_dict[key].backward()
+
+
+    def get_loss(self, data_dict):
+        """
+        Sums all losses and returns a single value that can be used e.g. in terminal condition or model(s) saving.
+
+        :param data_dict: :py:class:`ptp.utils.DataDict` object containing both input data to be processed and that will be extended by the results.
+
+        :return: Loss (scalar value).
+        """
+        if (len(self.losses) == 0):
+            raise ConfigurationError("Cannot train using backpropagation as there are no 'Loss' components")
+        loss_sum = 0
+        for loss in self.losses:
+            for key in loss.loss_keys():
+                loss_sum += data_dict[key].cpu().item()
+        return loss_sum
 
 
     def parameters(self, recurse=True):

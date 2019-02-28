@@ -23,6 +23,7 @@ training:
 # Validation parameters:
 validation:
   problem: *problem
+  partial_validation_interval: 10
 
 # Testing parameters:
 testing:
@@ -30,7 +31,7 @@ testing:
 
 pipeline:
   name: language_classifier
-  #skip: sentence_tokenizer
+  disabled: prediction_decoder
   # Sentences encoding.
   sentence_tokenizer:
       type: SentenceTokenizer

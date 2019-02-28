@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) IBM Corporation 2019
@@ -37,18 +36,17 @@ class AppState(metaclass=SingletonMetaClass):
         It is assumed that global variables are immutable, i.e. once a variable is set, it cannot be changed        
 
             >>> app_state["test1"] = 3 # Raises AtributeError
+
+    Additionally, it stores all properly parsed commandline arguments.
     """
 
     def __init__(self):
         """
         Constructor:
 
-            - Disable visualization by default,
         """
-        # Disable visualization by default.
-        self.visualize = False
-        # Disable GPU/CUDA by default.
-        self.use_gpu = False
+        # Empty commandline arguments.
+        self.args = None
 
         # Field storing global variables.
         self.__globals = dict()
@@ -85,7 +83,7 @@ class AppState(metaclass=SingletonMetaClass):
         :return: Associated Value.
         """
         if key not in self.__globals.keys():
-            msg = 'Key "{}" not present in global variables'.format(key)
+            msg = "Key '{}' not present in global variables".format(key)
             raise KeyError(msg)
         else:
             return self.__globals[key]

@@ -80,7 +80,7 @@ class ProblemManager(object):
 
         :param log_errors: Logs the detected errors (DEFAULT: TRUE)
 
-        :return: problem object (or None when faced errors)
+        :return: number of detected errors
         """
         try: 
             # Create component.

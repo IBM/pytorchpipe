@@ -58,27 +58,23 @@ class Trainer(Worker):
 
         # Add arguments to the specific parser.
         # These arguments will be shared by all basic trainers.
-        self.parser.add_argument('--tensorboard',
-                                 action='store',
-                                 dest='tensorboard', choices=[0, 1, 2],
-                                 type=int,
-                                 help="If present, enable logging to TensorBoard. Available log levels:\n"
-                                      "0: Log the collected statistics.\n"
-                                      "1: Add the histograms of the model's biases & weights (Warning: Slow).\n"
-                                      "2: Add the histograms of the model's biases & weights gradients "
-                                      "(Warning: Even slower).")
+        self.parser.add_argument(
+            '--tensorboard',
+            action='store',
+            dest='tensorboard', choices=[0, 1, 2],
+            type=int,
+            help="If present, enable logging to TensorBoard. Available log levels:\n"
+                "0: Log the collected statistics.\n"
+                "1: Add the histograms of the model's biases & weights (Warning: Slow).\n"
+                "2: Add the histograms of the model's biases & weights gradients "
+                "(Warning: Even slower).")
 
-        self.parser.add_argument('--visualize',
-                                 dest='visualize',
-                                 default='-1',
-                                 choices=[-1, 0, 1, 2, 3],
-                                 type=int,
-                                 help="Activate dynamic visualization (Warning: will require user interaction):\n"
-                                      "-1: disabled (DEFAULT)\n"
-                                      "0: Only during training episodes.\n"
-                                      "1: During both training and validation episodes.\n"
-                                      "2: Only during validation episodes.\n"
-                                      "3: Only during the last validation, after the training is completed.\n")
+        self.parser.add_argument(
+            '--save',
+            dest='save_intermediate',
+            action='store_true',
+            help='Setting to true results in saving intermediate models during training (DEFAULT: False)')
+
 
     def setup_experiment(self):
         """
@@ -128,17 +124,17 @@ class Trainer(Worker):
         super(Trainer, self).setup_experiment()
 
         # Check if config file was selected.
-        if self.flags.config == '':
+        if self.app_state.args.config == '':
             print('Please pass configuration file(s) as --c parameter')
             exit(-1)
 
         # Check the presence of the CUDA-compatible devices.
-        if self.flags.use_gpu and (torch.cuda.device_count() == 0):
+        if self.app_state.args.use_gpu and (torch.cuda.device_count() == 0):
             self.logger.error("Cannot use GPU as there are no CUDA-compatible devices present in the system!")
             exit(-2)
             
         # Get the list of configurations which need to be loaded.
-        configs_to_load = self.recurrent_config_parse(self.flags.config, [])
+        configs_to_load = self.recurrent_config_parse(self.app_state.args.config, [])
 
         # Read the YAML files one by one - but in reverse order -> overwrite the first indicated config(s)
         self.recurrent_config_load(configs_to_load)
@@ -176,9 +172,9 @@ class Trainer(Worker):
         while True:  # Dirty fix: if log_dir already exists, wait for 1 second and try again
             try:
                 time_str = '{0:%Y%m%d_%H%M%S}'.format(datetime.now())
-                if self.flags.savetag != '':
-                    time_str = time_str + "_" + self.flags.savetag
-                self.log_dir = self.flags.expdir + '/' + training_problem_type + '/' + pipeline_name + '/' + time_str + '/'
+                if self.app_state.args.savetag != '':
+                    time_str = time_str + "_" + self.app_state.args.savetag
+                self.log_dir = os.path.expanduser(self.app_state.args.expdir) + '/' + training_problem_type + '/' + pipeline_name + '/' + time_str + '/'
                 os.makedirs(self.log_dir, exist_ok=False)
             except FileExistsError:
                 sleep(1)
@@ -196,14 +192,14 @@ class Trainer(Worker):
         # Set random seeds in the training section.
         self.set_random_seeds('training', self.params['training'])
 
-        # Check if CUDA is available, if yes turn it on.
-        self.check_and_set_cuda(self.flags.use_gpu)
+        # Total number of detected errors.
+        errors =0
 
         ################# TRAINING PROBLEM ################# 
 
         # Build training problem manager.
         self.training = ProblemManager('training', self.params['training']) 
-        self.training.build()
+        errors += self.training.build()
         
         # parse the curriculum learning section in the loaded configuration.
         if 'curriculum_learning' in self.params['training']:
@@ -229,7 +225,7 @@ class Trainer(Worker):
         
         # Build validation problem manager.
         self.validation = ProblemManager('validation', self.params['validation'])
-        self.validation.build()
+        errors += self.validation.build()
 
         # Generate a single batch used for partial validation.
         self.validation_dict = next(iter(self.validation.dataloader))
@@ -238,7 +234,19 @@ class Trainer(Worker):
         
         # Build the model using the loaded configuration and the default values of the problem.
         self.pipeline = PipelineManager(pipeline_name, self.params['pipeline'])
-        self.pipeline.build()
+        errors += self.pipeline.build()
+
+        # Show pipeline.
+        summary_str = self.pipeline.summarize_io_header()
+        summary_str += self.training.problem.summarize_io("training")
+        summary_str += self.validation.problem.summarize_io("validation")
+        summary_str += self.pipeline.summarize_io()
+        self.logger.info(summary_str)
+        
+        # Check errors.
+        if errors > 0:
+            self.logger.error('Found {} errors, terminating execution'.format(errors))
+            exit(-2)
 
         # Load the pretrained model from checkpoint.
         #try: 
@@ -266,13 +274,19 @@ class Trainer(Worker):
         #    # Exit by following the logic: if user wanted to load the model but failed, then continuing the experiment makes no sense.
         #    exit(-6)
 
-        # Move the model to CUDA if applicable.
-        #if self.app_state.use_CUDA:
-        #    self.model.cuda()
+        # Handshake definitions.
+        self.logger.info("Handshaking training pipeline")
+        defs_training = self.training.problem.output_data_definitions()
+        errors += self.pipeline.handshake(defs_training)
 
+        self.logger.info("Handshaking validation pipeline")
+        defs_valid = self.validation.problem.output_data_definitions()
+        errors += self.pipeline.handshake(defs_valid)
 
-        # Handshaking!!
-        ## TODO!
+        # Check errors.
+        if errors > 0:
+            self.logger.error('Found {} errors, terminating execution'.format(errors))
+            exit(-2)
 
         # Show pipeline.
         summary_str = self.pipeline.summarize_io_header()
@@ -280,9 +294,13 @@ class Trainer(Worker):
         summary_str += self.pipeline.summarize_io()
         self.logger.info(summary_str)
 
-        # Log the model summary.
+        # Log the model summaries.
         for model in self.pipeline.models:
             self.logger.info(model.summarize())
+
+        # Move the models in the pipeline to GPU.
+        if self.app_state.args.use_gpu:
+            self.pipeline.cuda()
 
         ################# OPTIMIZER ################# 
 
@@ -292,9 +310,9 @@ class Trainer(Worker):
         del optimizer_conf['name']
 
         # Instantiate the optimizer and filter the model parameters based on if they require gradients.
-        self.optimizer = getattr(torch.optim, optimizer_name)(filter(lambda p: p.requires_grad,
-                                                                     self.pipeline.parameters()),
-                                                              **optimizer_conf)
+        self.optimizer = getattr(torch.optim, optimizer_name)(
+            filter(lambda p: p.requires_grad, self.pipeline.parameters()), **optimizer_conf)
+
 
     def add_statistics(self, stat_col):
         """
@@ -309,6 +327,7 @@ class Trainer(Worker):
         # Add default statistics with formatting.
         stat_col.add_statistic('epoch', '{:02d}')
 
+
     def add_aggregators(self, stat_agg):
         """
         Adds basic aggregators to to ``StatisticsAggregator`` and extends them with: epoch.
@@ -321,6 +340,7 @@ class Trainer(Worker):
 
         # add 'aggregators' for the epoch.
         stat_agg.add_aggregator('epoch', '{:02d}')
+
 
     def initialize_statistics_collection(self):
         """
@@ -366,6 +386,7 @@ class Trainer(Worker):
         # Create the csv file to store the validation statistic aggregations.
         self.validation_set_stats_file = self.validation_stat_agg.initialize_csv_file(self.log_dir, 'validation_set_agg_statistics.csv')
 
+
     def finalize_statistics_collection(self):
         """
         Finalizes the statistics collection by closing the csv files.
@@ -377,13 +398,14 @@ class Trainer(Worker):
         self.validation_batch_stats_file.close()
         self.validation_set_stats_file.close()
 
+
     def initialize_tensorboard(self):
         """
         Initializes the TensorBoard writers, and log directories.
 
         """
         # Create TensorBoard outputs - if TensorBoard is supposed to be used.
-        if self.flags.tensorboard is not None:
+        if self.app_state.args.tensorboard is not None:
             from tensorboardX import SummaryWriter
             self.training_batch_writer = SummaryWriter(self.log_dir + '/training')
             self.training_stat_col.initialize_tensorboard(self.training_batch_writer)
@@ -450,16 +472,6 @@ class Trainer(Worker):
         # Export collected statistics.
         self.export_all_statistics(self.validation_stat_col, '[Partial Validation]')
 
-        # Visualization of validation.
-        #if self.app_state.visualize:
-        #    # Allow for preprocessing
-        #    valid_batch, valid_logits = self.validation_problem.plot_preprocessing(valid_batch, valid_logits)
-        #
-        #    # Show plot, if user will press Stop then a SystemExit exception will be thrown.
-        #    self.model.plot(valid_batch, valid_logits)
-
-        # return valid_loss
-
     def validate_on_set(self, episode, epoch=None):
         """
         Performs a validation of the model on the whole validation set, using the validation ``DataLoader``.
@@ -495,22 +507,12 @@ class Trainer(Worker):
 
         with torch.no_grad():
             for ep, valid_batch in enumerate(self.validation.dataloader):
-                # 1. Perform forward step, get predictions and compute loss.
 
                 # Forward pass.
                 self.pipeline.forward(valid_batch)
                 # Collect the statistics.
                 self.collect_all_statistics(self.validation, self.pipeline, valid_batch,
                         self.validation_stat_col, ep, epoch)
-
-                # 2.Visualization of validation for the randomly selected batch
-                #if self.app_state.visualize and ep == vis_index:
-                #
-                #    # Allow for preprocessing
-                #    valid_batch, valid_logits = self.validation_problem.plot_preprocessing(valid_batch, valid_logits) 
-                #
-                #    # Show plot, if user will press Stop then a SystemExit exception will be thrown.
-                #    self.model.plot(valid_batch, valid_logits)
 
         # Aggregate statistics for the whole set.
         self.aggregate_all_statistics(self.validation, self.pipeline,
@@ -519,8 +521,6 @@ class Trainer(Worker):
         # Export aggregated statistics.
         self.export_all_statistics(self.validation_stat_agg, '[Full Validation]')
 
-        # Return the average validation loss.
-        #return self.validation_stat_agg['loss']
 
 if __name__ == '__main__':
     print("The trainer.py file contains only an abstract base class. Please try to use the \

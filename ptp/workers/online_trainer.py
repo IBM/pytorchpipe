@@ -103,7 +103,7 @@ class OnlineTrainer(Trainer):
         self.logger.info('\n' + '='*80)
 
         # Export and log configuration, optionally asking the user for confirmation.
-        self.export_experiment_configuration(self.log_dir, "training_configuration.yaml", self.flags.confirm)
+        self.export_experiment_configuration(self.log_dir, "training_configuration.yaml", self.app_state.args.confirm)
 
     def run_experiment(self):
         """
@@ -165,13 +165,6 @@ class OnlineTrainer(Trainer):
                 # reset all gradients
                 self.optimizer.zero_grad()
 
-                # Check the visualization flag - Set it if visualization is wanted during
-                # training & validation episodes.
-                if 0 <= self.flags.visualize <= 1:
-                    self.app_state.visualize = True
-                else:
-                    self.app_state.visualize = False
-
                 # Turn on training mode for the model.
                 self.pipeline.train()
 
@@ -197,16 +190,15 @@ class OnlineTrainer(Trainer):
                 self.optimizer.step()
 
                 # 5. Log collected statistics.
-
                 # 5.1. Export to csv - at every step.
                 self.training_stat_col.export_to_csv()
 
                 # 5.2. Export data to TensorBoard - at logging frequency.
-                if (self.training_batch_writer is not None) and (episode % self.flags.logging_interval == 0):
+                if (self.training_batch_writer is not None) and (episode % self.app_state.args.logging_interval == 0):
                     self.training_stat_col.export_to_tensorboard()
 
                     # Export histograms.
-                    if self.flags.tensorboard >= 1:
+                    if self.app_state.args.tensorboard >= 1:
                         for name, param in self.pipeline.named_parameters():
                             try:
                                 self.training_batch_writer.add_histogram(name, param.data.cpu().numpy(), episode,
@@ -216,7 +208,7 @@ class OnlineTrainer(Trainer):
                                 self.logger.error("  {} :: data :: {}".format(name, e))
 
                     # Export gradients.
-                    if self.flags.tensorboard >= 2:
+                    if self.app_state.args.tensorboard >= 2:
                         for name, param in self.pipeline.named_parameters():
                             try:
                                 self.training_batch_writer.add_histogram(name + '/grad', param.grad.data.cpu().numpy(),
@@ -226,29 +218,18 @@ class OnlineTrainer(Trainer):
                                 self.logger.error("  {} :: grad :: {}".format(name, e))
 
                 # 5.3. Log to logger - at logging frequency.
-                if episode % self.flags.logging_interval == 0:
+                if episode % self.app_state.args.logging_interval == 0:
                     self.logger.info(self.training_stat_col.export_to_string())
 
-                # 6. Check visualization of training data.
-                #if self.app_state.visualize:
-                #
-                #    # Allow for preprocessing
-                #    training_dict, logits = self.training.problem.plot_preprocessing(training_dict, logits)
-                #
-                #    # Show plot, if user will press Stop then a SystemExit exception will be thrown.
-                #    self.model.plot(training_dict, logits)
-
                 #  6. Validate and (optionally) save the model.
-                if False: # (episode % self.partial_validation_interval) == 0:
+                if (episode % self.partial_validation_interval) == 0:
 
-                    # Check visualization flag
-                    if 1 <= self.flags.visualize <= 2:
-                        self.app_state.visualize = True
-                    else:
-                        self.app_state.visualize = False
-
+                    # Clear the validation batch from all items aside of the ones originally returned by the problem.
+                    self.validation_dict.clear(self.validation.problem.output_data_definitions())
                     # Perform validation.
                     self.validate_on_batch(self.validation_dict, episode, epoch)
+                    # Get loss.
+                    validation_loss = self.pipeline.get_loss(self.validation_dict)
 
                     # Save the model using the latest validation statistics.
                     #self.model.save(self.model_dir, training_status, self.training_stat_col, self.validation_stat_col)
@@ -259,7 +240,7 @@ class OnlineTrainer(Trainer):
                     if self.curric_done or not self.must_finish_curriculum:
 
                         # Check the Partial Validation loss.
-                        if (self.validation_dict["loss"] < self.loss_stop):
+                        if (validation_loss < self.loss_stop):
                             # Change the status...
                             training_status = "Converged (Partial Validation Loss went below " \
                                 "Loss Stop threshold)"
@@ -315,25 +296,21 @@ class OnlineTrainer(Trainer):
             End of main training and validation loop. Perform final full validation.
             '''
             # Eventually perform "last" validation on batch.
-            if self.validation_stat_col["episode"] != episode:
+            if self.validation_stat_col["episode"][-1] != episode:
                 # We still must validate and try to save the model as it may perform better during this episode.
 
-                # Do not visualize.
-                self.app_state.visualize = False
-
+                # Clear the validation batch from all items aside of the ones originally returned by the problem.
+                self.validation_dict.clear(self.validation.problem.output_data_definitions())
                 # Perform validation.
                 self.validate_on_batch(self.validation_dict, episode, epoch)
+                # Get loss.
+                validation_loss = self.pipeline.get_loss(self.validation_dict)
 
                 # Try to save the model using the latest validation statistics.
                 #self.model.save(self.model_dir, training_status, self.training_stat_col, self.validation_stat_col)
 
             self.logger.info('\n' + '='*80)
             self.logger.info('Training finished because {}'.format(training_status))
-            # Check visualization flag - turn on visualization for last validation if needed.
-            if 2 <= self.flags.visualize <= 3:
-                self.app_state.visualize = True
-            else:
-                self.app_state.visualize = False
 
             # Validate over the entire validation set.
             self.validate_on_set(episode, epoch)

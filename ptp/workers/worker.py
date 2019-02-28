@@ -85,60 +85,75 @@ class Worker(object):
         # Add arguments to the specific parser.
         if add_default_parser_args:
             # These arguments will be shared by all basic workers.
-            self.parser.add_argument('--config',
-                                     dest='config',
-                                     type=str,
-                                     default='',
-                                     help='Name of the configuration file(s) to be loaded. '
-                                          'If specifying more than one file, they must be separated with coma ",".')
+            self.parser.add_argument(
+                '--config',
+                dest='config',
+                type=str,
+                default='',
+                help='Name of the configuration file(s) to be loaded. '
+                    'If specifying more than one file, they must be separated with coma ",".')
 
-            self.parser.add_argument('--pipeline',
-                                     type=str,
-                                     default='',
-                                     dest='pipeline',
-                                     help='Path to the checkpoint file containing the saved parameters'
-                                          ' of the pipeline models to load (should end with a .pt extension)')
+            self.parser.add_argument(
+                '--disabled',
+                type=str,
+                default='',
+                dest='disabled',
+                help='Comma-separated list of components to be disabled (DEFAULT: empty)')
 
-            self.parser.add_argument('--gpu',
-                                     dest='use_gpu',
-                                     action='store_true',
-                                     help='The current worker will move the computations on GPU devices, if available '
-                                          'in the system. (Default: False)')
+            self.parser.add_argument(
+                '--load',
+                type=str,
+                default='',
+                dest='load_checkpoint',
+                help='Path and name of the checkpoint file containing the saved parameters'
+                    ' of the pipeline models to load (should end with a .pt extension)')
 
-            self.parser.add_argument('--expdir',
-                                     dest='expdir',
-                                     type=str,
-                                     default="~/experiments",
-                                     help='Path to the directory where the experiment(s) folders are/will be stored.'
-                                          ' (DEFAULT: ~/experiments)')
+            self.parser.add_argument(
+                '--gpu',
+                dest='use_gpu',
+                action='store_true',
+                help='The current worker will move the computations on GPU devices, if available '
+                    'in the system. (Default: False)')
 
-            self.parser.add_argument('--savetag',
-                                     dest='savetag',
-                                     type=str,
-                                     default='',
-                                     help='Tag for the save directory.')
+            self.parser.add_argument(
+                '--expdir',
+                dest='expdir',
+                type=str,
+                default="~/experiments",
+                help='Path to the directory where the experiment(s) folders are/will be stored.'
+                    ' (DEFAULT: ~/experiments)')
 
-            self.parser.add_argument('--ll',
-                                    action='store',
-                                    dest='log_level',
-                                    type=str,
-                                    default='INFO',
-                                    choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'NOTSET'],
-                                    help="Log level. (DEFAULT: INFO)")
+            self.parser.add_argument(
+                '--savetag',
+                dest='savetag',
+                type=str,
+                default='',
+                help='Tag for the save directory.')
 
-            self.parser.add_argument('--li',
-                                     dest='logging_interval',
-                                     default=100,
-                                     type=int,
-                                     help='Statistics logging interval. Will impact logging to the logger and '
-                                          'exporting to TensorBoard. Writing to the csv file is not impacted '
-                                          '(interval of 1).(DEFAULT: 100, i.e. logs every 100 episodes).')
+            self.parser.add_argument(
+                '--logger',
+                action='store',
+                dest='log_level',
+                type=str,
+                default='INFO',
+                choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'NOTSET'],
+                help="Log level. (DEFAULT: INFO)")
 
-            self.parser.add_argument('--agree',
-                                     dest='confirm',
-                                     action='store_true',
-                                     help='Request user confirmation just after loading the settings, '
-                                          'before starting the experiment. (DEFAULT: False)')
+            self.parser.add_argument(
+                '--interval',
+                dest='logging_interval',
+                default=100,
+                type=int,
+                help='Statistics logging interval. Will impact logging to the logger and '
+                    'exporting to TensorBoard. Writing to the csv file is not impacted '
+                    '(exports at every step). (DEFAULT: 100, i.e. logs every 100 episodes).')
+
+            self.parser.add_argument(
+                '--agree',
+                dest='confirm',
+                action='store_true',
+                help='Request user confirmation just after loading the settings, '
+                    'before starting the experiment. (DEFAULT: False)')
 
     def initialize_logger(self):
         """
@@ -210,29 +225,6 @@ class Worker(object):
         self.logger.addHandler(fh)
 
 
-    def display_parsing_results(self):
-        """
-        Displays the properly & improperly parsed arguments (if any).
-
-        """
-        # Log the parsed flags.
-        flags_str = 'Properly parsed command line arguments: \n'
-        flags_str += '='*80 + '\n'
-        for arg in vars(self.flags): 
-            flags_str += "{}= {} \n".format(arg, getattr(self.flags, arg))
-        flags_str += '='*80 + '\n'
-        self.logger.info(flags_str)
-
-        # Log the unparsed flags if any.
-        if self.unparsed:
-            flags_str = 'Invalid command line arguments: \n'
-            flags_str += '='*80 + '\n'
-            for arg in self.unparsed: 
-                flags_str += "{} \n".format(arg)
-            flags_str += '='*80 + '\n'
-            self.logger.warning(flags_str)
-
-
     def setup_experiment(self):
         """
         Setups a specific experiment.
@@ -251,15 +243,38 @@ class Worker(object):
 
         """
         # Parse arguments.
-        self.flags, self.unparsed = self.parser.parse_known_args()
+        self.app_state.args, self.unparsed = self.parser.parse_known_args()
 
         # Set logger depending on the settings.
-        self.logger.setLevel(getattr(logging, self.flags.log_level.upper(), None))
+        self.logger.setLevel(getattr(logging, self.app_state.args.log_level.upper(), None))
 
         # add empty sections
         self.params.add_default_params({"training": {'terminal_conditions': {}}})
         self.params.add_default_params({"validation": {}})
         self.params.add_default_params({"testing": {}})
+
+
+    def display_parsing_results(self):
+        """
+        Displays the properly & improperly parsed arguments (if any).
+
+        """
+        # Log the parsed flags.
+        flags_str = 'Properly parsed command line arguments: \n'
+        flags_str += '='*80 + '\n'
+        for arg in vars(self.app_state.args): 
+            flags_str += "{}= {} \n".format(arg, getattr(self.app_state.args, arg))
+        flags_str += '='*80 + '\n'
+        self.logger.info(flags_str)
+
+        # Log the unparsed flags if any.
+        if self.unparsed:
+            flags_str = 'Invalid command line arguments: \n'
+            flags_str += '='*80 + '\n'
+            for arg in self.unparsed: 
+                flags_str += "{} \n".format(arg)
+            flags_str += '='*80 + '\n'
+            self.logger.warning(flags_str)
 
 
     def export_experiment_configuration(self, log_dir, filename, user_confirm):
@@ -409,23 +424,23 @@ class Worker(object):
             print('Loaded configuration from file {}'.format(config))
 
 
-    def check_and_set_cuda(self, use_gpu):
-        """
-        Enables computations on CUDA if GPU is available.
-        Sets the default data types.
-
-        :param use_gpu: Command line flag indicating whether use GPU/CUDA or not. 
-
-        """
-        # Determine if GPU/CUDA is available.
-        if torch.cuda.is_available():
-            if use_gpu:
-                self.app_state.use_gpu = True
-                self.logger.info('Running computations on GPU using CUDA enabled')
-        elif use_gpu:
-            self.logger.warning('GPU flag is enabled but there are no available GPU devices, using CPU instead')
-        else:
-            self.logger.warning('GPU flag is disabled, using CPU.')
+    #def check_and_set_cuda(self, use_gpu):
+    #    """
+    #    Enables computations on CUDA if GPU is available.
+    #    Sets the default data types.
+    #
+    #    :param use_gpu: Command line flag indicating whether use GPU/CUDA or not. 
+    #
+    #    """
+    #    # Determine if GPU/CUDA is available.
+    #    if torch.cuda.is_available() and self.app_state.use_gpu:
+    #        self.logger.info('Running computations on GPU using CUDA enabled')
+    #    elif self.app_state.use_gpu:
+    #        self.logger.warning('GPU flag is enabled but there are no available GPU devices, using CPU instead')
+    #        # Reset flag.
+    #        self.app_state.use_gpu = False
+    #    else:
+    #        self.logger.warning('GPU flag is disabled, using CPU.')
 
 
     def collect_all_statistics(self, problem_mgr, pipeline_mgr, data_dict, stat_col, episode, epoch):
