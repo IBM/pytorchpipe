@@ -1,7 +1,6 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) IBM Corporation 2018
+# Copyright (C) tkornuta, IBM Corporation 2019
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -333,18 +332,13 @@ class OnlineTrainer(Trainer):
             self.finalize_tensorboard()
 
 
-def main():
+
+if __name__ == '__main__':
     """
     Entry point function for the ``OnlineTrainer``.
-
     """
     trainer = OnlineTrainer()
     # parse args, load configuration and create all required objects.
     trainer.setup_experiment()
     # GO!
     trainer.run_experiment()
-
-
-if __name__ == '__main__':
-
-    main()

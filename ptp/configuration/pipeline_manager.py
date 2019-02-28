@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) IBM tkornuta, Corporation 2019
+# Copyright (C) tkornuta, IBM Corporation 2019
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ class PipelineManager(object):
 
     def __init__(self, name, params):
         """
-        Initializes the pipeline object.
+        Initializes the pipeline manager.
 
         :param params: Parameters used to instantiate all required components.
         :type params: ``utils.param_interface.ParamInterface``
