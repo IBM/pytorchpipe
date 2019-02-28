@@ -112,6 +112,16 @@ class StatisticsAggregator(StatisticsCollector):
         """
         return self.aggregators.__len__()
 
+    def __eq__(self, other):
+        """
+        Check whether two aggregators are equal (just for the purpose of compatibility with the base Mapping class).
+        """
+        if isinstance(other, self.__class__):
+            # Check statistics, formatting and aggregators.
+            return self.statistics == other.statistics and self.formatting == other.formatting and self.aggregators == other.aggregators
+        else:
+            return False
+
     def __iter__(self):
         """
         Return an iterator on the currently tracked statistical aggregators.
