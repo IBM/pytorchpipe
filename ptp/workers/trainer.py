@@ -248,7 +248,7 @@ class Trainer(Worker):
             self.logger.error('Found {} errors, terminating execution'.format(errors))
             exit(-2)
 
-        # Load the pretrained model from checkpoint.
+        # Load the pretrained models params from checkpoint.
         #try: 
         #    # Check command line arguments, then check load option in config.
         #    if self.flags.model != "":

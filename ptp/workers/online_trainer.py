@@ -21,6 +21,7 @@ import torch
 import numpy as np
 
 from ptp.workers.trainer import Trainer
+from ptp.configuration.configuration_error import ConfigurationError
 
 
 class OnlineTrainer(Trainer):
@@ -320,6 +321,9 @@ class OnlineTrainer(Trainer):
             self.logger.info('Experiment finished!')
 
         except SystemExit as e:
+            # the training did not end properly
+            self.logger.error('Experiment interrupted because {}'.format(e))
+        except ConfigurationError as e:
             # the training did not end properly
             self.logger.error('Experiment interrupted because {}'.format(e))
         except KeyboardInterrupt:
