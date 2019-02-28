@@ -94,10 +94,10 @@ class Worker(object):
                     'If specifying more than one file, they must be separated with coma ",".')
 
             self.parser.add_argument(
-                '--disabled',
+                '--disable',
                 type=str,
                 default='',
-                dest='disabled',
+                dest='disable',
                 help='Comma-separated list of components to be disabled (DEFAULT: empty)')
 
             self.parser.add_argument(

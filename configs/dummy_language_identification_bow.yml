@@ -31,7 +31,7 @@ testing:
 
 pipeline:
   name: language_classifier
-  disabled: prediction_decoder
+  #disable: prediction_decoder
   # Sentences encoding.
   sentence_tokenizer:
       type: SentenceTokenizer

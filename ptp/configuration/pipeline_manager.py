@@ -71,14 +71,14 @@ class PipelineManager(object):
         errors = 0
 
         # Check "skip" section.
-        sections_to_skip = "name disabled".split()
+        sections_to_skip = "name disable".split()
         disabled_components = ''
         # Add components to disable by the ones from configuration file.
-        if "disabled" in self.params:
-            disabled_components = [*disabled_components, *self.params["disabled"].split(",")]
+        if "disable" in self.params:
+            disabled_components = [*disabled_components, *self.params["disable"].split(",")]
         # Add components to disable by the ones from command line arguments.
-        if self.app_state.args.disabled != '':
-            disabled_components = [*disabled_components, *self.app_state.args.disabled.split(",")]
+        if self.app_state.args.disable != '':
+            disabled_components = [*disabled_components, *self.app_state.args.disable.split(",")]
 
         for c_key, c_params in self.params.items():
             # The section "key" will be used as "component" name.
