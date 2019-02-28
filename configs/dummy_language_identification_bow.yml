@@ -94,4 +94,11 @@ pipeline:
     keymappings:
       inputs: predictions
       outputs: predicted_labels
-#: pipeline
+
+  # Statistics.
+  batch_size:
+    type: BatchSize
+    priority: 9
+
+
+  #: pipeline

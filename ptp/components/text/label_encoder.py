@@ -17,7 +17,7 @@ __author__ = "Tomasz Kornuta"
 import torch
 
 from ptp.components.text.token_encoder import TokenEncoder
-from ptp.core_types.data_definition import DataDefinition
+from ptp.data_types.data_definition import DataDefinition
 
 
 class LabelEncoder(TokenEncoder):

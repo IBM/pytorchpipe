@@ -17,8 +17,8 @@ __author__ = "Tomasz Kornuta"
 import torch
 import torch.nn.functional as F
 
-from ptp.core_types.model import Model
-from ptp.core_types.data_definition import DataDefinition
+from ptp.components.models.model import Model
+from ptp.data_types.data_definition import DataDefinition
 
 
 class SoftmaxClassifier(Model): 

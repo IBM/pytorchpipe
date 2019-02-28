@@ -20,8 +20,7 @@ import torch
 import numpy as np
 import torch.nn as nn
 
-from ptp.core_types.problem import Problem
-
+from ptp.components.problems.problem import Problem
 
 class ImageToClassProblem(Problem):
     """
@@ -72,6 +71,7 @@ class ImageToClassProblem(Problem):
         #accuracy = correct / batch_size
 
         #return accuracy
+        pass
 
     def add_statistics(self, stat_col):
         """
@@ -81,7 +81,7 @@ class ImageToClassProblem(Problem):
 
         """
         #stat_col.add_statistic('acc', '{:12.10f}')
-        stat_col.add_statistic('batch_size', '{:06d}')
+        pass
 
     def collect_statistics(self, stat_col, data_dict):
         """
@@ -94,7 +94,7 @@ class ImageToClassProblem(Problem):
 
         """
         #stat_col['acc'] = self.calculate_accuracy(data_dict)
-        stat_col['batch_size'] = data_dict["index"].shape[0] # Batch major.
+        pass
 
     def add_aggregators(self, stat_agg):
         """
@@ -107,7 +107,7 @@ class ImageToClassProblem(Problem):
         #stat_agg.add_aggregator('acc_min', '{:12.10f}')
         #stat_agg.add_aggregator('acc_max', '{:12.10f}')
         #stat_agg.add_aggregator('acc_std', '{:12.10f}')
-        stat_agg.add_aggregator('samples_aggregated', '{:006d}')  # represents the average accuracy
+        pass
 
     def aggregate_statistics(self, stat_col, stat_agg):
         """
@@ -122,7 +122,7 @@ class ImageToClassProblem(Problem):
         #stat_agg['acc_max'] = max(stat_col['acc'])
         #stat_agg['acc'] = torch.mean(torch.tensor(stat_col['acc']))
         #stat_agg['acc_std'] = 0.0 if len(stat_col['acc']) <= 1 else torch.std(torch.tensor(stat_col['acc']))
-        stat_agg['samples_aggregated'] = sum(stat_col['batch_size'])
+        pass
 
     def show_sample(self, data_dict, sample_number=0):
         """

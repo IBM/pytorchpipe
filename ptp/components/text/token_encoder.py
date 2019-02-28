@@ -17,7 +17,7 @@ __author__ = "Tomasz Kornuta"
 import os
 import ptp.utils.io_utils as io
 
-from ptp.core_types.component import Component
+from ptp.components.component import Component
 
 
 class TokenEncoder(Component):

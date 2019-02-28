@@ -22,8 +22,8 @@ import torch
 from torchvision import datasets, transforms
 
 from ptp.components.problems.image_to_class.image_to_class_problem import ImageToClassProblem
-from ptp.core_types.data_dict import DataDict
-from ptp.core_types.data_definition import DataDefinition
+from ptp.data_types.data_dict import DataDict
+from ptp.data_types.data_definition import DataDefinition
 
 
 class MNIST(ImageToClassProblem):
@@ -139,6 +139,7 @@ class MNIST(ImageToClassProblem):
         :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
         """
         return {
+            self.key_indices: DataDefinition([-1, 1], [list, int], "Batch of sample indices [BATCH_SIZE] x [1]"),
             self.key_inputs: DataDefinition([-1, 1, self.height, self.width], [torch.Tensor], "Batch of images BATCH_SIZE x IMAGE_DEPTH x IMAGE_HEIGHT x IMAGE WIDTH"),
             self.key_targets: DataDefinition([-1], [torch.Tensor], "Batch of targets, each being a single index [BATCH_SIZE]")
             }

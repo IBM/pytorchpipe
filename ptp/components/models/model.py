@@ -21,7 +21,7 @@ import numpy as np
 import torch
 from torch.nn import Module
 
-from ptp.core_types.component import Component
+from ptp.components.component import Component
 
 
 class Model(Module, Component):

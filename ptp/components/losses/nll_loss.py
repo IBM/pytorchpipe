@@ -17,7 +17,7 @@ __author__ = "Tomasz Kornuta"
 import torch
 import torch.nn as nn
 
-from ptp.core_types.loss import Loss
+from ptp.components.losses.loss import Loss
 
 
 class NLLLoss(Loss):
