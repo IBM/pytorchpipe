@@ -16,8 +16,6 @@
 
 __author__ = "Tomasz Kornuta"
 
-import os.path
-import logging
 import inspect
 
 import ptp

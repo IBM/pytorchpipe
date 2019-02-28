@@ -18,7 +18,7 @@ __author__ = "Tomasz Kornuta"
 
 
 import logging
-import inspect
+from numpy import inf
 
 import ptp
 
@@ -52,8 +52,10 @@ class PipelineManager(object):
         self.models = []
         # Empty list of all losses - it will contain only "references" to objects stored in the components list.
         self.losses = []
-        # Empty list of all loss keys. Those keys will be used to find objects that will be roots for backpropagation of gradients.
-        #self.loss_keys = []
+
+        # Initialization of best loss - as INF.
+        self.best_loss = inf
+        self.best_status = "Unknown"
 
 
     def build(self, log_errors=True):

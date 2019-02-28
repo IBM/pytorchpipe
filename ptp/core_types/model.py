@@ -60,15 +60,6 @@ class Model(Module, Component):
         Component.__init__(self, name, params)
         Module.__init__(self)
 
-        # Flag indicating whether intermediate checkpoints should be saved or
-        # not (DEFAULT: False).
-        params.add_default_params({"save_intermediate": False})
-        self.save_intermediate = params["save_intermediate"]
-
-        # Initialization of best loss - as INF.
-        self.best_loss = np.inf
-        self.best_status = "Unknown"
-
 
     def save(self, model_dir, training_status, training_stats, validation_stats):
         """

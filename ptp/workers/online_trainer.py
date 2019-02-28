@@ -226,7 +226,7 @@ class OnlineTrainer(Trainer):
                 if (episode % self.partial_validation_interval) == 0:
 
                     # Clear the validation batch from all items aside of the ones originally returned by the problem.
-                    self.validation_dict.clear(self.validation.problem.output_data_definitions())
+                    self.validation_dict.reinitialize(self.validation.problem.output_data_definitions())
                     # Perform validation.
                     self.validate_on_batch(self.validation_dict, episode, epoch)
                     # Get loss.
@@ -301,11 +301,9 @@ class OnlineTrainer(Trainer):
                 # We still must validate and try to save the model as it may perform better during this episode.
 
                 # Clear the validation batch from all items aside of the ones originally returned by the problem.
-                self.validation_dict.clear(self.validation.problem.output_data_definitions())
+                self.validation_dict.reinitialize(self.validation.problem.output_data_definitions())
                 # Perform validation.
                 self.validate_on_batch(self.validation_dict, episode, epoch)
-                # Get loss.
-                validation_loss = self.pipeline.get_loss(self.validation_dict)
 
                 # Try to save the model using the latest validation statistics.
                 #self.model.save(self.model_dir, training_status, self.training_stat_col, self.validation_stat_col)

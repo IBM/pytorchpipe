@@ -88,7 +88,8 @@ class DataDict(collections.abc.MutableMapping):
             # Call setitem with "additional argument".
             self.__setitem__(key, value, addkey=True)
 
-    def clear(self, dict_to_leave):
+
+    def reinitialize(self, dict_to_leave):
         """
         Removes all keys (and associated values) from DatDict EXCEPT the ones passed in ``dict_to_leave``.
         """

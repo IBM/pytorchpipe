@@ -21,7 +21,6 @@ import os
 import yaml
 import torch
 from time import sleep
-from random import randrange
 from datetime import datetime
 
 from ptp.workers.worker import Worker

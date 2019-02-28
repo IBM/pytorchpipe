@@ -16,10 +16,8 @@
 
 __author__ = "Tomasz Kornuta"
 
-import os.path
 import signal
 import logging
-import inspect
 import numpy as np
 
 from torch.utils.data import DataLoader
