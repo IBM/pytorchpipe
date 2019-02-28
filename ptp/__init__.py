@@ -1,4 +1,4 @@
-from .__tests import *
+#from .__tests import *
 from .configuration import *
 
 # Components
