@@ -15,7 +15,6 @@
 __author__ = "Tomasz Kornuta"
 
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 
 from ptp.core_types.model import Model
@@ -48,7 +47,7 @@ class SoftmaxClassifier(Model):
         self.prediction_size = self.app_state[self.key_prediction_size]
         
         # Simple classifier.
-        self.linear = nn.Linear(self.input_size, self.prediction_size)
+        self.linear = torch.nn.Linear(self.input_size, self.prediction_size)
         
 
     def input_data_definitions(self):

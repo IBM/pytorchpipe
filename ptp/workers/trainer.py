@@ -261,6 +261,11 @@ class Trainer(Worker):
             self.logger.error('Found {} errors, terminating execution'.format(errors))
             exit(-2)
 
+        # Check if there are any models in the pipeline.
+        if len(self.pipeline.models) == 0:
+            self.logger.error('Cannot proceed with training, as there are no trainable models in the pipeline')
+            exit(-3)
+
 
         # Load the pretrained models params from checkpoint.
         try: 
