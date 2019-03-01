@@ -16,9 +16,8 @@
 # limitations under the License.
 
 __author__ = "Tomasz Kornuta, Younes Bouhadjar, Vincent Marois"
-import torch
+
 import numpy as np
-import torch.nn as nn
 
 from ptp.components.problems.problem import Problem
 
@@ -49,47 +48,6 @@ class ImageToClassProblem(Problem):
         self.key_inputs = self.mapkey("inputs")
         self.key_targets = self.mapkey("targets")
 
-
-    def add_statistics(self, stat_col):
-        """
-        Add accuracy statistic to ``StatisticsCollector``.
-
-        :param stat_col: ``StatisticsCollector``.
-
-        """
-        pass
-
-    def collect_statistics(self, stat_col, data_dict):
-        """
-        Collects accuracy.
-
-        :param stat_col: ``StatisticsCollector``.
-
-        :param data_dict: DataDict containing the targets and the mask.
-        :type data_dict: DataDict
-
-        """
-        pass
-
-    def add_aggregators(self, stat_agg):
-        """
-        Adds problem-dependent statistical aggregators to ``StatisticsAggregator``.
-
-        :param stat_agg: ``StatisticsAggregator``.
-
-        """
-        pass
-
-    def aggregate_statistics(self, stat_col, stat_agg):
-        """
-        Aggregates the statistics collected by ``StatisticsCollector'' and adds the results to ``StatisticsAggregator``.
-
-        :param stat_col: ``StatisticsCollector``.
-
-        :param stat_agg: ``StatisticsAggregator``.
-
-        """
-        pass
 
     def show_sample(self, data_dict, sample_number=0):
         """

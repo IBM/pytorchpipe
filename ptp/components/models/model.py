@@ -18,7 +18,6 @@ __author__ = "Tomasz Kornuta & Vincent Marois"
 
 import numpy as np
 
-import torch
 from torch.nn import Module
 
 from ptp.components.component import Component
