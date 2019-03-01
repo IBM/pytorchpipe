@@ -17,7 +17,7 @@ training:
   # settings parameters
   terminal_conditions:
     loss_stop: 1.0e-2
-    episode_limit: 300 #10000
+    episode_limit: 10000
     epoch_limit: 10
 
 # Validation parameters:
@@ -45,7 +45,7 @@ testing:
 
 
 pipeline:
-  name: mnist_classifier
+  name: mnist_lenet5_classifier
   #disable: nllloss
   # Image classifier.
   image_classifier:

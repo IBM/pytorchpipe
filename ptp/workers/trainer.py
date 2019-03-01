@@ -79,44 +79,40 @@ class Trainer(Worker):
         """
         Sets up experiment of all trainers:
 
-            - Calls base class setup_experiment to parse the command line arguments,
+        - Calls base class setup_experiment to parse the command line arguments,
 
-            - Loads the config file(s):
+        - Loads the config file(s):
 
-                >>> configs_to_load = self.recurrent_config_parse(flags.config, [])
+            >>> configs_to_load = self.recurrent_config_parse(flags.config, [])
 
-            - Set up the log directory path:
+        - Set up the log directory path:
 
-                >>> os.makedirs(self.log_dir, exist_ok=False)
+            >>> os.makedirs(self.log_dir, exist_ok=False)
 
-            - Add a ``FileHandler`` to the logger:
+        - Add a ``FileHandler`` to the logger:
 
-                >>>  self.add_file_handler_to_logger(self.log_file)
+            >>>  self.add_file_handler_to_logger(self.log_file)
 
-            - Set random seeds:
+        - Set random seeds:
 
-                >>>  self.set_random_seeds(self.params['training'], 'training')
+            >>>  self.set_random_seeds(self.params['training'], 'training')
 
-            - Creates the pipeline
+        - Creates the pipeline consisting of many components
 
-            - Creates training problem manager
+        - Creates training problem manager
 
-            - Handles curriculum learning if indicated:
+        - Handles curriculum learning if indicated:
 
-                >>> if 'curriculum_learning' in self.params['training']:
-                >>> ...
+            >>> if 'curriculum_learning' in self.params['training']:
+            >>> ...
 
-            - Handles the validation of the model:
+        - Creates training problem manager
 
-                - Creates validation problem manager
+        - Set optimizer:
 
-            - Set optimizer:
+            >>> self.optimizer = getattr(torch.optim, optimizer_name)
 
-                >>> self.optimizer = getattr(torch.optim, optimizer_name)
-
-            - Handles TensorBoard writers & files:
-
-                >>> self.training_writer = SummaryWriter(self.log_dir + '/training')
+        - Performs testing of compatibility of both training and validation pipelines.
 
         """
         # Call base method to parse all command line arguments and add default sections.
@@ -150,21 +146,21 @@ class Trainer(Worker):
         try:
             training_problem_type = self.params['training']['problem']['type']
         except KeyError:
-            print("Error: Couldn't retrieve the problem type from the 'training' section in the loaded configuration")
+            print("Error: Couldn't retrieve the problem 'type' from the 'training' section in the loaded configuration")
             exit(-1)
 
         # Get validation problem name
         try:
             _ = self.params['validation']['problem']['type']
         except KeyError:
-            print("Error: Couldn't retrieve the problem type from the 'validation' section in the loaded configuration")
+            print("Error: Couldn't retrieve the problem 'type' from the 'validation' section in the loaded configuration")
             exit(-1)
 
-        # Get model name.
+        # Get pipeline name.
         try:
             pipeline_name = self.params['pipeline']['name']
         except KeyError:
-            print("Error: Couldn't retrieve the pipeline name from the loaded configuration")
+            print("Error: Couldn't retrieve the pipeline 'name' from the loaded configuration")
             exit(-1)
 
         # Prepare the output path for logging
@@ -174,6 +170,8 @@ class Trainer(Worker):
                 if self.app_state.args.savetag != '':
                     time_str = time_str + "_" + self.app_state.args.savetag
                 self.log_dir = os.path.expanduser(self.app_state.args.expdir) + '/' + training_problem_type + '/' + pipeline_name + '/' + time_str + '/'
+                # Lowercase dirs.
+                self.log_dir = self.log_dir.lower()
                 os.makedirs(self.log_dir, exist_ok=False)
             except FileExistsError:
                 sleep(1)
@@ -229,9 +227,9 @@ class Trainer(Worker):
         # Generate a single batch used for partial validation.
         self.validation_dict = next(iter(self.validation.dataloader))
 
-        ################# MODEL PROBLEM ################# 
+        ###################### PIPELINE ######################
         
-        # Build the model using the loaded configuration and the default values of the problem.
+        # Build the pipeline using the loaded configuration.
         self.pipeline = PipelineManager(pipeline_name, self.params['pipeline'])
         errors += self.pipeline.build()
 
