@@ -21,6 +21,7 @@ import os
 import torch
 from torchvision import datasets, transforms
 
+from ptp.configuration.configuration_error import ConfigurationError
 from ptp.components.problems.image_to_class.image_to_class_problem import ImageToClassProblem
 from ptp.data_types.data_dict import DataDict
 from ptp.data_types.data_definition import DataDefinition
@@ -121,8 +122,18 @@ class MNIST(ImageToClassProblem):
         self.dataset = datasets.MNIST(root=data_folder, train=self.use_train_data, download=True,
                                       transform=transform)
 
+
+        # Set global variable - all dimensions ASIDE OF BATCH.
+        self.key_num_classes = self.mapkey("num_classes")
+        if self.key_num_classes in self.app_state.globalkeys():
+            if (self.app_state[self.key_num_classes] != 10):
+                raise ConfigurationError("Global key '{}' already exists and has different value (existing {} vs desired 10)!".format(self.key_num_classes, self.app_state[self.key_num_classes]))
+        else:
+            self.app_state[self.key_num_classes] = 10
+
         # Class names.
         #self.labels = 'Zero One Two Three Four Five Six Seven Eight Nine'.split(' ')
+
 
     def __len__(self):
         """

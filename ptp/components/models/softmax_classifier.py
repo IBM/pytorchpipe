@@ -17,6 +17,7 @@ __author__ = "Tomasz Kornuta"
 import torch
 import torch.nn.functional as F
 
+from ptp.configuration.configuration_error import ConfigurationError
 from ptp.components.models.model import Model
 from ptp.data_types.data_definition import DataDefinition
 
@@ -41,11 +42,25 @@ class SoftmaxClassifier(Model):
 
         # Retrieve input and output (prediction) sizes from global params.
         self.key_input_size = self.mapkey("input_size")
-        self.key_prediction_size = self.mapkey("prediction_size")
-        # Retrieve global params.
         self.input_size = self.app_state[self.key_input_size]
+        if type(self.input_size) == list:
+            if len(self.input_size) == 1:
+                self.input_size = self.input_size[0]
+            else:
+                raise ConfigurationError("SoftmaxClassifier input size '{}' must be a single dimension (current {})".format(self.key_input_size, self.input_size))
+
+
+        self.key_prediction_size = self.mapkey("prediction_size")
         self.prediction_size = self.app_state[self.key_prediction_size]
+        if type(self.prediction_size) == list:
+            if len(self.prediction_size) == 1:
+                self.prediction_size = self.prediction_size[0]
+            else:
+                raise ConfigurationError("SoftmaxClassifier prediction size '{}' must be a single dimension (current {})".format(self.key_prediction_size, self.prediction_size))
         
+        print("INPUTS: ", self.input_size)
+        print("PREDICTIONS: ", self.prediction_size)
+
         # Simple classifier.
         self.linear = torch.nn.Linear(self.input_size, self.prediction_size)
         

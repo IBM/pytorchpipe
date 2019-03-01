@@ -48,9 +48,8 @@ class LeNet5(Model):
         self.key_predictions = self.mapkey("predictions")
 
         # Retrieve prediction size from globals.
-        #self.key_prediction_size = self.mapkey("prediction_size")
-        #self.prediction_size = self.app_state[self.key_prediction_size]
-        self.prediction_size = 10
+        self.key_prediction_size = self.mapkey("prediction_size")
+        self.prediction_size = self.app_state[self.key_prediction_size]
 
         # Create the LeNet-5 layers.
         self.conv1 = torch.nn.Conv2d(1, 6, kernel_size=(5, 5))

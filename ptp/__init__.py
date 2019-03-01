@@ -1,7 +1,6 @@
-#from .__tests import *
 from .configuration import *
 
-# Components
+# Components.
 from .components.component import Component
 
 from .components.losses import *
@@ -16,10 +15,12 @@ from .components.statistics import *
 
 from .components.text import *
 
+from .components.transforms import *
+
+# Rest.
 from .data_types import *
 from .utils import *
-from .workers import *
 
-#    'Component',
-#   'Problem',
+# Workers.
+from .workers import *
 
