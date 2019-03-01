@@ -231,8 +231,8 @@ class OnlineTrainer(Trainer):
                     # Get loss.
                     validation_loss = self.pipeline.get_loss(self.validation_dict)
 
-                    # Save the model using the latest validation statistics.
-                    #self.model.save(self.model_dir, training_status, self.training_stat_col, self.validation_stat_col)
+                    # Save the pipeline using the latest validation statistics.
+                    self.pipeline.save(self.checkpoint_dir, training_status, validation_loss, episode, epoch)
 
                     # Terminal conditions.
                     # I. the loss is < threshold (only when curriculum learning is finished if set.)
@@ -245,8 +245,8 @@ class OnlineTrainer(Trainer):
                             training_status = "Converged (Partial Validation Loss went below " \
                                 "Loss Stop threshold)"
 
-                            # ... and THEN save the model using the latest validation statistics.
-                            #self.model.save(self.model_dir, training_status, self.training_stat_col, self.validation_stat_col)
+                            # ... and THEN save the pipeline (update its statistics).
+                            self.pipeline.save(self.checkpoint_dir, training_status, validation_loss, episode, epoch)
                             break
 
                     # II. Early stopping is set and loss hasn't improved by delta in n epochs.
@@ -305,7 +305,7 @@ class OnlineTrainer(Trainer):
                 self.validate_on_batch(self.validation_dict, episode, epoch)
 
                 # Try to save the model using the latest validation statistics.
-                #self.model.save(self.model_dir, training_status, self.training_stat_col, self.validation_stat_col)
+                self.pipeline.save(self.checkpoint_dir, training_status, validation_loss, episode, epoch)
 
             self.logger.info('\n' + '='*80)
             self.logger.info('Training finished because {}'.format(training_status))

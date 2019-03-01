@@ -18,8 +18,8 @@ __author__ = "Tomasz Kornuta"
 
 import torch
 
-from ptp.core_types.component import Component
-from ptp.core_types.data_definition import DataDefinition
+from ptp.components.component import Component
+from ptp.data_types.data_definition import DataDefinition
 
 
 class Loss(Component):
@@ -56,7 +56,7 @@ class Loss(Component):
         :return: dictionary containing input data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
         """
         return {
-            self.key_targets: DataDefinition([-1, 1], [list, int], "Batch of targets, each represented as index [BATCH_SIZE] x [int]"),
+            self.key_targets: DataDefinition([-1], [torch.Tensor], "Batch of targets, each being a single index [BATCH_SIZE]"),
             self.key_predictions: DataDefinition([-1, -1], [torch.Tensor], "Batch of predictions, represented as tensor with probability distribution over classes [BATCH_SIZE x NUM_CLASSES]")
             }
 

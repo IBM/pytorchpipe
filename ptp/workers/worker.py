@@ -443,7 +443,7 @@ class Worker(object):
     #        self.logger.warning('GPU flag is disabled, using CPU.')
 
 
-    def collect_all_statistics(self, problem_mgr, pipeline_mgr, data_dict, stat_col, episode, epoch):
+    def collect_all_statistics(self, problem_mgr, pipeline_mgr, data_dict, stat_col, episode, epoch=None):
         """
         Function that collects statistics
 
@@ -461,7 +461,7 @@ class Worker(object):
         :param episode: current episode index
         :type episode: int
 
-        :param epoch: current epoch index.
+        :param epoch: current epoch index (DEFAULT: None)
         :type epoch: int, optional
 
         """
@@ -476,7 +476,7 @@ class Worker(object):
 
         
 
-    def aggregate_all_statistics(self, problem_mgr, pipeline_mgr, stat_col, stat_agg, episode, epoch):
+    def aggregate_all_statistics(self, problem_mgr, pipeline_mgr, stat_col, stat_agg, episode, epoch=None):
         """
         Aggregates the collected statistics. Exports the aggregations to logger, csv and TB. \
         Empties statistics collector for the next episode.
@@ -493,7 +493,7 @@ class Worker(object):
         :param episode: current episode index
         :type episode: int
 
-        :param epoch: current epoch index.
+        :param epoch: current epoch index (DEFAULT: None)
         :type epoch: int, optional
 
         """ 

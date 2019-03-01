@@ -57,10 +57,6 @@ class Component(abc.ABC):
         # Initialize logger.
         self.logger = logging.getLogger(self.name)        
 
-        # Set default (empty) data definitions and default_values.
-        self.data_definitions = {}
-        self.default_values =  {}
-
         # Initialize the "name mapping facility".
         params.add_default_params({"keymappings": {}})
         self.keymappings = params["keymappings"]

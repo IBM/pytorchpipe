@@ -14,13 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__author__ = "Tomasz Kornuta & Vincent Marois"
+__author__ = "Tomasz Kornuta"
 
 import torch
 from torch.utils.data import Dataset
 
-from ptp.core_types.component import Component
-from ptp.core_types.data_dict import DataDict
+from ptp.components.component import Component
+from ptp.data_types.data_dict import DataDict
 
 
 class Problem(Component, Dataset):
@@ -36,8 +36,16 @@ class Problem(Component, Dataset):
 
     def __init__(self, name, params):
         """
-        Initializes problem object.
+        Initializes problem object:
+            - calls base class constructors.
+            - sets key_indices variable (used for storing indices of samples)
 
+                >>> self.key_indices = self.mapkey("indices")
+
+            - sets empry curriculim learning params
+
+                >>> self.curriculum_params = {}
+        
         :param name: Problem name.
         :type name: str
 
@@ -57,6 +65,9 @@ class Problem(Component, Dataset):
         # Call constructors of parent classes.
         Component.__init__(self, name, params)
         Dataset.__init__(self)
+
+        # Set default key mappings.
+        self.key_indices = self.mapkey("indices")
 
         # Empty curriculum learning params - for now.
         self.curriculum_params = {}
@@ -107,11 +118,12 @@ class Problem(Component, Dataset):
         """
         # Use self.output_data_definitions() if required
         data_definitions = data_definitions if data_definitions is not None else self.output_data_definitions()
-        # Add index.
-        data_definitions["index"] = None
+        # Add index - just in case. This key is required!
+        if self.key_indices not in data_definitions:
+            data_definitions[self.key_indices] = None
         data_dict = DataDict({key: None for key in data_definitions.keys()})
         # Set index.
-        data_dict["index"] = index
+        data_dict[self.key_indices] = index
         return data_dict
 
 

@@ -18,8 +18,8 @@ __author__ = "Tomasz Kornuta"
 
 import unittest
 
-from ptp.core_types.component import Component
-from ptp.core_types.data_definition import DataDefinition
+from ptp.components.component import Component
+from ptp.data_types.data_definition import DataDefinition
 from ptp.configuration.param_interface import ParamInterface
 
 

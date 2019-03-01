@@ -79,44 +79,40 @@ class Trainer(Worker):
         """
         Sets up experiment of all trainers:
 
-            - Calls base class setup_experiment to parse the command line arguments,
+        - Calls base class setup_experiment to parse the command line arguments,
 
-            - Loads the config file(s):
+        - Loads the config file(s):
 
-                >>> configs_to_load = self.recurrent_config_parse(flags.config, [])
+            >>> configs_to_load = self.recurrent_config_parse(flags.config, [])
 
-            - Set up the log directory path:
+        - Set up the log directory path:
 
-                >>> os.makedirs(self.log_dir, exist_ok=False)
+            >>> os.makedirs(self.log_dir, exist_ok=False)
 
-            - Add a ``FileHandler`` to the logger:
+        - Add a ``FileHandler`` to the logger:
 
-                >>>  self.add_file_handler_to_logger(self.log_file)
+            >>>  self.add_file_handler_to_logger(self.log_file)
 
-            - Set random seeds:
+        - Set random seeds:
 
-                >>>  self.set_random_seeds(self.params['training'], 'training')
+            >>>  self.set_random_seeds(self.params['training'], 'training')
 
-            - Creates the pipeline
+        - Creates the pipeline consisting of many components
 
-            - Creates training problem manager
+        - Creates training problem manager
 
-            - Handles curriculum learning if indicated:
+        - Handles curriculum learning if indicated:
 
-                >>> if 'curriculum_learning' in self.params['training']:
-                >>> ...
+            >>> if 'curriculum_learning' in self.params['training']:
+            >>> ...
 
-            - Handles the validation of the model:
+        - Creates training problem manager
 
-                - Creates validation problem manager
+        - Set optimizer:
 
-            - Set optimizer:
+            >>> self.optimizer = getattr(torch.optim, optimizer_name)
 
-                >>> self.optimizer = getattr(torch.optim, optimizer_name)
-
-            - Handles TensorBoard writers & files:
-
-                >>> self.training_writer = SummaryWriter(self.log_dir + '/training')
+        - Performs testing of compatibility of both training and validation pipelines.
 
         """
         # Call base method to parse all command line arguments and add default sections.
@@ -150,21 +146,21 @@ class Trainer(Worker):
         try:
             training_problem_type = self.params['training']['problem']['type']
         except KeyError:
-            print("Error: Couldn't retrieve the problem type from the 'training' section in the loaded configuration")
+            print("Error: Couldn't retrieve the problem 'type' from the 'training' section in the loaded configuration")
             exit(-1)
 
         # Get validation problem name
         try:
             _ = self.params['validation']['problem']['type']
         except KeyError:
-            print("Error: Couldn't retrieve the problem type from the 'validation' section in the loaded configuration")
+            print("Error: Couldn't retrieve the problem 'type' from the 'validation' section in the loaded configuration")
             exit(-1)
 
-        # Get model name.
+        # Get pipeline name.
         try:
             pipeline_name = self.params['pipeline']['name']
         except KeyError:
-            print("Error: Couldn't retrieve the pipeline name from the loaded configuration")
+            print("Error: Couldn't retrieve the pipeline 'name' from the loaded configuration")
             exit(-1)
 
         # Prepare the output path for logging
@@ -174,6 +170,8 @@ class Trainer(Worker):
                 if self.app_state.args.savetag != '':
                     time_str = time_str + "_" + self.app_state.args.savetag
                 self.log_dir = os.path.expanduser(self.app_state.args.expdir) + '/' + training_problem_type + '/' + pipeline_name + '/' + time_str + '/'
+                # Lowercase dirs.
+                self.log_dir = self.log_dir.lower()
                 os.makedirs(self.log_dir, exist_ok=False)
             except FileExistsError:
                 sleep(1)
@@ -229,49 +227,23 @@ class Trainer(Worker):
         # Generate a single batch used for partial validation.
         self.validation_dict = next(iter(self.validation.dataloader))
 
-        ################# MODEL PROBLEM ################# 
+        ###################### PIPELINE ######################
         
-        # Build the model using the loaded configuration and the default values of the problem.
+        # Build the pipeline using the loaded configuration.
         self.pipeline = PipelineManager(pipeline_name, self.params['pipeline'])
         errors += self.pipeline.build()
 
         # Show pipeline.
-        summary_str = self.pipeline.summarize_io_header()
+        summary_str = self.pipeline.summarize_all_components_header()
         summary_str += self.training.problem.summarize_io("training")
         summary_str += self.validation.problem.summarize_io("validation")
-        summary_str += self.pipeline.summarize_io()
+        summary_str += self.pipeline.summarize_all_components()
         self.logger.info(summary_str)
         
         # Check errors.
         if errors > 0:
             self.logger.error('Found {} errors, terminating execution'.format(errors))
             exit(-2)
-
-        # Load the pretrained models params from checkpoint.
-        #try: 
-        #    # Check command line arguments, then check load option in config.
-        #    if self.flags.model != "":
-        #        pipeline_name = self.flags.model
-        #        msg = "command line (--m)"
-        #    elif "load" in self.params['model']:
-        #        pipeline_name = self.params['model']['load']
-        #        msg = "model section of the configuration file"
-        #    else:
-        #        pipeline_name = ""
-        #    # Try to load the model.
-        #    if pipeline_name != "":
-        #        if os.path.isfile(pipeline_name):
-        #            # Load parameters from checkpoint.
-        #            self.model.load(pipeline_name)
-        #        else:
-        #            raise Exception("Couldn't load the checkpoint {} indicated in the {}: file does not exist".format(pipeline_name, msg))
-        #except KeyError:
-        #    self.logger.error("File {} indicated in the {} seems not to be a valid model checkpoint".format(pipeline_name, msg))
-        #    exit(-5)
-        #except Exception as e:
-        #    self.logger.error(e)
-        #    # Exit by following the logic: if user wanted to load the model but failed, then continuing the experiment makes no sense.
-        #    exit(-6)
 
         # Handshake definitions.
         self.logger.info("Handshaking training pipeline")
@@ -287,15 +259,43 @@ class Trainer(Worker):
             self.logger.error('Found {} errors, terminating execution'.format(errors))
             exit(-2)
 
-        # Show pipeline.
-        summary_str = self.pipeline.summarize_io_header()
-        summary_str += self.training.problem.summarize_io()
-        summary_str += self.pipeline.summarize_io()
-        self.logger.info(summary_str)
+        # Check if there are any models in the pipeline.
+        if len(self.pipeline.models) == 0:
+            self.logger.error('Cannot proceed with training, as there are no trainable models in the pipeline')
+            exit(-3)
+
+
+        # Load the pretrained models params from checkpoint.
+        try: 
+            # Check command line arguments, then check load option in config.
+            if self.app_state.args.load_checkpoint != "":
+                pipeline_name = self.app_state.args.load_checkpoint
+                msg = "command line (--load)"
+            elif "load" in self.params['pipeline']:
+                pipeline_name = self.params['pipeline']['load']
+                msg = "'pipeline' section of the configuration file"
+            else:
+                pipeline_name = ""
+            # Try to load the model.
+            if pipeline_name != "":
+                if os.path.isfile(pipeline_name):
+                    # Load parameters from checkpoint.
+                    self.pipeline.load(pipeline_name)
+                else:
+                    raise Exception("Couldn't load the checkpoint {} indicated in the {}: file does not exist".format(pipeline_name, msg))
+        except KeyError:
+            self.logger.error("File {} indicated in the {} seems not to be a valid model checkpoint".format(pipeline_name, msg))
+            exit(-5)
+        except Exception as e:
+            self.logger.error(e)
+            # Exit by following the logic: if user wanted to load the model but failed, then continuing the experiment makes no sense.
+            exit(-6)
+
 
         # Log the model summaries.
-        for model in self.pipeline.models:
-            self.logger.info(model.summarize())
+        summary_str = self.pipeline.summarize_models_header()
+        summary_str += self.pipeline.summarize_models()
+        self.logger.info(summary_str)
 
         # Move the models in the pipeline to GPU.
         if self.app_state.args.use_gpu:

@@ -5,7 +5,7 @@ training:
     data_folder: ~/data/language_identification/dummy
     batch_size:  2
     use_train_data: True
-    keymappings :
+    keymappings:
       inputs: sentences
       targets: languages
 
@@ -43,7 +43,7 @@ pipeline:
       type: SentenceEncoder
       priority: 2
       data_folder: ~/data/language_identification/dummy
-      source_files: x_training.txtx_test.txt
+      source_files: x_training.txt,x_test.txt
       encodings_file: word_encodings.csv
       keymappings:
         inputs: tokenized_sentences
@@ -61,7 +61,7 @@ pipeline:
       type: LabelEncoder
       priority: 4
       data_folder: ~/data/language_identification/dummy
-      source_files: y_training.txty_test.txt
+      source_files: y_training.tx,ty_test.txt
       encodings_file: language_name_encodings.csv
       keymappings:
         inputs: languages
@@ -94,4 +94,15 @@ pipeline:
     keymappings:
       inputs: predictions
       outputs: predicted_labels
-#: pipeline
+
+  # Statistics.
+  batch_size:
+    type: BatchSize
+    priority: 9
+  accuracy:
+    type: Accuracy
+    priority: 10
+    keymappings:
+      targets: encoded_languages
+
+  #: pipeline

@@ -16,8 +16,8 @@ __author__ = "Tomasz Kornuta"
 
 import os
 
-from ptp.core_types.problem import Problem
-from ptp.core_types.data_definition import DataDefinition
+from ptp.components.problems.problem import Problem
+from ptp.data_types.data_definition import DataDefinition
 
 
 class LanguageIdentification(Problem):
@@ -62,6 +62,7 @@ class LanguageIdentification(Problem):
         :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
         """
         return {
+            self.key_indices: DataDefinition([-1, 1], [list, int], "Batch of sample indices [BATCH_SIZE] x [1]"),
             self.key_inputs: DataDefinition([-1, 1], [list, str], "Batch of sentences, each being a single string (many words) [BATCH_SIZE x SENTENCE]"),
             self.key_targets: DataDefinition([-1, 1], [list, str], "Batch of targets, each being a single label (word) BATCH_SIZE x WORD]")
             }

@@ -18,8 +18,8 @@ __author__ = "Tomasz Kornuta"
 
 import unittest
 
-from ptp.core_types.problem import Problem
-from ptp.core_types.data_definition import DataDefinition
+from ptp.components.problems.problem import Problem
+from ptp.data_types.data_definition import DataDefinition
 from ptp.configuration.param_interface import ParamInterface
 
 
@@ -52,7 +52,7 @@ class TestProblem(unittest.TestCase):
         """ Tests whether the created data dict contains required keys. """
         data_dict = self.problem.create_data_dict(1)
         # Check presence of index.
-        self.assertEqual(data_dict['index'], 1)
+        self.assertEqual(data_dict['indices'], 1) # Even if we didn't explicitly indicated that in definitions!
         self.assertEqual(data_dict['inputs'], None)
         self.assertEqual(data_dict['targets'], None)
 
