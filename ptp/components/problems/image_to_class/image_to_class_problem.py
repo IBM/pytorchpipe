@@ -50,29 +50,6 @@ class ImageToClassProblem(Problem):
         self.key_targets = self.mapkey("targets")
 
 
-
-    def calculate_accuracy(self, data_dict):
-        """
-        Calculates accuracy equal to mean number of correct classification in a given batch.
-
-        :param data_dict: DataDict containing the targets.
-        :type data_dict: DataDict
-
-        :return: Accuracy.
-
-        """
-
-        # Get the index of the max log-probability.
-        #pred = logits.max(1, keepdim=True)[1]
-        #correct = pred.eq(data_dict['targets'].view_as(pred)).sum().item()
-
-        # Calculate the accuracy.
-        #batch_size = logits.size(0)
-        #accuracy = correct / batch_size
-
-        #return accuracy
-        pass
-
     def add_statistics(self, stat_col):
         """
         Add accuracy statistic to ``StatisticsCollector``.
@@ -80,7 +57,6 @@ class ImageToClassProblem(Problem):
         :param stat_col: ``StatisticsCollector``.
 
         """
-        #stat_col.add_statistic('acc', '{:12.10f}')
         pass
 
     def collect_statistics(self, stat_col, data_dict):
@@ -93,7 +69,6 @@ class ImageToClassProblem(Problem):
         :type data_dict: DataDict
 
         """
-        #stat_col['acc'] = self.calculate_accuracy(data_dict)
         pass
 
     def add_aggregators(self, stat_agg):
@@ -103,10 +78,6 @@ class ImageToClassProblem(Problem):
         :param stat_agg: ``StatisticsAggregator``.
 
         """
-        #stat_agg.add_aggregator('acc', '{:12.10f}')  # represents the average accuracy
-        #stat_agg.add_aggregator('acc_min', '{:12.10f}')
-        #stat_agg.add_aggregator('acc_max', '{:12.10f}')
-        #stat_agg.add_aggregator('acc_std', '{:12.10f}')
         pass
 
     def aggregate_statistics(self, stat_col, stat_agg):
@@ -118,10 +89,6 @@ class ImageToClassProblem(Problem):
         :param stat_agg: ``StatisticsAggregator``.
 
         """
-        #stat_agg['acc_min'] = min(stat_col['acc'])
-        #stat_agg['acc_max'] = max(stat_col['acc'])
-        #stat_agg['acc'] = torch.mean(torch.tensor(stat_col['acc']))
-        #stat_agg['acc_std'] = 0.0 if len(stat_col['acc']) <= 1 else torch.std(torch.tensor(stat_col['acc']))
         pass
 
     def show_sample(self, data_dict, sample_number=0):

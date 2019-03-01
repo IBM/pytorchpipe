@@ -72,7 +72,7 @@ class BatchSize(Component):
 
     def add_statistics(self, stat_col):
         """
-        Adds 'btch_size' statistics to ``StatisticsCollector``.
+        Adds 'batch_size' statistics to ``StatisticsCollector``.
 
         :param stat_col: ``StatisticsCollector``.
 
@@ -90,7 +90,7 @@ class BatchSize(Component):
 
     def add_aggregators(self, stat_agg):
         """
-        Adds aggregator summing samples from all collected batches.
+        Adds aggregator summing number of samples from all collected batches.
 
         :param stat_agg: ``StatisticsAggregator``.
 
@@ -100,7 +100,7 @@ class BatchSize(Component):
 
     def aggregate_statistics(self, stat_col, stat_agg):
         """
-        Aggregates samples from all collected batches.
+        Aggregates number of samples from all collected batches.
 
         :param stat_col: ``StatisticsCollector``
 

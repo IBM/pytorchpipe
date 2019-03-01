@@ -60,6 +60,9 @@ pipeline:
   batch_size:
     type: BatchSize
     priority: 3
+  accuracy:
+    type: Accuracy
+    priority: 4
 
 
 #: pipeline

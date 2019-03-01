@@ -82,11 +82,6 @@ class LeNet5(Model):
             self.key_predictions: DataDefinition([-1, self.prediction_size], [torch.Tensor], "Batch of predictions, each represented as probability distribution over classes [BATCH_SIZE x PREDICTION_SIZE]")
             }
 
-
-        # Create Model data definitions - indicate what a given model needs.
-        self.data_definitions = {
-            'images': {'size': [-1, 1, 32, 32], 'type': [torch.Tensor]}}
-
     def forward(self, data_dict):
         """
         Main forward pass of the ``LeNet5`` model.

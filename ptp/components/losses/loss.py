@@ -57,7 +57,6 @@ class Loss(Component):
         """
         return {
             self.key_targets: DataDefinition([-1], [torch.Tensor], "Batch of targets, each being a single index [BATCH_SIZE]"),
-            #self.key_targets: DataDefinition([-1, 1], [list, int], "Batch of targets, each represented as index [BATCH_SIZE] x [int]"),
             self.key_predictions: DataDefinition([-1, -1], [torch.Tensor], "Batch of predictions, represented as tensor with probability distribution over classes [BATCH_SIZE x NUM_CLASSES]")
             }
 

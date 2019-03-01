@@ -99,6 +99,10 @@ pipeline:
   batch_size:
     type: BatchSize
     priority: 9
-
+  accuracy:
+    type: Accuracy
+    priority: 10
+    keymappings:
+      targets: encoded_languages
 
   #: pipeline
