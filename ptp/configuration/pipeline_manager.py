@@ -84,10 +84,11 @@ class PipelineManager(object):
         if (self.app_state.args is not None) and (self.app_state.args.disable != ''):
             disabled_components = [*disabled_components, *self.app_state.args.disable.split(",")]
 
+        # Organize all components according to their priorities.
         for c_key, c_params in self.params.items():
-            # The section "key" will be used as "component" name.
+
             try:
-                # Skip "special" sections.
+                # Skip "special" pipeline sections.
                 if c_key in sections_to_skip:
                     #self.logger.info("Skipping section '{}'".format(c_key))
                     continue
@@ -95,14 +96,6 @@ class PipelineManager(object):
                 if c_key in disabled_components:
                     self.logger.info("Disabling component '{}'".format(c_key))
                     continue
-        
-                # Create component.
-                component, class_obj = ComponentFactory.build(c_key, c_params)
-
-                # Check if class is derived (even indirectly) from Problem.
-                if ComponentFactory.check_inheritance(class_obj, ptp.Problem.__name__):
-                    raise ConfigurationError("Object '{}' cannot be instantiated as part of pipeline, \
-                        as its class type '{}' is derived from Problem class!".format(c_key, class_obj.__name__))
 
                 # Check presence of priority.
                 if 'priority' not in c_params:
@@ -117,6 +110,46 @@ class PipelineManager(object):
                 # Check uniqueness of the priority.
                 if c_priority in self.__components.keys():
                     raise ConfigurationError("Found more than one component with the same priority ('{}')".format(c_priority))
+
+                # Ok, got the component name with priority. Save it.
+                # Later we will "plug" the adequate component in this place.
+                self.__components[c_priority] = c_key
+
+            except ConfigurationError as e:
+                if log_errors:
+                    self.logger.error(e)
+                errors += 1
+                continue
+            except KeyError as e:
+                if log_errors:
+                    self.logger.error(e)
+                errors += 1
+                continue
+                # end try/else
+            # end for
+
+        # Do not continue if found errors.
+        if errors > 0:
+            return errors
+
+        # List of priorities.
+        self.__priorities=sorted(self.__components.keys())        
+
+
+        for c_priority in self.__priorities:
+            try:
+                # The section "key" will be used as "component" name.
+                c_key = self.__components[c_priority]
+                # Get section.
+                c_params = self.params[c_key]
+
+                # Create component.
+                component, class_obj = ComponentFactory.build(c_key, c_params)
+
+                # Check if class is derived (even indirectly) from Problem.
+                if ComponentFactory.check_inheritance(class_obj, ptp.Problem.__name__):
+                    raise ConfigurationError("Object '{}' cannot be instantiated as part of pipeline, \
+                        as its class type '{}' is derived from Problem class!".format(c_key, class_obj.__name__))
 
                 # Add it to dict.
                 self.__components[c_priority] = component
@@ -143,8 +176,6 @@ class PipelineManager(object):
                 continue
                 # end try/else
             # end for
-        # List of priorities.
-        self.__priorities=sorted(self.__components.keys())        
 
         # Return detected errors.
         return errors
