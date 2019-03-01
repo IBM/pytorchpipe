@@ -95,6 +95,14 @@ class SoftmaxClassifier(Model):
             - inputs: expected inputs [BATCH_SIZE x INPUT_SIZE],
             - predictions: returned output with predictions (log_probs) [BATCH_SIZE x NUM_CLASSES]
         """
+        # Add noise to weights
+        #for _, param in self.linear.named_parameters():
+        #    if param.requires_grad:
+        #        #print (name, param.data)
+        #        noise = torch.randn(param.data.shape)*0.3
+        #        param.data = param.data * (1 + noise)
+        #        #print (name, param.data)
+
         inputs = data_dict[self.key_inputs]
         predictions = F.log_softmax(self.linear(inputs), dim=1)
         # Add them to datadict.

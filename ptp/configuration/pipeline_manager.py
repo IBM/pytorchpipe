@@ -132,9 +132,8 @@ class PipelineManager(object):
         if errors > 0:
             return errors
 
-        # List of priorities.
+        # Sort priorities.
         self.__priorities=sorted(self.__components.keys())        
-
 
         for c_priority in self.__priorities:
             try:
@@ -334,7 +333,10 @@ class PipelineManager(object):
         for prio in self.__priorities:
             # Get component
             comp = self.__components[prio]
-            summary_str += comp.summarize_io(prio)
+            if type(comp) == str:
+                summary_str += '  + {} (None: not created) [{}]\n'.format(comp, prio)
+            else:
+                summary_str += comp.summarize_io(prio)
         summary_str += '=' * 80 + '\n'
         return summary_str
 

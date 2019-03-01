@@ -94,6 +94,16 @@ class LeNet5(Model):
         :return: Predictions [batch_size, num_classes]
 
         """
+        # Add noise to weights
+        #for _, param in self.named_parameters():
+        #    if param.requires_grad:
+        #        #print (name, param.data)
+        #        #noise = -torch.randn(param.data.shape)*0.3
+        #        noise = 0.3
+        #        param.data = param.data * (1 + noise)
+        #        #print (name, param.data)
+
+
         # Unpack DataDict.
         img = data_dict[self.key_inputs]
 

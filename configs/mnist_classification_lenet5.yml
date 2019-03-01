@@ -51,6 +51,9 @@ pipeline:
   image_classifier:
     type: LeNet5
     priority: 1
+    keymappings:
+      prediction_size: num_classes
+
   # Loss
   nllloss:
     type: NLLLoss
