@@ -421,7 +421,7 @@ class Worker(object):
         for config in reversed(configs_to_load):
             # Load params from YAML file.
             self.params.add_config_params_from_yaml(config)
-            print('Loaded configuration from file {}'.format(config))
+            print('Info: Loaded configuration from file {}'.format(config))
 
 
     #def check_and_set_cuda(self, use_gpu):

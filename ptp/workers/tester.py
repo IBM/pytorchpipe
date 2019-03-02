@@ -162,6 +162,8 @@ class Tester(Worker):
                 if self.app_state.args.savetag != '':
                     time_str = time_str + "_" + self.app_state.args.savetag
                 self.log_dir = self.abs_path + '/' + time_str + '/'
+                # Lowercase dir.
+                self.log_dir = self.log_dir.lower()
                 os.makedirs(self.log_dir, exist_ok=False)
             except FileExistsError:
                 sleep(1)
@@ -171,6 +173,7 @@ class Tester(Worker):
         # Set log dir and add the handler for the logfile to the logger.
         self.log_file = self.log_dir + 'tester.log'
         self.add_file_handler_to_logger(self.log_file)
+        self.logger.info("Logger directory set to: {}".format(self.log_dir ))
 
         # Set random seeds in the testing section.
         self.set_random_seeds('testing', self.params['testing'])
