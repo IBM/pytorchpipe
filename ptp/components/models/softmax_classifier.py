@@ -58,9 +58,6 @@ class SoftmaxClassifier(Model):
             else:
                 raise ConfigurationError("SoftmaxClassifier prediction size '{}' must be a single dimension (current {})".format(self.key_prediction_size, self.prediction_size))
         
-        print("INPUTS: ", self.input_size)
-        print("PREDICTIONS: ", self.prediction_size)
-
         # Simple classifier.
         self.linear = torch.nn.Linear(self.input_size, self.prediction_size)
         

@@ -74,8 +74,8 @@ class PipelineManager(object):
         """
         errors = 0
 
-        # Check "skip" section.
-        sections_to_skip = "name disable".split()
+        # Special section names to "skip".
+        sections_to_skip = "name load freeze disable".split()
         disabled_components = ''
         # Add components to disable by the ones from configuration file.
         if "disable" in self.params:
@@ -206,7 +206,7 @@ class PipelineManager(object):
         model_str = ''
         # Save state dicts of all models.
         for model in self.models:
-            chkpt[model.name] = model.state_dict()
+            model.save_to_checkpoint(chkpt)
             model_str += "  + Model '{}' [{}] params saved \n".format(model.name, type(model).__name__)
 
         # Save the intermediate checkpoint.
@@ -265,11 +265,12 @@ class PipelineManager(object):
         warning = False
         # Save state dicts of all models.
         for model in self.models:
-            if model.name in chkpt.keys():
+            try:
                 # Load model.
-                model.load_state_dict(chkpt[model.name])
+                model.load_from_checkpoint(chkpt)
+                #model.load_state_dict(chkpt[model.name])
                 model_str += "  + Model '{}' [{}] params loaded\n".format(model.name, type(model).__name__)
-            else:
+            except KeyError:
                 model_str += "  + Model '{}' [{}] params not found in checkpoint!\n".format(model.name, type(model).__name__)
                 warning = True
 
@@ -280,7 +281,36 @@ class PipelineManager(object):
         else:
             self.logger.info(log_str)
 
+    def load_models(self):
+        """
+        Method analyses the configuration and loads models one by one by looking whether they got 'load' variable present in their configuration section.
 
+        ..note::
+            The 'load' variable should contain path with filename of the checkpoint from which we want to load particular model.
+        """
+        pass
+
+
+    def freeze_models(self):
+        """
+        Method analyses the configuration and freezes:
+            - all models when 'freeze' flag for whoe pipeline is set,
+            - individual models when their 'freeze' flags are set.
+        """
+        # Check freeze all option.
+        if "freeze" in self.params.keys():
+            freeze_all = bool(self.params["freeze"])
+        else: 
+            freeze_all = False
+                
+        # Iterate over models.
+        for model in self.models:
+            if "freeze" in model.params.keys():
+                if bool(model.params["freeze"]):
+                    model.freeze()
+            elif freeze_all:
+                model.freeze()
+        
 
     def __getitem__(self, number):
         """
@@ -422,7 +452,7 @@ class PipelineManager(object):
         Sets evaluation mode for all models in the pipeline.
         """
         for model in self.models:
-            model.eval()
+            model.eval
 
     def train(self):
         """ 
