@@ -17,7 +17,6 @@
 __author__ = "Tomasz Kornuta"
 
 import torch
-import math
 
 from ptp.components.component import Component
 from ptp.data_types.data_definition import DataDefinition
