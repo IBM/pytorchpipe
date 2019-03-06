@@ -1,11 +1,10 @@
 # Training parameters:
 training:
-  problem: &problem
-    type: DummyLanguageIdentification
-    data_folder: ~/data/language_identification/dummy
+  problem:
+    type: &p_type DummyLanguageIdentification
     batch_size:  2
     use_train_data: True
-    keymappings:
+    keymappings: &p_keymappings
       inputs: sentences
       targets: languages
 
@@ -22,12 +21,20 @@ training:
 
 # Validation parameters:
 validation:
-  problem: *problem
   partial_validation_interval: 10
+  problem:
+    type: *p_type
+    batch_size:  2
+    use_train_data: True
+    keymappings: *p_keymappings
 
 # Testing parameters:
 testing:
-  problem: *problem
+  problem:
+    type: *p_type 
+    batch_size:  2
+    use_train_data: False
+    keymappings: *p_keymappings
 
 pipeline:
   name: language_classifier
@@ -63,7 +70,7 @@ pipeline:
       type: LabelEncoder
       priority: 4
       data_folder: ~/data/language_identification/dummy
-      source_files: y_training.tx,ty_test.txt
+      source_files: y_training.txt,y_test.txt
       encodings_file: language_name_encodings.csv
       keymappings:
         inputs: languages

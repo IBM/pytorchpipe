@@ -16,6 +16,8 @@ __author__ = "Tomasz Kornuta"
 
 from .language_identification import LanguageIdentification
 
+import os
+
 import ptp.utils.io_utils as io
 
 
@@ -32,13 +34,21 @@ class DummyLanguageIdentification(LanguageIdentification):
 
         # Set default parameters.
         self.params.add_default_params({
-            'generate': True
-            })
-        # Generate the dataset (can be turned off).    
-        if self.params['generate']:
+                'data_folder': '~/data/language_identification/dummy',
+                'use_train_data': True,
+                'generate': False
+            })  
+
+        # Get absolute path.
+        self.data_folder = os.path.expanduser(self.params['data_folder'])
+
+        # Generate the dataset (can be turned off).
+        filenames = ["x_training.txt", "y_training.txt", "x_test.txt", "y_test.txt"]
+        if self.params['generate'] or not io.check_files_existence(self.data_folder, filenames):
             self.generate_dummy_dataset()
 
-        if self.use_train_data:
+        # Select set.
+        if self.params['use_train_data']:
             inputs_file = "x_training.txt"
             targets_file = "y_training.txt"
         else:

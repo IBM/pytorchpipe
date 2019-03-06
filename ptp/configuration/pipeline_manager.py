@@ -213,7 +213,7 @@ class PipelineManager(object):
         if self.app_state.args.save_intermediate:
             filename = chkpt_dir + self.name + '_episode_{:05d}.pt'.format(episode)
             torch.save(chkpt, filename)
-            log_str = "Exporting pipeline '{}' parameters to checkpoint {}:\n".format(self.name, filename)
+            log_str = "Exporting pipeline '{}' parameters to checkpoint:\n {}\n".format(self.name, filename)
             log_str += model_str
             self.logger.info(log_str)
 
@@ -226,7 +226,7 @@ class PipelineManager(object):
             # Save checkpoint.
             filename = chkpt_dir + self.name + '_best.pt'
             torch.save(chkpt, filename)
-            log_str = "Exporting pipeline '{}' parameters to checkpoint {}:\n".format(self.name, filename)
+            log_str = "Exporting pipeline '{}' parameters to checkpoint:\n {}\n".format(self.name, filename)
             log_str += model_str
             self.logger.info(log_str)
             return True
@@ -239,7 +239,7 @@ class PipelineManager(object):
             chkpt_loaded['status_timestamp'] = datetime.now()
             # Save updated checkpoint.
             torch.save(chkpt_loaded, filename)
-            self.logger.info("Updated training status in checkpoint {}".format(filename))
+            self.logger.info("Updated training status in checkpoint:\n {}".format(filename))
         # Else: that was not the best "model".
         return False
 

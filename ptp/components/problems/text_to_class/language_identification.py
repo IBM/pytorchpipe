@@ -14,8 +14,6 @@
 
 __author__ = "Tomasz Kornuta"
 
-import os
-
 from ptp.components.problems.problem import Problem
 from ptp.data_types.data_definition import DataDefinition
 
@@ -39,16 +37,6 @@ class LanguageIdentification(Problem):
         # Set key mappings.
         self.key_inputs = self.mapkey("inputs")
         self.key_targets = self.mapkey("targets")
-
-        # Set default parameters.
-        self.params.add_default_params({'data_folder': '~/data/language_identification',
-                                        'use_train_data': True
-                                        })
-        # Get absolute path.
-        self.data_folder = os.path.expanduser(self.params['data_folder'])
-        
-        # Retrieve parameters from the dictionary.
-        self.use_train_data = self.params['use_train_data']
 
         # Set empty inputs and targets.
         self.inputs = []
