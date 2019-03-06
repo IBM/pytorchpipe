@@ -83,8 +83,7 @@ class WiLYLanguageIdentification(LanguageIdentification):
 
         # Extract data from zip.
         self.logger.info("Extracting dataset from {}".format(zip_filename))
-        zip_ref = zipfile.ZipFile(self.data_folder + "/" + zip_filename, 'r')
-        zip_ref.extractall(self.data_folder)
-        zip_ref.close()
+        with zipfile.ZipFile(self.data_folder + "/" + zip_filename, 'r') as zip_ref:
+            zip_ref.extractall(self.data_folder)
 
         self.logger.info("Initialization successfull")

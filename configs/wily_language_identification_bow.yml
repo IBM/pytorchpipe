@@ -42,7 +42,7 @@ validation:
 testing:
   problem:
     type: *p_type 
-    batch_size:  2
+    batch_size: 64
     use_train_data: False
     keymappings: *p_keymappings
 
