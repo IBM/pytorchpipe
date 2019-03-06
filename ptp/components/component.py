@@ -74,7 +74,7 @@ class Component(abc.ABC):
         :return: Summary as a str.
 
         """
-        summary_str = "  + {} {} [{}] \n".format(self.name, type(self).__name__, priority)
+        summary_str = "  + {} ({}) [{}] \n".format(self.name, type(self).__name__, priority)
         # Get inputs
         summary_str += '      Inputs:\n' 
         for key,value in self.input_data_definitions().items():

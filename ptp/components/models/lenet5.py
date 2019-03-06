@@ -29,7 +29,7 @@ class LeNet5(Model):
     """
     A classical LeNet-5 model for MNIST digits classification. 
     """ 
-    def __init__(self, params_, problem_default_values_):
+    def __init__(self, name, params):
         """
         Initializes the ``LeNet5`` model, creates the required layers.
 
@@ -40,8 +40,7 @@ class LeNet5(Model):
         :type problem_default_values_: dict
 
         """
-        super(LeNet5, self).__init__(params_, problem_default_values_)
-        self.name = 'LeNet5'
+        super(LeNet5, self).__init__(name, params)
 
         # Set key mappings.
         self.key_inputs = self.mapkey("inputs")
