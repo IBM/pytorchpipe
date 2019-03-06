@@ -21,7 +21,6 @@ import os
 import torch
 from torchvision import datasets, transforms
 
-from ptp.configuration.configuration_error import ConfigurationError
 from ptp.components.problems.image_to_class.image_to_class_problem import ImageToClassProblem
 from ptp.data_types.data_dict import DataDict
 from ptp.data_types.data_definition import DataDefinition
