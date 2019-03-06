@@ -45,7 +45,7 @@ class DummyLanguageIdentification(LanguageIdentification):
         # Generate the dataset (can be turned off).
         filenames = ["x_training.txt", "y_training.txt", "x_test.txt", "y_test.txt"]
         if self.params['generate'] or not io.check_files_existence(self.data_folder, filenames):
-            self.generate_dummy_dataset()
+            self.initialize_dataset()
 
         # Select set.
         if self.params['use_train_data']:
@@ -62,20 +62,13 @@ class DummyLanguageIdentification(LanguageIdentification):
         # Assert that they are equal in size!
         assert len(self.inputs) == len(self.targets), "Number of inputs loaded from {} not equal to number of targets loaded from {}!".format(inputs_file, targets_file)
 
-    def __len__(self):
-        """
-        Returns the "size" of the "problem" (total number of samples).
 
-        :return: The size of the problem.
-        """
-        return len(self.inputs)
-
-
-    def generate_dummy_dataset(self):
+    def initialize_dataset(self):
         """
         Method generates dummy dataset for language identification, few (sentence-language) pairs, training and text sets.
         """
         self.logger.info("Generating dummy dataset in {}".format(self.data_folder))
+
         # "Training" set.
         x_training_data = [
             "me gusta comer en la cafeteria",
@@ -101,3 +94,5 @@ class DummyLanguageIdentification(LanguageIdentification):
             "SPANISH",
             "ENGLISH"]
         io.save_list_to_txt_file(self.data_folder, 'y_test.txt', y_test_data)
+
+        self.logger.info("Initialization successfull")

@@ -167,11 +167,15 @@ def download(directory, filename, url):
     :type url: str
     """
     if check_file_existence(directory, filename):
-        return True
+        return
     
+    # Make sure directory exists.
+    os.makedirs(os.path.dirname(directory +'/'), exist_ok=True)
+
     # Download.
+    file_result = os.path.expanduser(directory) + '/' + filename
+    urllib.request.urlretrieve(url, os.path.expanduser(file_result), reporthook)
     #self.logger.info('Downloading {}'.format(url))
-    urllib.request.urlretrieve(url, os.path.expanduser(directory), reporthook)
 
 def reporthook(count, block_size, total_size):
     """

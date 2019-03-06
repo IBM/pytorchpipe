@@ -56,6 +56,15 @@ class LanguageIdentification(Problem):
             }
 
 
+    def __len__(self):
+        """
+        Returns the "size" of the "problem" (total number of samples).
+
+        :return: The size of the problem.
+        """
+        return len(self.inputs)
+
+
     def __getitem__(self, index):
         """
         Getter method to access the dataset and return a sample.
