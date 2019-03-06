@@ -89,7 +89,7 @@ class ReshapeTensor(Component):
         # Get inputs to be encoded.
         inputs = data_dict[self.key_inputs]
 
-        # 
+        # Reshape.
         outputs = inputs.view(self.output_dims) 
         # Create the returned dict.
         data_dict.extend({self.key_outputs: outputs})
