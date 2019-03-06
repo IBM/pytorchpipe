@@ -123,13 +123,15 @@ class MNIST(ImageToClassProblem):
                                       transform=transform)
 
 
-        # Set global variable - all dimensions ASIDE OF BATCH.
+        # Set global variables - all dimensions ASIDE OF BATCH.
         self.key_num_classes = self.mapkey("num_classes")
-        if self.key_num_classes in self.app_state.globalkeys():
-            if (self.app_state[self.key_num_classes] != 10):
-                raise ConfigurationError("Global key '{}' already exists and has different value (existing {} vs desired 10)!".format(self.key_num_classes, self.app_state[self.key_num_classes]))
-        else:
-            self.app_state[self.key_num_classes] = 10
+        self.app_state[self.key_num_classes] = 10
+        self.key_image_width = self.mapkey("image_width")
+        self.app_state[self.key_image_width] = self.width
+        self.key_image_height = self.mapkey("image_height")
+        self.app_state[self.key_image_height] = self.height
+        self.key_image_depth = self.mapkey("image_depth")
+        self.app_state[self.key_image_depth] = 1
 
         # Class names.
         #self.labels = 'Zero One Two Three Four Five Six Seven Eight Nine'.split(' ')
@@ -151,7 +153,7 @@ class MNIST(ImageToClassProblem):
         """
         return {
             self.key_indices: DataDefinition([-1, 1], [list, int], "Batch of sample indices [BATCH_SIZE] x [1]"),
-            self.key_inputs: DataDefinition([-1, 1, self.height, self.width], [torch.Tensor], "Batch of images [BATCH_SIZE x IMAGE_DEPTH x IMAGE_HEIGHT x IMAGE WIDTH]"),
+            self.key_inputs: DataDefinition([-1, 1, self.height, self.width], [torch.Tensor], "Batch of images [BATCH_SIZE x IMAGE_DEPTH x IMAGE_HEIGHT x IMAGE_WIDTH]"),
             self.key_targets: DataDefinition([-1], [torch.Tensor], "Batch of targets, each being a single index [BATCH_SIZE]")
             }
 
