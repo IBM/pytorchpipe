@@ -58,6 +58,37 @@ class Model(Module, Component):
         Component.__init__(self, name, params)
         Module.__init__(self)
 
+        # Flag indicating whether the model is frozen or not.
+        self.frozen = False
+
+
+    def save_to_checkpoint(self, chkpt):
+        """
+        Adds model's state dictionary to checkpoint, which will be next stored to file.
+
+        :param: Checkpoint (dictionary) that will be saved to file.
+        """
+        chkpt[self.name] = self.state_dict()
+
+
+    def load_from_checkpoint(self, chkpt):
+        """
+        Loads state dictionary from checkpoint.
+
+        :param: Checkpoint (dictionary) loaded from file.
+        """
+        self.load_state_dict(chkpt[self.name])
+
+    def freeze(self):
+        """
+        Freezes the trainable weigths of the model.
+        """
+        # Freeze.
+        print("FREEZEING ",self.name)
+        self.frozen = True
+        for param in self.parameters():
+            param.requires_grad = False
+
 
     def summarize(self):
         """
@@ -111,6 +142,10 @@ class Model(Module, Component):
             mod_str += '  ' + '| ' * (indent_-1) + '+ '
 
         mod_str += module_name_ + " (" + module_._get_name() + ')'
+
+        if indent_ == 0:
+            if self.frozen:
+                mod_str += "\t\t[FROZEN]"
 
         mod_str += '\n'
         mod_str += ''.join(child_lines)

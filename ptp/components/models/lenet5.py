@@ -29,7 +29,7 @@ class LeNet5(Model):
     """
     A classical LeNet-5 model for MNIST digits classification. 
     """ 
-    def __init__(self, params_, problem_default_values_):
+    def __init__(self, name, params):
         """
         Initializes the ``LeNet5`` model, creates the required layers.
 
@@ -40,17 +40,15 @@ class LeNet5(Model):
         :type problem_default_values_: dict
 
         """
-        super(LeNet5, self).__init__(params_, problem_default_values_)
-        self.name = 'LeNet5'
+        super(LeNet5, self).__init__(name, params)
 
         # Set key mappings.
         self.key_inputs = self.mapkey("inputs")
         self.key_predictions = self.mapkey("predictions")
 
         # Retrieve prediction size from globals.
-        #self.key_prediction_size = self.mapkey("prediction_size")
-        #self.prediction_size = self.app_state[self.key_prediction_size]
-        self.prediction_size = 10
+        self.key_prediction_size = self.mapkey("prediction_size")
+        self.prediction_size = self.app_state[self.key_prediction_size]
 
         # Create the LeNet-5 layers.
         self.conv1 = torch.nn.Conv2d(1, 6, kernel_size=(5, 5))
@@ -95,6 +93,16 @@ class LeNet5(Model):
         :return: Predictions [batch_size, num_classes]
 
         """
+        # Add noise to weights
+        #for _, param in self.named_parameters():
+        #    if param.requires_grad:
+        #        #print (name, param.data)
+        #        #noise = -torch.randn(param.data.shape)*0.3
+        #        noise = 0.3
+        #        param.data = param.data * (1 + noise)
+        #        #print (name, param.data)
+
+
         # Unpack DataDict.
         img = data_dict[self.key_inputs]
 

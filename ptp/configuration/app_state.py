@@ -52,6 +52,14 @@ class AppState(metaclass=SingletonMetaClass):
         self.__globals = dict()
 
 
+    def globalkeys(self):
+        """
+        Yields global keys.
+        """
+        for key in self.__globals.keys():
+            yield key
+
+
     def __setitem__(self, key, value, override=False):
         """
         Adds global variable. 
@@ -68,8 +76,10 @@ class AppState(metaclass=SingletonMetaClass):
             Once global variable is set, its value cannot be changed (it becomes immutable).
         """
         if not override and key in self.__globals.keys():
-            msg = 'Cannot add or modify key "{}" as it is already present in global variables'.format(key)
-            raise KeyError(msg)
+            if (self.__globals[key] != value):
+                raise KeyError("Global key '{}' already exists and has different value (existing {} vs received {})!".format(key, self.__globals[key], value))
+            #msg = 'Cannot add or modify key "{}" as it is already present in global variables'.format(key)
+            #raise KeyError(msg)
         else:
             self.__globals[key] = value
 

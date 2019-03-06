@@ -31,7 +31,9 @@ testing:
 
 pipeline:
   name: language_classifier
-  #disable: prediction_decoder
+  load: /users/tomaszkornuta/experiments/dummylanguageidentification/language_classifier/20190301_145416/checkpoints/language_classifier_best.pt
+  #freeze: True
+  #disable: prediction_decoder,accuracy
   # Sentences encoding.
   sentence_tokenizer:
       type: SentenceTokenizer
@@ -70,6 +72,7 @@ pipeline:
   # Model
   classifier:
     type: SoftmaxClassifier
+    #freeze: True
     priority: 5
     keymappings:
       inputs: bow_sencentes

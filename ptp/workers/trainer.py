@@ -170,7 +170,7 @@ class Trainer(Worker):
                 if self.app_state.args.savetag != '':
                     time_str = time_str + "_" + self.app_state.args.savetag
                 self.log_dir = os.path.expanduser(self.app_state.args.expdir) + '/' + training_problem_type + '/' + pipeline_name + '/' + time_str + '/'
-                # Lowercase dirs.
+                # Lowercase dir.
                 self.log_dir = self.log_dir.lower()
                 os.makedirs(self.log_dir, exist_ok=False)
             except FileExistsError:
@@ -181,6 +181,7 @@ class Trainer(Worker):
         # Set log dir and add the handler for the logfile to the logger.
         self.log_file = self.log_dir + 'trainer.log'
         self.add_file_handler_to_logger(self.log_file)
+        self.logger.info("Logger directory set to: {}".format(self.log_dir ))
 
         # Models dir.
         self.checkpoint_dir = self.log_dir + 'checkpoints/'
@@ -259,12 +260,6 @@ class Trainer(Worker):
             self.logger.error('Found {} errors, terminating execution'.format(errors))
             exit(-2)
 
-        # Check if there are any models in the pipeline.
-        if len(self.pipeline.models) == 0:
-            self.logger.error('Cannot proceed with training, as there are no trainable models in the pipeline')
-            exit(-3)
-
-
         # Load the pretrained models params from checkpoint.
         try: 
             # Check command line arguments, then check load option in config.
@@ -291,6 +286,8 @@ class Trainer(Worker):
             # Exit by following the logic: if user wanted to load the model but failed, then continuing the experiment makes no sense.
             exit(-6)
 
+        # Finally, freeze models.
+        self.pipeline.freeze_models()
 
         # Log the model summaries.
         summary_str = self.pipeline.summarize_models_header()
@@ -307,6 +304,11 @@ class Trainer(Worker):
         optimizer_conf = dict(self.params['training']['optimizer'])
         optimizer_name = optimizer_conf['name']
         del optimizer_conf['name']
+
+        # Check if there are any models in the pipeline.
+        if len(list(filter(lambda p: p.requires_grad, self.pipeline.parameters()))) == 0:
+            self.logger.error('Cannot proceed with training, as there are no trainable models in the pipeline (or all models are frozen)')
+            exit(-7)
 
         # Instantiate the optimizer and filter the model parameters based on if they require gradients.
         self.optimizer = getattr(torch.optim, optimizer_name)(

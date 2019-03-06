@@ -17,6 +17,7 @@ __author__ = "Tomasz Kornuta"
 import torch
 import torch.nn.functional as F
 
+from ptp.configuration.configuration_error import ConfigurationError
 from ptp.components.models.model import Model
 from ptp.data_types.data_definition import DataDefinition
 
@@ -41,10 +42,21 @@ class SoftmaxClassifier(Model):
 
         # Retrieve input and output (prediction) sizes from global params.
         self.key_input_size = self.mapkey("input_size")
-        self.key_prediction_size = self.mapkey("prediction_size")
-        # Retrieve global params.
         self.input_size = self.app_state[self.key_input_size]
+        if type(self.input_size) == list:
+            if len(self.input_size) == 1:
+                self.input_size = self.input_size[0]
+            else:
+                raise ConfigurationError("SoftmaxClassifier input size '{}' must be a single dimension (current {})".format(self.key_input_size, self.input_size))
+
+
+        self.key_prediction_size = self.mapkey("prediction_size")
         self.prediction_size = self.app_state[self.key_prediction_size]
+        if type(self.prediction_size) == list:
+            if len(self.prediction_size) == 1:
+                self.prediction_size = self.prediction_size[0]
+            else:
+                raise ConfigurationError("SoftmaxClassifier prediction size '{}' must be a single dimension (current {})".format(self.key_prediction_size, self.prediction_size))
         
         # Simple classifier.
         self.linear = torch.nn.Linear(self.input_size, self.prediction_size)
@@ -80,6 +92,14 @@ class SoftmaxClassifier(Model):
             - inputs: expected inputs [BATCH_SIZE x INPUT_SIZE],
             - predictions: returned output with predictions (log_probs) [BATCH_SIZE x NUM_CLASSES]
         """
+        # Add noise to weights
+        #for _, param in self.linear.named_parameters():
+        #    if param.requires_grad:
+        #        #print (name, param.data)
+        #        noise = torch.randn(param.data.shape)*0.3
+        #        param.data = param.data * (1 + noise)
+        #        #print (name, param.data)
+
         inputs = data_dict[self.key_inputs]
         predictions = F.log_softmax(self.linear(inputs), dim=1)
         # Add them to datadict.

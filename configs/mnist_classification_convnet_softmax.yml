@@ -1,0 +1,117 @@
+# Training parameters:
+training:
+  problem: 
+    type: MNIST
+    batch_size: &b 64
+    use_train_data: True
+    data_folder: &folder '~/data/mnist'
+    #resize: [32, 32]
+  # Use sampler that operates on a subset.
+  sampler:
+    name: SubsetRandomSampler
+    indices: [0, 55000]
+  # optimizer parameters:
+  optimizer:
+    name: Adam
+    lr: 0.01
+  # settings parameters
+  terminal_conditions:
+    loss_stop: 1.0e-2
+    episode_limit: 10000
+    epoch_limit: 10
+
+# Validation parameters:
+validation:
+  partial_validation_interval: 500
+  problem:
+    type: MNIST
+    batch_size: *b
+    use_train_data: True  # True because we are splitting the training set to: validation and training
+    data_folder: *folder
+    #resize: [32, 32]
+  # Use sampler that operates on a subset.
+  sampler:
+    name: SubsetRandomSampler
+    indices: [55000, 60000]
+
+# Testing parameters:
+testing:
+  problem:
+    type: MNIST
+    batch_size: *b
+    use_train_data: False
+    data_folder: *folder
+    #resize: [32, 32]
+
+
+pipeline:
+  name: mnist_convnet_softmax_classifier
+  #disable: nllloss
+
+  # Model consisting of two components.
+  image_encoder:
+    type: ConvNetEncoder
+    priority: 1
+    conv1:
+        out_channels: 64
+        kernel_size: 3
+        stride: 1
+        padding: 0
+    maxpool1:
+        kernel_size: 2
+    conv2:
+        out_channels: 32
+        kernel_size: 3
+        stride: 1
+        padding: 0
+    maxpool2:
+        kernel_size: 2
+    conv3:
+        out_channels: 16
+        kernel_size: 3
+        stride: 1
+        padding: 0
+    maxpool3:
+        kernel_size: 2
+    keymappings:
+      #inputs: images
+      input_width: image_width
+      input_height: image_height
+      input_depth: image_depth
+      feature_maps: feature_maps
+
+  # Reshape inputs
+  reshape:
+    type: ReshapeTensor
+    input_dims: [-1, 16, 1, 1]
+    output_dims: [-1, 16]
+    priority: 2
+    keymappings:
+      inputs: feature_maps
+      outputs: reshaped_maps
+      output_size: reshaped_maps_size
+
+  # Image classifier.
+  classifier:
+    type: SoftmaxClassifier 
+    priority: 3
+    keymappings:
+      inputs: reshaped_maps
+      input_size: reshaped_maps_size
+      prediction_size: num_classes
+
+  # Loss
+  nllloss:
+    type: NLLLoss
+    priority: 5
+  
+  # Statistics.
+  batch_size:
+    type: BatchSize
+    priority: 6
+
+  accuracy:
+    type: Accuracy
+    priority: 7
+
+#: pipeline
