@@ -45,8 +45,8 @@ class MNIST(ImageToClassProblem):
         """
         Initializes MNIST problem:
 
-            - Calls ``problems.problem.ImageToClassProblem`` class constructor,
-            - Sets following attributes using the provided ``params``:
+            - Calls base class constructor,
+            - Sets following attributes using the provided ``params`` from configuration file:
 
                 - ``self.data_folder`` (`string`) : Root directory of dataset where ``processed/training.pt``\
                     and  ``processed/test.pt`` will be saved,
@@ -56,9 +56,7 @@ class MNIST(ImageToClassProblem):
                 - ``self.defaut_values`` :
 
                     >>> self.default_values = {'num_classes': 10,
-                    >>>            'num_channels': 1,
-                    >>>            'width': self.width, # (DEFAULT: 28)
-                    >>>            'height': self.height} # (DEFAULT: 28)
+                    >>>            'num_channels': 1}
 
 
         .. warning::

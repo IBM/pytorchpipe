@@ -209,6 +209,10 @@ setup(
     # For example, the following would provide a command called `sample` which
     # executes the function `main` from this package when invoked:
     entry_points={  # Optional
+         'console_scripts': [
+             'ptp-online-trainer=ptp.workers.online_trainer:main',
+             'ptp-tester=ptp.workers.tester:main',
+         ]
      },
 
     # List additional URLs that are relevant to your project as a dict.
