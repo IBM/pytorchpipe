@@ -24,9 +24,11 @@ from pathlib import Path
 
 
 
-def save_list_to_txt_file(folder, filename, data):
+def save_string_list_to_txt_file(folder, filename, data):
     """ 
-    Writes data to txt file.
+    Writes list of strings to txt file.
+
+    :param data: List containing strings (sententes, words etc.).
     """
     # Make sure directory exists.
     os.makedirs(os.path.dirname(folder +'/'), exist_ok=True)
@@ -36,9 +38,11 @@ def save_list_to_txt_file(folder, filename, data):
         txtfile.write('\n'.join(data))
 
 
-def load_list_from_txt_file(folder, filename):
+def load_string_list_from_txt_file(folder, filename):
     """
     Loads data from txt file.
+
+    :return: List of strings (e.g. list of sententes).
     """
     data = []
     with open(folder+'/'+filename, mode='rt') as txtfile:
@@ -50,9 +54,9 @@ def load_list_from_txt_file(folder, filename):
     return data
 
 
-def load_dict_from_csv_file(folder, filename):
+def load_mappings_from_csv_file(folder, filename):
     """
-    Loads data from csv file.
+    Loads mappings (word:id) from csv file.
 
     .. warning::
             There is an assumption that file will contain key:value pairs (no content checking for now!)
@@ -78,9 +82,9 @@ def load_dict_from_csv_file(folder, filename):
     return ret_dict
 
 
-def save_dict_to_csv_file(folder, filename, word_to_ix, fieldnames = []):
+def save_mappings_to_csv_file(folder, filename, word_to_ix, fieldnames = []):
     """
-    Saves dictionary to a file.
+    Saves mappings dictionary to a file.
 
     :param filename: File with encodings (absolute path + filename).
     :param word_to_ix: dictionary with word:index keys

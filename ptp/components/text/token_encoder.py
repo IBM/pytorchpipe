@@ -54,11 +54,11 @@ class TokenEncoder(Component):
             # Generate new encodings.
             self.word_to_ix = self.create_encodings(self.data_folder, self.source_files)
             assert (len(self.word_to_ix) > 0), "The created encodings list is empty!"
-            # Ok, save necodings, so next time we will simply load them.
-            io.save_dict_to_csv_file(self.data_folder, self.encodings_file, self.word_to_ix, ['word', 'index'])
+            # Ok, save mappings, so next time we will simply load them.
+            io.save_mappings_to_csv_file(self.data_folder, self.encodings_file, self.word_to_ix, ['word', 'index'])
         else:
             # Load encodings.
-            self.word_to_ix = io.load_dict_from_csv_file(self.data_folder, self.encodings_file)
+            self.word_to_ix = io.load_mappings_from_csv_file(self.data_folder, self.encodings_file)
             assert (len(self.word_to_ix) > 0), "The loaded encodings list is empty!"
 
         # Ok, we are ready to go!

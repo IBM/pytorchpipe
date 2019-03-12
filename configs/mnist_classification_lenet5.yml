@@ -43,7 +43,7 @@ testing:
     data_folder: *folder
     resize: [32, 32]
 
-
+# Definition of the pipeline.
 pipeline:
   name: mnist_lenet5_classifier
   #disable: nllloss
@@ -66,6 +66,4 @@ pipeline:
   accuracy:
     type: Accuracy
     priority: 4
-
-
 #: pipeline

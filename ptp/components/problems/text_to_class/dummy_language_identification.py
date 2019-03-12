@@ -56,8 +56,8 @@ class DummyLanguageIdentification(LanguageIdentification):
             targets_file = "y_test.txt"
 
         # Load files.
-        self.inputs = io.load_list_from_txt_file(self.data_folder, inputs_file)
-        self.targets = io.load_list_from_txt_file(self.data_folder, targets_file)
+        self.inputs = io.load_string_list_from_txt_file(self.data_folder, inputs_file)
+        self.targets = io.load_string_list_from_txt_file(self.data_folder, targets_file)
 
         # Assert that they are equal in size!
         assert len(self.inputs) == len(self.targets), "Number of inputs loaded from {} not equal to number of targets loaded from {}!".format(inputs_file, targets_file)
@@ -75,24 +75,24 @@ class DummyLanguageIdentification(LanguageIdentification):
             "Give it to me", 
             "No creo que sea una buena idea",
             "No it is not a good idea to get lost at sea"]
-        io.save_list_to_txt_file(self.data_folder, 'x_training.txt', x_training_data)
+        io.save_string_list_to_txt_file(self.data_folder, 'x_training.txt', x_training_data)
 
         y_training_data = [
             "SPANISH",
             "ENGLISH",
             "SPANISH",
             "ENGLISH"]
-        io.save_list_to_txt_file(self.data_folder, 'y_training.txt', y_training_data)
+        io.save_string_list_to_txt_file(self.data_folder, 'y_training.txt', y_training_data)
 
         # "Test" set.
         x_test_data = [
             "Yo creo que si",
             "it is lost on me"]
-        io.save_list_to_txt_file(self.data_folder, 'x_test.txt', x_test_data)
+        io.save_string_list_to_txt_file(self.data_folder, 'x_test.txt', x_test_data)
 
         y_test_data = [
             "SPANISH",
             "ENGLISH"]
-        io.save_list_to_txt_file(self.data_folder, 'y_test.txt', y_test_data)
+        io.save_string_list_to_txt_file(self.data_folder, 'y_test.txt', y_test_data)
 
         self.logger.info("Initialization successfull")

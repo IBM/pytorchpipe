@@ -58,8 +58,8 @@ class WiLYLanguageIdentification(LanguageIdentification):
             targets_file = "y_test.txt"
 
         # Load files.
-        self.inputs = io.load_list_from_txt_file(self.data_folder, inputs_file)
-        self.targets = io.load_list_from_txt_file(self.data_folder, targets_file)
+        self.inputs = io.load_string_list_from_txt_file(self.data_folder, inputs_file)
+        self.targets = io.load_string_list_from_txt_file(self.data_folder, targets_file)
 
         # Assert that they are equal in size!
         assert len(self.inputs) == len(self.targets), "Number of inputs loaded from {} not equal to number of targets loaded from {}!".format(inputs_file, targets_file)
