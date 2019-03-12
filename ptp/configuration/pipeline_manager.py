@@ -60,7 +60,7 @@ class PipelineManager(object):
         self.best_status = "Unknown"
 
 
-    def build(self, log_errors=True):
+    def build(self, use_logger=True):
         """
         Method creating the pipeline, consisting of:
             - a list components ordered by the priority (dictionary).
@@ -68,7 +68,7 @@ class PipelineManager(object):
             - models (separate list with link to objects in components dict)
             - losses (selarate list with links to objects in components dict)
 
-        :param log_errors: Logs the detected errors (DEFAULT: True)
+        :param use_logger: Logs the detected errors (DEFAULT: True)
 
         :return: number of detected errors.
         """
@@ -116,17 +116,20 @@ class PipelineManager(object):
                 self.__components[c_priority] = c_key
 
             except ConfigurationError as e:
-                if log_errors:
+                if use_logger:
                     self.logger.error(e)
                 errors += 1
                 continue
             except KeyError as e:
-                if log_errors:
+                if use_logger:
                     self.logger.error(e)
                 errors += 1
                 continue
                 # end try/else
             # end for
+
+        if use_logger:
+            self.logger.info("Building pipeline with {} components".format(len(self.__components)))
 
         # Do not continue if found errors.
         if errors > 0:
@@ -141,6 +144,9 @@ class PipelineManager(object):
                 c_key = self.__components[c_priority]
                 # Get section.
                 c_params = self.params[c_key]
+                
+                if use_logger:
+                    self.logger.info("Creating component '{}' with priority {}".format(c_key, c_priority))
 
                 # Create component.
                 component, class_obj = ComponentFactory.build(c_key, c_params)
@@ -164,12 +170,12 @@ class PipelineManager(object):
                     self.losses.append(component)
 
             except ConfigurationError as e:
-                if log_errors:
+                if use_logger:
                     self.logger.error(e)
                 errors += 1
                 continue
             except KeyError as e:
-                if log_errors:
+                if use_logger:
                     self.logger.error(e)
                 errors += 1
                 continue
