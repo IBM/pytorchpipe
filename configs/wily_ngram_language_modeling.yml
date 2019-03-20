@@ -1,0 +1,106 @@
+  # Training parameters:
+training:
+  problem:
+    type: &p_type WiLYNGramLanguageModeling
+    batch_size:  64
+    use_train_data: True
+    keymappings: &p_keymappings
+      inputs: ngrams
+      #targets: targets
+
+  # Use sampler that operates on a subset.
+  #sampler:
+  #  name: SubsetRandomSampler
+  #  indices: [0, 117000]
+
+  # optimizer parameters:
+  optimizer:
+    name: Adam
+    lr: 0.1
+
+  # settings parameters
+  terminal_conditions:
+    loss_stop: 1.0e-2
+    episode_limit: 10000
+    epoch_limit: 100
+
+# Validation parameters:
+validation:
+  partial_validation_interval: 10
+  problem:
+    type: *p_type
+    batch_size:  64
+    use_train_data: True
+    keymappings: *p_keymappings
+
+  # Use sampler that operates on a subset.
+  #sampler:
+  #  name: SubsetRandomSampler
+  #  indices: [117000, 117500]
+
+# Testing parameters:
+testing:
+  problem:
+    type: *p_type 
+    batch_size: 64
+    use_train_data: False
+    keymappings: *p_keymappings
+
+pipeline:
+  name: ngram_language_modeling
+  #load: /users/tomaszkornuta/experiments/dummylanguageidentification/language_classifier/20190301_145416/checkpoints/language_classifier_best.pt
+  #freeze: True
+  #disable: prediction_decoder,accuracy
+
+  # Source encoding.
+  source_encoder:
+    type: SentenceEncoder
+    priority: 2
+    data_folder: ~/data/language_identification/wily
+    source_files: x_train.txt,x_test.txt
+    encodings_file: word_encodings.csv
+    keymappings:
+      inputs: ngrams
+      outputs: encoded_ngrams
+  
+  # Targets encoding - use the same word encodings as for sentences.
+  target_encoder:
+    type: LabelEncoder
+    priority: 4
+    data_folder: ~/data/language_identification/wily
+    source_files: x_train.txt,x_test.txt
+    encodings_file: word_encodings.csv
+    keymappings:
+      inputs: targets
+      outputs: encoded_targets
+  
+  # Model
+  #classifier:
+  #  type: SoftmaxClassifier
+  #  #freeze: True
+  #  priority: 5
+  #  keymappings:
+  #    inputs: bow_sencentes
+  #    #predictions: encoded_predictions
+  #    #input_size: sentence_token_size # Set by sentence_encoder.
+  #    #prediction_size: label_token_size # Set by target_encoder.
+  
+  # Loss
+  nllloss:
+    type: NLLLoss
+    priority: 6
+    keymappings:
+      targets: encoded_targets
+      #predictions: encoded_predictions
+      loss: loss
+  # Predictions decoder.
+  prediction_decoder:
+    type: WordDecoder
+    priority: 8
+    data_folder: ~/data/language_identification/wily
+    encodings_file: word_encodings.csv
+    keymappings:
+      inputs: predictions
+      outputs: predicted_labels
+
+  #: pipeline

@@ -105,11 +105,11 @@ class PipelineManager(object):
                 try:
                     c_priority = float(c_params["priority"])
                 except ValueError:
-                    raise ConfigurationError("Priority '{}' in section '{}' is not a floating point number".format(c_params["priority"], c_key))
+                    raise ConfigurationError("Priority [{}] in section '{}' is not a floating point number".format(c_params["priority"], c_key))
 
                 # Check uniqueness of the priority.
                 if c_priority in self.__components.keys():
-                    raise ConfigurationError("Found more than one component with the same priority ('{}')".format(c_priority))
+                    raise ConfigurationError("Found more than one component with the same priority [{}]".format(c_priority))
 
                 # Ok, got the component name with priority. Save it.
                 # Later we will "plug" the adequate component in this place.
@@ -146,7 +146,7 @@ class PipelineManager(object):
                 c_params = self.params[c_key]
                 
                 if use_logger:
-                    self.logger.info("Creating component '{}' with priority {}".format(c_key, c_priority))
+                    self.logger.info("Creating component '{}' with priority [{}]".format(c_key, c_priority))
 
                 # Create component.
                 component, class_obj = ComponentFactory.build(c_key, c_params)
