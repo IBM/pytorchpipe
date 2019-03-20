@@ -260,8 +260,10 @@ class Tester(Worker):
                     self.pipeline.load(pipeline_name)
                 else:
                     raise Exception("Couldn't load the checkpoint {} indicated in the {}: file does not exist".format(pipeline_name, msg))
-            # Load individual models.
 
+            # Try to load the models parameters - one by one, if set so in the configuration file.
+            self.pipeline.load_models()
+            
         except KeyError:
             self.logger.error("File {} indicated in the {} seems not to be a valid model checkpoint".format(pipeline_name, msg))
             exit(-5)

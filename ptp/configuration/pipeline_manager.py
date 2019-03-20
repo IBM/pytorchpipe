@@ -17,6 +17,7 @@
 __author__ = "Tomasz Kornuta"
 
 
+import os
 import torch
 import logging
 from datetime import datetime
@@ -274,7 +275,6 @@ class PipelineManager(object):
             try:
                 # Load model.
                 model.load_from_checkpoint(chkpt)
-                #model.load_state_dict(chkpt[model.name])
                 model_str += "  + Model '{}' [{}] params loaded\n".format(model.name, type(model).__name__)
             except KeyError:
                 model_str += "  + Model '{}' [{}] params not found in checkpoint!\n".format(model.name, type(model).__name__)
@@ -294,7 +294,48 @@ class PipelineManager(object):
         ..note::
             The 'load' variable should contain path with filename of the checkpoint from which we want to load particular model.
         """
-        pass
+        error = False
+        log_str = ''
+        # Iterate over models.
+        for model in self.models:
+            if "load" in model.params.keys():
+                try:
+                    # Check if file exists. 
+                    checkpoint_filename = model.params["load"]
+                    if not os.path.isfile(checkpoint_filename):
+                        log_str += "Coud not import parameters of model '{}' from checkpoint {} as file does not exist\n".format(
+                            model.name,
+                            checkpoint_filename
+                            )
+                        error = True
+                        continue
+
+                    # Load checkpoint.
+                    # This is to be able to load a CUDA-trained model on CPU
+                    chkpt = torch.load(checkpoint_filename, map_location=lambda storage, loc: storage)
+
+                    log_str += "Importing model '{}' from pipeline '{}' parameters from checkpoint from {} (episode: {}, loss: {}, status: {}):\n".format(
+                            model.name,
+                            chkpt['name'],
+                            chkpt['timestamp'],
+                            chkpt['episode'],
+                            chkpt['loss'],
+                            chkpt['status']
+                            )
+                    # Load model.
+                    model.load_from_checkpoint(chkpt)
+                    log_str += "  + Model '{}' [{}] params loaded\n".format(model.name, type(model).__name__)
+                except KeyError:
+                    log_str += "  + Model '{}' [{}] params not found in checkpoint!\n".format(model.name, type(model).__name__)
+                    error = True
+
+        # Log results.
+        if error:
+            self.logger.error(log_str)
+            # Exit by following the logic: if user wanted to load the model but failed, then continuing the experiment makes no sense.
+            exit(-6)
+        else:
+            self.logger.info(log_str)
 
 
     def freeze_models(self):
