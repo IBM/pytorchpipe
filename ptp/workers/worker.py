@@ -424,25 +424,6 @@ class Worker(object):
             print('Info: Loaded configuration from file {}'.format(config))
 
 
-    #def check_and_set_cuda(self, use_gpu):
-    #    """
-    #    Enables computations on CUDA if GPU is available.
-    #    Sets the default data types.
-    #
-    #    :param use_gpu: Command line flag indicating whether use GPU/CUDA or not. 
-    #
-    #    """
-    #    # Determine if GPU/CUDA is available.
-    #    if torch.cuda.is_available() and self.app_state.use_gpu:
-    #        self.logger.info('Running computations on GPU using CUDA enabled')
-    #    elif self.app_state.use_gpu:
-    #        self.logger.warning('GPU flag is enabled but there are no available GPU devices, using CPU instead')
-    #        # Reset flag.
-    #        self.app_state.use_gpu = False
-    #    else:
-    #        self.logger.warning('GPU flag is disabled, using CPU.')
-
-
     def collect_all_statistics(self, problem_mgr, pipeline_mgr, data_dict, stat_col, episode, epoch=None):
         """
         Function that collects statistics

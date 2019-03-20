@@ -17,6 +17,10 @@
 
 __author__ = "Alexis Asseman, Tomasz Kornuta"
 
+import logging
+
+import torch
+
 from ptp.configuration.singleton import SingletonMetaClass
 
 
@@ -50,6 +54,55 @@ class AppState(metaclass=SingletonMetaClass):
 
         # Field storing global variables.
         self.__globals = dict()
+
+        # Initialize logger.
+        self.logger = logging.getLogger("AppState")        
+
+        # Set CPU types as default.
+        self.set_cpu_types()
+
+
+    def set_types(self):
+        """
+        Enables computations on CUDA if GPU is available.
+        Sets the default data types.
+        """
+        # Determine if GPU/CUDA is available.
+        if torch.cuda.is_available() and self.args.use_gpu:
+            self.logger.info('Running computations on GPU using CUDA')
+            self.set_gpu_types()
+        elif self.args.use_gpu:
+            self.logger.warning('GPU utilization is demanded but there are no available GPU devices! Using CPUs instead')
+        else:
+            self.logger.info('GPU utilization is disabled, performing all computations on CPUs')
+
+
+    def set_cpu_types(self):
+        """
+        Sets all tensor types to CPU data types.
+        """
+        self.FloatTensor = torch.FloatTensor
+        self.DoubleTensor = torch.DoubleTensor
+        self.HalfTensor = torch.HalfTensor
+        self.ByteTensor = torch.ByteTensor
+        self.CharTensor = torch.CharTensor
+        self.ShortTensor = torch.ShortTensor
+        self.IntTensor = torch.IntTensor
+        self.LongTensor = torch.LongTensor
+
+
+    def set_gpu_types(self):
+        """
+        Sets all tensor types to GPU/CUDA data types.
+        """
+        self.FloatTensor = torch.cuda.FloatTensor
+        self.DoubleTensor = torch.cuda.DoubleTensor
+        self.HalfTensor = torch.cuda.HalfTensor
+        self.ByteTensor = torch.cuda.ByteTensor
+        self.CharTensor = torch.cuda.CharTensor
+        self.ShortTensor = torch.cuda.ShortTensor
+        self.IntTensor = torch.cuda.IntTensor
+        self.LongTensor = torch.cuda.LongTensor
 
 
     def globalkeys(self):

@@ -107,6 +107,9 @@ class Tester(Worker):
             self.logger.error("Cannot use GPU as there are no CUDA-compatible devices present in the system!")
             exit(-4)
 
+        # Set cpu/gpu types.
+        self.app_state.set_types()
+
         # Get the list of configurations which need to be loaded.
         configs_to_load = self.recurrent_config_parse(config_file, [])
 

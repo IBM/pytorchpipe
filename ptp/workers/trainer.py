@@ -127,6 +127,9 @@ class Trainer(Worker):
         if self.app_state.args.use_gpu and (torch.cuda.device_count() == 0):
             self.logger.error("Cannot use GPU as there are no CUDA-compatible devices present in the system!")
             exit(-2)
+
+        # Set cpu/gpu types.
+        self.app_state.set_types()
             
         # Get the list of configurations which need to be loaded.
         configs_to_load = self.recurrent_config_parse(self.app_state.args.config, [])
@@ -288,7 +291,7 @@ class Trainer(Worker):
             # Exit by following the logic: if user wanted to load the model but failed, then continuing the experiment makes no sense.
             exit(-6)
 
-        # Finally, freeze models.
+        # Finally, freeze the models (that the user wants to freeze).
         self.pipeline.freeze_models()
 
         # Log the model summaries.
@@ -298,7 +301,7 @@ class Trainer(Worker):
 
         # Move the models in the pipeline to GPU.
         if self.app_state.args.use_gpu:
-            self.pipeline.cuda()
+            self.pipeline.cuda()        
 
         ################# OPTIMIZER ################# 
 
