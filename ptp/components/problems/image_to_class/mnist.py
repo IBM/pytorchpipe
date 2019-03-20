@@ -175,27 +175,3 @@ class MNIST(ImageToClassProblem):
         data_dict[self.key_inputs] = img
         data_dict[self.key_targets] = target
         return data_dict
-
-
-    def collate_fn(self, batch):
-        """
-        Combines a list of ``DataDict`` (retrieved with ``__getitem__`` ) into a batch.
-
-        .. note::
-
-            This function wraps a call to ``default_collate`` and simply returns the batch as a ``DataDict``\
-            instead of a dict.
-            Multi-processing is supported as the data sources are small enough to be kept in memory\
-            (`training.pt` has a size of 47.5 MB).
-
-        :param batch: list of individual ``DataDict`` samples to combine.
-
-        :return: ``DataDict({'images','targets', 'targets_label'})`` containing the batch.
-
-        """
-
-        collated_batch = DataDict({key: value for key, value in zip(batch[0].keys(),
-                                                          super(MNIST, self).collate_fn(batch).values())})
-
-        print(collated_batch[self.key_targets]) 
-        return collated_batch

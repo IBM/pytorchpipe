@@ -225,14 +225,12 @@ class DataDict(collections.abc.MutableMapping):
         :type non_blocking: bool
 
         """
-        print(self.keys())
         for key in self:
             if isinstance(self[key], torch.Tensor):
                 self[key] = self[key].cuda(device=device, non_blocking=non_blocking)
             else:
                 self[key] = self[key]
 
-        print(self.keys())
 
     #def detach(self):
     #    """
