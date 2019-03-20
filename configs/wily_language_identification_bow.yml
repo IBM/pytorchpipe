@@ -2,7 +2,7 @@
 training:
   problem:
     type: &p_type WiLYLanguageIdentification
-    batch_size:  64
+    batch_size:  1
     use_train_data: True
     keymappings: &p_keymappings
       inputs: sentences
@@ -29,7 +29,7 @@ validation:
   partial_validation_interval: 10
   problem:
     type: *p_type
-    batch_size:  64
+    batch_size:  1
     use_train_data: True
     keymappings: *p_keymappings
 
