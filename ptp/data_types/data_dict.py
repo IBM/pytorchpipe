@@ -227,13 +227,13 @@ class DataDict(collections.abc.MutableMapping):
         """
         print(self.keys())
         cuda_datadict = self.__class__({key: None for key in self.keys()})
-        print(cuda_datadict.keys())
         for key in self:
             if isinstance(self[key], torch.Tensor):
                 cuda_datadict[key] = self[key].cuda(device=device, non_blocking=non_blocking)
             else:
                 cuda_datadict[key] = self[key]
 
+        print(cuda_datadict.keys())
         return cuda_datadict
 
     #def detach(self):

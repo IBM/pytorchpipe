@@ -452,6 +452,8 @@ class PipelineManager(object):
             # Forward step.
             comp(data_dict)
             # TODO: Move to gpu!
+            print("after {}".format(comp.name))
+            print(data_dict.keys())
 
     def eval(self):
         """ 

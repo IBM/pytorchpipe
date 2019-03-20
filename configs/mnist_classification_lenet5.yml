@@ -2,7 +2,7 @@
 training:
   problem: 
     type: MNIST
-    batch_size: &b 64
+    batch_size: &b 1
     use_train_data: True
     data_folder: &folder '~/data/mnist'
     resize: [32, 32]
