@@ -127,7 +127,7 @@ class Problem(Component, Dataset):
         return data_dict
 
 
-    def collate_fn(self, data_dict):
+    def collate_fn1(self, data_dict):
         """
         Generates a batch of samples from a list of individuals samples retrieved by :py:func:`__getitem__`.
 
@@ -151,8 +151,11 @@ class Problem(Component, Dataset):
         :return: DataDict containing the created batch.
 
         """
-        return DataDict({key: torch.utils.data.dataloader.default_collate([d[key] for d in data_dict]) for key in data_dict[0]})
+        #return DataDict({key: torch.utils.data.dataloader.default_collate([d[key] for d in data_dict]) for key in data_dict[0]})
+        pass
 
+    def collate_fn(self, batch):
+        return torch.utils.data.dataloader.default_collate(batch)
 
     def initialize_epoch(self, epoch):
         """
