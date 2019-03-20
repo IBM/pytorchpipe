@@ -197,5 +197,5 @@ class MNIST(ImageToClassProblem):
         collated_batch = DataDict({key: value for key, value in zip(batch[0].keys(),
                                                           super(MNIST, self).collate_fn(batch).values())})
 
-        #print(collated_batch[self.key_targets]) 
+        print(collated_batch[self.key_targets]) 
         return collated_batch
