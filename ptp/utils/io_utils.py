@@ -17,7 +17,6 @@ __author__ = "Tomasz Kornuta"
 import os
 import sys
 import time
-import errno
 import csv
 import urllib
 from pathlib import Path
