@@ -226,10 +226,8 @@ class DataDict(collections.abc.MutableMapping):
 
         """
         for key in self:
-            if isinstance(self[key], torch.Tensor):
+            if isinstance(self[key], torch.Tensor) and (not self[key].is_cuda):
                 self[key] = self[key].cuda(device=device, non_blocking=non_blocking)
-            else:
-                self[key] = self[key]
 
 
     #def detach(self):

@@ -451,7 +451,9 @@ class PipelineManager(object):
             comp = self.__components[prio]
             # Forward step.
             comp(data_dict)
-            # TODO: Move to gpu!
+            # Component might add some fields to DataDict, move them to GPU if required.
+            if self.app_state.args.use_gpu:
+                data_dict.cuda()
             print("after {}".format(comp.name))
             print(data_dict.keys())
 
