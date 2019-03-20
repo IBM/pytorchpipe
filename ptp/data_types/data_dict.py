@@ -207,7 +207,7 @@ class DataDict(collections.abc.MutableMapping):
 
     def cuda(self, device=None, non_blocking=False):
         """
-        Returns a copy of this object in GPU/CUDA memory.
+        Moves object(s) to GPU/CUDA memory.
 
         .. note::
 
@@ -226,15 +226,13 @@ class DataDict(collections.abc.MutableMapping):
 
         """
         print(self.keys())
-        cuda_datadict = self.__class__({key: None for key in self.keys()})
         for key in self:
             if isinstance(self[key], torch.Tensor):
-                cuda_datadict[key] = self[key].cuda(device=device, non_blocking=non_blocking)
+                self[key] = self[key].cuda(device=device, non_blocking=non_blocking)
             else:
-                cuda_datadict[key] = self[key]
+                self[key] = self[key]
 
-        print(cuda_datadict.keys())
-        return cuda_datadict
+        print(self.keys())
 
     #def detach(self):
     #    """
