@@ -443,8 +443,8 @@ class PipelineManager(object):
 
         """
         # TODO: Convert to gpu/CUDA.
-        #if self.app_state.use_gpu:
-        #    data_dict = data_dict.cuda()
+        if self.app_state.args.use_gpu:
+            data_dict = data_dict.cuda()
 
         for prio in self.__priorities:
             # Get component

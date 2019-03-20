@@ -157,55 +157,53 @@ class DataDict(collections.abc.MutableMapping):
         """
         return '{}, DataDict({})'.format(super(DataDict, self).__repr__(), self.__dict__)
 
-    def numpy(self):
-        """
-        Converts the DataDict to numpy objects.
+    #def numpy(self):
+    #    """
+    #    Converts the DataDict to numpy objects.
+    #
+    #    .. note::
+    #
+    #        The ``torch.tensor`` (s) contained in `self` are converted using ``torch.Tensor.numpy()`` : \
+    #        This tensor and the returned ndarray share the same underlying storage. \
+    #        Changes to ``self`` tensor will be reflected in the ndarray and vice versa.    
+    #
+    #        If an element of ``self`` is not a ``torch.tensor``, it is returned as is.
+    #
+    #    :return: Converted DataDict.  
+    #
+    #    """
+    #    numpy_datadict = self.__class__({key: None for key in self.keys()})
+    #
+    #    for key in self:
+    #        if isinstance(self[key], torch.Tensor):
+    #            numpy_datadict[key] = self[key].numpy()
+    #        else:
+    #            numpy_datadict[key] = self[key]
+    #
+    #    return numpy_datadict
 
-        .. note::
-
-            The ``torch.tensor`` (s) contained in `self` are converted using ``torch.Tensor.numpy()`` : \
-            This tensor and the returned ndarray share the same underlying storage. \
-            Changes to ``self`` tensor will be reflected in the ndarray and vice versa.
-
-            If an element of ``self`` is not a ``torch.tensor``, it is returned as is.
-
-
-        :return: Converted DataDict.
-
-        """
-        numpy_datadict = self.__class__({key: None for key in self.keys()})
-
-        for key in self:
-            if isinstance(self[key], torch.Tensor):
-                numpy_datadict[key] = self[key].numpy()
-            else:
-                numpy_datadict[key] = self[key]
-
-        return numpy_datadict
-
-    def cpu(self):
-        """
-        Moves the DataDict to memory accessible to the CPU.
-
-        .. note::
-
-            The ``torch.tensor`` (s) contained in `self` are converted using ``torch.Tensor.cpu()`` .
-            If an element of `self` is not a ``torch.tensor``, it is returned as is, \
-            i.e. We only move the ``torch.tensor`` (s) contained in `self`.
-
-
-        :return: Converted DataDict.
-
-        """
-        cpu_datadict = self.__class__({key: None for key in self.keys()})
-
-        for key in self:
-            if isinstance(self[key], torch.Tensor):
-                cpu_datadict[key] = self[key].cpu()
-            else:
-                cpu_datadict[key] = self[key]
-
-        return cpu_datadict
+    #def cpu(self):
+    #    """
+    #    Moves the DataDict to memory accessible to the CPU.
+    #
+    #    .. note::
+    #
+    #        The ``torch.tensor`` (s) contained in `self` are converted using ``torch.Tensor.cpu()`` .
+    #        If an element of `self` is not a ``torch.tensor``, it is returned as is, \
+    #        i.e. We only move the ``torch.tensor`` (s) contained in `self`.
+    #
+    #    :return: Converted DataDict.
+    #
+    #    """
+    #    cpu_datadict = self.__class__({key: None for key in self.keys()})
+    #
+    #    for key in self:
+    #        if isinstance(self[key], torch.Tensor):
+    #            cpu_datadict[key] = self[key].cpu()
+    #        else:
+    #            cpu_datadict[key] = self[key]
+    #
+    #    return cpu_datadict
 
     def cuda(self, device=None, non_blocking=False):
         """
@@ -236,22 +234,22 @@ class DataDict(collections.abc.MutableMapping):
 
         return cuda_datadict
 
-    def detach(self):
-        """
-        Returns a new DataDict, detached from the current graph.
-        The result will never require gradient.
-
-        .. note::
-            Wraps call to ``torch.Tensor.detach()`` : the ``torch.tensor`` (s) in the returned ``DataDict`` use the same\
-            data tensor(s) as the original one(s).
-            In-place modifications on either of them will be seen, and may trigger errors in correctness checks.
-
-        """
-        detached_datadict = self.__class__({key: None for key in self.keys()})
-        for key in self:
-            if isinstance(self[key], torch.Tensor):
-                detached_datadict[key] = self[key].detach()
-            else:
-                detached_datadict[key] = self[key]
-
-        return detached_datadict
+    #def detach(self):
+    #    """
+    #    Returns a new DataDict, detached from the current graph.
+    #    The result will never require gradient.
+    #
+    #    .. note::
+    #        Wraps call to ``torch.Tensor.detach()`` : the ``torch.tensor`` (s) in the returned ``DataDict`` use the same\
+    #        data tensor(s) as the original one(s).
+    #        In-place modifications on either of them will be seen, and may trigger errors in correctness checks.
+    #
+    #    """
+    #    detached_datadict = self.__class__({key: None for key in self.keys()})
+    #    for key in self:
+    #        if isinstance(self[key], torch.Tensor):
+    #            detached_datadict[key] = self[key].detach()
+    #        else:
+    #            detached_datadict[key] = self[key]
+    #
+    #    return detached_datadict
