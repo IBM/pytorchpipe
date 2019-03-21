@@ -26,7 +26,9 @@ import ptp.utils.io_utils as io
 class WiLYLanguageIdentification(LanguageIdentification):
     """
     Language identification (classification) problem.
-    Using WiLI benchmark _dataset taken from the paper: Thoma, Martin. "The WiLI benchmark dataset for written language identification." arXiv preprint arXiv:1801.07779 (2018). (_arxiv)
+    Using WiLI-2018 benchmark _dataset taken from the paper: Thoma, Martin. "The WiLI benchmark dataset for written language identification." arXiv preprint arXiv:1801.07779 (2018). (_arxiv)
+
+    The dataset contains sentences from 235 languages.
 
     .. _dataset: https://zenodo.org/record/841984
     .. _arxiv: https://arxiv.org/abs/1801.07779

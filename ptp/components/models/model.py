@@ -146,6 +146,9 @@ class Model(Module, Component):
         if indent_ == 0:
             if self.frozen:
                 mod_str += "\t\t[FROZEN]"
+            else:
+                mod_str += "\t\t[TRAINABLE]"
+
 
         mod_str += '\n'
         mod_str += ''.join(child_lines)

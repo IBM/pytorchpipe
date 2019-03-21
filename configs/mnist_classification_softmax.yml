@@ -44,8 +44,9 @@ testing:
 pipeline:
   name: mnist_softmax_classifier
   #disable: nllloss
-  # Reshape inputs
-  reshape:
+
+  # Reshapes tensors.
+  reshaper:
     type: ReshapeTensor
     input_dims: [-1, 1, 28, 28]
     output_dims: [-1, 784]
@@ -54,10 +55,11 @@ pipeline:
       outputs: reshaped_images
       output_size: reshaped_image_size
 
-  # Image classifier.
+  # Classifier.
   classifier:
     type: SoftmaxClassifier 
     priority: 2
+    hidden_sizes: [100, 100]
     keymappings:
       inputs: reshaped_images
       input_size: reshaped_image_size

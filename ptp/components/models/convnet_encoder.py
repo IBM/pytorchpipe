@@ -53,6 +53,7 @@ class ConvNetEncoder(Model):
             ``nn.MaxPool2D``.
 
 
+        :param name: Name of the model (tken from the configuration file).
 
         :param params: dict of parameters (read from configuration ``.yaml`` file).
         :type params: utils.ParamInterface

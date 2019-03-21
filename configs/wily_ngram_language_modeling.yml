@@ -2,7 +2,9 @@
 training:
   problem:
     type: &p_type WiLYNGramLanguageModeling
-    batch_size:  64
+    data_folder: &data_folder '~/data/language_identification/tiny-wily'
+    context: &context 2
+    batch_size:  3
     use_train_data: True
     keymappings: &p_keymappings
       inputs: ngrams
@@ -29,7 +31,9 @@ validation:
   partial_validation_interval: 10
   problem:
     type: *p_type
-    batch_size:  64
+    data_folder: *data_folder
+    context: *context
+    batch_size:  3
     use_train_data: True
     keymappings: *p_keymappings
 
@@ -42,7 +46,9 @@ validation:
 testing:
   problem:
     type: *p_type 
-    batch_size: 64
+    data_folder: *data_folder
+    context: *context
+    batch_size: 3
     use_train_data: False
     keymappings: *p_keymappings
 
@@ -53,51 +59,80 @@ pipeline:
   #disable: prediction_decoder,accuracy
 
   # Source encoding.
-  source_encoder:
-    type: SentenceEncoder
+  sentence_tokenizer:
+    type: SentenceTokenizer
+    priority: 1
+    keymappings: 
+      inputs: ngrams
+      outputs: tokenized_ngrams
+
+  source_indexer:
+    type: SentenceIndexer
     priority: 2
-    data_folder: ~/data/language_identification/wily
+    data_folder: *data_folder
     source_files: x_train.txt,x_test.txt
     encodings_file: word_encodings.csv
     keymappings:
-      inputs: ngrams
-      outputs: encoded_ngrams
+      inputs: tokenized_ngrams
+      outputs: indexed_ngrams
   
+  # Model 1: word embeddings.
+  sentence_embedder:
+    type: Embeddings
+    priority: 3
+    embeddings_size: 235 # 235 * 3
+    keymappings:
+      inputs: indexed_ngrams
+      outputs: embedded_ngrams
+      vocab_size: sentence_vocab_size
+      
+
   # Targets encoding - use the same word encodings as for sentences.
-  target_encoder:
-    type: LabelEncoder
+  target_indexer:
+    type: LabelIndexer
     priority: 4
-    data_folder: ~/data/language_identification/wily
+    data_folder: *data_folder
     source_files: x_train.txt,x_test.txt
     encodings_file: word_encodings.csv
     keymappings:
       inputs: targets
-      outputs: encoded_targets
+      outputs: indexed_targets
   
-  # Model
-  #classifier:
-  #  type: SoftmaxClassifier
-  #  #freeze: True
-  #  priority: 5
-  #  keymappings:
-  #    inputs: bow_sencentes
-  #    #predictions: encoded_predictions
-  #    #input_size: sentence_token_size # Set by sentence_encoder.
-  #    #prediction_size: label_token_size # Set by target_encoder.
-  
+  # Reshapes tensors.
+  reshaper:
+    type: ReshapeTensor
+    input_dims: [-1, -1, 235]
+    output_dims: [-1, 470]
+    priority: 5
+    keymappings:
+      inputs: embedded_ngrams
+      outputs: reshaped_ngrams
+      output_size: reshaped_ngrams_size
+
+  # Model 2: classifier.
+  classifier:
+    type: SoftmaxClassifier 
+    priority: 6
+    #hidden_sizes: [128]
+    keymappings:
+      inputs: reshaped_ngrams
+      input_size: reshaped_ngrams_size
+      prediction_size: sentence_vocab_size
+
   # Loss
   nllloss:
     type: NLLLoss
-    priority: 6
+    priority: 7
     keymappings:
-      targets: encoded_targets
+      targets: indexed_targets
       #predictions: encoded_predictions
       loss: loss
+
   # Predictions decoder.
   prediction_decoder:
     type: WordDecoder
     priority: 8
-    data_folder: ~/data/language_identification/wily
+    data_folder: *data_folder
     encodings_file: word_encodings.csv
     keymappings:
       inputs: predictions

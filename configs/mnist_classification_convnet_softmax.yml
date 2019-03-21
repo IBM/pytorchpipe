@@ -81,7 +81,7 @@ pipeline:
       feature_maps: feature_maps
 
   # Reshape inputs
-  reshape:
+  reshaper:
     type: ReshapeTensor
     input_dims: [-1, 16, 1, 1]
     output_dims: [-1, 16]

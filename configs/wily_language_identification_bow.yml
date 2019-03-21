@@ -73,18 +73,18 @@ pipeline:
     keymappings:
       inputs: encoded_sentences
       outputs: bow_sencentes
-      input_size: sentence_token_size # Set by sentence_encoder.
+      input_size: sentence_vocab_size # Set by sentence_encoder.
   
   # Targets encoding.
-  label_encoder:
-    type: LabelEncoder
+  label_indexer:
+    type: LabelIndexer
     priority: 4
     data_folder: ~/data/language_identification/wily
     source_files: y_train.txt,y_test.txt
     encodings_file: language_name_encodings.csv
     keymappings:
       inputs: languages
-      outputs: encoded_languages
+      outputs: indexed_languages
   
   # Model
   classifier:
@@ -94,15 +94,15 @@ pipeline:
     keymappings:
       inputs: bow_sencentes
       #predictions: encoded_predictions
-      input_size: sentence_token_size # Set by sentence_encoder.
-      prediction_size: label_token_size # Set by target_encoder.
+      input_size: sentence_vocab_size # Set by sentence_encoder.
+      prediction_size: label_vocab_size # Set by target_encoder.
   
   # Loss
   nllloss:
     type: NLLLoss
     priority: 6
     keymappings:
-      targets: encoded_languages
+      targets: indexed_languages
       #predictions: encoded_predictions
       loss: loss
   # Predictions decoder.
@@ -123,6 +123,6 @@ pipeline:
     type: Accuracy
     priority: 10
     keymappings:
-      targets: encoded_languages
+      targets: indexed_languages
 
   #: pipeline

@@ -74,6 +74,7 @@ class PipelineManager(object):
         :return: number of detected errors.
         """
         errors = 0
+        self.__priorities = []
 
         # Special section names to "skip".
         sections_to_skip = "name load freeze disable".split()
@@ -147,7 +148,7 @@ class PipelineManager(object):
                 c_params = self.params[c_key]
                 
                 if use_logger:
-                    self.logger.info("Creating component '{}' with priority [{}]".format(c_key, c_priority))
+                    self.logger.info("Creating component '{}' ({}) with priority [{}]".format(c_key, c_params["type"], c_priority))
 
                 # Create component.
                 component, class_obj = ComponentFactory.build(c_key, c_params)

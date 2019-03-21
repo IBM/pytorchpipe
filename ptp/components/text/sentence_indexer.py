@@ -20,18 +20,21 @@ from ptp.components.text.token_encoder import TokenEncoder
 from ptp.data_types.data_definition import DataDefinition
 
 
-class SentenceEncoder(TokenEncoder):
+class SentenceIndexer(TokenEncoder):
     """
-    Class responsible for encoding of samples being sequences of words (1-hot encoding).
+    Class responsible for encoding of sequences of words into list of indices.
+    Those can be letter embedded, encoded with 1-hot encoding or else.
     """
     def __init__(self, name, params):
         # Call constructors of parent classes.
         TokenEncoder.__init__(self, name, params)
 
-        # Export output token size to global params.
-        self.output_size = len(self.word_to_ix)
+        # Export vocabulary size to global params.
         self.key_vocab_size = self.mapkey("sentence_vocab_size")
-        self.app_state[self.key_vocab_size] = self.output_size
+        self.app_state[self.key_vocab_size] = len(self.word_to_ix)
+
+        self.logger.info("Initializing sentence indexer with vocabulary size '{}' = {}".format(self.key_vocab_size, len(self.word_to_ix)))
+
 
     def input_data_definitions(self):
         """ 
@@ -50,7 +53,7 @@ class SentenceEncoder(TokenEncoder):
         :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
         """
         return {
-            self.key_outputs: DataDefinition([-1, -1, self.output_size], [list, list, torch.Tensor], "Batch of sentences, each represented as a list of vectors [BATCH_SIZE] x [SEQ_LENGTH] x [OUTPUT_SIZE]"),
+            self.key_outputs: DataDefinition([-1, -1], [torch.Tensor], "Batch of sentences represented as a single tensor of indices [BATCH_SIZE x SEQ_LENGTH]"),
             }
 
     def __call__(self, data_dict):
@@ -62,7 +65,7 @@ class SentenceEncoder(TokenEncoder):
 
             - "inputs": expected input field containing list of words [BATCH_SIZE] x [SEQ_SIZE] x [string]
 
-            - "encoded_targets": added output field containing list of indices [BATCH_SIZE] x [SEQ_SIZE] x [OUTPUT_SIZE1] 
+            - "encoded_targets": added output field containing list of indices [BATCH_SIZE x SEQ_SIZE] 
         """
         # Get inputs to be encoded.
         inputs = data_dict[self.key_inputs]
@@ -74,13 +77,14 @@ class SentenceEncoder(TokenEncoder):
             output_sample = []
             # Encode sample (list of words)
             for token in sample:
-                # Create empty vector.
-                output_token = torch.zeros(self.output_size)
-                # Add one for given word
-                output_token[self.word_to_ix[token]] += 1
-                # Add to outputs.
-                output_sample.append( output_token )
+                # Get index.
+                output_index = self.word_to_ix[token]
+                # Add index to outputs.
+                output_sample.append( output_index )
 
             outputs_list.append(output_sample)
+
+        # Transform the list of lists to tensor.
+        output = torch.LongTensor(outputs_list)
         # Create the returned dict.
-        data_dict.extend({self.key_outputs: outputs_list})
+        data_dict.extend({self.key_outputs: output})

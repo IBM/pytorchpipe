@@ -76,6 +76,8 @@ class TokenEncoder(Component):
 
         # Dictionary word_to_ix maps each word in the vocab to a unique integer.
         word_to_ix = {}
+        # Add special word (10 spaces), so the "real" enumeration will start from 1!
+        word_to_ix['          '] = 0
 
         for filename in source_files.split(','):
             # filename + path.

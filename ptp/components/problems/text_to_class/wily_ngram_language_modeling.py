@@ -113,7 +113,8 @@ class WiLYNGramLanguageModeling(Problem):
         """
         return {
             self.key_indices: DataDefinition([-1, 1], [list, int], "Batch of sample indices [BATCH_SIZE] x [1]"),
-            self.key_inputs: DataDefinition([-1, self.context, 1], [list, list, str], "Batch of sentences, each being a context consisint of several words [BATCH_SIZE] x [CONTEXT_SIZE] x [WORD]"),
+            #self.key_inputs: DataDefinition([-1, self.context, 1], [list, list, str], "Batch of sentences, each being a context consisint of several words [BATCH_SIZE] x [CONTEXT_SIZE] x [WORD]"),
+            self.key_inputs: DataDefinition([-1, 1], [list, str], "Batch of sentences, each being a context consisint of several words [BATCH_SIZE] x [string CONTEXT_SIZE * WORD]"),
             self.key_targets: DataDefinition([-1, 1], [list, str], "Batch of targets, each being a single word [BATCH_SIZE] x [WORD]")
             }
 
@@ -139,8 +140,9 @@ class WiLYNGramLanguageModeling(Problem):
         """
         # Return data_dict.
         data_dict = self.create_data_dict(index)
-        data_dict[self.key_inputs] = self.ngrams[:self.context]
-        data_dict[self.key_targets] = self.ngrams[-1] # Last word
+        data_dict[self.key_inputs] = ' '.join(self.ngrams[index][:self.context])
+        data_dict[self.key_targets] = self.ngrams[index][-1] # Last word
+        #print("problem: context = {} target = {}".format(data_dict[self.key_inputs], data_dict[self.key_targets]))
         return data_dict
 
 

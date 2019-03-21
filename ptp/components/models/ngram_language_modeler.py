@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__author__ = "Tomasz Kornuta & Vincent Marois"
+__author__ = "Tomasz Kornuta"
 
 
 import torch
@@ -25,6 +25,23 @@ from ptp.components.models.model import Model
 from ptp.data_types.data_definition import DataDefinition
 
 
+class NGramLanguageModeler(Model):
+    """
+    A simple model for training word embeddings on ngrams.
+    """ 
+    def __init__(self, vocab_size, embedding_dim, context_size):
+        super(NGramLanguageModeler, self).__init__()
+        self.embeddings = nn.Embedding(vocab_size, embedding_dim)
+        self.linear1 = nn.Linear(context_size * embedding_dim, 128)
+        self.linear2 = nn.Linear(128, vocab_size)
+
+    def forward(self, inputs):
+        embeds = self.embeddings(inputs).view((1, -1))
+        out = F.relu(self.linear1(embeds))
+        out = self.linear2(out)
+        log_probs = F.log_softmax(out, dim=1)
+        return log_probs
+
 class LeNet5(Model):
     """
     A classical LeNet-5 model for MNIST digits classification. 
@@ -33,10 +50,11 @@ class LeNet5(Model):
         """
         Initializes the ``LeNet5`` model, creates the required layers.
 
-        :param name: Name of the model (taken from the configuration file).
-
         :param params: Parameters read from configuration file.
         :type params: ``miprometheus.utils.ParamInterface``
+
+        :param problem_default_values_: dict of parameters values coming from the problem class.
+        :type problem_default_values_: dict
 
         """
         super(LeNet5, self).__init__(name, params)

@@ -40,7 +40,7 @@ class SoftmaxClassifier(Model):
         self.key_inputs = self.mapkey("inputs")
         self.key_predictions = self.mapkey("predictions")
 
-        # Retrieve input and output (prediction) sizes from global params.
+        # Retrieve input size from global params.
         self.key_input_size = self.mapkey("input_size")
         self.input_size = self.app_state[self.key_input_size]
         if type(self.input_size) == list:
@@ -49,7 +49,7 @@ class SoftmaxClassifier(Model):
             else:
                 raise ConfigurationError("SoftmaxClassifier input size '{}' must be a single dimension (current {})".format(self.key_input_size, self.input_size))
 
-
+        # Retrieve output (prediction) size from global params.
         self.key_prediction_size = self.mapkey("prediction_size")
         self.prediction_size = self.app_state[self.key_prediction_size]
         if type(self.prediction_size) == list:
@@ -58,8 +58,33 @@ class SoftmaxClassifier(Model):
             else:
                 raise ConfigurationError("SoftmaxClassifier prediction size '{}' must be a single dimension (current {})".format(self.key_prediction_size, self.prediction_size))
         
-        # Simple classifier.
-        self.linear = torch.nn.Linear(self.input_size, self.prediction_size)
+        self.logger.info("Initializing softmax classifier with input size = {} and prediction size = {}".format(self.input_size, self.prediction_size))
+
+        # Create the model.
+        self.layers = torch.nn.ModuleList()
+
+        # Retrieve number of hidden layers, along with their sizes (numbers of hidden neurons from configuration).
+        try:
+            hidden_sizes = self.params["hidden_sizes"]
+            if type(hidden_sizes) == list:
+                # Stack linear layers.
+                input_dim = self.input_size
+                for hidden_dim in hidden_sizes:
+                    # Add linear layer.
+                    self.layers.append( torch.nn.Linear(input_dim, hidden_dim) )
+                    input_dim = hidden_dim
+                # Add output layer.
+                self.layers.append( torch.nn.Linear(input_dim, self.prediction_size) )
+
+                self.logger.info("Created {} hidden layers".format(len(self.layers)-1))
+
+            else:
+                raise ConfigurationError("SoftmaxClassifier 'hidden_sizes' must contain a list with numbers of neurons in hidden layers (currently {})".format(self.hidden_sizes))
+
+
+        except KeyError:
+            # Not present, in that case create a simple classifier with 1 linear layer.
+            self.layers.append( torch.nn.Linear(self.input_size, self.prediction_size) )
         
 
     def input_data_definitions(self):
@@ -92,15 +117,20 @@ class SoftmaxClassifier(Model):
             - inputs: expected inputs [BATCH_SIZE x INPUT_SIZE],
             - predictions: returned output with predictions (log_probs) [BATCH_SIZE x NUM_CLASSES]
         """
-        # Add noise to weights
-        #for _, param in self.linear.named_parameters():
-        #    if param.requires_grad:
-        #        #print (name, param.data)
-        #        noise = torch.randn(param.data.shape)*0.3
-        #        param.data = param.data * (1 + noise)
-        #        #print (name, param.data)
 
-        inputs = data_dict[self.key_inputs]
-        predictions = F.log_softmax(self.linear(inputs), dim=1)
-        # Add them to datadict.
+        # Get inputs.
+        x = data_dict[self.key_inputs]
+
+        # Propagate inputs through all but last layer.
+        for layer in self.layers[:-1]:
+            x = layer(x)
+            x = F.relu(x)
+
+        # Propagate activations through the last layer.
+        x = self.layers[-1](x)
+
+        # Log softmax.
+        predictions = F.log_softmax(x, dim=1)
+
+        # Add predictions to datadict.
         data_dict.extend({self.key_predictions: predictions})
