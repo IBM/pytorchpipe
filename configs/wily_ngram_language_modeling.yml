@@ -80,7 +80,7 @@ pipeline:
   sentence_embedder:
     type: Embeddings
     priority: 3
-    embeddings_size: 1175 # 235 * 5
+    embeddings_size: 940 # 235 * 4
     keymappings:
       inputs: indexed_ngrams
       outputs: embedded_ngrams
@@ -101,8 +101,8 @@ pipeline:
   # Reshapes tensors.
   reshaper:
     type: ReshapeTensor
-    input_dims: [-1, -1, 1175]
-    output_dims: [-1, 2350]
+    input_dims: [-1, -1, 940]
+    output_dims: [-1, 1880]
     priority: 5
     keymappings:
       inputs: embedded_ngrams
