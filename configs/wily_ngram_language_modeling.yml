@@ -80,7 +80,7 @@ pipeline:
   sentence_embedder:
     type: Embeddings
     priority: 3
-    embeddings_size: 200 # 235 * 4
+    embeddings_size: 150 # 235 * 4
     keymappings:
       inputs: indexed_ngrams
       outputs: embedded_ngrams
@@ -101,8 +101,8 @@ pipeline:
   # Reshapes tensors.
   reshaper:
     type: ReshapeTensor
-    input_dims: [-1, -1, 200]
-    output_dims: [-1, 400]
+    input_dims: [-1, -1, 150]
+    output_dims: [-1, 300]
     priority: 5
     keymappings:
       inputs: embedded_ngrams
@@ -113,7 +113,7 @@ pipeline:
   classifier:
     type: SoftmaxClassifier 
     priority: 6
-    hidden_sizes: [500]
+    hidden_sizes: [300]
     keymappings:
       inputs: reshaped_ngrams
       input_size: reshaped_ngrams_size
