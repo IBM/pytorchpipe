@@ -2,7 +2,7 @@
 training:
   problem:
     type: &p_type WiLYNGramLanguageModeling
-    data_folder: &data_folder '~/data/language_identification/tiny-wily'
+    data_folder: &data_folder '~/data/language_identification/wily'
     context: &context 2
     batch_size:  64
     use_train_data: True
