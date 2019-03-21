@@ -1,0 +1,44 @@
+# Training parameters:
+training:
+  problem: 
+    type: MNIST
+    batch_size: &b 64
+    use_train_data: True
+    data_folder: &folder '~/data/mnist'
+    #resize: [32, 32]
+  # Use sampler that operates on a subset.
+  sampler:
+    name: SubsetRandomSampler
+    indices: [0, 55000]
+  # optimizer parameters:
+  optimizer:
+    name: Adam
+    lr: 0.01
+  # settings parameters
+  terminal_conditions:
+    loss_stop: 1.0e-2
+    episode_limit: 10000
+    epoch_limit: 10
+
+# Validation parameters:
+validation:
+  partial_validation_interval: 500
+  problem:
+    type: MNIST
+    batch_size: *b
+    use_train_data: True  # True because we are splitting the training set to: validation and training
+    data_folder: *folder
+    #resize: [32, 32]
+  # Use sampler that operates on a subset.
+  sampler:
+    name: SubsetRandomSampler
+    indices: [55000, 60000]
+
+# Testing parameters:
+testing:
+  problem:
+    type: MNIST
+    batch_size: *b
+    use_train_data: False
+    data_folder: *folder
+    #resize: [32, 32]

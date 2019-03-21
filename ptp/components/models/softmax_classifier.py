@@ -63,6 +63,9 @@ class SoftmaxClassifier(Model):
         # Create the model.
         self.layers = torch.nn.ModuleList()
 
+        # Retrieve dropout parameter - if set, will put dropout between every layer.
+        #dropout = self.params["dropout"]
+
         # Retrieve number of hidden layers, along with their sizes (numbers of hidden neurons from configuration).
         try:
             hidden_sizes = self.params["hidden_sizes"]
