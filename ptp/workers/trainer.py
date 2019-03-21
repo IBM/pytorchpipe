@@ -242,13 +242,19 @@ class Trainer(Worker):
         errors += self.validation.build()
 
         # Generate a single batch used for partial validation.
-        self.validation_dict = next(iter(self.validation.dataloader))
+        if errors == 0:
+            self.validation_dict = next(iter(self.validation.dataloader))
 
         ###################### PIPELINE ######################
         
         # Build the pipeline using the loaded configuration.
         self.pipeline = PipelineManager(pipeline_name, self.params['pipeline'])
         errors += self.pipeline.build()
+
+        # Check errors.
+        if errors > 0:
+            self.logger.error('Found {} errors, terminating execution'.format(errors))
+            exit(-2)
 
         # Show pipeline.
         summary_str = self.pipeline.summarize_all_components_header()
@@ -257,11 +263,6 @@ class Trainer(Worker):
         summary_str += self.pipeline.summarize_all_components()
         self.logger.info(summary_str)
         
-        # Check errors.
-        if errors > 0:
-            self.logger.error('Found {} errors, terminating execution'.format(errors))
-            exit(-2)
-
         # Handshake definitions.
         self.logger.info("Handshaking training pipeline")
         defs_training = self.training.problem.output_data_definitions()

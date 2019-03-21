@@ -25,6 +25,7 @@ from ptp.components.problems.image_to_class.image_to_class_problem import ImageT
 from ptp.data_types.data_dict import DataDict
 from ptp.data_types.data_definition import DataDefinition
 
+import yaml
 
 class MNIST(ImageToClassProblem):
     """
@@ -80,10 +81,7 @@ class MNIST(ImageToClassProblem):
         # Call base class constructors.
         super(MNIST, self).__init__(name, params)
 
-        # Set default parameters.
-        self.params.add_default_params({'data_folder': '~/data/mnist',
-                                        'use_train_data': True
-                                        })
+        self.load_default_configuration(MNIST)
 
         # Get absolute path.
         data_folder = os.path.expanduser(self.params['data_folder'])
@@ -119,7 +117,6 @@ class MNIST(ImageToClassProblem):
         self.dataset = datasets.MNIST(root=data_folder, train=self.use_train_data, download=True,
                                       transform=transform)
 
-
         # Set global variables - all dimensions ASIDE OF BATCH.
         self.key_num_classes = self.mapkey("num_classes")
         self.app_state[self.key_num_classes] = 10
@@ -132,6 +129,33 @@ class MNIST(ImageToClassProblem):
 
         # Class names.
         #self.labels = 'Zero One Two Three Four Five Six Seven Eight Nine'.split(' ')
+
+    def load_default_configuration(self, class_type):
+        
+        # Extract path to default config.
+        module = class_type.__module__.replace(".","/")
+        rel_path = module[module.find("ptp")+4:]
+        # Build the abs path to the default config file of a given component.
+        abs_default_config = self.app_state.absolute_config_path + "default/" + rel_path + ".yml"
+
+        # Check if file exists.
+        if not os.path.isfile(abs_default_config):
+            self.logger.error("Default configuration file '{}' for '{}' component does not exist".format(abs_default_config, class_type.__module__))
+            exit(-1)
+
+        try:
+            # Open file and get parameter dictionary.
+            with open(abs_default_config, 'r') as stream:
+                param_dict = yaml.safe_load(stream)
+                # Set default parameters in global registry.
+                if param_dict is None:
+                        self.logger.warning("The {} default configuration file is empty!".format(abs_default_config))
+                else:
+                    self.params.add_default_params(param_dict)
+
+        except yaml.YAMLError as e:
+            self.logger.error("Couldn't properly parse the {} default configuration file. YAML error:\n  {}".format(abs_default_config, e))
+            exit(-2)
 
 
     def __len__(self):

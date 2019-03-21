@@ -4,7 +4,6 @@ training:
     type: MNIST
     batch_size: &b 64
     use_train_data: True
-    data_folder: &folder '~/data/mnist'
     #resize: [32, 32]
   # Use sampler that operates on a subset.
   sampler:
@@ -27,7 +26,6 @@ validation:
     type: MNIST
     batch_size: *b
     use_train_data: True  # True because we are splitting the training set to: validation and training
-    data_folder: *folder
     #resize: [32, 32]
   # Use sampler that operates on a subset.
   sampler:
@@ -40,5 +38,4 @@ testing:
     type: MNIST
     batch_size: *b
     use_train_data: False
-    data_folder: *folder
     #resize: [32, 32]

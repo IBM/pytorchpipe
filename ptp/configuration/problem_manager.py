@@ -122,9 +122,15 @@ class ProblemManager(object):
 
         except ConfigurationError as e:
             if log:
-                self.logger.error(e)
+                self.logger.error("Detected configuration error while creating the problem instance:\n  {}".format(e))
             # Return error.
             return 1
+        except KeyError as e:
+            if log:
+                self.logger.error("Detected key error while creating the problem instance: required key {} is missing".format(e))
+            # Return error.
+            return 1
+
 
 
     def worker_init_fn(self, worker_id):
