@@ -80,7 +80,7 @@ pipeline:
   sentence_embedder:
     type: Embeddings
     priority: 3
-    embeddings_size: 100 # 235 * 4
+    embeddings_size: 50 # 235 * 4
     keymappings:
       inputs: indexed_ngrams
       outputs: embedded_ngrams
