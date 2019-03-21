@@ -356,7 +356,7 @@ class Worker(object):
         """
 
 
-    def recurrent_config_parse(self, configs: str, configs_parsed: list):
+    def recurrent_config_parse(self, configs: str, configs_parsed: list, abs_config_path: str):
         """
         Parses names of configuration files in a recursive manner, i.e. \
         by looking for ``default_config`` sections and trying to load and parse those \
@@ -368,6 +368,7 @@ class Worker(object):
         :param configs_parsed: Configurations that were already parsed (so we won't parse them many times).
         :type configs_parsed: list
 
+        :param abs_config_path: Absolute path to ``config`` directory.
 
         :return: list of parsed configuration files.
 
@@ -380,28 +381,29 @@ class Worker(object):
 
             # Get config.
             config = configs_to_parse.pop(0)
+            abs_config = abs_config_path + config
 
             # Skip empty names (after lose comas).
             if config == '':
                 continue
-            print("Info: Parsing the {} configuration file".format(config))
+            print("Info: Parsing the {} configuration file".format(abs_config))
 
             # Check if it was already loaded.
             if config in configs_parsed:
-                print('Warning: Configuration file {} already parsed - skipping'.format(config))
+                print('Warning: Configuration file {} already parsed - skipping'.format(abs_config))
                 continue
 
             # Check if file exists.
-            if not os.path.isfile(config):
-                print('Error: Configuration file {} does not exist'.format(config))
+            if not os.path.isfile(abs_config):
+                print('Error: Configuration file {} does not exist'.format(abs_config))
                 exit(-1)
 
             try:
                 # Open file and get parameter dictionary.
-                with open(config, 'r') as stream:
+                with open(abs_config, 'r') as stream:
                     param_dict = yaml.safe_load(stream)
             except yaml.YAMLError as e:
-                print("Error: Couldn't properly parse the {} configuration file".format(config))
+                print("Error: Couldn't properly parse the {} configuration file".format(abs_config))
                 print('yaml.YAMLERROR:', e)
                 exit(-1)
 
@@ -412,16 +414,16 @@ class Worker(object):
             if 'default_configs' in param_dict:
                 # If there are - recursion!
                 configs_parsed = self.recurrent_config_parse(
-                    param_dict['default_configs'], configs_parsed)
+                    param_dict['default_configs'], configs_parsed, abs_config_path)
 
         # Done, return list of loaded configs.
         return configs_parsed
 
-    def recurrent_config_load(self,configs_to_load):
+    def recurrent_config_load(self,configs_to_load, abs_config_path):
         for config in reversed(configs_to_load):
             # Load params from YAML file.
-            self.params.add_config_params_from_yaml(config)
-            print('Info: Loaded configuration from file {}'.format(config))
+            self.params.add_config_params_from_yaml(abs_config_path + config)
+            print('Info: Loaded configuration from file {}'.format(abs_config_path + config))
 
 
     def collect_all_statistics(self, problem_mgr, pipeline_mgr, data_dict, stat_col, episode, epoch=None):

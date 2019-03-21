@@ -130,12 +130,25 @@ class Trainer(Worker):
 
         # Set cpu/gpu types.
         self.app_state.set_types()
-            
+
+        # Check if config file exists.            
+        root_config = self.app_state.args.config
+        if not os.path.isfile(root_config):
+            print('Error: Configuration file {} does not exist'.format(root_config))
+            exit(-3)
+        
+        # Extract absolute path to config.
+        abs_config_path = os.path.abspath(root_config)
+        # Save it in app_state!
+        self.app_state.absolute_config_path = abs_config_path[:abs_config_path.find("configs")+8] 
+        # Get relative path.
+        rel_config_path = abs_config_path[abs_config_path.find("configs")+8:]
+
         # Get the list of configurations which need to be loaded.
-        configs_to_load = self.recurrent_config_parse(self.app_state.args.config, [])
+        configs_to_load = self.recurrent_config_parse(rel_config_path, [], self.app_state.absolute_config_path)
 
         # Read the YAML files one by one - but in reverse order -> overwrite the first indicated config(s)
-        self.recurrent_config_load(configs_to_load)
+        self.recurrent_config_load(configs_to_load, self.app_state.absolute_config_path)
 
         # -> At this point, the Param Registry contains the configuration loaded (and overwritten) from several files.
         # Log the resulting training configuration.

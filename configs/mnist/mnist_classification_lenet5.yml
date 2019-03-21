@@ -1,5 +1,5 @@
 # Load config defining MNIST problems for training, validation and testing.
-default_configs: configs/mnist/default_mnist.yml
+default_configs: mnist/default_mnist.yml
 
 # Training parameters - overwrite defaults:
 training:
