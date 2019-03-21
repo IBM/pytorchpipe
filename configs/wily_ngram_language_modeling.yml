@@ -102,7 +102,7 @@ pipeline:
   reshaper:
     type: ReshapeTensor
     input_dims: [-1, -1, 235]
-    output_dims: [-1,  470]
+    output_dims: [-1, 470]
     priority: 5
     keymappings:
       inputs: embedded_ngrams
