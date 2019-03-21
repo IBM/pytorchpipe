@@ -35,7 +35,7 @@ class WiLYLanguageIdentification(LanguageIdentification):
     """
     def __init__(self, name, params):
         # Call constructors of parent classes.
-        LanguageIdentification.__init__(self, name, params) 
+        LanguageIdentification.__init__(self, name, WiLYLanguageIdentification, params) 
 
         # Set default parameters.
         self.params.add_default_params({

@@ -33,7 +33,7 @@ class NLLLoss(Loss):
 
         """
         # Call constructors of parent classes.
-        Loss.__init__(self, name, params)
+        Loss.__init__(self, name, NLLLoss, params)
 
         # Set loss.
         self.loss_function = nn.NLLLoss()

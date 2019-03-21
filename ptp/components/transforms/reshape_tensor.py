@@ -40,7 +40,7 @@ class ReshapeTensor(Component):
 
         """
         # Call constructors of parent classes.
-        Component.__init__(self, name, params)
+        Component.__init__(self, name, ReshapeTensor, params)
 
         # Set key mappings.
         self.key_inputs = self.mapkey("inputs")

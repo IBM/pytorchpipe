@@ -24,9 +24,21 @@ class TokenEncoder(Component):
     """
     Abstract class responsible for encoding tokens. Please use derrived classes.
     """
-    def __init__(self, name, params):
+    def __init__(self, name, class_type, params):
+        """
+        Initializes the component.
+
+        :param name: Component name (read from configuration file).
+        :type name: str
+
+        :param class_type: Class type of the component (derrived from this class).
+
+        :param params: Dictionary of parameters (read from the configuration ``.yaml`` file).
+        :type params: :py:class:`ptp.utils.ParamInterface`
+
+        """
         # Call constructors of parent classes.
-        Component.__init__(self, name, params)
+        Component.__init__(self, name, class_type, params)
 
         # Set default parameters.
         params.add_default_params({

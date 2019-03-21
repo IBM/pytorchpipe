@@ -34,7 +34,7 @@ class SoftmaxClassifier(Model):
         """
         # Call constructors of parent classes.
         #super(Model, self).__init__(name, params))
-        Model.__init__(self, name, params)
+        Model.__init__(self, name, SoftmaxClassifier, params)
 
         # Set key mappings.
         self.key_inputs = self.mapkey("inputs")

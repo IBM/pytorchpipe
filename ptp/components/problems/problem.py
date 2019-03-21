@@ -34,7 +34,7 @@ class Problem(Component, Dataset):
 
     """
 
-    def __init__(self, name, params):
+    def __init__(self, name, class_type, params):
         """
         Initializes problem object:
             - calls base class constructors.
@@ -48,6 +48,8 @@ class Problem(Component, Dataset):
         
         :param name: Problem name.
         :type name: str
+
+        :param class_type: Class type of the component.
 
         :param params: Dictionary of parameters (read from the configuration ``.yaml`` file).
         :type params: :py:class:`ptp.utils.ParamInterface`
@@ -63,7 +65,7 @@ class Problem(Component, Dataset):
                 >>> val = self.app_state["new_global_value" # Gets global value.
         """
         # Call constructors of parent classes.
-        Component.__init__(self, name, params)
+        Component.__init__(self, name, class_type, params)
         Dataset.__init__(self)
 
         # Set default key mappings.

@@ -39,7 +39,7 @@ class LeNet5(Model):
         :type params: ``miprometheus.utils.ParamInterface``
 
         """
-        super(LeNet5, self).__init__(name, params)
+        super(LeNet5, self).__init__(name, LeNet5, params)
 
         # Set key mappings.
         self.key_inputs = self.mapkey("inputs")

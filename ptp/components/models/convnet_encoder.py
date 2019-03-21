@@ -60,7 +60,7 @@ class ConvNetEncoder(Model):
 
         """
         # Call base constructor.
-        super(ConvNetEncoder, self).__init__(name, params)
+        super(ConvNetEncoder, self).__init__(name, ConvNetEncoder, params)
 
         # Set key mappings.
         self.key_inputs = self.mapkey("inputs")

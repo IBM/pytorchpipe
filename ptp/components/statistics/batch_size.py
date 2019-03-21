@@ -30,7 +30,7 @@ class BatchSize(Component):
         """
         Initializes object.
 
-        :param name: Loss name.
+        :param name: Batch size name.
         :type name: str
 
         :param params: Dictionary of parameters (read from the configuration ``.yaml`` file).
@@ -38,7 +38,7 @@ class BatchSize(Component):
 
         """
         # Call constructors of parent classes.
-        Component.__init__(self, name, params)
+        Component.__init__(self, name, BatchSize, params)
 
         # Set key mappings.
         self.key_indices = self.mapkey("indices")

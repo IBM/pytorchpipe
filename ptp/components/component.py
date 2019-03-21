@@ -20,10 +20,11 @@ import abc
 import logging
 
 from ptp.configuration.app_state import AppState
+from ptp.configuration.configs_parsing import load_default_configuration_file
 
 
 class Component(abc.ABC):
-    def __init__(self, name, params):
+    def __init__(self, name, class_type, params):
         """
         Initializes the component.
 
@@ -47,6 +48,8 @@ class Component(abc.ABC):
 
         :param name: Name of the component.
 
+        :param class_type: Class type of the component.
+
         :param params: Dictionary of parameters (read from configuration ``.yaml`` file).
         :type params: ``configuration.param_interface.ParamInterface``
 
@@ -57,12 +60,14 @@ class Component(abc.ABC):
         # Initialize logger.
         self.logger = logging.getLogger(self.name)        
 
-        # Initialize the "name mapping facility".
-        params.add_default_params({"keymappings": {}})
-        self.keymappings = params["keymappings"]
-
         # Get access to AppState: for globals, visualization flag etc.
         self.app_state = AppState()
+
+        # Load default configuration.
+        self.params.add_default_params(load_default_configuration_file(class_type))
+
+        # Initialize the "name mapping facility".
+        self.keymappings = params["keymappings"]
 
 
     def summarize_io(self, priority = -1):

@@ -32,7 +32,7 @@ class LanguageIdentification(Problem):
         :param params: Dictionary of parameters (read from configuration ``.yaml`` file).
         """
         # Call constructors of parent classes.
-        Problem.__init__(self, name, params)
+        Problem.__init__(self, name, LanguageIdentification, params)
 
         # Set key mappings.
         self.key_inputs = self.mapkey("inputs")

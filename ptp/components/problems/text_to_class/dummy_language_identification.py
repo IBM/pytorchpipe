@@ -30,7 +30,7 @@ class DummyLanguageIdentification(LanguageIdentification):
     """
     def __init__(self, name, params):
         # Call constructors of parent classes.
-        LanguageIdentification.__init__(self, name, params) 
+        LanguageIdentification.__init__(self, name, DummyLanguageIdentification, params) 
 
         # Set default parameters.
         self.params.add_default_params({

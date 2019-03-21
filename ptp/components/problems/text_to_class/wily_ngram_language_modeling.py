@@ -34,7 +34,7 @@ class WiLYNGramLanguageModeling(Problem):
     """
     def __init__(self, name, params):
         # Call constructors of parent classes.
-        Problem.__init__(self, name, params) 
+        Problem.__init__(self, name, WiLYNGramLanguageModeling, params) 
 
         # Set key mappings.
         self.key_inputs = self.mapkey("inputs")

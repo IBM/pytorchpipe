@@ -26,8 +26,18 @@ class SentenceIndexer(TokenEncoder):
     Those can be letter embedded, encoded with 1-hot encoding or else.
     """
     def __init__(self, name, params):
+        """
+        Initializes the component.
+
+        :param name: Component name (read from configuration file).
+        :type name: str
+
+        :param params: Dictionary of parameters (read from the configuration ``.yaml`` file).
+        :type params: :py:class:`ptp.utils.ParamInterface`
+
+        """
         # Call constructors of parent classes.
-        TokenEncoder.__init__(self, name, params)
+        TokenEncoder.__init__(self, name, SentenceIndexer, params)
 
         # Export vocabulary size to global params.
         self.key_vocab_size = self.mapkey("sentence_vocab_size")

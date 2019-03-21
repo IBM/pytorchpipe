@@ -37,7 +37,7 @@ class Embeddings(Model):
         :param params: Parameters read from configuration file.
         :type params: ``miprometheus.utils.ParamInterface``
         """
-        super(Embeddings, self).__init__(name, params)
+        super(Embeddings, self).__init__(name, Embeddings, params)
 
         # Set key mappings.
         self.key_inputs = self.mapkey("inputs")

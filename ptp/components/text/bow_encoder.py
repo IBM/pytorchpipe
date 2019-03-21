@@ -31,10 +31,15 @@ class BOWEncoder(Component):
         """
         Initializes the bag-of-word encoded by creating dictionary mapping ALL words from training, validation and test sets into unique indices.
 
+        :param name: Component name (read from configuration file).
+        :type name: str
+
         :param params: Dictionary of parameters (read from configuration ``.yaml`` file).
+        :type params: :py:class:`ptp.utils.ParamInterface`
+
         """
         # Call constructors of parent classes.
-        Component.__init__(self, name, params)
+        Component.__init__(self, name, BOWEncoder, params)
 
         # Default name mappings for all encoders.
         self.key_inputs = self.mapkey("inputs")

@@ -35,12 +35,14 @@ class Model(Module, Component):
 
     """
 
-    def __init__(self, name, params):
+    def __init__(self, name, class_type, params):
         """
         Initializes a Model object.
 
         :param name: Model name.
         :type name: str
+
+        :param class_type: Class type of the component.
 
         :param params: Parameters read from configuration file.
         :type params: ``ptp.utils.ParamInterface``
@@ -55,7 +57,7 @@ class Model(Module, Component):
 
         """
         # Call constructors of parent classes.
-        Component.__init__(self, name, params)
+        Component.__init__(self, name, class_type, params)
         Module.__init__(self)
 
         # Flag indicating whether the model is frozen or not.

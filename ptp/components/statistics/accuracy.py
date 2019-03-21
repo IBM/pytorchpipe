@@ -40,7 +40,7 @@ class Accuracy(Component):
 
         """
         # Call constructors of parent classes.
-        Component.__init__(self, name, params)
+        Component.__init__(self, name, Accuracy, params)
 
         # Set key mappings.
         self.key_accuracies = self.mapkey("accuracies")
