@@ -1,0 +1,74 @@
+  # Training parameters:
+training:
+  problem:
+    type: &p_type WikiTextLanguageModeling
+    data_folder: &data_folder ~/data/language_modeling/wikitext-2
+    dataset: &dataset wikitext-2
+    subset: train
+    batch_size:  64
+
+  # optimizer parameters:
+  optimizer:
+    name: Adam
+    lr: 0.1
+
+  # settings parameters
+  terminal_conditions:
+    loss_stop: 1.0e-2
+    episode_limit: 10000
+    epoch_limit: 100
+
+# Validation parameters:
+validation:
+  partial_validation_interval: 10
+  problem:
+    type: *p_type
+    dataset: *dataset
+    subset: valid
+    batch_size:  64
+
+# Testing parameters:
+testing:
+  problem:
+    type: *p_type 
+    dataset: *dataset
+    subset: test
+    batch_size: 64
+
+pipeline:
+  name: wikitext_language_modeling
+  #load: /users/tomaszkornuta/experiments/dummylanguageidentification/language_classifier/20190301_145416/checkpoints/language_classifier_best.pt
+  #freeze: True
+  #disable: prediction_decoder,accuracy
+
+  # Source encoding.
+  sentence_tokenizer:
+    type: SentenceTokenizer
+    priority: 1
+    streams: 
+      inputs: inputs
+      outputs: tokenized_inputs
+
+  source_indexer:
+    type: SentenceIndexer
+    priority: 2
+    data_folder: *data_folder
+    source_files: x_train.txt,x_test.txt
+    encodings_file: word_encodings.csv
+    streams:
+      inputs: tokenized_inputs
+      outputs: indexed_inputs
+  
+  # Model 1: word embeddings.
+  sentence_embedder:
+    type: Embeddings
+    priority: 3
+    embeddings_size: 100
+    streams:
+      inputs: indexed_inputs
+      outputs: embedded_inputs
+    globals:
+      vocab_size: sentence_vocab_size
+      
+
+  #: pipeline
