@@ -64,7 +64,8 @@ class Component(abc.ABC):
         self.app_state = AppState()
 
         # Load default configuration.
-        self.params.add_default_params(load_default_configuration_file(class_type))
+        if class_type is not None:
+            self.params.add_default_params(load_default_configuration_file(class_type))
 
         # Initialize the "streams mapping facility".
         if "streams" not in params or params["streams"] is None:

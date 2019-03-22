@@ -28,7 +28,7 @@ class MockupProblem (Problem):
     Mockup component class.
     """
     def __init__(self, name, params):
-        Problem.__init__(self, name, params)
+        Problem.__init__(self, name, None, params)
 
     def output_data_definitions(self):
         return {
