@@ -24,6 +24,9 @@ globals:
   # 3. Keymappings of variables that will be RETRIEVED from GLOBALS.
   ####################################################################
 
+  # Size of the input (RETRIEVED)
+  input_size: input_size
+
   # Size of the prediction (RETRIEVED)
   prediction_size: prediction_size
 

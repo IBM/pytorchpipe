@@ -14,13 +14,10 @@
 
 __author__ = "Tomasz Kornuta"
 
-
-from .language_identification import LanguageIdentification
-
 import os
-import zipfile
 
 import ptp.utils.io_utils as io
+from .language_identification import LanguageIdentification
 
 
 class WiLYLanguageIdentification(LanguageIdentification):
@@ -34,6 +31,15 @@ class WiLYLanguageIdentification(LanguageIdentification):
     .. _arxiv: https://arxiv.org/abs/1801.07779
     """
     def __init__(self, name, params):
+        """
+        Initializes problem object. Calls base constructor. Downloads the dataset if not present and loads the adequate files depending on the mode.
+
+        :param name: Name of the component.
+
+        :param class_type: Class type of the component.
+
+        :param params: Dictionary of parameters (read from configuration ``.yaml`` file).
+        """
         # Call constructors of parent classes.
         LanguageIdentification.__init__(self, name, WiLYLanguageIdentification, params) 
 
@@ -43,7 +49,10 @@ class WiLYLanguageIdentification(LanguageIdentification):
         # Generate the dataset (can be turned off).
         filenames = ["x_train.txt", "y_train.txt", "x_test.txt", "y_test.txt"]
         if not io.check_files_existence(self.data_folder, filenames):
-            self.initialize_dataset()
+            # Download and unpack.
+            url = "https://zenodo.org/record/841984/files/wili-2018.zip?download=1"
+            zipfile_name = "wili-2018.zip"
+            io.download_extract_zip_file(self.logger, self.data_folder, url, zipfile_name)
 
         # Select set.
         if self.params['use_train_data']:
@@ -59,27 +68,3 @@ class WiLYLanguageIdentification(LanguageIdentification):
 
         # Assert that they are equal in size!
         assert len(self.inputs) == len(self.targets), "Number of inputs loaded from {} not equal to number of targets loaded from {}!".format(inputs_file, targets_file)
-
-    def initialize_dataset(self):
-        """
-        Method downloads dataset from WiLI project url and extract the files.
-        """
-        self.logger.info("Initializing dataset in folder {}".format(self.data_folder))
-
-        # Download url.
-        url = "https://zenodo.org/record/841984/files/wili-2018.zip?download=1"
-        zip_filename = "wili-2018.zip"
-
-        if not io.check_file_existence(self.data_folder, zip_filename):
-            self.logger.info("Downloading file {} containing WiLI dataset from {}".format(zip_filename, url))
-            io.download(self.data_folder, zip_filename, url)
-        else:
-            self.logger.info("File {} found in {}".format(zip_filename, self.data_folder))
-
-
-        # Extract data from zip.
-        self.logger.info("Extracting dataset from {}".format(zip_filename))
-        with zipfile.ZipFile(self.data_folder + "/" + zip_filename, 'r') as zip_ref:
-            zip_ref.extractall(self.data_folder)
-
-        self.logger.info("Initialization successfull")

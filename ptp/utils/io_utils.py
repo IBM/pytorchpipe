@@ -16,6 +16,8 @@ __author__ = "Tomasz Kornuta"
 
 import os
 import sys
+import shutil
+import zipfile
 import time
 import csv
 import urllib
@@ -33,7 +35,7 @@ def save_string_list_to_txt_file(folder, filename, data):
     os.makedirs(os.path.dirname(folder +'/'), exist_ok=True)
 
     # Write elements in separate lines.        
-    with open(folder+'/'+filename, mode='w+') as txtfile:
+    with open(os.path.join(folder, filename), mode='w+') as txtfile:
         txtfile.write('\n'.join(data))
 
 
@@ -44,7 +46,7 @@ def load_string_list_from_txt_file(folder, filename):
     :return: List of strings (e.g. list of sententes).
     """
     data = []
-    with open(folder+'/'+filename, mode='rt') as txtfile:
+    with open(os.path.join(folder, filename), mode='rt') as txtfile:
         for line in txtfile:
             # Remove next line char.
             if line[-1] == '\n':
@@ -63,7 +65,7 @@ def load_mappings_from_csv_file(folder, filename):
     :param filename: File with encodings (absolute path + filename).
     :return: dictionary with word:index keys
     """        
-    file_path = os.path.expanduser(folder) + "/" + filename
+    file_path = os.path.join(os.path.expanduser(folder), filename)
 
     with open(file_path, mode='rt') as csvfile:
         # Check the presence of the header.
@@ -91,7 +93,7 @@ def save_mappings_to_csv_file(folder, filename, word_to_ix, fieldnames = []):
     # Make sure directory exists.
     os.makedirs(os.path.dirname(folder +'/'), exist_ok=True)
 
-    file_path = os.path.expanduser(folder) + "/" + filename
+    file_path = os.path.join(os.path.expanduser(folder), filename)
 
     with open(file_path, mode='w+') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
@@ -121,7 +123,7 @@ def check_file_existence(directory, filename):
     :param filename: Name of the file.
     :type directory: str
     """
-    file_to_check = os.path.expanduser(directory) + '/' + filename
+    file_to_check = os.path.join(os.path.expanduser(directory), filename)
     if os.path.isdir(directory) and os.path.isfile(file_to_check):
         return True
         #self.logger.info('Dataset found at {}'.format(file_folder_to_check))
@@ -148,7 +150,7 @@ def check_files_existence(directory, filenames):
 
     # Check files one by one.
     for file in filenames:
-        file_to_check = os.path.expanduser(directory) + '/' + file
+        file_to_check = os.path.join(os.path.expanduser(directory), file)
         if not os.path.isfile(file_to_check):
             return False
     # Ok.
@@ -176,7 +178,7 @@ def download(directory, filename, url):
     os.makedirs(os.path.dirname(directory +'/'), exist_ok=True)
 
     # Download.
-    file_result = os.path.expanduser(directory) + '/' + filename
+    file_result = os.path.join(os.path.expanduser(directory), filename)
     urllib.request.urlretrieve(url, os.path.expanduser(file_result), reporthook)
     #self.logger.info('Downloading {}'.format(url))
 
@@ -195,3 +197,45 @@ def reporthook(count, block_size, total_size):
     sys.stdout.write("\r...%d%%, %d MB, %d KB/s, %d seconds passed" %
                      (percent, progress_size / (1024 * 1024), speed, duration))
     sys.stdout.flush()
+
+def download_extract_zip_file(logger, data_folder, url, zipfile_name):
+    """
+    Method downloads zipfile from given URL and extracts it.
+
+    :param logger: Logger object used for logging information during download.
+
+    :param data_folder: Folder in which data will be stored.
+
+    :param url: URL from which file will be downloaded.
+
+    :param zipfile_name: Name of the zip file to be downloaded and extracted.
+
+    """
+    logger.info("Initializing download in folder {}".format(data_folder))
+
+    if not check_file_existence(data_folder, zipfile_name):
+        logger.info("Downloading file {} from {}".format(zipfile_name, url))
+        download(data_folder, zipfile_name, url)
+    else:
+        logger.info("File {} found in {}".format(zipfile_name, data_folder))
+
+    # Extract data from zip.
+    logger.info("Extracting data from {}".format(zipfile_name))
+    with zipfile.ZipFile(os.path.join(data_folder, zipfile_name), 'r') as zip_ref:
+        zip_ref.extractall(data_folder)
+    
+    logger.info("Download and extraciton finished")
+
+def move_files_between_dirs(logger, source_folder, dest_folder, filenames):
+    """
+    Moves files between directories
+    """
+    # Process list of files.
+    if type(filenames) == str:
+        filenames = filenames.split(" ")
+
+    for f in filenames:
+        shutil.move(os.path.join(source_folder, f) , os.path.join(dest_folder, f))
+
+    logger.info("Moved {} from {} to {}".format(filenames, source_folder, dest_folder))
+

@@ -1,31 +1,44 @@
-# This file defines the default values for the NLL Loss.
+# This file defines the default values for the RNN model.
 
 ####################################################################
 # 1. CONFIGURATION PARAMETERS that will be LOADED by the component.
 ####################################################################
 
-# Number of dimensions of the target, so the loss can work with 
-# diffent inputs/targets (LOADED)
-targets_dim: 1
+# Size of the hidden state (LOADED)
+hidden_size: 100
+
+# Dropout rate (LOADED)
+# Default: 0 (means that it is turned off)
+dropout_rate: 0
+
+# Number of "stacked" layers (LOADED)
+num_layers: 1
+
+# Type of recurrent cell (LOADED)
+# Options: LSTM | GRU | RNN_TANH | RNN_RELU
+rnn_type: LSTM
 
 streams: 
   ####################################################################
   # 2. Keymappings associated with INPUT and OUTPUT streams.
   ####################################################################
 
-  # Stream containing targets (label ids) (INPUT)
-  targets: targets
+  # Stream containing batch of images (INPUT)
+  inputs: inputs
 
-  # Stream containing batch of predictions (INPUT)
+  # Stream containing predictions (OUTPUT)
   predictions: predictions
-
-  # Stream containing loss (OUTPUT)
-  loss: loss
 
 globals:
   ####################################################################
   # 3. Keymappings of variables that will be RETRIEVED from GLOBALS.
   ####################################################################
+
+  # Size of the input (RETRIEVED)
+  input_size: input_size
+
+  # Size of the prediction (RETRIEVED)
+  prediction_size: prediction_size
 
   ####################################################################
   # 4. Keymappings associated with GLOBAL variables that will be SET.

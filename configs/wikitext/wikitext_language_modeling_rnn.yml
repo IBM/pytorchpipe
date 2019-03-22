@@ -1,0 +1,107 @@
+  # Training parameters:
+training:
+  problem:
+    type: &p_type WikiTextLanguageModeling
+    data_folder: &data_folder ~/data/language_modeling/wikitext-2
+    dataset: &dataset wikitext-2
+    subset: train
+    sentence_length: 50
+    batch_size:  64
+
+  # optimizer parameters:
+  optimizer:
+    name: Adam
+    lr: 0.1
+
+  # settings parameters
+  terminal_conditions:
+    loss_stop: 1.0e-2
+    episode_limit: 10000
+    epoch_limit: 100
+
+# Validation parameters:
+validation:
+  partial_validation_interval: 10
+  problem:
+    type: *p_type
+    data_folder: *data_folder
+    dataset: *dataset
+    subset: valid
+    sentence_length: 50
+    batch_size:  64
+
+# Testing parameters:
+testing:
+  problem:
+    type: *p_type 
+    data_folder: *data_folder
+    dataset: *dataset
+    subset: test
+    sentence_length: 50
+    batch_size: 64
+
+pipeline:
+  name: wikitext_language_modeling
+  #load: /users/tomaszkornuta/experiments/dummylanguageidentification/language_classifier/20190301_145416/checkpoints/language_classifier_best.pt
+  #freeze: True
+  #disable: prediction_decoder,accuracy
+
+  # Source encoding.
+  source_indexer:
+    type: SentenceIndexer
+    priority: 1.1
+    data_folder: *data_folder
+    source_files: wiki.train.tokens,wiki.valid.tokens,wiki.test.tokens
+    encodings_file: wiki.all.tokenized_words
+    additional_tokens: <eos>
+    streams:
+      inputs: sources
+      outputs: indexed_sources
+    globals:
+      sentence_vocab_size: source_vocab_size
+  
+  # Model 1: word embeddings.
+  source_embedder:
+    type: Embeddings
+    priority: 1.2
+    embeddings_size: 100
+    streams:
+      inputs: indexed_sources
+      outputs: embedded_sources
+    globals:
+      vocab_size: source_vocab_size
+      
+  # Target encoding.
+  target_indexer:
+    type: SentenceIndexer
+    priority: 2.1
+    data_folder: *data_folder
+    source_files: wiki.train.tokens,wiki.valid.tokens,wiki.test.tokens
+    encodings_file: wiki.all.tokenized_words
+    additional_tokens: <eos>
+    streams:
+      inputs: targets
+      outputs: indexed_targets
+    globals:
+      sentence_vocab_size: target_vocab_size
+  
+  # Model 3: RNN
+  lstm:
+    type: RNN
+    priority: 3
+    streams:
+      inputs: embedded_sources
+    globals:
+      input_size: embeddings_size
+      prediction_size: target_vocab_size # in this case it is equal to source_vocab_size
+
+  # Loss
+  nllloss:
+    type: NLLLoss
+    priority: 6
+    targets_dim: 2
+    streams:
+      targets: indexed_targets
+      loss: loss
+
+  #: pipeline

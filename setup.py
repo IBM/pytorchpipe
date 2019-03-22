@@ -166,8 +166,9 @@ setup(
     # (i.e. dependencies of your dependencies). This is overly-restrictive,
     # and prevents the user from gaining the benefit of dependency upgrades.
     install_requires=[
-        'torchvision',
+        'nltk',
         #'torchtext',
+        'torchvision',
         'torch',
         'PyYAML'
         ],

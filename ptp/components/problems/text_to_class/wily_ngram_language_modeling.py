@@ -14,14 +14,11 @@
 
 __author__ = "Tomasz Kornuta"
 
-
-from ptp.components.problems.problem import Problem
-from ptp.data_types.data_definition import DataDefinition
-
 import os
-import zipfile
 
 import ptp.utils.io_utils as io
+from ptp.components.problems.problem import Problem
+from ptp.data_types.data_definition import DataDefinition
 
 
 class WiLYNGramLanguageModeling(Problem):
@@ -33,6 +30,15 @@ class WiLYNGramLanguageModeling(Problem):
     .. _arxiv: https://arxiv.org/abs/1801.07779
     """
     def __init__(self, name, params):
+        """
+        Initializes problem object. Calls base constructor.
+
+        :param name: Name of the component.
+
+        :param class_type: Class type of the component.
+
+        :param params: Dictionary of parameters (read from configuration ``.yaml`` file).
+        """
         # Call constructors of parent classes.
         Problem.__init__(self, name, WiLYNGramLanguageModeling, params) 
 
@@ -59,7 +65,10 @@ class WiLYNGramLanguageModeling(Problem):
             # Sadly not, we have to generate them.
             if not io.check_file_existence(self.data_folder, inputs_file):
                 # Even worst - we have to download wily.
-                self.initialize_dataset()
+                url = "https://zenodo.org/record/841984/files/wili-2018.zip?download=1"
+                zipfile_name = "wili-2018.zip"
+                io.download_extract_zip_file(self.logger, self.data_folder, url, zipfile_name)
+
 
             # Load file.
             inputs = io.load_string_list_from_txt_file(self.data_folder, inputs_file)
@@ -137,28 +146,3 @@ class WiLYNGramLanguageModeling(Problem):
         data_dict[self.key_targets] = self.ngrams[index][-1] # Last word
         #print("problem: context = {} target = {}".format(data_dict[self.key_inputs], data_dict[self.key_targets]))
         return data_dict
-
-
-    def initialize_dataset(self):
-        """
-        Method downloads dataset from WiLI project url and extract the files.
-        """
-        self.logger.info("Initializing dataset in folder {}".format(self.data_folder))
-
-        # Download url.
-        url = "https://zenodo.org/record/841984/files/wili-2018.zip?download=1"
-        zip_filename = "wili-2018.zip"
-
-        if not io.check_file_existence(self.data_folder, zip_filename):
-            self.logger.info("Downloading file {} containing WiLI dataset from {}".format(zip_filename, url))
-            io.download(self.data_folder, zip_filename, url)
-        else:
-            self.logger.info("File {} found in {}".format(zip_filename, self.data_folder))
-
-
-        # Extract data from zip.
-        self.logger.info("Extracting dataset from {}".format(zip_filename))
-        with zipfile.ZipFile(self.data_folder + "/" + zip_filename, 'r') as zip_ref:
-            zip_ref.extractall(self.data_folder)
-
-        self.logger.info("Initialization successfull")

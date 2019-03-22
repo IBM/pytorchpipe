@@ -19,7 +19,6 @@ __author__ = "Tomasz Kornuta"
 import torch
 
 from ptp.components.component import Component
-from ptp.data_types.data_definition import DataDefinition
 
 
 class Loss(Component):
@@ -50,28 +49,6 @@ class Loss(Component):
         self.key_targets = self.get_stream_key("targets")
         self.key_predictions = self.get_stream_key("predictions")
         self.key_loss = self.get_stream_key("loss")
-
-    def input_data_definitions(self):
-        """ 
-        Function returns a dictionary with definitions of input data that are required by the component.
-
-        :return: dictionary containing input data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
-        """
-        return {
-            self.key_targets: DataDefinition([-1], [torch.Tensor], "Batch of targets, each being a single index [BATCH_SIZE]"),
-            self.key_predictions: DataDefinition([-1, -1], [torch.Tensor], "Batch of predictions, represented as tensor with probability distribution over classes [BATCH_SIZE x NUM_CLASSES]")
-            }
-
-    def output_data_definitions(self):
-        """ 
-        Function returns a dictionary with definitions of output data produced the component.
-
-        :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
-        """
-        return {
-            self.key_loss: DataDefinition([1], [torch.Tensor], "Loss value (scalar, i.e. 1D tensor)")
-            }
-
 
     def loss_keys(self):
         """ 

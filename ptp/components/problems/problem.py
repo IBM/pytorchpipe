@@ -150,8 +150,6 @@ class Problem(Component, Dataset):
         tensors, numbers, dicts or lists.
         :type batch: list
 
-        :return: DataDict containing the created batch.
-
         """
         return DataDict({key: torch.utils.data.dataloader.default_collate([sample[key] for sample in batch]) for key in batch[0]})
 

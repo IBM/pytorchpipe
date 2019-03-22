@@ -29,6 +29,15 @@ class DummyLanguageIdentification(LanguageIdentification):
     .. _example: https://pytorch.org/tutorials/beginner/nlp/deep_learning_tutorial.html
     """
     def __init__(self, name, params):
+        """
+        Initializes the problem object. Calls base constructor and generates the files, if not present.
+
+        :param name: Name of the component.
+
+        :param class_type: Class type of the component.
+
+        :param params: Dictionary of parameters (read from configuration ``.yaml`` file).
+        """
         # Call constructors of parent classes.
         LanguageIdentification.__init__(self, name, DummyLanguageIdentification, params) 
 
@@ -38,7 +47,7 @@ class DummyLanguageIdentification(LanguageIdentification):
         # Generate the dataset (can be turned off).
         filenames = ["x_training.txt", "y_training.txt", "x_test.txt", "y_test.txt"]
         if self.params['regenerate'] or not io.check_files_existence(self.data_folder, filenames):
-            self.initialize_dataset()
+            self.generate_dataset()
 
         # Select set.
         if self.params['use_train_data']:
@@ -56,7 +65,7 @@ class DummyLanguageIdentification(LanguageIdentification):
         assert len(self.inputs) == len(self.targets), "Number of inputs loaded from {} not equal to number of targets loaded from {}!".format(inputs_file, targets_file)
 
 
-    def initialize_dataset(self):
+    def generate_dataset(self):
         """
         Method generates dummy dataset for language identification, few (sentence-language) pairs, training and text sets.
         """

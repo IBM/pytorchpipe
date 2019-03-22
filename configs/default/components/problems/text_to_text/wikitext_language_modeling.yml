@@ -1,26 +1,37 @@
-# This file defines the default values for the NLL Loss.
+# This file defines the default values for the WikiText language modeling.
 
 ####################################################################
 # 1. CONFIGURATION PARAMETERS that will be LOADED by the component.
 ####################################################################
 
-# Number of dimensions of the target, so the loss can work with 
-# diffent inputs/targets (LOADED)
-targets_dim: 1
+# Folder where problem will store data (LOADED)
+data_folder: ~/data/language_modeling/wikitext
+
+# Defines the dataset that will be used used (LOADED)
+# Options: wikitext-2 | wikitext-103
+dataset: wikitext-2
+
+# Defines the used subset (LOADED)
+# Options: train | valid | test
+subset: train
+
+# Length of sentence (i.e. number of tokens in input and target sentences)
+sentence_length: 50
 
 streams: 
   ####################################################################
   # 2. Keymappings associated with INPUT and OUTPUT streams.
   ####################################################################
 
-  # Stream containing targets (label ids) (INPUT)
+  # Stream containing batch of indices (OUTPUT)
+  # Every problem MUST return that stream.
+  indices: indices
+
+  # Stream containing batch of tokenized source sentences (OUTPUT)
+  sources: sources
+
+  # Stream containing batch of tokenized target sentences (OUTPUT)
   targets: targets
-
-  # Stream containing batch of predictions (INPUT)
-  predictions: predictions
-
-  # Stream containing loss (OUTPUT)
-  loss: loss
 
 globals:
   ####################################################################
