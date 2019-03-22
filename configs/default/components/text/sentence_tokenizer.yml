@@ -8,7 +8,7 @@
 # False: sentence -> list of strings, True: list of strings -> sentence.
 detokenize: False 
 
-keymappings: 
+streams: 
   ####################################################################
   # 2. Keymappings associated with INPUT and OUTPUT streams.
   ####################################################################
@@ -19,6 +19,7 @@ keymappings:
   # Stream containing output (tokenized or detokenized) sentences (OUTPUT)
   outputs: outputs
 
+globals:
   ####################################################################
   # 3. Keymappings of variables that will be RETRIEVED from GLOBALS.
   ####################################################################

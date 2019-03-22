@@ -60,7 +60,7 @@ class Component(abc.ABC):
         # Initialize logger.
         self.logger = logging.getLogger(self.name)        
 
-        # Get access to AppState: for globals, visualization flag etc.
+        # Get access to AppState: for command line args, globals etc.
         self.app_state = AppState()
 
         # Load default configuration.
