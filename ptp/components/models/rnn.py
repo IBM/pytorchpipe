@@ -99,11 +99,11 @@ class RNN(Model):
 
         if self.rnn_type == 'LSTM':
             # Return tuple (hidden_state, memory_cell).
-            return (torch.zeros(self.num_layers, batch_size, self.hidden_size),
-                    torch.zeros(self.num_layers, batch_size, self.hidden_size) )
+            return (torch.zeros(self.num_layers, batch_size, self.hidden_size).type(self.app_state.FloatTensor),
+                    torch.zeros(self.num_layers, batch_size, self.hidden_size).type(self.app_state.FloatTensor) )
         else:
             # Return hidden_state.
-            return torch.zeros(self.num_layers, batch_size, self.hidden_size)
+            return torch.zeros(self.num_layers, batch_size, self.hidden_size).type(self.app_state.FloatTensor)
 
 
     def input_data_definitions(self):
