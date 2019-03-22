@@ -49,20 +49,7 @@ keymappings:
   feature_maps: feature_maps
 
   ####################################################################
-  # 3. Keymappings associated with GLOBAL variables that will be SET.
-  ####################################################################
-
-  # Height of the feature map (SET)
-  feature_map_height: feature_map_height
-
-  # Width of the feature map (SET)
-  feature_map_width: feature_map_width
-
-  # Depth of the feature map (SET)
-  feature_map_depth: feature_map_depth
-
-  ####################################################################
-  # 4. Keymappings associated with GLOBAL variables that will be RETRIEVED.
+  # 3. Keymappings of variables that will be RETRIEVED from GLOBALS.
   ####################################################################
 
   # Height dimension of the input (RETRIEVED)
@@ -73,6 +60,19 @@ keymappings:
 
   # Depth dimension of the image (RETRIEVED)
   input_depth: image_depth
+
+  ####################################################################
+  # 4. Keymappings associated with GLOBAL variables that will be SET.
+  ####################################################################
+
+  # Height of the feature map (SET)
+  feature_map_height: feature_map_height
+
+  # Width of the feature map (SET)
+  feature_map_width: feature_map_width
+
+  # Depth of the feature map (SET)
+  feature_map_depth: feature_map_depth
 
   ####################################################################
   # 5. Keymappings associated with statistics that will be ADDED.

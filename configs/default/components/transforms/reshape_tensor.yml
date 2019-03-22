@@ -24,15 +24,16 @@ keymappings:
   outputs: outputs
 
   ####################################################################
-  # 3. Keymappings associated with GLOBAL variables that will be SET.
+  # 3. Keymappings of variables that will be RETRIEVED from GLOBALS.
   ####################################################################
 
-  # Size of the output tensor (all dimensions except batch_size)
+  ####################################################################
+  # 4. Keymappings associated with GLOBAL variables that will be SET.
+  ####################################################################
+
+  # Size of the output tensor (SET)
+  # (all dimensions except batch_size)
   output_size: output_size
-
-  ####################################################################
-  # 4. Keymappings associated with GLOBAL variables that will be RETRIEVED.
-  ####################################################################
 
   ####################################################################
   # 5. Keymappings associated with statistics that will be ADDED.

@@ -20,15 +20,15 @@ keymappings:
   predictions: predictions
 
   ####################################################################
-  # 3. Keymappings associated with GLOBAL variables that will be SET.
+  # 3. Keymappings of variables that will be RETRIEVED from GLOBALS.
   ####################################################################
 
-  ####################################################################
-  # 4. Keymappings associated with GLOBAL variables that will be RETRIEVED.
-  ####################################################################
-
-  # Size of the prediction (GET)
+  # Size of the prediction (RETRIEVED)
   prediction_size: prediction_size
+
+  ####################################################################
+  # 4. Keymappings associated with GLOBAL variables that will be SET.
+  ####################################################################
 
   ####################################################################
   # 5. Keymappings associated with statistics that will be ADDED.
