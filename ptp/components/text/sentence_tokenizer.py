@@ -23,19 +23,25 @@ class SentenceTokenizer(Component):
     Class responsible for tokenizing the sentence.
     """
     def __init__(self, name, params):
-        # Call constructors of parent classes.
-        Component.__init__(self, name, params)
+        """
+        Initializes the component.
 
-        # Set default parameters.
-        params.add_default_params({
-            'detokenize': False, # Mode - False: sentence -> list of strings, True: list of strings -> sentence.
-            })
+        :param name: Component name (read from configuration file).
+        :type name: str
+
+        :param params: Dictionary of parameters (read from the configuration ``.yaml`` file).
+        :type params: :py:class:`ptp.utils.ParamInterface`
+
+        """
+        # Call constructors of parent classes.
+        Component.__init__(self, name, SentenceTokenizer, params)
+
         # Read the actual configuration.
         self.mode_detokenize = params['detokenize']
 
         # Set key mappings.
-        self.key_inputs = self.mapkey("inputs")
-        self.key_outputs = self.mapkey("outputs")
+        self.key_inputs = self.get_stream_key("inputs")
+        self.key_outputs = self.get_stream_key("outputs")
 
         if self.mode_detokenize:
             # list of strings -> sentence.

@@ -127,12 +127,28 @@ class Trainer(Worker):
         if self.app_state.args.use_gpu and (torch.cuda.device_count() == 0):
             self.logger.error("Cannot use GPU as there are no CUDA-compatible devices present in the system!")
             exit(-2)
-            
+
+        # Set cpu/gpu types.
+        self.app_state.set_types()
+
+        # Check if config file exists.            
+        root_config = self.app_state.args.config
+        if not os.path.isfile(root_config):
+            print('Error: Configuration file {} does not exist'.format(root_config))
+            exit(-3)
+        
+        # Extract absolute path to config.
+        abs_config_path = os.path.abspath(root_config)
+        # Save it in app_state!
+        self.app_state.absolute_config_path = abs_config_path[:abs_config_path.find("configs")+8] 
+        # Get relative path.
+        rel_config_path = abs_config_path[abs_config_path.find("configs")+8:]
+
         # Get the list of configurations which need to be loaded.
-        configs_to_load = self.recurrent_config_parse(self.app_state.args.config, [])
+        configs_to_load = self.recurrent_config_parse(rel_config_path, [], self.app_state.absolute_config_path)
 
         # Read the YAML files one by one - but in reverse order -> overwrite the first indicated config(s)
-        self.recurrent_config_load(configs_to_load)
+        self.recurrent_config_load(configs_to_load, self.app_state.absolute_config_path)
 
         # -> At this point, the Param Registry contains the configuration loaded (and overwritten) from several files.
         # Log the resulting training configuration.
@@ -226,13 +242,19 @@ class Trainer(Worker):
         errors += self.validation.build()
 
         # Generate a single batch used for partial validation.
-        self.validation_dict = next(iter(self.validation.dataloader))
+        if errors == 0:
+            self.validation_dict = next(iter(self.validation.dataloader))
 
         ###################### PIPELINE ######################
         
         # Build the pipeline using the loaded configuration.
         self.pipeline = PipelineManager(pipeline_name, self.params['pipeline'])
         errors += self.pipeline.build()
+
+        # Check errors.
+        if errors > 0:
+            self.logger.error('Found {} errors, terminating execution'.format(errors))
+            exit(-2)
 
         # Show pipeline.
         summary_str = self.pipeline.summarize_all_components_header()
@@ -241,11 +263,6 @@ class Trainer(Worker):
         summary_str += self.pipeline.summarize_all_components()
         self.logger.info(summary_str)
         
-        # Check errors.
-        if errors > 0:
-            self.logger.error('Found {} errors, terminating execution'.format(errors))
-            exit(-2)
-
         # Handshake definitions.
         self.logger.info("Handshaking training pipeline")
         defs_training = self.training.problem.output_data_definitions()
@@ -259,6 +276,8 @@ class Trainer(Worker):
         if errors > 0:
             self.logger.error('Found {} errors, terminating execution'.format(errors))
             exit(-2)
+
+        ################## MODEL LOAD/FREEZE #################
 
         # Load the pretrained models params from checkpoint.
         try: 
@@ -278,6 +297,10 @@ class Trainer(Worker):
                     self.pipeline.load(pipeline_name)
                 else:
                     raise Exception("Couldn't load the checkpoint {} indicated in the {}: file does not exist".format(pipeline_name, msg))
+
+            # Try to load the models parameters - one by one, if set so in the configuration file.
+            self.pipeline.load_models()
+
         except KeyError:
             self.logger.error("File {} indicated in the {} seems not to be a valid model checkpoint".format(pipeline_name, msg))
             exit(-5)
@@ -286,7 +309,7 @@ class Trainer(Worker):
             # Exit by following the logic: if user wanted to load the model but failed, then continuing the experiment makes no sense.
             exit(-6)
 
-        # Finally, freeze models.
+        # Finally, freeze the models (that the user wants to freeze).
         self.pipeline.freeze_models()
 
         # Log the model summaries.
@@ -296,7 +319,7 @@ class Trainer(Worker):
 
         # Move the models in the pipeline to GPU.
         if self.app_state.args.use_gpu:
-            self.pipeline.cuda()
+            self.pipeline.cuda()        
 
         ################# OPTIMIZER ################# 
 

@@ -332,8 +332,7 @@ class OnlineTrainer(Trainer):
             self.finalize_tensorboard()
 
 
-
-if __name__ == '__main__':
+def main():
     """
     Entry point function for the ``OnlineTrainer``.
     """
@@ -342,3 +341,6 @@ if __name__ == '__main__':
     trainer.setup_experiment()
     # GO!
     trainer.run_experiment()
+
+if __name__ == '__main__':
+    main()

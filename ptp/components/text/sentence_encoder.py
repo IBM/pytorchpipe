@@ -25,13 +25,23 @@ class SentenceEncoder(TokenEncoder):
     Class responsible for encoding of samples being sequences of words (1-hot encoding).
     """
     def __init__(self, name, params):
+        """
+        Initializes the component.
+
+        :param name: Component name (read from configuration file).
+        :type name: str
+
+        :param params: Dictionary of parameters (read from the configuration ``.yaml`` file).
+        :type params: :py:class:`ptp.utils.ParamInterface`
+
+        """
         # Call constructors of parent classes.
-        TokenEncoder.__init__(self, name, params)
+        TokenEncoder.__init__(self, name, SentenceEncoder, params)
 
         # Export output token size to global params.
         self.output_size = len(self.word_to_ix)
-        self.key_token_size = self.mapkey("sentence_token_size")
-        self.app_state[self.key_token_size] = self.output_size
+        self.key_vocab_size = self.get_global_key("sentence_vocab_size")
+        self.app_state[self.key_vocab_size] = self.output_size
 
     def input_data_definitions(self):
         """ 
@@ -62,7 +72,7 @@ class SentenceEncoder(TokenEncoder):
 
             - "inputs": expected input field containing list of words [BATCH_SIZE] x [SEQ_SIZE] x [string]
 
-            - "encoded_targets": added output field containing list of indices [BATCH_SIZE] x [SEQ_SIZE] x [1] 
+            - "encoded_targets": added output field containing list of indices [BATCH_SIZE] x [SEQ_SIZE] x [OUTPUT_SIZE1] 
         """
         # Get inputs to be encoded.
         inputs = data_dict[self.key_inputs]

@@ -22,9 +22,7 @@ import torch
 from torchvision import datasets, transforms
 
 from ptp.components.problems.image_to_class.image_to_class_problem import ImageToClassProblem
-from ptp.data_types.data_dict import DataDict
 from ptp.data_types.data_definition import DataDefinition
-
 
 class MNIST(ImageToClassProblem):
     """
@@ -45,8 +43,8 @@ class MNIST(ImageToClassProblem):
         """
         Initializes MNIST problem:
 
-            - Calls ``problems.problem.ImageToClassProblem`` class constructor,
-            - Sets following attributes using the provided ``params``:
+            - Calls base class constructor,
+            - Sets following attributes using the provided ``params`` from configuration file:
 
                 - ``self.data_folder`` (`string`) : Root directory of dataset where ``processed/training.pt``\
                     and  ``processed/test.pt`` will be saved,
@@ -56,9 +54,7 @@ class MNIST(ImageToClassProblem):
                 - ``self.defaut_values`` :
 
                     >>> self.default_values = {'num_classes': 10,
-                    >>>            'num_channels': 1,
-                    >>>            'width': self.width, # (DEFAULT: 28)
-                    >>>            'height': self.height} # (DEFAULT: 28)
+                    >>>            'num_channels': 1}
 
 
         .. warning::
@@ -80,12 +76,7 @@ class MNIST(ImageToClassProblem):
         """
 
         # Call base class constructors.
-        super(MNIST, self).__init__(name, params)
-
-        # Set default parameters.
-        self.params.add_default_params({'data_folder': '~/data/mnist',
-                                        'use_train_data': True
-                                        })
+        super(MNIST, self).__init__(name, MNIST, params)
 
         # Get absolute path.
         data_folder = os.path.expanduser(self.params['data_folder'])
@@ -121,20 +112,18 @@ class MNIST(ImageToClassProblem):
         self.dataset = datasets.MNIST(root=data_folder, train=self.use_train_data, download=True,
                                       transform=transform)
 
-
         # Set global variables - all dimensions ASIDE OF BATCH.
-        self.key_num_classes = self.mapkey("num_classes")
+        self.key_num_classes = self.get_global_key("num_classes")
         self.app_state[self.key_num_classes] = 10
-        self.key_image_width = self.mapkey("image_width")
+        self.key_image_width = self.get_global_key("image_width")
         self.app_state[self.key_image_width] = self.width
-        self.key_image_height = self.mapkey("image_height")
+        self.key_image_height = self.get_global_key("image_height")
         self.app_state[self.key_image_height] = self.height
-        self.key_image_depth = self.mapkey("image_depth")
+        self.key_image_depth = self.get_global_key("image_depth")
         self.app_state[self.key_image_depth] = 1
 
         # Class names.
         #self.labels = 'Zero One Two Three Four Five Six Seven Eight Nine'.split(' ')
-
 
     def __len__(self):
         """
@@ -177,27 +166,3 @@ class MNIST(ImageToClassProblem):
         data_dict[self.key_inputs] = img
         data_dict[self.key_targets] = target
         return data_dict
-
-
-    def collate_fn(self, batch):
-        """
-        Combines a list of ``DataDict`` (retrieved with ``__getitem__`` ) into a batch.
-
-        .. note::
-
-            This function wraps a call to ``default_collate`` and simply returns the batch as a ``DataDict``\
-            instead of a dict.
-            Multi-processing is supported as the data sources are small enough to be kept in memory\
-            (`training.pt` has a size of 47.5 MB).
-
-        :param batch: list of individual ``DataDict`` samples to combine.
-
-        :return: ``DataDict({'images','targets', 'targets_label'})`` containing the batch.
-
-        """
-
-        collated_batch = DataDict({key: value for key, value in zip(batch[0].keys(),
-                                                          super(MNIST, self).collate_fn(batch).values())})
-
-        #print(collated_batch[self.key_targets]) 
-        return collated_batch

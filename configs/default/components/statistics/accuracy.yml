@@ -1,0 +1,34 @@
+# This file defines the default values for the Accuracy statistics.
+
+####################################################################
+# 1. CONFIGURATION PARAMETERS that will be LOADED by the component.
+####################################################################
+
+streams: 
+  ####################################################################
+  # 2. Keymappings associated with INPUT and OUTPUT streams.
+  ####################################################################
+
+  # Stream containing targets (label ids) (INPUT)
+  targets: targets
+
+  # Stream containing batch of predictions (INPUT)
+  predictions: predictions
+
+globals:
+  ####################################################################
+  # 3. Keymappings of variables that will be RETRIEVED from GLOBALS.
+  ####################################################################
+
+  ####################################################################
+  # 4. Keymappings associated with GLOBAL variables that will be SET.
+  ####################################################################
+
+statistics:
+  ####################################################################
+  # 5. Keymappings associated with statistics that will be ADDED.
+  ####################################################################
+
+  # Name used for collected statistics (ADDED).
+  accuracies: accuracies
+

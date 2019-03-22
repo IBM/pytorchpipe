@@ -20,17 +20,29 @@ from ptp.components.text.token_encoder import TokenEncoder
 from ptp.data_types.data_definition import DataDefinition
 
 
-class LabelEncoder(TokenEncoder):
+class LabelIndexer(TokenEncoder):
     """
-    Class responsible for encoding of samples consisting of labels (into indices, that can be latter used for loss calculation, PyTorch-style).
+    Class responsible for changing of samples consisting of single words/labels into indices (that e.g. can be latter used for loss calculation, PyTorch-style).
     """
     def __init__(self, name, params):
-        # Call constructors of parent classes.
-        TokenEncoder.__init__(self, name, params)
+        """
+        Initializes the component.
 
-        # Export token size to global params.
-        self.key_token_size = self.mapkey("label_token_size")
-        self.app_state[self.key_token_size] = len(self.word_to_ix)
+        :param name: Component name (read from configuration file).
+        :type name: str
+
+        :param params: Dictionary of parameters (read from the configuration ``.yaml`` file).
+        :type params: :py:class:`ptp.utils.ParamInterface`
+
+        """
+        # Call constructors of parent classes.
+        TokenEncoder.__init__(self, name, LabelIndexer, params)
+
+        # Export vocabulary size to global params.
+        self.key_vocab_size = self.get_global_key("label_vocab_size")
+        self.app_state[self.key_vocab_size] = len(self.word_to_ix)
+
+        self.logger.info("Initializing sentence indexer with vocabulary size '{}' = {}".format(self.key_vocab_size, len(self.word_to_ix)))
 
     def input_data_definitions(self):
         """ 
@@ -49,7 +61,7 @@ class LabelEncoder(TokenEncoder):
         :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
         """
         return {
-            self.key_outputs: DataDefinition([-1], [torch.Tensor], "Batch of labels, each represented as a single index [BATCH_SIZE] x [index]")
+            self.key_outputs: DataDefinition([-1], [torch.Tensor], "Batch of labels, each represented as a single index [BATCH_SIZE]")
             }
 
     def __call__(self, data_dict):

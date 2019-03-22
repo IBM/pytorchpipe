@@ -4,8 +4,7 @@ training:
     type: MNIST
     batch_size: &b 64
     use_train_data: True
-    data_folder: &folder '~/data/mnist'
-    resize: [32, 32]
+    #resize: [32, 32]
   # Use sampler that operates on a subset.
   sampler:
     name: SubsetRandomSampler
@@ -27,8 +26,7 @@ validation:
     type: MNIST
     batch_size: *b
     use_train_data: True  # True because we are splitting the training set to: validation and training
-    data_folder: *folder
-    resize: [32, 32]
+    #resize: [32, 32]
   # Use sampler that operates on a subset.
   sampler:
     name: SubsetRandomSampler
@@ -40,32 +38,4 @@ testing:
     type: MNIST
     batch_size: *b
     use_train_data: False
-    data_folder: *folder
-    resize: [32, 32]
-
-
-pipeline:
-  name: mnist_lenet5_classifier
-  #disable: nllloss
-  # Image classifier.
-  image_classifier:
-    type: LeNet5
-    priority: 1
-    keymappings:
-      prediction_size: num_classes
-
-  # Loss
-  nllloss:
-    type: NLLLoss
-    priority: 2
-  
-  # Statistics.
-  batch_size:
-    type: BatchSize
-    priority: 3
-  accuracy:
-    type: Accuracy
-    priority: 4
-
-
-#: pipeline
+    #resize: [32, 32]

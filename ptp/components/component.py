@@ -20,10 +20,11 @@ import abc
 import logging
 
 from ptp.configuration.app_state import AppState
+from ptp.configuration.configs_parsing import load_default_configuration_file
 
 
 class Component(abc.ABC):
-    def __init__(self, name, params):
+    def __init__(self, name, class_type, params):
         """
         Initializes the component.
 
@@ -47,6 +48,8 @@ class Component(abc.ABC):
 
         :param name: Name of the component.
 
+        :param class_type: Class type of the component.
+
         :param params: Dictionary of parameters (read from configuration ``.yaml`` file).
         :type params: ``configuration.param_interface.ParamInterface``
 
@@ -57,12 +60,30 @@ class Component(abc.ABC):
         # Initialize logger.
         self.logger = logging.getLogger(self.name)        
 
-        # Initialize the "name mapping facility".
-        params.add_default_params({"keymappings": {}})
-        self.keymappings = params["keymappings"]
-
-        # Get access to AppState: for globals, visualization flag etc.
+        # Get access to AppState: for command line args, globals etc.
         self.app_state = AppState()
+
+        # Load default configuration.
+        if class_type is not None:
+            self.params.add_default_params(load_default_configuration_file(class_type))
+
+        # Initialize the "streams mapping facility".
+        if "streams" not in params or params["streams"] is None:
+            self.__stream_keys = {}
+        else:
+            self.__stream_keys = params["streams"]
+
+        # Initialize the "globals mapping facility".
+        if "globals" not in params or params["globals"] is None:
+            self.__global_keys = {}
+        else:
+            self.__global_keys = params["globals"]
+
+        # Initialize the "statistics mapping facility".
+        if "statistics" not in params or params["statistics"] is None:
+            self.__statistic_keys = {}
+        else:
+            self.__statistic_keys = params["statistics"]
 
 
     def summarize_io(self, priority = -1):
@@ -157,7 +178,7 @@ class Component(abc.ABC):
     
     def export_output_definitions(self, all_definitions, log_errors=True):
         """ 
-        Exports output definitinos to all_definitions, checking errors (e.g. if output field is already present in all_definitions).
+        Exports output definitions to all_definitions, checking errors (e.g. if output field is already present in all_definitions).
 
         :param all_definitions: dictionary containing output data definitions (each of type :py:class:`ptp.configuration.DataDefinition`).
 
@@ -179,15 +200,35 @@ class Component(abc.ABC):
         return  errors
 
 
-    def mapkey(self, key_name):
+    def get_stream_key(self, key_name):
         """
-        Method responsible for checking whether name exists in the mappings.
+        Method responsible for checking whether name exists in the stream key mappings.
         
         :key_name: name of the key to be mapped.
 
-        :return: Mapped name or original key name (if it does not exist in mappings list).
+        :return: Mapped name or original key name (if it does not exist in stream key mappings list).
         """
-        return self.keymappings.get(key_name, key_name)
+        return self.__stream_keys.get(key_name, key_name)
+
+    def get_global_key(self, key_name):
+        """
+        Method responsible for checking whether name exists in the global key mappings.
+        
+        :key_name: name of the key to be mapped.
+
+        :return: Mapped name or original key name (if it does not exist in global key mappings list).
+        """
+        return self.__global_keys.get(key_name, key_name)
+
+    def get_statistic_key(self, key_name):
+        """
+        Method responsible for checking whether name exists in the statisitc key mappings.
+        
+        :key_name: name of the key to be mapped.
+
+        :return: Mapped name or original key name (if it does not exist in statistic key mappings list).
+        """
+        return self.__statistic_keys.get(key_name, key_name)
 
 
     @abc.abstractmethod

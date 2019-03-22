@@ -14,8 +14,6 @@
 
 __author__ = "Tomasz Kornuta"
 
-import os
-
 from ptp.components.problems.problem import Problem
 from ptp.data_types.data_definition import DataDefinition
 
@@ -25,30 +23,22 @@ class LanguageIdentification(Problem):
     Language identification (classification) problem.
     """
 
-    def __init__(self, name, params):
+    def __init__(self, name, class_type, params):
         """
         Initializes problem object. Calls base constructor.
 
         :param name: Name of the component.
 
+        :param class_type: Class type of the component.
+
         :param params: Dictionary of parameters (read from configuration ``.yaml`` file).
         """
         # Call constructors of parent classes.
-        Problem.__init__(self, name, params)
+        Problem.__init__(self, name, class_type, params)
 
         # Set key mappings.
-        self.key_inputs = self.mapkey("inputs")
-        self.key_targets = self.mapkey("targets")
-
-        # Set default parameters.
-        self.params.add_default_params({'data_folder': '~/data/language_identification',
-                                        'use_train_data': True
-                                        })
-        # Get absolute path.
-        self.data_folder = os.path.expanduser(self.params['data_folder'])
-        
-        # Retrieve parameters from the dictionary.
-        self.use_train_data = self.params['use_train_data']
+        self.key_inputs = self.get_stream_key("inputs")
+        self.key_targets = self.get_stream_key("targets")
 
         # Set empty inputs and targets.
         self.inputs = []
@@ -66,6 +56,15 @@ class LanguageIdentification(Problem):
             self.key_inputs: DataDefinition([-1, 1], [list, str], "Batch of sentences, each being a single string (many words) [BATCH_SIZE x SENTENCE]"),
             self.key_targets: DataDefinition([-1, 1], [list, str], "Batch of targets, each being a single label (word) BATCH_SIZE x WORD]")
             }
+
+
+    def __len__(self):
+        """
+        Returns the "size" of the "problem" (total number of samples).
+
+        :return: The size of the problem.
+        """
+        return len(self.inputs)
 
 
     def __getitem__(self, index):

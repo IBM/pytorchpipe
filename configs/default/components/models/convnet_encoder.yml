@@ -1,0 +1,81 @@
+# This file defines the default values for the simple 3-layer ConvNet model.
+
+####################################################################
+# 1. CONFIGURATION PARAMETERS that will be LOADED by the component.
+####################################################################
+
+# Parameters defining the first convolutional layer (LOADED)
+conv1:
+    out_channels: 64
+    kernel_size: 3
+    stride: 1
+    padding: 0
+
+# Parameters defining the first max-pooling layer (LOADED)
+maxpool1:
+    kernel_size: 2
+
+# Parameters defining the second convolutional layer (LOADED)
+conv2:
+    out_channels: 32
+    kernel_size: 3
+    stride: 1
+    padding: 0
+
+# Parameters defining the second max-pooling layer (LOADED)
+maxpool2:
+    kernel_size: 2
+
+# Parameters defining the third convolutional layer (LOADED)
+conv3:
+    out_channels: 16
+    kernel_size: 3
+    stride: 1
+    padding: 0
+
+# Parameters defining the third max-pooling layer (LOADED)
+maxpool3:
+    kernel_size: 2
+
+streams: 
+  ####################################################################
+  # 2. Keymappings associated with INPUT and OUTPUT streams.
+  ####################################################################
+
+  # Stream containing batch of inputs (INPUT)
+  inputs: inputs
+
+  # Stream containing batch of feature maps (OUTPUT)
+  feature_maps: feature_maps
+
+globals:
+  ####################################################################
+  # 3. Keymappings of variables that will be RETRIEVED from GLOBALS.
+  ####################################################################
+
+  # Height dimension of the input (RETRIEVED)
+  input_height: image_height
+
+  # Width dimension of the image (RETRIEVED)
+  input_width: image_width
+
+  # Depth dimension of the image (RETRIEVED)
+  input_depth: image_depth
+
+  ####################################################################
+  # 4. Keymappings associated with GLOBAL variables that will be SET.
+  ####################################################################
+
+  # Height of the feature map (SET)
+  feature_map_height: feature_map_height
+
+  # Width of the feature map (SET)
+  feature_map_width: feature_map_width
+
+  # Depth of the feature map (SET)
+  feature_map_depth: feature_map_depth
+
+  ####################################################################
+  # 5. Keymappings associated with statistics that will be ADDED.
+  ####################################################################
+

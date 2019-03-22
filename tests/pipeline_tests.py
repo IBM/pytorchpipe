@@ -17,6 +17,7 @@
 __author__ = "Tomasz Kornuta"
 
 import unittest
+import os
 
 from ptp.configuration.param_interface import ParamInterface
 from ptp.configuration.param_registry import ParamRegistry
@@ -29,8 +30,11 @@ class TestPipeline(unittest.TestCase):
         super(TestPipeline, self).__init__(*args, **kwargs)
         # Set required globals.
         app_state = AppState()
-        app_state.__setitem__("input_size", 10, override=True)
-        
+        app_state.__setitem__("bow_size", 10, override=True)
+        # Extract absolute path to config.
+        abs_config_path = os.path.realpath(__file__)
+        # Save it in app_state!
+        app_state.absolute_config_path = abs_config_path[:abs_config_path.find("tests")]+"configs/"
  
     def test_create_component_full_type(self):
         """ Tests whether component can be created when using full module name with 'path'. """

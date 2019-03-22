@@ -24,17 +24,21 @@ class TokenEncoder(Component):
     """
     Abstract class responsible for encoding tokens. Please use derrived classes.
     """
-    def __init__(self, name, params):
-        # Call constructors of parent classes.
-        Component.__init__(self, name, params)
+    def __init__(self, name, class_type, params):
+        """
+        Initializes the component.
 
-        # Set default parameters.
-        params.add_default_params({
-            'data_folder': '~/data/',
-            'source_files': '', # Source files
-            'encodings_file': 'default_encodings.csv', # File containing encodings
-            'regenerate': False # True means that it will be regenerated despite the existence of file.
-            })
+        :param name: Component name (read from configuration file).
+        :type name: str
+
+        :param class_type: Class type of the component (derrived from this class).
+
+        :param params: Dictionary of parameters (read from the configuration ``.yaml`` file).
+        :type params: :py:class:`ptp.utils.ParamInterface`
+
+        """
+        # Call constructors of parent classes.
+        Component.__init__(self, name, class_type, params)
 
         # Read the actual configuration.
         self.data_folder = params['data_folder']
@@ -43,8 +47,8 @@ class TokenEncoder(Component):
         self.mode_regenerate = params['regenerate']
 
         # Default name mappings for all encoders.
-        self.key_inputs = self.mapkey("inputs")
-        self.key_outputs = self.mapkey("outputs")
+        self.key_inputs = self.get_stream_key("inputs")
+        self.key_outputs = self.get_stream_key("outputs")
 
         # Encodings file.
         encodings_file_path = os.path.expanduser(self.data_folder) + "/" + self.encodings_file
@@ -54,11 +58,11 @@ class TokenEncoder(Component):
             # Generate new encodings.
             self.word_to_ix = self.create_encodings(self.data_folder, self.source_files)
             assert (len(self.word_to_ix) > 0), "The created encodings list is empty!"
-            # Ok, save necodings, so next time we will simply load them.
-            io.save_dict_to_csv_file(self.data_folder, self.encodings_file, self.word_to_ix, ['word', 'index'])
+            # Ok, save mappings, so next time we will simply load them.
+            io.save_mappings_to_csv_file(self.data_folder, self.encodings_file, self.word_to_ix, ['word', 'index'])
         else:
             # Load encodings.
-            self.word_to_ix = io.load_dict_from_csv_file(self.data_folder, self.encodings_file)
+            self.word_to_ix = io.load_mappings_from_csv_file(self.data_folder, self.encodings_file)
             assert (len(self.word_to_ix) > 0), "The loaded encodings list is empty!"
 
         # Ok, we are ready to go!
@@ -76,6 +80,8 @@ class TokenEncoder(Component):
 
         # Dictionary word_to_ix maps each word in the vocab to a unique integer.
         word_to_ix = {}
+        # Add special word (10 spaces), so the "real" enumeration will start from 1!
+        word_to_ix['          '] = 0
 
         for filename in source_files.split(','):
             # filename + path.

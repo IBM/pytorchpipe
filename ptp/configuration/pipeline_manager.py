@@ -17,6 +17,7 @@
 __author__ = "Tomasz Kornuta"
 
 
+import os
 import torch
 import logging
 from datetime import datetime
@@ -60,7 +61,7 @@ class PipelineManager(object):
         self.best_status = "Unknown"
 
 
-    def build(self, log_errors=True):
+    def build(self, use_logger=True):
         """
         Method creating the pipeline, consisting of:
             - a list components ordered by the priority (dictionary).
@@ -68,11 +69,12 @@ class PipelineManager(object):
             - models (separate list with link to objects in components dict)
             - losses (selarate list with links to objects in components dict)
 
-        :param log_errors: Logs the detected errors (DEFAULT: True)
+        :param use_logger: Logs the detected errors (DEFAULT: True)
 
         :return: number of detected errors.
         """
         errors = 0
+        self.__priorities = []
 
         # Special section names to "skip".
         sections_to_skip = "name load freeze disable".split()
@@ -105,28 +107,31 @@ class PipelineManager(object):
                 try:
                     c_priority = float(c_params["priority"])
                 except ValueError:
-                    raise ConfigurationError("Priority '{}' in section '{}' is not a floating point number".format(c_params["priority"], c_key))
+                    raise ConfigurationError("Priority [{}] in section '{}' is not a floating point number".format(c_params["priority"], c_key))
 
                 # Check uniqueness of the priority.
                 if c_priority in self.__components.keys():
-                    raise ConfigurationError("Found more than one component with the same priority ('{}')".format(c_priority))
+                    raise ConfigurationError("Found more than one component with the same priority [{}]".format(c_priority))
 
                 # Ok, got the component name with priority. Save it.
                 # Later we will "plug" the adequate component in this place.
                 self.__components[c_priority] = c_key
 
             except ConfigurationError as e:
-                if log_errors:
+                if use_logger:
                     self.logger.error(e)
                 errors += 1
                 continue
             except KeyError as e:
-                if log_errors:
+                if use_logger:
                     self.logger.error(e)
                 errors += 1
                 continue
                 # end try/else
             # end for
+
+        if use_logger:
+            self.logger.info("Building pipeline with {} components".format(len(self.__components)))
 
         # Do not continue if found errors.
         if errors > 0:
@@ -141,6 +146,9 @@ class PipelineManager(object):
                 c_key = self.__components[c_priority]
                 # Get section.
                 c_params = self.params[c_key]
+                
+                if use_logger:
+                    self.logger.info("Creating component '{}' ({}) with priority [{}]".format(c_key, c_params["type"], c_priority))
 
                 # Create component.
                 component, class_obj = ComponentFactory.build(c_key, c_params)
@@ -164,13 +172,13 @@ class PipelineManager(object):
                     self.losses.append(component)
 
             except ConfigurationError as e:
-                if log_errors:
-                    self.logger.error(e)
+                if use_logger:
+                    self.logger.error("Detected configuration error while creating the component '{}' instance:\n  {}".format(c_key, e))
                 errors += 1
                 continue
             except KeyError as e:
-                if log_errors:
-                    self.logger.error(e)
+                if use_logger:
+                    self.logger.error("Detected key error while creating the component '{}' instance: required key '{}' is missing".format(c_key, e))
                 errors += 1
                 continue
                 # end try/else
@@ -213,7 +221,7 @@ class PipelineManager(object):
         if self.app_state.args.save_intermediate:
             filename = chkpt_dir + self.name + '_episode_{:05d}.pt'.format(episode)
             torch.save(chkpt, filename)
-            log_str = "Exporting pipeline '{}' parameters to checkpoint {}:\n".format(self.name, filename)
+            log_str = "Exporting pipeline '{}' parameters to checkpoint:\n {}\n".format(self.name, filename)
             log_str += model_str
             self.logger.info(log_str)
 
@@ -226,7 +234,7 @@ class PipelineManager(object):
             # Save checkpoint.
             filename = chkpt_dir + self.name + '_best.pt'
             torch.save(chkpt, filename)
-            log_str = "Exporting pipeline '{}' parameters to checkpoint {}:\n".format(self.name, filename)
+            log_str = "Exporting pipeline '{}' parameters to checkpoint:\n {}\n".format(self.name, filename)
             log_str += model_str
             self.logger.info(log_str)
             return True
@@ -239,7 +247,7 @@ class PipelineManager(object):
             chkpt_loaded['status_timestamp'] = datetime.now()
             # Save updated checkpoint.
             torch.save(chkpt_loaded, filename)
-            self.logger.info("Updated training status in checkpoint {}".format(filename))
+            self.logger.info("Updated training status in checkpoint:\n {}".format(filename))
         # Else: that was not the best "model".
         return False
 
@@ -268,7 +276,6 @@ class PipelineManager(object):
             try:
                 # Load model.
                 model.load_from_checkpoint(chkpt)
-                #model.load_state_dict(chkpt[model.name])
                 model_str += "  + Model '{}' [{}] params loaded\n".format(model.name, type(model).__name__)
             except KeyError:
                 model_str += "  + Model '{}' [{}] params not found in checkpoint!\n".format(model.name, type(model).__name__)
@@ -288,7 +295,48 @@ class PipelineManager(object):
         ..note::
             The 'load' variable should contain path with filename of the checkpoint from which we want to load particular model.
         """
-        pass
+        error = False
+        log_str = ''
+        # Iterate over models.
+        for model in self.models:
+            if "load" in model.params.keys():
+                try:
+                    # Check if file exists. 
+                    checkpoint_filename = model.params["load"]
+                    if not os.path.isfile(checkpoint_filename):
+                        log_str += "Coud not import parameters of model '{}' from checkpoint {} as file does not exist\n".format(
+                            model.name,
+                            checkpoint_filename
+                            )
+                        error = True
+                        continue
+
+                    # Load checkpoint.
+                    # This is to be able to load a CUDA-trained model on CPU
+                    chkpt = torch.load(checkpoint_filename, map_location=lambda storage, loc: storage)
+
+                    log_str += "Importing model '{}' from pipeline '{}' parameters from checkpoint from {} (episode: {}, loss: {}, status: {}):\n".format(
+                            model.name,
+                            chkpt['name'],
+                            chkpt['timestamp'],
+                            chkpt['episode'],
+                            chkpt['loss'],
+                            chkpt['status']
+                            )
+                    # Load model.
+                    model.load_from_checkpoint(chkpt)
+                    log_str += "  + Model '{}' [{}] params loaded\n".format(model.name, type(model).__name__)
+                except KeyError:
+                    log_str += "  + Model '{}' [{}] params not found in checkpoint!\n".format(model.name, type(model).__name__)
+                    error = True
+
+        # Log results.
+        if error:
+            self.logger.error(log_str)
+            # Exit by following the logic: if user wanted to load the model but failed, then continuing the experiment makes no sense.
+            exit(-6)
+        else:
+            self.logger.info(log_str)
 
 
     def freeze_models(self):
@@ -437,15 +485,19 @@ class PipelineManager(object):
 
         """
         # TODO: Convert to gpu/CUDA.
-        #if self.app_state.use_gpu:
-        #    data_dict = data_dict.cuda()
+        if self.app_state.args.use_gpu:
+            data_dict.cuda()
 
         for prio in self.__priorities:
             # Get component
             comp = self.__components[prio]
             # Forward step.
             comp(data_dict)
-            # TODO: Move to gpu!
+            # Component might add some fields to DataDict, move them to GPU if required.
+            if self.app_state.args.use_gpu:
+                data_dict.cuda()
+            #print("after {}".format(comp.name))
+            #print(data_dict.keys())
 
     def eval(self):
         """ 

@@ -17,46 +17,45 @@ __author__ = "Tomasz Kornuta"
 import os
 import sys
 import time
-import errno
 import csv
 import urllib
 from pathlib import Path
 
 
 
-def save_list_to_txt_file(folder, filename, data):
+def save_string_list_to_txt_file(folder, filename, data):
     """ 
-    Writes data to txt file.
+    Writes list of strings to txt file.
+
+    :param data: List containing strings (sententes, words etc.).
     """
-    # Check directory existence.
-    if not os.path.exists(os.path.dirname(folder)):
-        try:
-            os.makedirs(os.path.dirname(folder))
-        except OSError as exc:
-            # Guard against race condition
-            if exc.errno != errno.EEXIST:
-                raise        
+    # Make sure directory exists.
+    os.makedirs(os.path.dirname(folder +'/'), exist_ok=True)
+
     # Write elements in separate lines.        
     with open(folder+'/'+filename, mode='w+') as txtfile:
         txtfile.write('\n'.join(data))
 
 
-def load_list_from_txt_file(folder, filename):
+def load_string_list_from_txt_file(folder, filename):
     """
     Loads data from txt file.
+
+    :return: List of strings (e.g. list of sententes).
     """
     data = []
     with open(folder+'/'+filename, mode='rt') as txtfile:
         for line in txtfile:
+            # Remove next line char.
             if line[-1] == '\n':
                 line = line[:-1]
             data.append(line)
     return data
 
 
-def load_dict_from_csv_file(folder, filename):
+def load_mappings_from_csv_file(folder, filename):
     """
-    Loads data from csv file.
+    Loads mappings (word:id) from csv file.
 
     .. warning::
             There is an assumption that file will contain key:value pairs (no content checking for now!)
@@ -82,23 +81,17 @@ def load_dict_from_csv_file(folder, filename):
     return ret_dict
 
 
-def save_dict_to_csv_file(folder, filename, word_to_ix, fieldnames = []):
+def save_mappings_to_csv_file(folder, filename, word_to_ix, fieldnames = []):
     """
-    Saves dictionary to a file.
+    Saves mappings dictionary to a file.
 
     :param filename: File with encodings (absolute path + filename).
     :param word_to_ix: dictionary with word:index keys
     """
-    file_path = os.path.expanduser(folder) + "/" + filename
+    # Make sure directory exists.
+    os.makedirs(os.path.dirname(folder +'/'), exist_ok=True)
 
-    # Check directory existence.
-    if not os.path.exists(os.path.dirname(folder)):
-        try:
-            os.makedirs(os.path.dirname(folder))
-        except OSError as exc:
-            # Guard against race condition
-            if exc.errno != errno.EEXIST:
-                raise        
+    file_path = os.path.expanduser(folder) + "/" + filename
 
     with open(file_path, mode='w+') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
@@ -118,40 +111,79 @@ def get_project_root() -> Path:
     return Path(__file__).parent.parent
 
 
+def check_file_existence(directory, filename):
+    """
+    Checks if file exists.
 
-# Function to make check and download easier
-def check_and_download(file_folder_to_check, url=None, download_name='~/data/downloaded'):
+    :param directory: Relative path to to folder.
+    :type directory: str
+
+    :param filename: Name of the file.
+    :type directory: str
+    """
+    file_to_check = os.path.expanduser(directory) + '/' + filename
+    if os.path.isdir(directory) and os.path.isfile(file_to_check):
+        return True
+        #self.logger.info('Dataset found at {}'.format(file_folder_to_check))
+    else:
+        return False
+
+def check_files_existence(directory, filenames):
+    """
+    Checks if all files in the list exist.
+
+    :param directory: Relative path to to folder.
+    :type directory: str
+
+    :param filename: List of files
+    :type directory: List of strings or a single string with filenames separated by spaces)
+    """
+    # Check directory existence.
+    if not os.path.isdir(directory):
+        return False
+
+    # Process list of files.
+    if type(filenames) == str:
+        filenames = filenames.split(" ")
+
+    # Check files one by one.
+    for file in filenames:
+        file_to_check = os.path.expanduser(directory) + '/' + file
+        if not os.path.isfile(file_to_check):
+            return False
+    # Ok.
+    return True
+    
+
+def download(directory, filename, url):
     """
     Checks whether a file or folder exists at given path (relative to storage folder), \
     otherwise downloads files from the given URL.
 
-    :param file_folder_to_check: Relative path to a file or folder to check to see if it exists.
-    :type file_folder_to_check: str
+    :param directory: Relative path to to folder.
+    :type directory: str
 
-    :param url: URL to download files from.
+    :param filename: Name of the file.
+    :type directory: str
+
+    :param url: URL to download the file from.
     :type url: str
-
-    :param download_name: What to name the downloaded file. (DEFAULT: "downloaded").
-    :type download_name: str
-
-    :return: False if file was found, True if a download was necessary.
-
     """
+    if check_file_existence(directory, filename):
+        return
+    
+    # Make sure directory exists.
+    os.makedirs(os.path.dirname(directory +'/'), exist_ok=True)
 
-    file_folder_to_check = os.path.expanduser(file_folder_to_check)
-    if not (os.path.isfile(file_folder_to_check) or os.path.isdir(file_folder_to_check)):
-        if url is not None:
-            #self.logger.info('Downloading {}'.format(url))
-            urllib.request.urlretrieve(url, os.path.expanduser(download_name), reporthook)
-            return True
-        else:
-            return True
-    else:
-        #self.logger.info('Dataset found at {}'.format(file_folder_to_check))
-        return False
+    # Download.
+    file_result = os.path.expanduser(directory) + '/' + filename
+    urllib.request.urlretrieve(url, os.path.expanduser(file_result), reporthook)
+    #self.logger.info('Downloading {}'.format(url))
 
-# Progress bar function
 def reporthook(count, block_size, total_size):
+    """
+    Progress bar function.
+    """
     global start_time
     if count == 0:
             start_time = time.time()

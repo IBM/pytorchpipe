@@ -33,21 +33,20 @@ class LeNet5(Model):
         """
         Initializes the ``LeNet5`` model, creates the required layers.
 
+        :param name: Name of the model (taken from the configuration file).
+
         :param params: Parameters read from configuration file.
         :type params: ``miprometheus.utils.ParamInterface``
 
-        :param problem_default_values_: dict of parameters values coming from the problem class.
-        :type problem_default_values_: dict
-
         """
-        super(LeNet5, self).__init__(name, params)
+        super(LeNet5, self).__init__(name, LeNet5, params)
 
         # Set key mappings.
-        self.key_inputs = self.mapkey("inputs")
-        self.key_predictions = self.mapkey("predictions")
+        self.key_inputs = self.get_stream_key("inputs")
+        self.key_predictions = self.get_stream_key("predictions")
 
         # Retrieve prediction size from globals.
-        self.key_prediction_size = self.mapkey("prediction_size")
+        self.key_prediction_size = self.get_global_key("prediction_size")
         self.prediction_size = self.app_state[self.key_prediction_size]
 
         # Create the LeNet-5 layers.

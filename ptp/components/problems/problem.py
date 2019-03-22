@@ -34,7 +34,7 @@ class Problem(Component, Dataset):
 
     """
 
-    def __init__(self, name, params):
+    def __init__(self, name, class_type, params):
         """
         Initializes problem object:
             - calls base class constructors.
@@ -48,6 +48,8 @@ class Problem(Component, Dataset):
         
         :param name: Problem name.
         :type name: str
+
+        :param class_type: Class type of the component.
 
         :param params: Dictionary of parameters (read from the configuration ``.yaml`` file).
         :type params: :py:class:`ptp.utils.ParamInterface`
@@ -63,11 +65,11 @@ class Problem(Component, Dataset):
                 >>> val = self.app_state["new_global_value" # Gets global value.
         """
         # Call constructors of parent classes.
-        Component.__init__(self, name, params)
+        Component.__init__(self, name, class_type, params)
         Dataset.__init__(self)
 
         # Set default key mappings.
-        self.key_indices = self.mapkey("indices")
+        self.key_indices = self.get_stream_key("indices")
 
         # Empty curriculum learning params - for now.
         self.curriculum_params = {}
@@ -127,7 +129,7 @@ class Problem(Component, Dataset):
         return data_dict
 
 
-    def collate_fn(self, data_dict):
+    def collate_fn(self, batch):
         """
         Generates a batch of samples from a list of individuals samples retrieved by :py:func:`__getitem__`.
 
@@ -144,14 +146,14 @@ class Problem(Component, Dataset):
             override this default :py:func:`collate_fn`.
 
 
-        :param data_dict: :py:class:`ptp.utils.DataDict` retrieved by :py:func:`__getitem__`, each containing \
+        :param batch: List of :py:class:`ptp.utils.DataDict` retrieved by :py:func:`__getitem__`, each containing \
         tensors, numbers, dicts or lists.
         :type batch: list
 
         :return: DataDict containing the created batch.
 
         """
-        return DataDict({key: torch.utils.data.dataloader.default_collate([d[key] for d in data_dict]) for key in data_dict[0]})
+        return DataDict({key: torch.utils.data.dataloader.default_collate([sample[key] for sample in batch]) for key in batch[0]})
 
 
     def initialize_epoch(self, epoch):

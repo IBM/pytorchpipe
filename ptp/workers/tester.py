@@ -107,6 +107,9 @@ class Tester(Worker):
             self.logger.error("Cannot use GPU as there are no CUDA-compatible devices present in the system!")
             exit(-4)
 
+        # Set cpu/gpu types.
+        self.app_state.set_types()
+
         # Get the list of configurations which need to be loaded.
         configs_to_load = self.recurrent_config_parse(config_file, [])
 
@@ -257,8 +260,10 @@ class Tester(Worker):
                     self.pipeline.load(pipeline_name)
                 else:
                     raise Exception("Couldn't load the checkpoint {} indicated in the {}: file does not exist".format(pipeline_name, msg))
-            # Load individual models.
 
+            # Try to load the models parameters - one by one, if set so in the configuration file.
+            self.pipeline.load_models()
+            
         except KeyError:
             self.logger.error("File {} indicated in the {} seems not to be a valid model checkpoint".format(pipeline_name, msg))
             exit(-5)
@@ -403,5 +408,4 @@ def main():
 
 
 if __name__ == '__main__':
-
     main()

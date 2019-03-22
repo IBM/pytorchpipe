@@ -1,0 +1,43 @@
+# This file defines the default values for Word Decoder.
+
+####################################################################
+# 1. CONFIGURATION PARAMETERS that will be LOADED by the component.
+####################################################################
+
+# Folder where problem will store data (LOADED)
+data_folder: '~/data/'
+
+# Source files that will be used to create a dictionary  LOADED)
+source_files: ''
+
+# File containing encodings (LOADED)
+encodings_file: 'default_encodings.csv'
+
+# If set, component will always (re)generate data (LOADED)
+# True means that it will be regenerated despite the existence of file.
+regenerate: False 
+
+streams: 
+  ####################################################################
+  # 2. Keymappings associated with INPUT and OUTPUT streams.
+  ####################################################################
+
+  # Stream containing input tensor (INPUT)
+  inputs: inputs
+
+  # Stream containing output tensor (OUTPUT)
+  outputs: outputs
+
+globals:
+  ####################################################################
+  # 3. Keymappings of variables that will be RETRIEVED from GLOBALS.
+  ####################################################################
+
+  ####################################################################
+  # 4. Keymappings associated with GLOBAL variables that will be SET.
+  ####################################################################
+
+  ####################################################################
+  # 5. Keymappings associated with statistics that will be ADDED.
+  ####################################################################
+

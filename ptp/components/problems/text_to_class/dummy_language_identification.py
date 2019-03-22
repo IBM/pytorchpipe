@@ -16,6 +16,8 @@ __author__ = "Tomasz Kornuta"
 
 from .language_identification import LanguageIdentification
 
+import os
+
 import ptp.utils.io_utils as io
 
 
@@ -28,17 +30,18 @@ class DummyLanguageIdentification(LanguageIdentification):
     """
     def __init__(self, name, params):
         # Call constructors of parent classes.
-        LanguageIdentification.__init__(self, name, params) 
+        LanguageIdentification.__init__(self, name, DummyLanguageIdentification, params) 
 
-        # Set default parameters.
-        self.params.add_default_params({
-            'generate': True
-            })
-        # Generate the dataset (can be turned off).    
-        if self.params['generate']:
-            self.generate_dummy_dataset()
+        # Get absolute path.
+        self.data_folder = os.path.expanduser(self.params['data_folder'])
 
-        if self.use_train_data:
+        # Generate the dataset (can be turned off).
+        filenames = ["x_training.txt", "y_training.txt", "x_test.txt", "y_test.txt"]
+        if self.params['regenerate'] or not io.check_files_existence(self.data_folder, filenames):
+            self.initialize_dataset()
+
+        # Select set.
+        if self.params['use_train_data']:
             inputs_file = "x_training.txt"
             targets_file = "y_training.txt"
         else:
@@ -46,48 +49,43 @@ class DummyLanguageIdentification(LanguageIdentification):
             targets_file = "y_test.txt"
 
         # Load files.
-        self.inputs = io.load_list_from_txt_file(self.data_folder, inputs_file)
-        self.targets = io.load_list_from_txt_file(self.data_folder, targets_file)
+        self.inputs = io.load_string_list_from_txt_file(self.data_folder, inputs_file)
+        self.targets = io.load_string_list_from_txt_file(self.data_folder, targets_file)
 
         # Assert that they are equal in size!
         assert len(self.inputs) == len(self.targets), "Number of inputs loaded from {} not equal to number of targets loaded from {}!".format(inputs_file, targets_file)
 
-    def __len__(self):
-        """
-        Returns the "size" of the "problem" (total number of samples).
 
-        :return: The size of the problem.
-        """
-        return len(self.inputs)
-
-
-    def generate_dummy_dataset(self):
+    def initialize_dataset(self):
         """
         Method generates dummy dataset for language identification, few (sentence-language) pairs, training and text sets.
         """
         self.logger.info("Generating dummy dataset in {}".format(self.data_folder))
+
         # "Training" set.
         x_training_data = [
             "me gusta comer en la cafeteria",
             "Give it to me", 
             "No creo que sea una buena idea",
             "No it is not a good idea to get lost at sea"]
-        io.save_list_to_txt_file(self.data_folder, 'x_training.txt', x_training_data)
+        io.save_string_list_to_txt_file(self.data_folder, 'x_training.txt', x_training_data)
 
         y_training_data = [
             "SPANISH",
             "ENGLISH",
             "SPANISH",
             "ENGLISH"]
-        io.save_list_to_txt_file(self.data_folder, 'y_training.txt', y_training_data)
+        io.save_string_list_to_txt_file(self.data_folder, 'y_training.txt', y_training_data)
 
         # "Test" set.
         x_test_data = [
             "Yo creo que si",
             "it is lost on me"]
-        io.save_list_to_txt_file(self.data_folder, 'x_test.txt', x_test_data)
+        io.save_string_list_to_txt_file(self.data_folder, 'x_test.txt', x_test_data)
 
         y_test_data = [
             "SPANISH",
             "ENGLISH"]
-        io.save_list_to_txt_file(self.data_folder, 'y_test.txt', y_test_data)
+        io.save_string_list_to_txt_file(self.data_folder, 'y_test.txt', y_test_data)
+
+        self.logger.info("Initialization successfull")

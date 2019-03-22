@@ -28,7 +28,7 @@ class MockupComponent (Component):
     Mockup component class.
     """
     def __init__(self):
-        Component.__init__(self, "MockupComponent", ParamInterface())
+        Component.__init__(self, "MockupComponent", None, ParamInterface())
 
     def input_data_definitions(self):
         return {
