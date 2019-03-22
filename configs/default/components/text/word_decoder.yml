@@ -1,34 +1,32 @@
-# This file defines the default values for the MNIST problem.
+# This file defines the default values for Word Decoder.
 
 ####################################################################
 # 1. CONFIGURATION PARAMETERS that will be LOADED by the component.
 ####################################################################
 
 # Folder where problem will store data (LOADED)
-data_folder: '~/data/mnist'
+data_folder: '~/data/'
 
-# Defines the set that will be used used (LOADED)
-# True: training set | False: test set.
-use_train_data: True
+# Source files that will be used to create a dictionary  LOADED)
+source_files: ''
 
-# Optional parameter (LOADED)
-# When present, resizes the MNIST images from [28,28] to [width, height]
-#resize = [height, width]
+# File containing encodings (LOADED)
+encodings_file: 'default_encodings.csv'
 
-keymappings:
+# If set, component will always (re)generate data (LOADED)
+# True means that it will be regenerated despite the existence of file.
+regenerate: False 
+
+keymappings: 
   ####################################################################
   # 2. Keymappings associated with INPUT and OUTPUT streams.
   ####################################################################
 
-  # Stream containing batch of indices (OUTPUT)
-  # Every problem MUST return that stream.
-  indices: indices
-
-  # Stream containing batch of images (OUTPUT)
+  # Stream containing input tensor (INPUT)
   inputs: inputs
 
-  # Stream containing targets (label ids) (OUTPUT)
-  targets: targets
+  # Stream containing output tensor (OUTPUT)
+  outputs: outputs
 
   ####################################################################
   # 3. Keymappings of variables that will be RETRIEVED from GLOBALS.
@@ -37,13 +35,6 @@ keymappings:
   ####################################################################
   # 4. Keymappings associated with GLOBAL variables that will be SET.
   ####################################################################
-
-  # Width of the image (SET)
-  input_width: image_width
-  # Height of the image (SET)
-  input_height: image_height
-  # Depth of the image (SET)
-  input_depth: image_depth
 
   ####################################################################
   # 5. Keymappings associated with statistics that will be ADDED.

@@ -4,7 +4,6 @@ training:
     type: &p_type WiLYLanguageIdentification
     data_folder: &data_folder '~/data/language_identification/wily'
     batch_size:  64
-    use_train_data: True
     keymappings: &p_keymappings
       inputs: sentences
       targets: languages
@@ -31,8 +30,7 @@ validation:
   problem:
     type: *p_type
     data_folder: *data_folder
-    batch_size:  1
-    use_train_data: True
+    batch_size:  64
     keymappings: *p_keymappings
 
   # Use sampler that operates on a subset.
@@ -76,7 +74,7 @@ pipeline:
     keymappings:
       inputs: encoded_sentences
       outputs: bow_sencentes
-      input_size: sentence_vocab_size # Set by sentence_encoder.
+      bow_size: sentence_vocab_size # Set by sentence_encoder.
   
   # Targets encoding.
   label_indexer:

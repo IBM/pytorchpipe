@@ -173,12 +173,12 @@ class PipelineManager(object):
 
             except ConfigurationError as e:
                 if use_logger:
-                    self.logger.error("Detected configuration error while creating the component {} instance:\n  {}".format(c_key, e))
+                    self.logger.error("Detected configuration error while creating the component '{}' instance:\n  {}".format(c_key, e))
                 errors += 1
                 continue
             except KeyError as e:
                 if use_logger:
-                    self.logger.error("Detected key error while creating the component {} instance: required key {} is missing".format(c_key, e))
+                    self.logger.error("Detected key error while creating the component '{}' instance: required key '{}' is missing".format(c_key, e))
                 errors += 1
                 continue
                 # end try/else

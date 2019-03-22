@@ -40,14 +40,6 @@ class TokenEncoder(Component):
         # Call constructors of parent classes.
         Component.__init__(self, name, class_type, params)
 
-        # Set default parameters.
-        params.add_default_params({
-            'data_folder': '~/data/',
-            'source_files': '', # Source files
-            'encodings_file': 'default_encodings.csv', # File containing encodings
-            'regenerate': False # True means that it will be regenerated despite the existence of file.
-            })
-
         # Read the actual configuration.
         self.data_folder = params['data_folder']
         self.source_files = params['source_files']

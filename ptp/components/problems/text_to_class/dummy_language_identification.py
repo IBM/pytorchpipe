@@ -32,19 +32,12 @@ class DummyLanguageIdentification(LanguageIdentification):
         # Call constructors of parent classes.
         LanguageIdentification.__init__(self, name, DummyLanguageIdentification, params) 
 
-        # Set default parameters.
-        self.params.add_default_params({
-                'data_folder': '~/data/language_identification/dummy',
-                'use_train_data': True,
-                'generate': False
-            })  
-
         # Get absolute path.
         self.data_folder = os.path.expanduser(self.params['data_folder'])
 
         # Generate the dataset (can be turned off).
         filenames = ["x_training.txt", "y_training.txt", "x_test.txt", "y_test.txt"]
-        if self.params['generate'] or not io.check_files_existence(self.data_folder, filenames):
+        if self.params['regenerate'] or not io.check_files_existence(self.data_folder, filenames):
             self.initialize_dataset()
 
         # Select set.

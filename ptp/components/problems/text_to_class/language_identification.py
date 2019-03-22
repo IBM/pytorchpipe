@@ -23,16 +23,18 @@ class LanguageIdentification(Problem):
     Language identification (classification) problem.
     """
 
-    def __init__(self, name, params):
+    def __init__(self, name, class_type, params):
         """
         Initializes problem object. Calls base constructor.
 
         :param name: Name of the component.
 
+        :param class_type: Class type of the component.
+
         :param params: Dictionary of parameters (read from configuration ``.yaml`` file).
         """
         # Call constructors of parent classes.
-        Problem.__init__(self, name, LanguageIdentification, params)
+        Problem.__init__(self, name, class_type, params)
 
         # Set key mappings.
         self.key_inputs = self.mapkey("inputs")

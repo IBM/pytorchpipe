@@ -36,10 +36,6 @@ class SentenceTokenizer(Component):
         # Call constructors of parent classes.
         Component.__init__(self, name, SentenceTokenizer, params)
 
-        # Set default parameters.
-        params.add_default_params({
-            'detokenize': False, # Mode - False: sentence -> list of strings, True: list of strings -> sentence.
-            })
         # Read the actual configuration.
         self.mode_detokenize = params['detokenize']
 

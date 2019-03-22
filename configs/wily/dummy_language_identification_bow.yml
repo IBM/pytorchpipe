@@ -65,7 +65,7 @@ pipeline:
       keymappings:
         inputs: encoded_sentences
         outputs: bow_sencentes
-        input_size: sentence_token_size # Set by sentence_encoder.
+        bow_size: sentence_vocab_size # Set by sentence_encoder.
   
   # Targets encoding.
   label_indexer:
@@ -86,7 +86,7 @@ pipeline:
     keymappings:
       inputs: bow_sencentes
       #predictions: encoded_predictions
-      input_size: sentence_token_size # Set by sentence_encoder.
+      input_size: sentence_vocab_size # Set by sentence_encoder.
       prediction_size: label_vocab_size # Set by target_encoder.
   
   # Loss

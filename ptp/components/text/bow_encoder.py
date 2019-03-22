@@ -44,10 +44,10 @@ class BOWEncoder(Component):
         # Default name mappings for all encoders.
         self.key_inputs = self.mapkey("inputs")
         self.key_outputs = self.mapkey("outputs")
-        self.key_input_size = self.mapkey("input_size")
+        self.key_bow_size = self.mapkey("bow_size")
 
-        # Retrieve input size from global params.
-        self.input_size = self.app_state[self.key_input_size]
+        # Retrieve output size from global params.
+        self.bow_size = self.app_state[self.key_bow_size]
 
     def input_data_definitions(self):
         """ 
@@ -56,7 +56,7 @@ class BOWEncoder(Component):
         :return: dictionary containing input data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
         """
         return {
-            self.key_inputs: DataDefinition([-1, -1, -1], [list, list, torch.Tensor], "Batch of sentences, each represented as a list of vectors [BATCH_SIZE] x [SEQ_LENGTH] x [ITEM_SIZE] (agnostic to item size)")
+            self.key_inputs: DataDefinition([-1, -1, self.bow_size], [list, list, torch.Tensor], "Batch of sentences, each represented as a list of vectors [BATCH_SIZE] x [SEQ_LENGTH] x [ITEM_SIZE] (agnostic to item size)")
             }
 
     def output_data_definitions(self):
@@ -66,7 +66,7 @@ class BOWEncoder(Component):
         :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
         """
         return {
-            self.key_outputs: DataDefinition([-1, self.input_size], [torch.Tensor], "Batch of sentences, each represented as a single vector [BATCH_SIZE x ITEM_SIZE] (agnostic to item size)")
+            self.key_outputs: DataDefinition([-1, self.bow_size], [torch.Tensor], "Batch of sentences, each represented as a single vector [BATCH_SIZE x ITEM_SIZE] (agnostic to item size)")
             }
 
     def __call__(self, data_dict):
@@ -95,7 +95,7 @@ class BOWEncoder(Component):
 
     def encode_sample(self, list_of_tokens):
         """
-        Generates a bag-of-word vector of length `output_size`.
+        Generates a bag-of-word vector of length `bow_size`.
 
         :param list_of_tokens: List of tokens [SEQ_LENGTH] x [ITEM_SIZE]
         :return: torch.LongTensor [ITEM_SIZE]

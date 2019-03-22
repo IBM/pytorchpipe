@@ -37,12 +37,6 @@ class WiLYLanguageIdentification(LanguageIdentification):
         # Call constructors of parent classes.
         LanguageIdentification.__init__(self, name, WiLYLanguageIdentification, params) 
 
-        # Set default parameters.
-        self.params.add_default_params({
-                'data_folder': '~/data/language_identification/wily',
-                'use_train_data': True
-            })  
-
         # Get absolute path.
         self.data_folder = os.path.expanduser(self.params['data_folder'])
 

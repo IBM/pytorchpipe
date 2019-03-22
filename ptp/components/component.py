@@ -67,7 +67,10 @@ class Component(abc.ABC):
         self.params.add_default_params(load_default_configuration_file(class_type))
 
         # Initialize the "name mapping facility".
-        self.keymappings = params["keymappings"]
+        if "keymappings" not in params or params["keymappings"] is None:
+            self.keymappings = {}
+        else:
+            self.keymappings = params["keymappings"]
 
 
     def summarize_io(self, priority = -1):
@@ -162,7 +165,7 @@ class Component(abc.ABC):
     
     def export_output_definitions(self, all_definitions, log_errors=True):
         """ 
-        Exports output definitinos to all_definitions, checking errors (e.g. if output field is already present in all_definitions).
+        Exports output definitions to all_definitions, checking errors (e.g. if output field is already present in all_definitions).
 
         :param all_definitions: dictionary containing output data definitions (each of type :py:class:`ptp.configuration.DataDefinition`).
 
