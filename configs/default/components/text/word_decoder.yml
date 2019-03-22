@@ -17,6 +17,9 @@ encodings_file: 'default_encodings.csv'
 # True means that it will be regenerated despite the existence of file.
 regenerate: False 
 
+# Additional tokens, that will be added to vocabulary (LOADED)
+# additional_tokens:   
+
 streams: 
   ####################################################################
   # 2. Keymappings associated with INPUT and OUTPUT streams.

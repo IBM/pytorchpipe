@@ -39,6 +39,9 @@ class NLLLoss(Loss):
         # Set loss.
         self.loss_function = nn.NLLLoss()
 
+        # Get number of dimensions.
+        self.targets_dim = self.params["targets_dim"]
+
 
     def input_data_definitions(self):
         """ 
@@ -47,8 +50,8 @@ class NLLLoss(Loss):
         :return: dictionary containing input data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
         """
         return {
-            self.key_targets: DataDefinition([-1, -1], [torch.Tensor], "Batch of targets, each being a single index [BATCH_SIZE]"),
-            self.key_predictions: DataDefinition([-1, -1, -1], [torch.Tensor], "Batch of predictions, represented as tensor with probability distribution over classes [BATCH_SIZE x NUM_CLASSES]")
+            self.key_targets: DataDefinition([-1]*self.targets_dim, [torch.Tensor], "Batch of targets (indices) [DIM 1 x DIM 2 x ... ]"),
+            self.key_predictions: DataDefinition([-1]*(self.targets_dim+1), [torch.Tensor], "Batch of predictions, represented as tensor with probability distribution over classes [DIM 1 x DIM x ... x NUM_CLASSES]")
             }
 
     def output_data_definitions(self):
@@ -82,7 +85,10 @@ class NLLLoss(Loss):
             # Change to long tensor, as expected by nllloss.
             targets = torch.LongTensor(targets)
 
+        # reshape.
+        last_dim = predictions.size(-1)
+
         # Calculate loss.
-        loss = self.loss_function(predictions, targets)
+        loss = self.loss_function(predictions.view(-1, last_dim), targets.view(-1))
         # Add it to datadict.
         data_dict.extend({self.key_loss: loss})

@@ -53,6 +53,7 @@ pipeline:
     data_folder: *data_folder
     source_files: wiki.train.tokens,wiki.valid.tokens,wiki.test.tokens
     encodings_file: wiki.all.tokenized_words
+    additional_tokens: <eos>
     streams:
       inputs: sources
       outputs: indexed_sources
@@ -77,6 +78,7 @@ pipeline:
     data_folder: *data_folder
     source_files: wiki.train.tokens,wiki.valid.tokens,wiki.test.tokens
     encodings_file: wiki.all.tokenized_words
+    additional_tokens: <eos>
     streams:
       inputs: targets
       outputs: indexed_targets
@@ -97,6 +99,7 @@ pipeline:
   nllloss:
     type: NLLLoss
     priority: 6
+    targets_dim: 2
     streams:
       targets: indexed_targets
       loss: loss

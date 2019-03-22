@@ -80,13 +80,13 @@ class RNN(Model):
         self.rnn_type = self.params["rnn_type"]
         if self.rnn_type in ['LSTM', 'GRU']:
             # Create rnn cell.
-            self.rnn = getattr(torch.nn, self.rnn_type)(self.input_size, self.hidden_size, self.num_layers, dropout=dropout_rate)
+            self.rnn = getattr(torch.nn, self.rnn_type)(self.input_size, self.hidden_size, self.num_layers, dropout=dropout_rate, batch_first=True)
         else:
             try:
                 # Retrieve the non-linearity.
                 nonlinearity = {'RNN_TANH': 'tanh', 'RNN_RELU': 'relu'}[self.rnn_type]
                 # Create rnn cell.
-                self.rnn = torch.nn.RNN(self.input_size, self.hidden_size, self.num_layers, nonlinearity=nonlinearity, dropout=dropout_rate)
+                self.rnn = torch.nn.RNN(self.input_size, self.hidden_size, self.num_layers, nonlinearity=nonlinearity, dropout=dropout_rate, batch_first=True)
 
             except KeyError:
                 raise ConfigurationError( "Invalid RNN type, available options for 'rnn_type' are ['LSTM', 'GRU', 'RNN_TANH', 'RNN_RELU'] (currently '{}')".format(self.rnn_type))
@@ -148,10 +148,10 @@ class RNN(Model):
         activations, hidden = self.rnn(inputs, hidden)
         
         # Propagate activations through dropout layer.
-        activations = self.drop(activations)
+        activations = self.dropout(activations)
 
         # Reshape to 2D tensor [BATCH_SIZE * SEQ_LEN x HIDDEN_SIZE]
-        outputs = activations.view(activations.size(0)*activations.size(1), activations.size(2))
+        outputs = activations.contiguous().view(-1, self.hidden_size)
 
         # Propagate data through the output layer [BATCH_SIZE * SEQ_LEN x PREDICTION_SIZE]
         outputs = self.hidden2output(outputs)

@@ -46,6 +46,9 @@ class TokenEncoder(Component):
         self.encodings_file = params['encodings_file']
         self.mode_regenerate = params['regenerate']
 
+        # Additional entries in the vocabulary.
+        self.additional_tokens = params.get("additional_tokens", "").split(',')
+
         # Default name mappings for all encoders.
         self.key_inputs = self.get_stream_key("inputs")
         self.key_outputs = self.get_stream_key("outputs")
@@ -65,7 +68,13 @@ class TokenEncoder(Component):
             self.word_to_ix = io.load_mappings_from_csv_file(self.data_folder, self.encodings_file)
             assert (len(self.word_to_ix) > 0), "The loaded encodings list is empty!"
 
-        # Ok, we are ready to go!
+        # Check if additional tokens are present.
+        for word in self.additional_tokens:
+            # If new token.
+            if word not in self.word_to_ix:
+                self.word_to_ix[word] = len(self.word_to_ix)
+
+        
 
     def create_encodings(self, data_folder, source_files):
         """

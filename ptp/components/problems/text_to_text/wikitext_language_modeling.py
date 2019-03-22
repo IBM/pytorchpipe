@@ -165,7 +165,25 @@ class WikiTextLanguageModeling(Problem):
         """
         # Return data_dict.
         data_dict = self.create_data_dict(index)
-        data_dict[self.key_sources] = self.tokens[index:self.sentence_length]
-        data_dict[self.key_targets] = self.tokens[index+1:self.sentence_length+1] # target is "shifted" by 1.
-        print("problem: source = {} target = {}".format(data_dict[self.key_sources], data_dict[self.key_targets]))
+        data_dict[self.key_sources] = self.tokens[index:index+self.sentence_length]
+        data_dict[self.key_targets] = self.tokens[index+1:index+self.sentence_length+1] # target is "shifted" by 1.
+        #print("problem: index = {} source = {} target = {}".format(index, data_dict[self.key_sources], data_dict[self.key_targets]))
         return data_dict
+
+    def collate_fn(self, batch):
+        """
+        Generates a batch of samples from a list of individuals samples retrieved by :py:func:`__getitem__`.
+
+        :param batch: List of :py:class:`ptp.utils.DataDict` retrieved by :py:func:`__getitem__`
+        :type batch: list
+
+        :return: DataDict containing the created batch.
+
+        """
+        # Collate indices.
+        data_dict = self.create_data_dict([sample[self.key_indices] for sample in batch])
+        # Collate sources.
+        data_dict[self.key_sources] = [sample[self.key_sources] for sample in batch]
+        data_dict[self.key_targets] = [sample[self.key_targets] for sample in batch]
+        return data_dict
+
