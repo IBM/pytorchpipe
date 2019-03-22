@@ -31,6 +31,15 @@ class WiLYLanguageIdentification(LanguageIdentification):
     .. _arxiv: https://arxiv.org/abs/1801.07779
     """
     def __init__(self, name, params):
+        """
+        Initializes problem object. Calls base constructor. Downloads the dataset if not present and loads the adequate files depending on the mode.
+
+        :param name: Name of the component.
+
+        :param class_type: Class type of the component.
+
+        :param params: Dictionary of parameters (read from configuration ``.yaml`` file).
+        """
         # Call constructors of parent classes.
         LanguageIdentification.__init__(self, name, WiLYLanguageIdentification, params) 
 

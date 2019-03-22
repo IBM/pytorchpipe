@@ -30,6 +30,15 @@ class WiLYNGramLanguageModeling(Problem):
     .. _arxiv: https://arxiv.org/abs/1801.07779
     """
     def __init__(self, name, params):
+        """
+        Initializes problem object. Calls base constructor.
+
+        :param name: Name of the component.
+
+        :param class_type: Class type of the component.
+
+        :param params: Dictionary of parameters (read from configuration ``.yaml`` file).
+        """
         # Call constructors of parent classes.
         Problem.__init__(self, name, WiLYNGramLanguageModeling, params) 
 

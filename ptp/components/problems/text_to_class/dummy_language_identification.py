@@ -29,6 +29,15 @@ class DummyLanguageIdentification(LanguageIdentification):
     .. _example: https://pytorch.org/tutorials/beginner/nlp/deep_learning_tutorial.html
     """
     def __init__(self, name, params):
+        """
+        Initializes the problem object. Calls base constructor and generates the files, if not present.
+
+        :param name: Name of the component.
+
+        :param class_type: Class type of the component.
+
+        :param params: Dictionary of parameters (read from configuration ``.yaml`` file).
+        """
         # Call constructors of parent classes.
         LanguageIdentification.__init__(self, name, DummyLanguageIdentification, params) 
 

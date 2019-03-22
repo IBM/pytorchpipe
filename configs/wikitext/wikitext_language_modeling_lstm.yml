@@ -23,6 +23,7 @@ validation:
   partial_validation_interval: 10
   problem:
     type: *p_type
+    data_folder: *data_folder
     dataset: *dataset
     subset: valid
     batch_size:  64
@@ -31,6 +32,7 @@ validation:
 testing:
   problem:
     type: *p_type 
+    data_folder: *data_folder
     dataset: *dataset
     subset: test
     batch_size: 64

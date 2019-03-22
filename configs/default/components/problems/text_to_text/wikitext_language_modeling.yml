@@ -5,7 +5,7 @@
 ####################################################################
 
 # Folder where problem will store data (LOADED)
-data_folder: '~/data/language_modeling/wikitext'
+data_folder: ~/data/language_modeling/wikitext
 
 # Defines the dataset that will be used used (LOADED)
 # Options: wikitext-2 | wikitext-103
@@ -15,6 +15,8 @@ dataset: wikitext-2
 # Options: train | valid | test
 subset: train
 
+# Length of sentence (i.e. number of tokens in input and target sentences)
+sentence_length: 50
 
 streams: 
   ####################################################################
@@ -25,10 +27,10 @@ streams:
   # Every problem MUST return that stream.
   indices: indices
 
-  # Stream containing batch of images (OUTPUT)
-  inputs: inputs
+  # Stream containing batch of tokenized source sentences (OUTPUT)
+  sources: sources
 
-  # Stream containing targets (label ids) (OUTPUT)
+  # Stream containing batch of tokenized target sentences (OUTPUT)
   targets: targets
 
 globals:
