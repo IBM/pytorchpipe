@@ -1,30 +1,38 @@
-# This file defines the default values for the Multi-Layer Softmax Classifier.
+# This file defines the default values for the ngram language modeling
+# using WiLY dataset.
 
 ####################################################################
 # 1. CONFIGURATION PARAMETERS that will be LOADED by the component.
 ####################################################################
 
-# Optional (LOADED)
-# Number of hidden layers, along with their sizes (numbers of neurons).
-# hidden_sizes: [dim hidden 1, dim hidden 2, ...]
+# Folder where problem will store data (LOADED)
+data_folder: '~/data/language_identification/wily'
+
+# Defines the set that will be used used (LOADED)
+# True: training set | False: test set.
+use_train_data: True
+
+# Size of the context (LOADED)
+context: 2
 
 keymappings: 
   ####################################################################
   # 2. Keymappings associated with INPUT and OUTPUT streams.
   ####################################################################
 
-  # Stream containing batch of inputs (INPUT)
+  # Stream containing batch of indices (OUTPUT)
+  # Every problem MUST return that stream.
+  indices: indices
+
+  # Stream containing batch of images (OUTPUT)
   inputs: inputs
 
-  # Stream containing predictions (OUTPUT)
-  predictions: predictions
+  # Stream containing targets (label ids) (OUTPUT)
+  targets: targets
 
   ####################################################################
   # 3. Keymappings of variables that will be RETRIEVED from GLOBALS.
   ####################################################################
-
-  # Size of the prediction (RETRIEVED)
-  prediction_size: prediction_size
 
   ####################################################################
   # 4. Keymappings associated with GLOBAL variables that will be SET.

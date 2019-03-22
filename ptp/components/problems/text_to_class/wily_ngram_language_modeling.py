@@ -40,13 +40,6 @@ class WiLYNGramLanguageModeling(Problem):
         self.key_inputs = self.mapkey("inputs")
         self.key_targets = self.mapkey("targets")
 
-        # Set default parameters.
-        self.params.add_default_params({
-                'data_folder': '~/data/language_identification/wily',
-                'use_train_data': True,
-                'context': 2,
-            })  
-
         # Get absolute path.
         self.data_folder = os.path.expanduser(self.params['data_folder'])
 
