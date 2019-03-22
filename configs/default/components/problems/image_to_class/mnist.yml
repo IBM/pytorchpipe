@@ -15,7 +15,7 @@ use_train_data: True
 # When present, resizes the MNIST images from [28,28] to [width, height]
 #resize = [height, width]
 
-keymappings:
+streams:
   ####################################################################
   # 2. Keymappings associated with INPUT and OUTPUT streams.
   ####################################################################
@@ -30,6 +30,7 @@ keymappings:
   # Stream containing targets (label ids) (OUTPUT)
   targets: targets
 
+globals:
   ####################################################################
   # 3. Keymappings of variables that will be RETRIEVED from GLOBALS.
   ####################################################################

@@ -43,9 +43,10 @@ class ReshapeTensor(Component):
         Component.__init__(self, name, ReshapeTensor, params)
 
         # Set key mappings.
-        self.key_inputs = self.mapkey("inputs")
-        self.key_outputs = self.mapkey("outputs")
-        self.key_output_size = self.mapkey("output_size")
+        self.key_inputs = self.get_stream_key("inputs")
+        self.key_outputs = self.get_stream_key("outputs")
+        
+        self.key_output_size = self.get_global_key("output_size")
 
         # Get input and output shapes from configuration.
         self.input_dims = [int(x) for x in self.params["input_dims"]]

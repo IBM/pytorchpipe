@@ -8,7 +8,7 @@
 # Number of hidden layers, along with their sizes (numbers of neurons).
 # hidden_sizes: [dim hidden 1, dim hidden 2, ...]
 
-keymappings: 
+streams: 
   ####################################################################
   # 2. Keymappings associated with INPUT and OUTPUT streams.
   ####################################################################
@@ -19,6 +19,7 @@ keymappings:
   # Stream containing predictions (OUTPUT)
   predictions: predictions
 
+globals:
   ####################################################################
   # 3. Keymappings of variables that will be RETRIEVED from GLOBALS.
   ####################################################################

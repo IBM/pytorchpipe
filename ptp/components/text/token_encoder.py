@@ -47,8 +47,8 @@ class TokenEncoder(Component):
         self.mode_regenerate = params['regenerate']
 
         # Default name mappings for all encoders.
-        self.key_inputs = self.mapkey("inputs")
-        self.key_outputs = self.mapkey("outputs")
+        self.key_inputs = self.get_stream_key("inputs")
+        self.key_outputs = self.get_stream_key("outputs")
 
         # Encodings file.
         encodings_file_path = os.path.expanduser(self.data_folder) + "/" + self.encodings_file

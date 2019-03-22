@@ -37,11 +37,11 @@ class SoftmaxClassifier(Model):
         Model.__init__(self, name, SoftmaxClassifier, params)
 
         # Set key mappings.
-        self.key_inputs = self.mapkey("inputs")
-        self.key_predictions = self.mapkey("predictions")
+        self.key_inputs = self.get_stream_key("inputs")
+        self.key_predictions = self.get_stream_key("predictions")
 
         # Retrieve input size from global params.
-        self.key_input_size = self.mapkey("input_size")
+        self.key_input_size = self.get_global_key("input_size")
         self.input_size = self.app_state[self.key_input_size]
         if type(self.input_size) == list:
             if len(self.input_size) == 1:
@@ -50,7 +50,7 @@ class SoftmaxClassifier(Model):
                 raise ConfigurationError("SoftmaxClassifier input size '{}' must be a single dimension (current {})".format(self.key_input_size, self.input_size))
 
         # Retrieve output (prediction) size from global params.
-        self.key_prediction_size = self.mapkey("prediction_size")
+        self.key_prediction_size = self.get_global_key("prediction_size")
         self.prediction_size = self.app_state[self.key_prediction_size]
         if type(self.prediction_size) == list:
             if len(self.prediction_size) == 1:

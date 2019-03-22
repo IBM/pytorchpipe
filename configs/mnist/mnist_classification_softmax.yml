@@ -11,8 +11,9 @@ pipeline:
     input_dims: [-1, 1, 28, 28]
     output_dims: [-1, 784]
     priority: 1
-    keymappings:
+    streams:
       outputs: reshaped_images
+    globals:
       output_size: reshaped_image_size
 
   # Classifier.
@@ -20,8 +21,9 @@ pipeline:
     type: SoftmaxClassifier 
     priority: 2
     hidden_sizes: [100, 100]
-    keymappings:
+    streams:
       inputs: reshaped_images
+    globals:
       input_size: reshaped_image_size
       prediction_size: num_classes
 

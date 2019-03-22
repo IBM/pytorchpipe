@@ -69,7 +69,7 @@ class Problem(Component, Dataset):
         Dataset.__init__(self)
 
         # Set default key mappings.
-        self.key_indices = self.mapkey("indices")
+        self.key_indices = self.get_stream_key("indices")
 
         # Empty curriculum learning params - for now.
         self.curriculum_params = {}

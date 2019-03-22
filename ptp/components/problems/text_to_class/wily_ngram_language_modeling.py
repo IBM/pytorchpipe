@@ -37,8 +37,8 @@ class WiLYNGramLanguageModeling(Problem):
         Problem.__init__(self, name, WiLYNGramLanguageModeling, params) 
 
         # Set key mappings.
-        self.key_inputs = self.mapkey("inputs")
-        self.key_targets = self.mapkey("targets")
+        self.key_inputs = self.get_stream_key("inputs")
+        self.key_targets = self.get_stream_key("targets")
 
         # Get absolute path.
         self.data_folder = os.path.expanduser(self.params['data_folder'])

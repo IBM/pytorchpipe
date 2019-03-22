@@ -4,7 +4,7 @@
 # 1. CONFIGURATION PARAMETERS that will be LOADED by the component.
 ####################################################################
 
-keymappings: 
+streams: 
   ####################################################################
   # 2. Keymappings associated with INPUT and OUTPUT streams.
   ####################################################################
@@ -12,6 +12,7 @@ keymappings:
   # Stream containing batch of indices (INPUT)
   indices: indices
 
+globals:
   ####################################################################
   # 3. Keymappings of variables that will be RETRIEVED from GLOBALS.
   ####################################################################

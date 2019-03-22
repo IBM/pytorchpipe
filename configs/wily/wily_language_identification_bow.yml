@@ -4,7 +4,7 @@ training:
     type: &p_type WiLYLanguageIdentification
     data_folder: &data_folder '~/data/language_identification/wily'
     batch_size:  64
-    keymappings: &p_keymappings
+    streams: &p_streams
       inputs: sentences
       targets: languages
 
@@ -31,7 +31,7 @@ validation:
     type: *p_type
     data_folder: *data_folder
     batch_size:  64
-    keymappings: *p_keymappings
+    streams: *p_streams
 
   # Use sampler that operates on a subset.
   sampler:
@@ -45,7 +45,7 @@ testing:
     data_folder: *data_folder
     batch_size: 64
     use_train_data: False
-    keymappings: *p_keymappings
+    streams: *p_streams
 
 pipeline:
   name: language_classifier
@@ -56,24 +56,27 @@ pipeline:
   sentence_tokenizer:
     type: SentenceTokenizer
     priority: 1
-    keymappings: 
+    streams: 
       inputs: sentences
       outputs: tokenized_sentences
+
   sentence_encoder:
     type: SentenceEncoder
     priority: 2
     data_folder: ~/data/language_identification/wily
     source_files: x_train.txt,x_test.txt
     encodings_file: word_encodings.csv
-    keymappings:
+    streams:
       inputs: tokenized_sentences
       outputs: encoded_sentences
+      
   bow_encoder:
     type: BOWEncoder
     priority: 3
-    keymappings:
+    streams:
       inputs: encoded_sentences
       outputs: bow_sencentes
+    globals:
       bow_size: sentence_vocab_size # Set by sentence_encoder.
   
   # Targets encoding.
@@ -83,7 +86,7 @@ pipeline:
     data_folder: ~/data/language_identification/wily
     source_files: y_train.txt,y_test.txt
     encodings_file: language_name_encodings.csv
-    keymappings:
+    streams:
       inputs: languages
       outputs: indexed_languages
   
@@ -92,9 +95,9 @@ pipeline:
     type: SoftmaxClassifier
     #freeze: True
     priority: 5
-    keymappings:
+    streams:
       inputs: bow_sencentes
-      #predictions: encoded_predictions
+    globals:
       input_size: sentence_vocab_size # Set by sentence_encoder.
       prediction_size: label_vocab_size # Set by target_encoder.
   
@@ -102,7 +105,7 @@ pipeline:
   nllloss:
     type: NLLLoss
     priority: 6
-    keymappings:
+    streams:
       targets: indexed_languages
       #predictions: encoded_predictions
       loss: loss
@@ -112,7 +115,7 @@ pipeline:
     priority: 8
     data_folder: ~/data/language_identification/wily
     encodings_file: language_name_encodings.csv
-    keymappings:
+    streams:
       inputs: predictions
       outputs: predicted_labels
 
@@ -123,7 +126,7 @@ pipeline:
   accuracy:
     type: Accuracy
     priority: 10
-    keymappings:
+    streams:
       targets: indexed_languages
 
   #: pipeline

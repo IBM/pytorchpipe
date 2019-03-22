@@ -40,7 +40,7 @@ class SentenceIndexer(TokenEncoder):
         TokenEncoder.__init__(self, name, SentenceIndexer, params)
 
         # Export vocabulary size to global params.
-        self.key_vocab_size = self.mapkey("sentence_vocab_size")
+        self.key_vocab_size = self.get_global_key("sentence_vocab_size")
         self.app_state[self.key_vocab_size] = len(self.word_to_ix)
 
         self.logger.info("Initializing sentence indexer with vocabulary size '{}' = {}".format(self.key_vocab_size, len(self.word_to_ix)))

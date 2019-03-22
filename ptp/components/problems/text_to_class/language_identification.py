@@ -37,8 +37,8 @@ class LanguageIdentification(Problem):
         Problem.__init__(self, name, class_type, params)
 
         # Set key mappings.
-        self.key_inputs = self.mapkey("inputs")
-        self.key_targets = self.mapkey("targets")
+        self.key_inputs = self.get_stream_key("inputs")
+        self.key_targets = self.get_stream_key("targets")
 
         # Set empty inputs and targets.
         self.inputs = []

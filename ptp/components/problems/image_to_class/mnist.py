@@ -114,13 +114,13 @@ class MNIST(ImageToClassProblem):
                                       transform=transform)
 
         # Set global variables - all dimensions ASIDE OF BATCH.
-        self.key_num_classes = self.mapkey("num_classes")
+        self.key_num_classes = self.get_global_key("num_classes")
         self.app_state[self.key_num_classes] = 10
-        self.key_image_width = self.mapkey("image_width")
+        self.key_image_width = self.get_global_key("image_width")
         self.app_state[self.key_image_width] = self.width
-        self.key_image_height = self.mapkey("image_height")
+        self.key_image_height = self.get_global_key("image_height")
         self.app_state[self.key_image_height] = self.height
-        self.key_image_depth = self.mapkey("image_depth")
+        self.key_image_depth = self.get_global_key("image_depth")
         self.app_state[self.key_image_depth] = 1
 
         # Class names.

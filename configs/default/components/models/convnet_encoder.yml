@@ -37,7 +37,7 @@ conv3:
 maxpool3:
     kernel_size: 2
 
-keymappings: 
+streams: 
   ####################################################################
   # 2. Keymappings associated with INPUT and OUTPUT streams.
   ####################################################################
@@ -48,6 +48,7 @@ keymappings:
   # Stream containing batch of feature maps (OUTPUT)
   feature_maps: feature_maps
 
+globals:
   ####################################################################
   # 3. Keymappings of variables that will be RETRIEVED from GLOBALS.
   ####################################################################

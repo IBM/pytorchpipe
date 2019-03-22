@@ -66,11 +66,23 @@ class Component(abc.ABC):
         # Load default configuration.
         self.params.add_default_params(load_default_configuration_file(class_type))
 
-        # Initialize the "name mapping facility".
-        if "keymappings" not in params or params["keymappings"] is None:
-            self.keymappings = {}
+        # Initialize the "streams mapping facility".
+        if "streams" not in params or params["streams"] is None:
+            self.__stream_keys = {}
         else:
-            self.keymappings = params["keymappings"]
+            self.__stream_keys = params["streams"]
+
+        # Initialize the "globals mapping facility".
+        if "globals" not in params or params["globals"] is None:
+            self.__global_keys = {}
+        else:
+            self.__global_keys = params["globals"]
+
+        # Initialize the "statistics mapping facility".
+        if "statistics" not in params or params["statistics"] is None:
+            self.__statistic_keys = {}
+        else:
+            self.__statistic_keys = params["statistics"]
 
 
     def summarize_io(self, priority = -1):
@@ -187,15 +199,35 @@ class Component(abc.ABC):
         return  errors
 
 
-    def mapkey(self, key_name):
+    def get_stream_key(self, key_name):
         """
-        Method responsible for checking whether name exists in the mappings.
+        Method responsible for checking whether name exists in the stream key mappings.
         
         :key_name: name of the key to be mapped.
 
-        :return: Mapped name or original key name (if it does not exist in mappings list).
+        :return: Mapped name or original key name (if it does not exist in stream key mappings list).
         """
-        return self.keymappings.get(key_name, key_name)
+        return self.__stream_keys.get(key_name, key_name)
+
+    def get_global_key(self, key_name):
+        """
+        Method responsible for checking whether name exists in the global key mappings.
+        
+        :key_name: name of the key to be mapped.
+
+        :return: Mapped name or original key name (if it does not exist in global key mappings list).
+        """
+        return self.__global_keys.get(key_name, key_name)
+
+    def get_statistic_key(self, key_name):
+        """
+        Method responsible for checking whether name exists in the statisitc key mappings.
+        
+        :key_name: name of the key to be mapped.
+
+        :return: Mapped name or original key name (if it does not exist in statistic key mappings list).
+        """
+        return self.__statistic_keys.get(key_name, key_name)
 
 
     @abc.abstractmethod

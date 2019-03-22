@@ -40,16 +40,16 @@ class Embeddings(Model):
         super(Embeddings, self).__init__(name, Embeddings, params)
 
         # Set key mappings.
-        self.key_inputs = self.mapkey("inputs")
-        self.key_outputs = self.mapkey("outputs")
+        self.key_inputs = self.get_stream_key("inputs")
+        self.key_outputs = self.get_stream_key("outputs")
 
         # Retrieve vocabulary size from globals.
-        self.key_vocab_size = self.mapkey("vocab_size")
+        self.key_vocab_size = self.get_global_key("vocab_size")
         vocab_size = self.app_state[self.key_vocab_size]
 
         # Retrieve embeddings size from configuration and export it to globals.
         self.embeddings_size = params['embeddings_size']
-        self.key_embeddings_size = self.mapkey("embeddings_size")
+        self.key_embeddings_size = self.get_global_key("embeddings_size")
         self.app_state[self.key_embeddings_size] = self.embeddings_size
 
         self.logger.info("Initializing embeddings layer with vocabulary size = {} and embeddings size = {}".format(vocab_size, self.embeddings_size))

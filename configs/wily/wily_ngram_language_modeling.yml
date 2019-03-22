@@ -6,7 +6,7 @@ training:
     context: &context 2
     batch_size:  64
     use_train_data: True
-    keymappings: &p_keymappings
+    streams: &p_streams
       inputs: ngrams
       #targets: targets
 
@@ -35,7 +35,7 @@ validation:
     context: *context
     batch_size:  64
     use_train_data: True
-    keymappings: *p_keymappings
+    streams: *p_streams
 
   # Use sampler that operates on a subset.
   #sampler:
@@ -50,7 +50,7 @@ testing:
     context: *context
     batch_size: 64
     use_train_data: False
-    keymappings: *p_keymappings
+    streams: *p_streams
 
 pipeline:
   name: ngram_language_modeling
@@ -62,7 +62,7 @@ pipeline:
   sentence_tokenizer:
     type: SentenceTokenizer
     priority: 1
-    keymappings: 
+    streams: 
       inputs: ngrams
       outputs: tokenized_ngrams
 
@@ -72,7 +72,7 @@ pipeline:
     data_folder: *data_folder
     source_files: x_train.txt,x_test.txt
     encodings_file: word_encodings.csv
-    keymappings:
+    streams:
       inputs: tokenized_ngrams
       outputs: indexed_ngrams
   
@@ -81,9 +81,10 @@ pipeline:
     type: Embeddings
     priority: 3
     embeddings_size: 100 # 235 * 4
-    keymappings:
+    streams:
       inputs: indexed_ngrams
       outputs: embedded_ngrams
+    globals:
       vocab_size: sentence_vocab_size
       
 
@@ -94,7 +95,7 @@ pipeline:
     data_folder: *data_folder
     source_files: x_train.txt,x_test.txt
     encodings_file: word_encodings.csv
-    keymappings:
+    streams:
       inputs: targets
       outputs: indexed_targets
   
@@ -104,9 +105,10 @@ pipeline:
     input_dims: [-1, -1, 100]
     output_dims: [-1, 200]
     priority: 5
-    keymappings:
+    streams:
       inputs: embedded_ngrams
       outputs: reshaped_ngrams
+    globals:
       output_size: reshaped_ngrams_size
 
   # Model 2: classifier.
@@ -114,8 +116,9 @@ pipeline:
     type: SoftmaxClassifier 
     priority: 6
     hidden_sizes: [200]
-    keymappings:
+    streams:
       inputs: reshaped_ngrams
+    globals:
       input_size: reshaped_ngrams_size
       prediction_size: sentence_vocab_size
 
@@ -123,7 +126,7 @@ pipeline:
   nllloss:
     type: NLLLoss
     priority: 7
-    keymappings:
+    streams:
       targets: indexed_targets
       predictions: predictions
       loss: loss
@@ -134,7 +137,7 @@ pipeline:
     priority: 8
     data_folder: *data_folder
     encodings_file: word_encodings.csv
-    keymappings:
+    streams:
       inputs: predictions
       outputs: predicted_labels
 
@@ -142,8 +145,7 @@ pipeline:
   accuracy:
     type: Accuracy
     priority: 10
-    keymappings:
+    streams:
       targets: indexed_targets
-
 
   #: pipeline

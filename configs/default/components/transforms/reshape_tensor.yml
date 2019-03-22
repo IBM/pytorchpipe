@@ -12,7 +12,7 @@
 # Specific to a task/model, must be set by user (no DEFAULT)
 # output_dims: [BATCH x ....]
 
-keymappings: 
+streams: 
   ####################################################################
   # 2. Keymappings associated with INPUT and OUTPUT streams.
   ####################################################################
@@ -23,6 +23,7 @@ keymappings:
   # Stream containing output tensor (OUTPUT)
   outputs: outputs
 
+globals:
   ####################################################################
   # 3. Keymappings of variables that will be RETRIEVED from GLOBALS.
   ####################################################################

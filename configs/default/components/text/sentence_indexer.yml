@@ -17,7 +17,7 @@ encodings_file: 'default_encodings.csv'
 # True means that it will be regenerated despite the existence of file.
 regenerate: False 
 
-keymappings: 
+streams: 
   ####################################################################
   # 2. Keymappings associated with INPUT and OUTPUT streams.
   ####################################################################
@@ -28,6 +28,7 @@ keymappings:
   # Stream containing output tensor (OUTPUT)
   outputs: outputs
 
+globals:
   ####################################################################
   # 3. Keymappings of variables that will be RETRIEVED from GLOBALS.
   ####################################################################

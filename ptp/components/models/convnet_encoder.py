@@ -63,17 +63,17 @@ class ConvNetEncoder(Model):
         super(ConvNetEncoder, self).__init__(name, ConvNetEncoder, params)
 
         # Set key mappings.
-        self.key_inputs = self.mapkey("inputs")
-        self.key_feature_maps = self.mapkey("feature_maps")
+        self.key_inputs = self.get_stream_key("inputs")
+        self.key_feature_maps = self.get_stream_key("feature_maps")
 
         # Get input image information from the global parameters.
-        self.key_input_width = self.mapkey("input_width")
+        self.key_input_width = self.get_global_key("input_width")
         self.input_width = self.app_state[self.key_input_width]
         
-        self.key_input_height = self.mapkey("input_height")
+        self.key_input_height = self.get_global_key("input_height")
         self.input_height = self.app_state[self.key_input_height]
         
-        self.key_input_depth = self.mapkey("input_depth")
+        self.key_input_depth = self.get_global_key("input_depth")
         self.input_depth = self.app_state[self.key_input_depth]
 
         # Retrieve the Conv1 parameters.
@@ -189,11 +189,11 @@ class ConvNetEncoder(Model):
             ((self.height_features_conv3 - self.maxpool1.kernel_size + 2 * self.maxpool3.padding) / self.maxpool3.stride) + 1)
 
         # Set global variables: output dims
-        self.key_feature_map_height = self.mapkey("feature_map_height")
+        self.key_feature_map_height = self.get_global_key("feature_map_height")
         self.app_state[self.key_feature_map_height] = self.height_features_maxpool3
-        self.key_feature_map_width = self.mapkey("feature_map_width")
+        self.key_feature_map_width = self.get_global_key("feature_map_width")
         self.app_state[self.key_feature_map_width] = self.width_features_maxpool3
-        self.key_feature_map_depth = self.mapkey("feature_map_depth")
+        self.key_feature_map_depth = self.get_global_key("feature_map_depth")
         self.app_state[self.key_feature_map_depth] = self.out_channels_conv3
         
         # log some info.

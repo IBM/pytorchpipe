@@ -42,9 +42,9 @@ class BOWEncoder(Component):
         Component.__init__(self, name, BOWEncoder, params)
 
         # Default name mappings for all encoders.
-        self.key_inputs = self.mapkey("inputs")
-        self.key_outputs = self.mapkey("outputs")
-        self.key_bow_size = self.mapkey("bow_size")
+        self.key_inputs = self.get_stream_key("inputs")
+        self.key_outputs = self.get_stream_key("outputs")
+        self.key_bow_size = self.get_global_key("bow_size")
 
         # Retrieve output size from global params.
         self.bow_size = self.app_state[self.key_bow_size]

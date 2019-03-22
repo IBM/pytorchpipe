@@ -24,7 +24,7 @@ pipeline:
   image_classifier:
     type: LeNet5
     priority: 1
-    keymappings:
+    globals:
       prediction_size: num_classes
 
   # Loss

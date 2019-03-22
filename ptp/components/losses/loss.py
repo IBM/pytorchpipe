@@ -47,9 +47,9 @@ class Loss(Component):
         Component.__init__(self, name, class_type, params)
 
         # Set key mappings.
-        self.key_targets = self.mapkey("targets")
-        self.key_predictions = self.mapkey("predictions")
-        self.key_loss = self.mapkey("loss")
+        self.key_targets = self.get_stream_key("targets")
+        self.key_predictions = self.get_stream_key("predictions")
+        self.key_loss = self.get_stream_key("loss")
 
     def input_data_definitions(self):
         """ 
