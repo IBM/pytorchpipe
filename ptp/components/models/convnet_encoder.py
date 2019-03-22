@@ -189,9 +189,13 @@ class ConvNetEncoder(Model):
             ((self.height_features_conv3 - self.maxpool1.kernel_size + 2 * self.maxpool3.padding) / self.maxpool3.stride) + 1)
 
         # Set global variables: output dims
-        self.key_feature_maps_dims = self.mapkey("feature_maps_dims")
-        self.app_state[self.key_feature_maps_dims] = [ self.out_channels_conv3, self.height_features_maxpool3, self.width_features_maxpool3]
-
+        self.key_feature_map_height = self.mapkey("feature_map_height")
+        self.app_state[self.key_feature_map_height] = self.height_features_maxpool3
+        self.key_feature_map_width = self.mapkey("feature_map_width")
+        self.app_state[self.key_feature_map_width] = self.width_features_maxpool3
+        self.key_feature_map_depth = self.mapkey("feature_map_depth")
+        self.app_state[self.key_feature_map_depth] = self.out_channels_conv3
+        
         # log some info.
         self.logger.info('Input: [-1, {}, {}, {}]'.format(self.input_depth, self.input_width, self.input_height))
         self.logger.info('Computed output shape of each layer:')

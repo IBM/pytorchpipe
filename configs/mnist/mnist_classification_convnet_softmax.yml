@@ -9,33 +9,6 @@ pipeline:
   image_encoder:
     type: ConvNetEncoder
     priority: 1
-    conv1:
-        out_channels: 64
-        kernel_size: 3
-        stride: 1
-        padding: 0
-    maxpool1:
-        kernel_size: 2
-    conv2:
-        out_channels: 32
-        kernel_size: 3
-        stride: 1
-        padding: 0
-    maxpool2:
-        kernel_size: 2
-    conv3:
-        out_channels: 16
-        kernel_size: 3
-        stride: 1
-        padding: 0
-    maxpool3:
-        kernel_size: 2
-    keymappings:
-      #inputs: images
-      input_width: image_width
-      input_height: image_height
-      input_depth: image_depth
-      feature_maps: feature_maps
 
   # Reshape inputs
   reshaper:

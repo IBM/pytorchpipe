@@ -1,16 +1,18 @@
 # This file defines the default values for the MNIST problem.
 
 ####################################################################
-# 1. CONFIGURATION PARAMETERS that will be loaded by the component.
+# 1. CONFIGURATION PARAMETERS that will be LOADED by the component.
 ####################################################################
 
-# Folder where problem will store data.
+# Folder where problem will store data (LOADED)
 data_folder: '~/data/mnist'
 
-# Defines the set that will be used used. True: training set | False: test set.
+# Defines the set that will be used used (LOADED)
+# True: training set | False: test set.
 use_train_data: True
 
-# Optional parameter: when present, resizes the MNIST images from [28,28] to [width, height]
+# Optional parameter (LOADED)
+# When present, resizes the MNIST images from [28,28] to [width, height]
 #resize = [height, width]
 
 keymappings: 
@@ -37,5 +39,9 @@ keymappings:
 
   ####################################################################
   # 4. Keymappings associated with GLOBAL variables that will be RETRIEVED.
+  ####################################################################
+
+  ####################################################################
+  # 5. Keymappings associated with statistics that will be ADDED.
   ####################################################################
 
