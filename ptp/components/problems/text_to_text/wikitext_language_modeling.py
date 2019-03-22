@@ -139,8 +139,8 @@ class WikiTextLanguageModeling(Problem):
         """
         return {
             self.key_indices: DataDefinition([-1, 1], [list, int], "Batch of sample indices [BATCH_SIZE] x [1]"),
-            self.key_sources: DataDefinition([-1, 1], [list, str], "Batch of input sentences, each consisting of several words [BATCH_SIZE] x [string CONTEXT_SIZE * WORD]"),
-            self.key_targets: DataDefinition([-1, 1], [list, str], "Batch of target sentences, each consisting of several words [BATCH_SIZE] x [WORD]")
+            self.key_sources: DataDefinition([-1, self.sentence_length, 1], [list, list, str], "Batch of input sentences, each consisting of several words [BATCH_SIZE] x [SENTENCE_LENGTH] x [string]"),
+            self.key_targets: DataDefinition([-1, self.sentence_length, 1], [list, list, str], "Batch of target sentences, each consisting of several words [BATCH_SIZE] x [SENTENCE_LENGTH] x [string]")
             }
 
 

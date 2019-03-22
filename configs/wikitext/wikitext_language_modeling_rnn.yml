@@ -5,6 +5,7 @@ training:
     data_folder: &data_folder ~/data/language_modeling/wikitext-2
     dataset: &dataset wikitext-2
     subset: train
+    sentence_length: 50
     batch_size:  64
 
   # optimizer parameters:
@@ -26,6 +27,7 @@ validation:
     data_folder: *data_folder
     dataset: *dataset
     subset: valid
+    sentence_length: 50
     batch_size:  64
 
 # Testing parameters:
@@ -35,6 +37,7 @@ testing:
     data_folder: *data_folder
     dataset: *dataset
     subset: test
+    sentence_length: 50
     batch_size: 64
 
 pipeline:
@@ -44,33 +47,58 @@ pipeline:
   #disable: prediction_decoder,accuracy
 
   # Source encoding.
-  sentence_tokenizer:
-    type: SentenceTokenizer
-    priority: 1
-    streams: 
-      inputs: inputs
-      outputs: tokenized_inputs
-
   source_indexer:
     type: SentenceIndexer
-    priority: 2
+    priority: 1.1
     data_folder: *data_folder
-    source_files: x_train.txt,x_test.txt
-    encodings_file: word_encodings.csv
+    source_files: wiki.train.tokens,wiki.valid.tokens,wiki.test.tokens
+    encodings_file: wiki.all.tokenized_words
     streams:
-      inputs: tokenized_inputs
-      outputs: indexed_inputs
+      inputs: sources
+      outputs: indexed_sources
+    globals:
+      sentence_vocab_size: source_vocab_size
   
   # Model 1: word embeddings.
-  sentence_embedder:
+  source_embedder:
     type: Embeddings
-    priority: 3
+    priority: 1.2
     embeddings_size: 100
     streams:
-      inputs: indexed_inputs
-      outputs: embedded_inputs
+      inputs: indexed_sources
+      outputs: embedded_sources
     globals:
-      vocab_size: sentence_vocab_size
+      vocab_size: source_vocab_size
       
+  # Target encoding.
+  target_indexer:
+    type: SentenceIndexer
+    priority: 2.1
+    data_folder: *data_folder
+    source_files: wiki.train.tokens,wiki.valid.tokens,wiki.test.tokens
+    encodings_file: wiki.all.tokenized_words
+    streams:
+      inputs: targets
+      outputs: indexed_targets
+    globals:
+      sentence_vocab_size: target_vocab_size
+  
+  # Model 3: RNN
+  lstm:
+    type: RNN
+    priority: 3
+    streams:
+      inputs: embedded_sources
+    globals:
+      input_size: embeddings_size
+      prediction_size: target_vocab_size # in this case it is equal to source_vocab_size
+
+  # Loss
+  nllloss:
+    type: NLLLoss
+    priority: 6
+    streams:
+      targets: indexed_targets
+      loss: loss
 
   #: pipeline
