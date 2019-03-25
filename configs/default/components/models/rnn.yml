@@ -16,7 +16,7 @@ num_layers: 1
 
 # Type of recurrent cell (LOADED)
 # Options: LSTM | GRU | RNN_TANH | RNN_RELU
-rnn_type: RNN_TANH
+rnn_type: LSTM
 
 streams: 
   ####################################################################
