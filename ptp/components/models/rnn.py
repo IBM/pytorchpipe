@@ -112,12 +112,12 @@ class RNN(Model):
             # Return tuple (hidden_state, memory_cell).
             #return (torch.zeros(self.num_layers, batch_size, self.hidden_size).type(self.app_state.FloatTensor),
             #        torch.zeros(self.num_layers, batch_size, self.hidden_size).type(self.app_state.FloatTensor) )
-            return (self.init_hidden.expand(self.num_layers, batch_size, self.hidden_size),
-                    self.init_memory.expand(self.num_layers, batch_size, self.hidden_size) )
+            return (self.init_hidden.expand(self.num_layers, batch_size, self.hidden_size).configuous(),
+                    self.init_memory.expand(self.num_layers, batch_size, self.hidden_size).configuous() )
         else:
             # Return hidden_state.
             #return torch.zeros(self.num_layers, batch_size, self.hidden_size).type(self.app_state.FloatTensor)
-            return self.init_hidden.expand(self.num_layers, batch_size, self.hidden_size)
+            return self.init_hidden.expand(self.num_layers, batch_size, self.hidden_size).configuous()
 
 
     def input_data_definitions(self):
