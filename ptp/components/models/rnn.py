@@ -94,30 +94,49 @@ class RNN(Model):
         # Create the output layer.
         self.hidden2output = torch.nn.Linear(self.hidden_size, self.prediction_size)
         
-        # Initialize a single vector used as hidden state.
+        # Check if initial state (h0/c0) are trainable or not.
+        self.initial_state_trainable = self.params["initial_state_trainable"]
+
+        # Parameters - for a single sample.        
         h0 = torch.zeros(self.num_layers, 1, self.hidden_size)
-        # Initialize it using xavier initialization.
-        torch.nn.init.xavier_uniform(h0)
-        # It will be trainable, i.e. the system will learn what should be the right initialization state.
-        self.init_hidden = torch.nn.Parameter(h0, requires_grad=True)
-        # Initilize memory cell in a similar way.
-        if self.rnn_type == 'LSTM':
-            c0 = torch.zeros(self.num_layers, 1, self.hidden_size)
-            torch.nn.init.xavier_uniform(c0)
-            self.init_memory = torch.nn.Parameter(c0, requires_grad=True)
+        c0 = torch.zeros(self.num_layers, 1, self.hidden_size)
+
+        if self.initial_state_trainable:
+            self.logger.info("Using trainable initial (h0/c0) state")
+            # Initialize a single vector used as hidden state.
+            # Initialize it using xavier initialization.
+            torch.nn.init.xavier_uniform(h0)
+            # It will be trainable, i.e. the system will learn what should be the right initialization state.
+            self.init_hidden = torch.nn.Parameter(h0, requires_grad=True)
+            # Initilize memory cell in a similar way.
+            if self.rnn_type == 'LSTM':
+                torch.nn.init.xavier_uniform(c0)
+                self.init_memory = torch.nn.Parameter(c0, requires_grad=True)
+        else:
+            self.logger.info("Using zero initial (h0/c0) state")
+            # We will still embedd it into parameter to enable storing/loading of both types of models by each other.
+            self.init_hidden = torch.nn.Parameter(h0, requires_grad=False)
+            if self.rnn_type == 'LSTM':
+                self.init_memory = torch.nn.Parameter(c0, requires_grad=False)
+
 
     def initialize_hiddens_state(self, batch_size):
 
         if self.rnn_type == 'LSTM':
             # Return tuple (hidden_state, memory_cell).
-            #return (torch.zeros(self.num_layers, batch_size, self.hidden_size).type(self.app_state.FloatTensor),
-            #        torch.zeros(self.num_layers, batch_size, self.hidden_size).type(self.app_state.FloatTensor) )
+            #if self.initial_state_trainable:
             return (self.init_hidden.expand(self.num_layers, batch_size, self.hidden_size).contiguous(),
-                    self.init_memory.expand(self.num_layers, batch_size, self.hidden_size).contiguous() )
+                self.init_memory.expand(self.num_layers, batch_size, self.hidden_size).contiguous() )
+            #else:
+            #    return (torch.zeros(self.num_layers, batch_size, self.hidden_size).type(self.app_state.FloatTensor),
+            #        torch.zeros(self.num_layers, batch_size, self.hidden_size).type(self.app_state.FloatTensor) )
+
         else:
             # Return hidden_state.
-            #return torch.zeros(self.num_layers, batch_size, self.hidden_size).type(self.app_state.FloatTensor)
+            #if self.initial_state_trainable: 
             return self.init_hidden.expand(self.num_layers, batch_size, self.hidden_size).contiguous()
+            #else:
+            #    return torch.zeros(self.num_layers, batch_size, self.hidden_size).type(self.app_state.FloatTensor)
 
 
     def input_data_definitions(self):

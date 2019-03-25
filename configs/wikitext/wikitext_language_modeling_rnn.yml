@@ -41,7 +41,7 @@ testing:
     batch_size: 64
 
 pipeline:
-  name: wikitext_language_modeling
+  name: wikitext_language_modeling_rnn
   #load: /users/tomaszkornuta/experiments/dummylanguageidentification/language_classifier/20190301_145416/checkpoints/language_classifier_best.pt
   #freeze: True
   #disable: prediction_decoder,accuracy
@@ -88,7 +88,9 @@ pipeline:
   # Model 3: RNN
   lstm:
     type: RNN
+    #freeze: True
     priority: 3
+    #initial_state_trainable: False
     streams:
       inputs: embedded_sources
     globals:
