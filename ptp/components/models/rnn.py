@@ -94,16 +94,30 @@ class RNN(Model):
         # Create the output layer.
         self.hidden2output = torch.nn.Linear(self.hidden_size, self.prediction_size)
         
+        # Initialize a single vector used as hidden state.
+        h0 = torch.zeros(self.num_layers, 1, self.hidden_size)
+        # Initialize it using xavier initialization.
+        torch.nn.init.xavier_uniform(h0)
+        # It will be trainable, i.e. the system will learn what should be the right initialization state.
+        self.init_hidden = torch.nn.Parameter(h0, requires_grad=True)
+        # Initilize memory cell in a similar way.
+        if self.rnn_type == 'LSTM':
+            c0 = torch.zeros(self.num_layers, 1, self.hidden_size)
+            torch.nn.init.xavier_uniform(c0)
+            self.init_memory = torch.nn.Parameter(c0, requires_grad=True)
 
-    def init_hiddens_state(self, batch_size):
+    def initialize_hiddens_state(self, batch_size):
 
         if self.rnn_type == 'LSTM':
             # Return tuple (hidden_state, memory_cell).
-            return (torch.zeros(self.num_layers, batch_size, self.hidden_size).type(self.app_state.FloatTensor),
-                    torch.zeros(self.num_layers, batch_size, self.hidden_size).type(self.app_state.FloatTensor) )
+            #return (torch.zeros(self.num_layers, batch_size, self.hidden_size).type(self.app_state.FloatTensor),
+            #        torch.zeros(self.num_layers, batch_size, self.hidden_size).type(self.app_state.FloatTensor) )
+            return (self.init_hidden.expand(self.num_layers, batch_size, self.hidden_size),
+                    self.init_memory.expand(self.num_layers, batch_size, self.hidden_size) )
         else:
             # Return hidden_state.
-            return torch.zeros(self.num_layers, batch_size, self.hidden_size).type(self.app_state.FloatTensor)
+            #return torch.zeros(self.num_layers, batch_size, self.hidden_size).type(self.app_state.FloatTensor)
+            return self.init_hidden.expand(self.num_layers, batch_size, self.hidden_size)
 
 
     def input_data_definitions(self):
@@ -141,8 +155,12 @@ class RNN(Model):
         # Get inputs [BATCH_SIZE x SEQ_LEN x INPUT_SIZE]
         inputs = data_dict[self.key_inputs]
 
+        print(self.init_hidden)
+        print(self.init_hidden.requires_grad)
+        print(self.init_hidden.grad)
+
         # Initialize hidden state.
-        hidden = self.init_hiddens_state(inputs.shape[0])
+        hidden = self.initialize_hiddens_state(inputs.shape[0])
 
         # Propagate inputs through rnn.
         activations, hidden = self.rnn(inputs, hidden)
