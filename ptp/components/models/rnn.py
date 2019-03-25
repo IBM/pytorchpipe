@@ -80,13 +80,13 @@ class RNN(Model):
         self.rnn_type = self.params["rnn_type"]
         if self.rnn_type in ['LSTM', 'GRU']:
             # Create rnn cell.
-            self.rnn = getattr(torch.nn, self.rnn_type)(self.input_size, self.hidden_size, self.num_layers, dropout=dropout_rate, batch_first=True)
+            self.rnn_cell = getattr(torch.nn, self.rnn_type)(self.input_size, self.hidden_size, self.num_layers, dropout=dropout_rate, batch_first=True)
         else:
             try:
                 # Retrieve the non-linearity.
                 nonlinearity = {'RNN_TANH': 'tanh', 'RNN_RELU': 'relu'}[self.rnn_type]
                 # Create rnn cell.
-                self.rnn = torch.nn.RNN(self.input_size, self.hidden_size, self.num_layers, nonlinearity=nonlinearity, dropout=dropout_rate, batch_first=True)
+                self.rnn_cell = torch.nn.RNN(self.input_size, self.hidden_size, self.num_layers, nonlinearity=nonlinearity, dropout=dropout_rate, batch_first=True)
 
             except KeyError:
                 raise ConfigurationError( "Invalid RNN type, available options for 'rnn_type' are ['LSTM', 'GRU', 'RNN_TANH', 'RNN_RELU'] (currently '{}')".format(self.rnn_type))
@@ -124,19 +124,12 @@ class RNN(Model):
 
         if self.rnn_type == 'LSTM':
             # Return tuple (hidden_state, memory_cell).
-            #if self.initial_state_trainable:
             return (self.init_hidden.expand(self.num_layers, batch_size, self.hidden_size).contiguous(),
                 self.init_memory.expand(self.num_layers, batch_size, self.hidden_size).contiguous() )
-            #else:
-            #    return (torch.zeros(self.num_layers, batch_size, self.hidden_size).type(self.app_state.FloatTensor),
-            #        torch.zeros(self.num_layers, batch_size, self.hidden_size).type(self.app_state.FloatTensor) )
 
         else:
             # Return hidden_state.
-            #if self.initial_state_trainable: 
             return self.init_hidden.expand(self.num_layers, batch_size, self.hidden_size).contiguous()
-            #else:
-            #    return torch.zeros(self.num_layers, batch_size, self.hidden_size).type(self.app_state.FloatTensor)
 
 
     def input_data_definitions(self):
@@ -174,15 +167,11 @@ class RNN(Model):
         # Get inputs [BATCH_SIZE x SEQ_LEN x INPUT_SIZE]
         inputs = data_dict[self.key_inputs]
 
-        print(self.init_hidden)
-        print(self.init_hidden.requires_grad)
-        print(self.init_hidden.grad)
-
         # Initialize hidden state.
         hidden = self.initialize_hiddens_state(inputs.shape[0])
 
-        # Propagate inputs through rnn.
-        activations, hidden = self.rnn(inputs, hidden)
+        # Propagate inputs through rnn cell.
+        activations, hidden = self.rnn_cell(inputs, hidden)
         
         # Propagate activations through dropout layer.
         activations = self.dropout(activations)
