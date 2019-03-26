@@ -89,6 +89,7 @@ pipeline:
   lstm:
     type: RNN
     #freeze: True
+    disable: True
     priority: 3
     #initial_state_trainable: False
     streams:

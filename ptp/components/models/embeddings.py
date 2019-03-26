@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) IBM Corporation 2018
+# Copyright (C) tkornuta, IBM Corporation 2019
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -56,6 +56,10 @@ class Embeddings(Model):
 
         # Finally: create the embeddings layer.
         self.embeddings = torch.nn.Embedding(vocab_size, self.embeddings_size)
+
+
+    #def load_embeddings(self):
+
 
 
     def input_data_definitions(self):
