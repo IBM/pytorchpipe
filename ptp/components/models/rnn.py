@@ -31,6 +31,7 @@ class RNN(Model):
         Initializes the model.
 
         :param params: Dictionary of parameters (read from configuration ``.yaml`` file).
+        :type params: ``ptp.configuration.ParamInterface``
         """
         # Call constructors of parent classes.
         #super(Model, self).__init__(name, params))

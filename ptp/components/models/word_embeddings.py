@@ -24,9 +24,11 @@ from ptp.components.models.model import Model
 from ptp.data_types.data_definition import DataDefinition
 
 
-class Embeddings(Model):
+class WordEmbeddings(Model):
     """
-    A simple model consisting of a single word embeddings layer.
+    A simple embeddings layer.
+    Embedds words using the vocabulary that it creates on its own.
+    Assumes presence of a Word/Sencence Indexer.
     """ 
     def __init__(self, name, params):
         """
@@ -35,15 +37,16 @@ class Embeddings(Model):
         :param name: Name of the model (taken from the configuration file).
 
         :param params: Parameters read from configuration file.
-        :type params: ``miprometheus.utils.ParamInterface``
+        :type params: ``ptp.configuration.ParamInterface``
         """
-        super(Embeddings, self).__init__(name, Embeddings, params)
+        super(WordEmbeddings, self).__init__(name, WordEmbeddings, params)
 
         # Set key mappings.
         self.key_inputs = self.get_stream_key("inputs")
         self.key_outputs = self.get_stream_key("outputs")
 
         # Retrieve vocabulary size from globals.
+        # CREATE VOCABULARY.
         self.key_vocab_size = self.get_global_key("vocab_size")
         vocab_size = self.app_state[self.key_vocab_size]
 
@@ -57,10 +60,15 @@ class Embeddings(Model):
         # Finally: create the embeddings layer.
         self.embeddings = torch.nn.Embedding(vocab_size, self.embeddings_size)
 
+    def load_embeddings(self):
+        """
+        Loads the pretrained embeddings.
+        """
+        # https://medium.com/@martinpella/how-to-use-pre-trained-word-embeddings-in-pytorch-71ca59249f76
+        # http://ronny.rest/blog/post_2017_08_04_glove/
+        # https://nlp.stanford.edu/projects/glove/
 
-    #def load_embeddings(self):
-
-
+        
 
     def input_data_definitions(self):
         """ 

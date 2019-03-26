@@ -45,7 +45,7 @@ class Model(Module, Component):
         :param class_type: Class type of the component.
 
         :param params: Parameters read from configuration file.
-        :type params: ``ptp.utils.ParamInterface``
+        :type params: ``ptp.configuration.ParamInterface``
 
         This constructor:
 

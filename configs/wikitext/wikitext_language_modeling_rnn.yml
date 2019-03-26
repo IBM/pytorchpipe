@@ -60,9 +60,9 @@ pipeline:
     globals:
       sentence_vocab_size: source_vocab_size
   
-  # Model 1: word embeddings.
+  # Model 1: index embeddings.
   source_embedder:
-    type: Embeddings
+    type: IndexEmbeddings
     priority: 1.2
     embeddings_size: 100
     streams:
