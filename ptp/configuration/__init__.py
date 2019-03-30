@@ -1,6 +1,7 @@
 from .app_state import AppState
 from .component_factory import ComponentFactory
 from .configuration_error import ConfigurationError
+from .global_facade import GlobalFacade
 from .param_interface import ParamInterface
 from .param_registry import ParamRegistry
 from .pipeline_manager import PipelineManager
@@ -13,6 +14,7 @@ __all__ = [
     'AppState',
     'ComponentFactory',
     'ConfigurationError',
+    'GlobalFacade',
     'ParamInterface',
     'ParamRegistry',
     'PipelineManager',

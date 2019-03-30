@@ -45,7 +45,7 @@ class Model(Module, Component):
         :param class_type: Class type of the component.
 
         :param params: Parameters read from configuration file.
-        :type params: ``ptp.utils.ParamInterface``
+        :type params: ``ptp.configuration.ParamInterface``
 
         This constructor:
 
@@ -86,7 +86,6 @@ class Model(Module, Component):
         Freezes the trainable weigths of the model.
         """
         # Freeze.
-        print("FREEZEING ",self.name)
         self.frozen = True
         for param in self.parameters():
             param.requires_grad = False
@@ -110,7 +109,7 @@ class Model(Module, Component):
         mod_trainable_params = filter(lambda p: p.requires_grad, self.parameters())
         num_trainable_params = sum([np.prod(p.size()) for p in mod_trainable_params])
 
-        summary_str += '\nTotal Trainable Params: {}\n'.format(num_trainable_params)
+        summary_str += 'Total Trainable Params: {}\n'.format(num_trainable_params)
         summary_str += 'Total Non-trainable Params: {}\n'.format(num_total_params-num_trainable_params) 
         summary_str += '='*80 + '\n'
 
@@ -141,9 +140,13 @@ class Model(Module, Component):
         mod_str = ''
 
         if indent_ > 0:
-            mod_str += '  ' + '| ' * (indent_-1) + '+ '
+            mod_str += ' ' + '| ' * (indent_-1) + '+ '
 
         mod_str += module_name_ + " (" + module_._get_name() + ')'
+
+        #print("Model's state_dict:")
+        #for param_tensor in module_.state_dict():
+        #    print(param_tensor, "\t", module_.state_dict()[param_tensor].size())
 
         if indent_ == 0:
             if self.frozen:
@@ -151,24 +154,26 @@ class Model(Module, Component):
             else:
                 mod_str += "\t\t[TRAINABLE]"
 
-
         mod_str += '\n'
         mod_str += ''.join(child_lines)
 
         # Get leaf weights and number of params - only for leafs!
-        if not child_lines:
-            # Collect names and dimensions of all (named) params. 
-            mod_weights = [(n, tuple(p.size())) for n, p in module_.named_parameters()]
-            mod_str += '  ' + '| ' * indent_ + '  Matrices: {}\n'.format(mod_weights)
+        #if not child_lines:
+        # Collect names and dimensions of all (named) params. 
+        mod_direct_params = list(filter(lambda np: np[0].find('.') == -1, module_.named_parameters()))
+        if len(mod_direct_params) != 0:
+            mod_weights = [(n, tuple(p.size())) for (n, p) in mod_direct_params]
+            mod_str += ' ' + '| ' * (indent_) + '+ ' + 'Matrices: {}\n'.format(mod_weights)
 
             # Sum the parameters.
-            num_total_params = sum([np.prod(p.size()) for p in module_.parameters()])
-            mod_trainable_params = filter(lambda p: p.requires_grad, module_.parameters())
-            num_trainable_params = sum([np.prod(p.size()) for p in mod_trainable_params])
+            num_total_params = sum([np.prod(p.size()) for (_,p) in mod_direct_params])
+            mod_trainable_params = filter(lambda np: np[1].requires_grad, mod_direct_params)
+            num_trainable_params = sum([np.prod(p.size()) for (_,p) in mod_trainable_params])
 
-            mod_str += '  ' + '| ' * indent_ + '  Trainable Params: {}\n'.format(num_trainable_params)
-            mod_str += '  ' + '| ' * indent_ + '  Non-trainable Params: {}\n'.format(num_total_params -
-                                                                                     num_trainable_params)
-            mod_str += '  ' + '| ' * indent_ + '\n'
+            mod_str += ' ' + '| ' * (indent_) + '  Trainable Params: {}\n'.format(num_trainable_params)
+            mod_str += ' ' + '| ' * (indent_) + '  Non-trainable Params: {}\n'.format(num_total_params - num_trainable_params)
+        
+        # Add line.                                                                                
+        mod_str += ' ' + '| ' * (indent_) + '\n'
     
         return mod_str
