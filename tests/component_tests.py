@@ -84,7 +84,6 @@ class TestComponent(unittest.TestCase):
         self.assertEqual(data_dict['inputs'], None)
         self.assertEqual(data_dict['targets'], 3)
 
-
     def test_global_set_get(self):
         """ Tests setting and getting global value. """
         # Set global value.
