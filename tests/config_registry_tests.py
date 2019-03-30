@@ -22,16 +22,35 @@ from ptp.configuration.config_registry import ConfigRegistry
 
 class TestConfigRegistry(unittest.TestCase):
 
-    def test_values(self):
+    def test_default_params(self):
+        config = ConfigRegistry()
+        # Add params.
+        config.add_default_params({'default_0': {'default_1': 'str'}})
+        self.assertNotEqual(config['default_0'], None)
+        self.assertEqual(config['default_0']['default_1'], 'str')
 
-    config = ConfigRegistry()
+        # Remove params.
+        config.del_default_params(['default_0', 'default_1'])
+        with self.assertRaises(KeyError):
+            _ = config['default_0']['default_1']
 
-    config.add_default_params({'default_0': {'default_1': 'str'}})
-    config.add_config_params({'config_0': {'config_1': 'int'}})
+    def test_config_params(self):
+        config = ConfigRegistry()
+        # Add params.
+        config.add_config_params({'config_0': {'config_1': 'int'}})
+        self.assertNotEqual(config['config_0'], None)
+        self.assertEqual(config['config_0']['config_1'], 'int')
 
-    print(dict(params))
-    config.del_config_params(['config_0', 'config_1'])
-    print(dict(params))
+        # Remove params.
+        config.del_config_params(['config_0', 'config_1'])
+        with self.assertRaises(KeyError):
+            _ = config['config_0']['config_1']
 
-    config.del_default_params(['default_0', 'default_1'])
-    print(dict(params))
+    def test_overwrite_params(self):
+        config = ConfigRegistry()
+        config.add_config_params({'under': True})
+        config.add_default_params({'under': False})
+        self.assertEqual(config['under'], True)
+
+#if __name__ == "__main__":
+#    unittest.main()
