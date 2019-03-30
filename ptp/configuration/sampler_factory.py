@@ -34,7 +34,7 @@ class SamplerFactory(object):
     """
 
     @staticmethod
-    def build(problem, params):
+    def build(problem, config):
         """
         Static method returning particular sampler, depending on the name \
         provided in the list of parameters & the specified problem class.
@@ -42,12 +42,12 @@ class SamplerFactory(object):
         :param problem: Instance of an object derived from the Problem class.
         :type problem: ``problems.Problem``
 
-        :param params: Parameters used to instantiate the sampler.
-        :type params: ``utils.param_interface.ParamInterface``
+        :param config: Parameters used to instantiate the sampler.
+        :type config: :py:class:`ptp.configuration.ConfigInterface`
 
         ..note::
 
-            ``params`` should contains the exact (case-sensitive) class name of the sampler to instantiate.
+            ``config`` should contains the exact (case-sensitive) class name of the sampler to instantiate.
 
 
         .. warning::
@@ -80,17 +80,17 @@ class SamplerFactory(object):
         logger = logging.getLogger('SamplerFactory')
 
         # Check if sampler is required, i.e. 'sampler' section is empty.
-        if not params:
-            logger.info('The sampler configuration section is not present.')
+        if not config:
+            logger.info("The sampler configuration section is not present - using default 'random' sampling")
             return None
 
         try: 
             # Check presence of the name attribute.
-            if 'name' not in params:
+            if 'name' not in config:
                 raise Exception("The sampler configuration section does not contain the key 'name'.")
 
             # Get the class name.
-            name = params['name']
+            name = config['name']
 
             # Verify that the specified class is in the samplers package.
             if name not in dir(torch.utils.data.sampler):
@@ -106,11 +106,11 @@ class SamplerFactory(object):
             if sampler_class.__name__ == 'SubsetRandomSampler':
 
                 # Check presence of the name attribute.
-                if 'indices' not in params:
+                if 'indices' not in config:
                     raise Exception("The sampler configuration section does not contain the key 'indices' "
                                     "required by SubsetRandomSampler.")
 
-                indices = params['indices']
+                indices = config['indices']
 
                 # Analyze the type.
                 if type(indices) == str:
@@ -173,7 +173,7 @@ if __name__ == "__main__":
     """
     Tests the factory.
     """
-    from miprometheus.utils.param_interface import ParamInterface
+    from ptp.configuration.config_interface import ConfigInterface
     import yaml
 
     # Problem.
@@ -192,11 +192,11 @@ if __name__ == "__main__":
     # Option 4: name of the file containing indices.
     filename = "~/data/mnist/training_indices.txt"
 
-    params = ParamInterface()
-    params.add_default_params({'name': 'SubsetRandomSampler',
+    config = ConfigInterface()
+    config.add_default_params({'name': 'SubsetRandomSampler',
                                'indices': yaml_list})
 
-    sampler = SamplerFactory.build(TestProblem(), params)
+    sampler = SamplerFactory.build(TestProblem(), config)
     print(type(sampler))
 
     for i, index in enumerate(sampler):

@@ -25,21 +25,21 @@ class SentenceIndexer(TokenEncoder):
     Class responsible for encoding of sequences of words into list of indices.
     Those can be letter embedded, encoded with 1-hot encoding or else.
     """
-    def __init__(self, name, params):
+    def __init__(self, name, config):
         """
         Initializes the component.
 
         :param name: Component name (read from configuration file).
         :type name: str
 
-        :param params: Dictionary of parameters (read from the configuration ``.yaml`` file).
-        :type params: :py:class:`ptp.utils.ParamInterface`
+        :param config: Dictionary of parameters (read from the configuration ``.yaml`` file).
+        :type config: :py:class:`ptp.configuration.ConfigInterface`
 
         """
         # Call constructors of parent classes.
-        TokenEncoder.__init__(self, name, SentenceIndexer, params)
+        TokenEncoder.__init__(self, name, SentenceIndexer, config)
 
-        # Export vocabulary size to global params.
+        # Export vocabulary size to global variables.
         self.globals["sentence_vocab_size"] = len(self.word_to_ix)
 
         self.logger.info("Initializing sentence indexer with vocabulary size '{}' = {}".format(self.global_keys["sentence_vocab_size"], len(self.word_to_ix)))

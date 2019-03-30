@@ -31,9 +31,9 @@ class MetaSingletonABC(SingletonMetaClass, ABCMeta):
     pass
 
 
-class ParamRegistry(Mapping, metaclass=MetaSingletonABC):
+class ConfigRegistry(Mapping, metaclass=MetaSingletonABC):
     """
-    Registry singleton for the parameters.
+    Registry singleton for the parameters loaded from the configuration files.
 
     Registers `default` values (coming from workers, models, problems, etc) as well as \
     `config` values loaded by the user for a particular experiment.
@@ -45,11 +45,9 @@ class ParamRegistry(Mapping, metaclass=MetaSingletonABC):
 
     Can contain nested parameters sections (acts as a dict).
 
-
     .. warning::
 
-            This class should not be used except through :py:class:`ParamInterface`.
-
+            This class should not be used except through :py:class:`ConfigInterface`.
 
     """
 
@@ -66,7 +64,7 @@ class ParamRegistry(Mapping, metaclass=MetaSingletonABC):
 
 
         """
-        super(ParamRegistry, self).__init__()
+        super(ConfigRegistry, self).__init__()
         # Default parameters set in the code.
 
         self._clear_registry()
@@ -249,18 +247,3 @@ class ParamRegistry(Mapping, metaclass=MetaSingletonABC):
             del r[keypath[-1]]
         else:
             del current_dict[keypath[-1]]
-
-
-if __name__ == '__main__':
-
-    params = ParamRegistry()
-
-    params.add_default_params({'default_0': {'default_1': 'str'}})
-    params.add_config_params({'config_0': {'config_1': 'int'}})
-
-    print(dict(params))
-    params.del_config_params(['config_0', 'config_1'])
-    print(dict(params))
-
-    params.del_default_params(['default_0', 'default_1'])
-    print(dict(params))

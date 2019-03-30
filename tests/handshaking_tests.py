@@ -20,7 +20,7 @@ import unittest
 
 from ptp.components.component import Component
 from ptp.data_types.data_definition import DataDefinition
-from ptp.configuration.param_interface import ParamInterface
+from ptp.configuration.config_interface import ConfigInterface
 
 
 class MockupComponent (Component):
@@ -28,7 +28,7 @@ class MockupComponent (Component):
     Mockup component class.
     """
     def __init__(self):
-        Component.__init__(self, "MockupComponent", None, ParamInterface())
+        Component.__init__(self, "MockupComponent", None, ConfigInterface())
 
     def input_data_definitions(self):
         return {

@@ -19,8 +19,8 @@ __author__ = "Tomasz Kornuta"
 import unittest
 import os
 
-from ptp.configuration.param_interface import ParamInterface
-from ptp.configuration.param_registry import ParamRegistry
+from ptp.configuration.config_interface import ConfigInterface
+from ptp.configuration.config_registry import ConfigRegistry
 from ptp.configuration.app_state import AppState
 from ptp.configuration.pipeline_manager import PipelineManager
 
@@ -39,9 +39,9 @@ class TestPipeline(unittest.TestCase):
     def test_create_component_full_type(self):
         """ Tests whether component can be created when using full module name with 'path'. """
         # Instantiate.
-        ParamRegistry()._clear_registry()
-        params = ParamInterface()
-        params.add_default_params({
+        ConfigRegistry()._clear_registry()
+        config = ConfigInterface()
+        config.add_default_params({
             'bow_encoder' : 
                 {
                     'type': 'ptp.components.text.bow_encoder.BOWEncoder',
@@ -49,7 +49,7 @@ class TestPipeline(unittest.TestCase):
                 }
             })
         # Build object.
-        pipe = PipelineManager('testpm', params)
+        pipe = PipelineManager('testpm', config)
         pipe.build(False)
 
         # Assert type.
@@ -59,9 +59,9 @@ class TestPipeline(unittest.TestCase):
     def test_create_component_type(self):
         """ Tests whether component can be created when using only module name. """
         # Instantiate.
-        ParamRegistry()._clear_registry()
-        params = ParamInterface()
-        params.add_default_params({
+        ConfigRegistry()._clear_registry()
+        config = ConfigInterface()
+        config.add_default_params({
             'bow_encoder' : 
                 {
                     'type': 'BOWEncoder',
@@ -69,7 +69,7 @@ class TestPipeline(unittest.TestCase):
                 }
             })
         # Build object.
-        pipe = PipelineManager('testpm', params)
+        pipe = PipelineManager('testpm', config)
         pipe.build(False)
 
         # Assert type.
@@ -79,9 +79,9 @@ class TestPipeline(unittest.TestCase):
     def test_disable_component(self):
         """ Tests whether skipping (disable) works properly. """
         # Set param registry.
-        ParamRegistry()._clear_registry()
-        params = ParamInterface()
-        params.add_default_params({
+        ConfigRegistry()._clear_registry()
+        config = ConfigInterface()
+        config.add_default_params({
             'disable': 'bow_encoder',
             'bow_encoder' : 
                 {
@@ -90,7 +90,7 @@ class TestPipeline(unittest.TestCase):
                 }
             })
         # Build object.
-        pipe = PipelineManager('testpm', params)
+        pipe = PipelineManager('testpm', config)
         pipe.build(False)
 
         # Assert no components were created.
@@ -100,9 +100,9 @@ class TestPipeline(unittest.TestCase):
     def test_priorities(self):
         """ Tests component priorities. """
         # Instantiate.
-        ParamRegistry()._clear_registry()
-        params = ParamInterface()
-        params.add_default_params({
+        ConfigRegistry()._clear_registry()
+        config = ConfigInterface()
+        config.add_default_params({
             'bow_encoder2' : 
                 {
                     'type': 'BOWEncoder',
@@ -114,7 +114,7 @@ class TestPipeline(unittest.TestCase):
                     'priority': 0.1
                 }
             })
-        pipe = PipelineManager('testpm', params)
+        pipe = PipelineManager('testpm', config)
         pipe.build(False)
 
         # Assert the right order of components.

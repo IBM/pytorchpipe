@@ -39,61 +39,40 @@ class MNIST(ImageToClassProblem):
 
     """
 
-    def __init__(self, name, params):
+    def __init__(self, name, config):
         """
-        Initializes MNIST problem:
-
-            - Calls base class constructor,
-            - Sets following attributes using the provided ``params`` from configuration file:
-
-                - ``self.data_folder`` (`string`) : Root directory of dataset where ``processed/training.pt``\
-                    and  ``processed/test.pt`` will be saved,
-                - ``self.use_train_data`` (`bool`, `optional`) : If True, creates dataset from ``training.pt``,\
-                    otherwise from ``test.pt``
-                - ``self.resize`` : (optional) resize the images to `[h, w]` if set,
-                - ``self.defaut_values`` :
-
-                    >>> self.default_values = {'num_classes': 10,
-                    >>>            'num_channels': 1}
-
+        Initializes the MNIST problem.
 
         .. warning::
 
             Resizing images might cause a significant slow down in batch generation.
 
-        .. note::
-
-            The following is set by default:
-
-            >>> self.params.add_default_params({'data_folder': '~/data/mnist',
-            >>>           'use_train_data': True})
-
         :param name: Problem name.
         :type name: str
 
-        :param params: Dictionary of parameters (read from the configuration ``.yaml`` file).
-        :type params: :py:class:`ptp.utils.ParamInterface`
+        :param config: Dictionary of parameters (read from the configuration ``.yaml`` file).
+        :type config: :py:class:`ptp.configuration.ConfigInterface`
         """
 
         # Call base class constructors.
-        super(MNIST, self).__init__(name, MNIST, params)
+        super(MNIST, self).__init__(name, MNIST, config)
 
         # Get absolute path.
-        data_folder = os.path.expanduser(self.params['data_folder'])
+        data_folder = os.path.expanduser(self.config['data_folder'])
 
         # Retrieve parameters from the dictionary.
-        self.use_train_data = self.params['use_train_data']
+        self.use_train_data = self.config['use_train_data']
 
         # Add transformations depending on the resizing option.
-        if 'resize' in self.params:
+        if 'resize' in self.config:
             # Check the desired size.
-            if len(self.params['resize']) != 2:
+            if len(self.config['resize']) != 2:
                 self.logger.error("'resize' field must contain 2 values: the desired height and width")
                 exit(-1)
 
             # Output image dimensions.
-            self.height = self.params['resize'][0]
-            self.width = self.params['resize'][1]
+            self.height = self.config['resize'][0]
+            self.width = self.config['resize'][1]
 
             # Up-scale and transform to tensors.
             transform = transforms.Compose([transforms.Resize((self.height, self.width)), transforms.ToTensor()])

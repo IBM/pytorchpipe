@@ -15,6 +15,9 @@ pretrained_embeddings: ''
 # Source files that will be used to create the vocabulary  (LOADED)
 source_vocabulary_files: ''
 
+# Additional tokens, that will be added to vocabulary (LOADED)
+additional_tokens: ''
+
 # File containing resulting (LOADED)
 vocabulary_mappings_file: 'default_mappings.csv'
 

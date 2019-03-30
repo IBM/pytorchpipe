@@ -22,19 +22,19 @@ import logging
 from ptp.configuration.app_state import AppState
 from ptp.configuration.globals_facade import GlobalsFacade
 from ptp.configuration.key_mappings_facade import KeyMappingsFacade
-from ptp.configuration.configs_parsing import load_default_configuration_file
+from ptp.configuration.config_parsing import load_default_configuration_file
 
 
 class Component(abc.ABC):
-    def __init__(self, name, class_type, params):
+    def __init__(self, name, class_type, config):
         """
         Initializes the component.
 
         This constructor:
 
-        - stores a pointer to ``params``:
+        - stores a pointer to ``config``:
 
-            >>> self.params = params
+            >>> self.config = config
 
         - sets a problem name:
 
@@ -52,12 +52,12 @@ class Component(abc.ABC):
 
         :param class_type: Class type of the component.
 
-        :param params: Dictionary of parameters (read from configuration ``.yaml`` file).
-        :type params: ``configuration.param_interface.ParamInterface``
+        :param config: Dictionary of parameters (read from configuration ``.yaml`` file).
+        :type config: :py:class:`ptp.configuration.ConfigInterface`
 
         """
         self.name = name
-        self.params = params
+        self.config = config
 
         # Initialize logger.
         self.logger = logging.getLogger(self.name)        
@@ -67,27 +67,27 @@ class Component(abc.ABC):
 
         # Load default configuration.
         if class_type is not None:
-            self.params.add_default_params(load_default_configuration_file(class_type))
+            self.config.add_default_params(load_default_configuration_file(class_type))
 
         # Initialize the "streams mapping facility".
-        if "streams" not in params or params["streams"] is None:
+        if "streams" not in config or config["streams"] is None:
             self.__stream_keys = {}
         else:
-            self.__stream_keys = params["streams"]
+            self.__stream_keys = config["streams"]
         self.stream_keys = KeyMappingsFacade(self.__stream_keys)
 
         # Initialize the "globals mapping facility".
-        if "globals" not in params or params["globals"] is None:
+        if "globals" not in config or config["globals"] is None:
             self.__global_keys = {}
         else:
-            self.__global_keys = params["globals"]
+            self.__global_keys = config["globals"]
         self.global_keys = KeyMappingsFacade(self.__global_keys)
 
         # Initialize the "statistics mapping facility".
-        if "statistics" not in params or params["statistics"] is None:
+        if "statistics" not in config or config["statistics"] is None:
             self.__statistics_keys = {}
         else:
-            self.__statistics_keys = params["statistics"]
+            self.__statistics_keys = config["statistics"]
         self.statistics_keys = KeyMappingsFacade(self.__statistics_keys)
 
         # Facade for accessing global parameters (stored still in AppState).

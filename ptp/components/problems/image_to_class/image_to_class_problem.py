@@ -31,7 +31,7 @@ class ImageToClassProblem(Problem):
 
     """
 
-    def __init__(self, name, class_type, params):
+    def __init__(self, name, class_type, config):
         """
         Initializes problem.
 
@@ -40,13 +40,13 @@ class ImageToClassProblem(Problem):
 
         :param class_type: Class type of the component.
 
-        :param params: Dictionary of parameters (read from the configuration ``.yaml`` file).
-        :type params: :py:class:`ptp.utils.ParamInterface`
+        :param config: Dictionary of parameters (read from the configuration ``.yaml`` file).
+        :type config: :py:class:`ptp.configuration.ConfigInterface`
         """
         # Call base class constructors.
-        super(ImageToClassProblem, self).__init__(name, class_type, params)
+        super(ImageToClassProblem, self).__init__(name, class_type, config)
 
-        # Set default key mappings.
+        # Get default key mappings.
         self.key_inputs = self.stream_keys["inputs"]
         self.key_targets = self.stream_keys["targets"]
 

@@ -26,19 +26,19 @@ class BatchSize(Component):
 
     """
 
-    def __init__(self, name, params):
+    def __init__(self, name, config):
         """
         Initializes object.
 
         :param name: Batch size name.
         :type name: str
 
-        :param params: Dictionary of parameters (read from the configuration ``.yaml`` file).
-        :type params: :py:class:`ptp.utils.ParamInterface`
+        :param config: Dictionary of parameters (read from the configuration ``.yaml`` file).
+        :type config: :py:class:`ptp.configuration.ConfigInterface`
 
         """
         # Call constructors of parent classes.
-        Component.__init__(self, name, BatchSize, params)
+        Component.__init__(self, name, BatchSize, config)
 
         # Set key mappings.
         self.key_indices = self.stream_keys["indices"]

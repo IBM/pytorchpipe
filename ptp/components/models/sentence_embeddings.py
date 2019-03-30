@@ -39,32 +39,32 @@ class SentenceEmbeddings(Model):
     Optionally, it can load pretrained word embeddings (currently GloVe).
 
     """ 
-    def __init__(self, name, params):
+    def __init__(self, name, config):
         """
         Initializes the ``SentenceEmbeddings`` layer.
 
         :param name: Name of the model (taken from the configuration file).
 
-        :param params: Parameters read from configuration file.
-        :type params: ``ptp.configuration.ParamInterface``
+        :param config: Parameters read from configuration file.
+        :type config: ``ptp.configuration.ConfigInterface``
         """
-        super(SentenceEmbeddings, self).__init__(name, SentenceEmbeddings, params)
+        super(SentenceEmbeddings, self).__init__(name, SentenceEmbeddings, config)
 
         # Set key mappings.
         self.key_inputs = self.stream_keys["inputs"]
         self.key_outputs = self.stream_keys["outputs"]
 
         # Read the actual configuration.
-        self.data_folder = os.path.expanduser(params['data_folder'])
+        self.data_folder = os.path.expanduser(self.config['data_folder'])
 
         # Source and resulting (indexed) vocabulary.
-        self.source_vocabulary_files = params['source_vocabulary_files']
-        self.vocabulary_mappings_file = params['vocabulary_mappings_file']
+        self.source_vocabulary_files = self.config['source_vocabulary_files']
+        self.vocabulary_mappings_file = self.config['vocabulary_mappings_file']
         # Regenerate vocabulary.
-        self.mode_regenerate = params['regenerate']
+        self.mode_regenerate = self.config['regenerate']
 
         # Retrieve embeddings size from configuration and export it to globals.
-        self.embeddings_size = params['embeddings_size']
+        self.embeddings_size = self.config['embeddings_size']
         self.globals["embeddings_size"] = self.embeddings_size
 
         # Initialize the vocabulary.
@@ -83,7 +83,7 @@ class SentenceEmbeddings(Model):
             assert (len(self.word_to_ix) > 0), "The loaded encodings list is empty!"
 
         # Check if additional tokens are present.
-        self.additional_tokens = params.get("additional_tokens", "").split(',')
+        self.additional_tokens = self.config["additional_tokens"].split(',')
         for word in self.additional_tokens:
             # If new token.
             if word not in self.word_to_ix:
@@ -98,8 +98,8 @@ class SentenceEmbeddings(Model):
         self.embeddings = torch.nn.Embedding(len(self.word_to_ix), self.embeddings_size)
 
         # Load the embeddings first.
-        if self.params["pretrained_embeddings"] != '':
-            emb_vectors = self.load_pretrained_glove_embeddings(self.data_folder, self.params["pretrained_embeddings"], self.word_to_ix, self.embeddings_size)
+        if self.config["pretrained_embeddings"] != '':
+            emb_vectors = self.load_pretrained_glove_embeddings(self.data_folder, self.config["pretrained_embeddings"], self.word_to_ix, self.embeddings_size)
             self.embeddings.weight = torch.nn.Parameter(emb_vectors)
 
 

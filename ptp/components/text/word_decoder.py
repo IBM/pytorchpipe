@@ -24,19 +24,19 @@ class WordDecoder(TokenEncoder):
     """
     Class responsible for decoding of samples encoded in the form of vectors ("probability distributions").
     """
-    def __init__(self, name, params):
+    def __init__(self, name, config):
         """
         Initializes the component.
 
         :param name: Component name (read from configuration file).
         :type name: str
 
-        :param params: Dictionary of parameters (read from the configuration ``.yaml`` file).
-        :type params: :py:class:`ptp.utils.ParamInterface`
+        :param config: Dictionary of parameters (read from the configuration ``.yaml`` file).
+        :type config: :py:class:`ptp.configuration.ConfigInterface`
 
         """
         # Call constructors of parent classes.
-        TokenEncoder.__init__(self, name, WordDecoder, params)
+        TokenEncoder.__init__(self, name, WordDecoder, config)
         # Construct reverse mapping for faster processing.
         self.ix_to_word = dict((v,k) for k,v in self.word_to_ix.items())
 

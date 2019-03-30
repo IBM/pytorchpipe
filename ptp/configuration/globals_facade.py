@@ -20,7 +20,7 @@ from ptp.configuration.app_state import AppState
 
 class GlobalsFacade(object):
     """
-    Simple facility for accessing global variables using provided mappings using list read-write access.
+    Simple facility for accessing global variables using provided mappings using list-like read-write access.
     """
     def __init__(self, key_mappings):
         """

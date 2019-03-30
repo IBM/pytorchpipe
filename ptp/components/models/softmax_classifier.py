@@ -26,22 +26,21 @@ class SoftmaxClassifier(Model):
     """
     Simple Classifier consisting of fully connected layer with log softmax non-linearity.
     """
-    def __init__(self, name, params):
+    def __init__(self, name, config):
         """
         Initializes the classifier.
 
-        :param params: Dictionary of parameters (read from configuration ``.yaml`` file).
-        :type params: ``ptp.configuration.ParamInterface``
+        :param config: Dictionary of parameters (read from configuration ``.yaml`` file).
+        :type config: ``ptp.configuration.ConfigInterface``
         """
         # Call constructors of parent classes.
-        #super(Model, self).__init__(name, params))
-        Model.__init__(self, name, SoftmaxClassifier, params)
+        Model.__init__(self, name, SoftmaxClassifier, config)
 
-        # Set key mappings.
+        # Get key mappings.
         self.key_inputs = self.stream_keys["inputs"]
         self.key_predictions = self.stream_keys["predictions"]
 
-        # Retrieve input size from global params.
+        # Retrieve input size from global variables.
         self.input_size = self.globals["input_size"]
         if type(self.input_size) == list:
             if len(self.input_size) == 1:
@@ -63,11 +62,12 @@ class SoftmaxClassifier(Model):
         self.layers = torch.nn.ModuleList()
 
         # Retrieve dropout parameter - if set, will put dropout between every layer.
-        #dropout = self.params["dropout"]
+        # TODO!
+        #dropout = self.config["dropout"]
 
         # Retrieve number of hidden layers, along with their sizes (numbers of hidden neurons from configuration).
         try:
-            hidden_sizes = self.params["hidden_sizes"]
+            hidden_sizes = self.config["hidden_sizes"]
             if type(hidden_sizes) == list:
                 # Stack linear layers.
                 input_dim = self.input_size

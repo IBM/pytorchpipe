@@ -24,21 +24,21 @@ class LabelIndexer(TokenEncoder):
     """
     Class responsible for changing of samples consisting of single words/labels into indices (that e.g. can be latter used for loss calculation, PyTorch-style).
     """
-    def __init__(self, name, params):
+    def __init__(self, name, config):
         """
         Initializes the component.
 
         :param name: Component name (read from configuration file).
         :type name: str
 
-        :param params: Dictionary of parameters (read from the configuration ``.yaml`` file).
-        :type params: :py:class:`ptp.utils.ParamInterface`
+        :param config: Dictionary of parameters (read from the configuration ``.yaml`` file).
+        :type config: :py:class:`ptp.configuration.ConfigInterface`
 
         """
         # Call constructors of parent classes.
-        TokenEncoder.__init__(self, name, LabelIndexer, params)
+        TokenEncoder.__init__(self, name, LabelIndexer, config)
 
-        # Export vocabulary size to global params.
+        # Export vocabulary size to global variables.
         self.globals["label_vocab_size"] = len(self.word_to_ix)
 
         self.logger.info("Initializing sentence indexer with vocabulary size '{}' = {}".format(self.global_keys["label_vocab_size"], len(self.word_to_ix)))

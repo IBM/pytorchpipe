@@ -28,27 +28,27 @@ class ReshapeTensor(Component):
 
     """
 
-    def __init__(self, name, params):
+    def __init__(self, name, config):
         """
         Initializes object.
 
         :param name: Loss name.
         :type name: str
 
-        :param params: Dictionary of parameters (read from the configuration ``.yaml`` file).
-        :type params: :py:class:`ptp.utils.ParamInterface`
+        :param config: Dictionary of parameters (read from the configuration ``.yaml`` file).
+        :type config: :py:class:`ptp.configuration.ConfigInterface`
 
         """
         # Call constructors of parent classes.
-        Component.__init__(self, name, ReshapeTensor, params)
+        Component.__init__(self, name, ReshapeTensor, config)
 
         # Set key mappings.
         self.key_inputs = self.stream_keys["inputs"]
         self.key_outputs = self.stream_keys["outputs"]
         
         # Get input and output shapes from configuration.
-        self.input_dims = [int(x) for x in self.params["input_dims"]]
-        self.output_dims = [int(x) for x in self.params["output_dims"]]
+        self.input_dims = [int(x) for x in self.config["input_dims"]]
+        self.output_dims = [int(x) for x in self.config["output_dims"]]
 
         # Set global variable - all dimensions ASIDE OF BATCH.
         self.globals["output_size"] = self.output_dims[1:]

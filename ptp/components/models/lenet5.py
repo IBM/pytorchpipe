@@ -29,17 +29,17 @@ class LeNet5(Model):
     """
     A classical LeNet-5 model for MNIST digits classification. 
     """ 
-    def __init__(self, name, params):
+    def __init__(self, name, config):
         """
         Initializes the ``LeNet5`` model, creates the required layers.
 
         :param name: Name of the model (taken from the configuration file).
 
-        :param params: Parameters read from configuration file.
-        :type params: ``ptp.configuration.ParamInterface``
+        :param config: Parameters read from configuration file.
+        :type config: ``ptp.configuration.ConfigInterface``
 
         """
-        super(LeNet5, self).__init__(name, LeNet5, params)
+        super(LeNet5, self).__init__(name, LeNet5, config)
 
         # Get key mappings.
         self.key_inputs = self.stream_keys["inputs"]
