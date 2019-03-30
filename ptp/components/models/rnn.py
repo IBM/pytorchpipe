@@ -43,7 +43,7 @@ class RNN(Model):
 
         # Retrieve input size from global params.
         self.key_input_size = self.get_global_key("input_size")
-        self.input_size = self.app_state[self.key_input_size]
+        self.input_size = self.global_value["input_size"]
         if type(self.input_size) == list:
             if len(self.input_size) == 1:
                 self.input_size = self.input_size[0]
@@ -51,8 +51,7 @@ class RNN(Model):
                 raise ConfigurationError("RNN input size '{}' must be a single dimension (current {})".format(self.key_input_size, self.input_size))
 
         # Retrieve output (prediction) size from global params.
-        self.key_prediction_size = self.get_global_key("prediction_size")
-        self.prediction_size = self.app_state[self.key_prediction_size]
+        self.prediction_size = self.global_value["prediction_size"]
         if type(self.prediction_size) == list:
             if len(self.prediction_size) == 1:
                 self.prediction_size = self.prediction_size[0]

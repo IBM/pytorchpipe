@@ -46,14 +46,12 @@ class ReshapeTensor(Component):
         self.key_inputs = self.get_stream_key("inputs")
         self.key_outputs = self.get_stream_key("outputs")
         
-        self.key_output_size = self.get_global_key("output_size")
-
         # Get input and output shapes from configuration.
         self.input_dims = [int(x) for x in self.params["input_dims"]]
         self.output_dims = [int(x) for x in self.params["output_dims"]]
 
         # Set global variable - all dimensions ASIDE OF BATCH.
-        self.app_state[self.key_output_size] = self.output_dims[1:]
+        self.global_value["output_size"] = self.output_dims[1:]
 
     def input_data_definitions(self):
         """ 
