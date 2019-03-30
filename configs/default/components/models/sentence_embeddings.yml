@@ -1,33 +1,33 @@
-# This file defines the default values for the RNN model.
+# This file defines the default values for the Sentence Embeddings.
 
 ####################################################################
 # 1. CONFIGURATION PARAMETERS that will be LOADED by the component.
 ####################################################################
 
-# Size of the hidden state (LOADED)
-hidden_size: 100
+# Folder where problem will store data (LOADED)
+data_folder: '~/data/'
 
-# Dropout rate (LOADED)
-# Default: 0 (means that it is turned off)
-dropout_rate: 0
+# File containing pretrained embeddings (LOADED)
+# Empty means that no embeddings will be loaded.
+# Options: 
+pretrained_embeddings: ''
 
-# Number of "stacked" layers (LOADED)
-num_layers: 1
+# Source files that will be used to create the vocabulary  (LOADED)
+source_vocabulary_files: ''
 
-# Type of recurrent cell (LOADED)
-# Options: LSTM | GRU | RNN_TANH | RNN_RELU
-rnn_type: LSTM
+# File containing resulting (LOADED)
+vocabulary_mappings_file: 'default_mappings.csv'
 
-# Flag informing the model to learn the intial state (h0/c0) (LOADED)
-# When false, (c0/c0) will be initialized as zeros.
-initial_state_trainable: True
+# If set, component will always (re)generate vocabulary (LOADED)
+# True means that it will be regenerated despite the existence of file.
+regenerate: False 
 
 streams: 
   ####################################################################
   # 2. Keymappings associated with INPUT and OUTPUT streams.
   ####################################################################
 
-  # Stream containing batch of images (INPUT)
+  # Stream containing batch of inputs (INPUT)
   inputs: inputs
 
   # Stream containing predictions (OUTPUT)
@@ -38,15 +38,20 @@ globals:
   # 3. Keymappings of variables that will be RETRIEVED from GLOBALS.
   ####################################################################
 
-  # Size of the input (RETRIEVED)
-  input_size: input_size
-
-  # Size of the prediction (RETRIEVED)
-  prediction_size: prediction_size
-
   ####################################################################
   # 4. Keymappings associated with GLOBAL variables that will be SET.
   ####################################################################
+
+  # The created vocabulary (SET)
+  vocabulary: vocabulary
+
+  # Size of the vocabulary (SET)
+  vocabulary_size: vocabulary_size
+
+  # Size of the embeddings (SET)
+  # It is exported to globals, so other components can use it during
+  # their initialization.
+  embeddings_size: embeddings_size
 
   ####################################################################
   # 5. Keymappings associated with statistics that will be ADDED.

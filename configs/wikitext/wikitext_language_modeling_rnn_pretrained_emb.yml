@@ -41,36 +41,27 @@ testing:
     batch_size: 64
 
 pipeline:
-  name: wikitext_language_modeling_rnn
+  name: wikitext_language_modeling_rnn_pretrained_emb
   #load: /users/tomaszkornuta/experiments/dummylanguageidentification/language_classifier/20190301_145416/checkpoints/language_classifier_best.pt
   #freeze: True
   #disable: prediction_decoder,accuracy
 
-  # Source encoding.
-  source_indexer:
-    type: SentenceIndexer
+  # Source encoding - model 1.
+  source_sentence_embedding:
+    type: SentenceEmbeddings
     priority: 1.1
+    embeddings_size: 50
+    pretrained_embeddings: glove.6B.50d.txt
     data_folder: *data_folder
-    source_files: wiki.train.tokens,wiki.valid.tokens,wiki.test.tokens
-    encodings_file: wiki.all.tokenized_words
+    source_vocabulary_files: wiki.train.tokens,wiki.valid.tokens,wiki.test.tokens
+    vocabulary_mappings_file: wiki.all.tokenized_words
     additional_tokens: <eos>
     streams:
       inputs: sources
-      outputs: indexed_sources
-    globals:
-      sentence_vocab_size: source_vocab_size
-  
-  # Model 1: index embeddings.
-  source_embedder:
-    type: IndexEmbeddings
-    priority: 1.2
-    embeddings_size: 100
-    streams:
-      inputs: indexed_sources
       outputs: embedded_sources
     globals:
       vocab_size: source_vocab_size
-      
+        
   # Target encoding.
   target_indexer:
     type: SentenceIndexer
@@ -85,7 +76,7 @@ pipeline:
     globals:
       sentence_vocab_size: target_vocab_size
   
-  # Model 3: RNN
+  # Model 2: RNN
   lstm:
     type: RNN
     #freeze: True

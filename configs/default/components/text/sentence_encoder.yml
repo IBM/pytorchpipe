@@ -13,7 +13,7 @@ source_files: ''
 # File containing encodings (LOADED)
 encodings_file: 'default_encodings.csv'
 
-# If set, component will always (re)generate data (LOADED)
+# If set, component will always (re)generate vocabulary (LOADED)
 # True means that it will be regenerated despite the existence of file.
 regenerate: False 
 

@@ -25,7 +25,7 @@ from ptp.configuration.param_interface import ParamInterface
 
 class MockupProblem (Problem):
     """
-    Mockup component class.
+    Mockup problem class.
     """
     def __init__(self, name, params):
         Problem.__init__(self, name, None, params)

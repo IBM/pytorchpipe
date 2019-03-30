@@ -31,6 +31,7 @@ class RNN(Model):
         Initializes the model.
 
         :param params: Dictionary of parameters (read from configuration ``.yaml`` file).
+        :type params: ``ptp.configuration.ParamInterface``
         """
         # Call constructors of parent classes.
         #super(Model, self).__init__(name, params))
@@ -80,13 +81,13 @@ class RNN(Model):
         self.rnn_type = self.params["rnn_type"]
         if self.rnn_type in ['LSTM', 'GRU']:
             # Create rnn cell.
-            self.rnn = getattr(torch.nn, self.rnn_type)(self.input_size, self.hidden_size, self.num_layers, dropout=dropout_rate, batch_first=True)
+            self.rnn_cell = getattr(torch.nn, self.rnn_type)(self.input_size, self.hidden_size, self.num_layers, dropout=dropout_rate, batch_first=True)
         else:
             try:
                 # Retrieve the non-linearity.
                 nonlinearity = {'RNN_TANH': 'tanh', 'RNN_RELU': 'relu'}[self.rnn_type]
                 # Create rnn cell.
-                self.rnn = torch.nn.RNN(self.input_size, self.hidden_size, self.num_layers, nonlinearity=nonlinearity, dropout=dropout_rate, batch_first=True)
+                self.rnn_cell = torch.nn.RNN(self.input_size, self.hidden_size, self.num_layers, nonlinearity=nonlinearity, dropout=dropout_rate, batch_first=True)
 
             except KeyError:
                 raise ConfigurationError( "Invalid RNN type, available options for 'rnn_type' are ['LSTM', 'GRU', 'RNN_TANH', 'RNN_RELU'] (currently '{}')".format(self.rnn_type))
@@ -94,16 +95,42 @@ class RNN(Model):
         # Create the output layer.
         self.hidden2output = torch.nn.Linear(self.hidden_size, self.prediction_size)
         
+        # Check if initial state (h0/c0) are trainable or not.
+        self.initial_state_trainable = self.params["initial_state_trainable"]
 
-    def init_hiddens_state(self, batch_size):
+        # Parameters - for a single sample.        
+        h0 = torch.zeros(self.num_layers, 1, self.hidden_size)
+        c0 = torch.zeros(self.num_layers, 1, self.hidden_size)
+
+        if self.initial_state_trainable:
+            self.logger.info("Using trainable initial (h0/c0) state")
+            # Initialize a single vector used as hidden state.
+            # Initialize it using xavier initialization.
+            torch.nn.init.xavier_uniform(h0)
+            # It will be trainable, i.e. the system will learn what should be the right initialization state.
+            self.init_hidden = torch.nn.Parameter(h0, requires_grad=True)
+            # Initilize memory cell in a similar way.
+            if self.rnn_type == 'LSTM':
+                torch.nn.init.xavier_uniform(c0)
+                self.init_memory = torch.nn.Parameter(c0, requires_grad=True)
+        else:
+            self.logger.info("Using zero initial (h0/c0) state")
+            # We will still embedd it into parameter to enable storing/loading of both types of models by each other.
+            self.init_hidden = torch.nn.Parameter(h0, requires_grad=False)
+            if self.rnn_type == 'LSTM':
+                self.init_memory = torch.nn.Parameter(c0, requires_grad=False)
+
+
+    def initialize_hiddens_state(self, batch_size):
 
         if self.rnn_type == 'LSTM':
             # Return tuple (hidden_state, memory_cell).
-            return (torch.zeros(self.num_layers, batch_size, self.hidden_size).type(self.app_state.FloatTensor),
-                    torch.zeros(self.num_layers, batch_size, self.hidden_size).type(self.app_state.FloatTensor) )
+            return (self.init_hidden.expand(self.num_layers, batch_size, self.hidden_size).contiguous(),
+                self.init_memory.expand(self.num_layers, batch_size, self.hidden_size).contiguous() )
+
         else:
             # Return hidden_state.
-            return torch.zeros(self.num_layers, batch_size, self.hidden_size).type(self.app_state.FloatTensor)
+            return self.init_hidden.expand(self.num_layers, batch_size, self.hidden_size).contiguous()
 
 
     def input_data_definitions(self):
@@ -142,10 +169,10 @@ class RNN(Model):
         inputs = data_dict[self.key_inputs]
 
         # Initialize hidden state.
-        hidden = self.init_hiddens_state(inputs.shape[0])
+        hidden = self.initialize_hiddens_state(inputs.shape[0])
 
-        # Propagate inputs through rnn.
-        activations, hidden = self.rnn(inputs, hidden)
+        # Propagate inputs through rnn cell.
+        activations, hidden = self.rnn_cell(inputs, hidden)
         
         # Propagate activations through dropout layer.
         activations = self.dropout(activations)

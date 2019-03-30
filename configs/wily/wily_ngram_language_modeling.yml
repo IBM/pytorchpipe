@@ -76,9 +76,9 @@ pipeline:
       inputs: tokenized_ngrams
       outputs: indexed_ngrams
   
-  # Model 1: word embeddings.
+  # Model 1: index embeddings.
   sentence_embedder:
-    type: Embeddings
+    type: IndexEmbeddings
     priority: 3
     embeddings_size: 100 # 235 * 4
     streams:

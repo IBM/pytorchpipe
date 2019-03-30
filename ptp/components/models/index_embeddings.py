@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) IBM Corporation 2018
+# Copyright (C) tkornuta, IBM Corporation 2019
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,9 +24,11 @@ from ptp.components.models.model import Model
 from ptp.data_types.data_definition import DataDefinition
 
 
-class Embeddings(Model):
+class IndexEmbeddings(Model):
     """
-    A simple model consisting of a single word embeddings layer.
+    A simple embeddings layer.
+    Embedds words using the provided indices of words.
+    Assumes presence of a Word/Sencence Indexer.
     """ 
     def __init__(self, name, params):
         """
@@ -35,9 +37,9 @@ class Embeddings(Model):
         :param name: Name of the model (taken from the configuration file).
 
         :param params: Parameters read from configuration file.
-        :type params: ``miprometheus.utils.ParamInterface``
+        :type params: ``ptp.configuration.ParamInterface``
         """
-        super(Embeddings, self).__init__(name, Embeddings, params)
+        super(IndexEmbeddings, self).__init__(name, IndexEmbeddings, params)
 
         # Set key mappings.
         self.key_inputs = self.get_stream_key("inputs")
@@ -56,6 +58,7 @@ class Embeddings(Model):
 
         # Finally: create the embeddings layer.
         self.embeddings = torch.nn.Embedding(vocab_size, self.embeddings_size)
+
 
 
     def input_data_definitions(self):

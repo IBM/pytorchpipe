@@ -36,7 +36,7 @@ class LeNet5(Model):
         :param name: Name of the model (taken from the configuration file).
 
         :param params: Parameters read from configuration file.
-        :type params: ``miprometheus.utils.ParamInterface``
+        :type params: ``ptp.configuration.ParamInterface``
 
         """
         super(LeNet5, self).__init__(name, LeNet5, params)
