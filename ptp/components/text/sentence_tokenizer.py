@@ -40,8 +40,8 @@ class SentenceTokenizer(Component):
         self.mode_detokenize = params['detokenize']
 
         # Set key mappings.
-        self.key_inputs = self.get_stream_key("inputs")
-        self.key_outputs = self.get_stream_key("outputs")
+        self.key_inputs = self.stream_keys["inputs"]
+        self.key_outputs = self.stream_keys["outputs"]
 
         if self.mode_detokenize:
             # list of strings -> sentence.

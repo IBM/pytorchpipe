@@ -113,10 +113,10 @@ class MNIST(ImageToClassProblem):
                                       transform=transform)
 
         # Set global variables - all dimensions ASIDE OF BATCH.
-        self.global_value["num_classes"] = 10
-        self.global_value["image_width"] = self.width
-        self.global_value["image_height"] = self.height
-        self.global_value["image_depth"] = 1
+        self.globals["num_classes"] = 10
+        self.globals["image_width"] = self.width
+        self.globals["image_height"] = self.height
+        self.globals["image_depth"] = 1
 
         # Class names.
         #self.labels = 'Zero One Two Three Four Five Six Seven Eight Nine'.split(' ')

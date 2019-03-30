@@ -43,10 +43,10 @@ class Accuracy(Component):
         Component.__init__(self, name, Accuracy, params)
 
         # Set key mappings.
-        self.key_targets = self.get_stream_key("targets")
-        self.key_predictions = self.get_stream_key("predictions")
+        self.key_targets = self.stream_keys["targets"]
+        self.key_predictions = self.stream_keys["predictions"]
 
-        self.key_accuracies = self.get_statistic_key("accuracies")
+        self.key_accuracies = self.statistics_keys["accuracies"]
 
 
     def input_data_definitions(self):

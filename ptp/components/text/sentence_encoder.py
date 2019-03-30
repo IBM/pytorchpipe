@@ -40,7 +40,7 @@ class SentenceEncoder(TokenEncoder):
 
         # Export output token size to global params.
         self.output_size = len(self.word_to_ix)
-        self.global_value["sentence_vocab_size"] = self.output_size
+        self.globals["sentence_vocab_size"] = self.output_size
 
     def input_data_definitions(self):
         """ 

@@ -41,16 +41,16 @@ class IndexEmbeddings(Model):
         """
         super(IndexEmbeddings, self).__init__(name, IndexEmbeddings, params)
 
-        # Set key mappings.
-        self.key_inputs = self.get_stream_key("inputs")
-        self.key_outputs = self.get_stream_key("outputs")
+        # Get key mappings.
+        self.key_inputs = self.stream_keys["inputs"]
+        self.key_outputs = self.stream_keys["outputs"]
 
         # Retrieve vocabulary size from globals.
-        vocab_size = self.global_value["vocab_size"]
+        vocab_size = self.globals["vocab_size"]
 
         # Retrieve embeddings size from configuration and export it to globals.
         self.embeddings_size = params['embeddings_size']
-        self.global_value["embeddings_size"] = self.embeddings_size
+        self.globals["embeddings_size"] = self.embeddings_size
 
         self.logger.info("Initializing embeddings layer with vocabulary size = {} and embeddings size = {}".format(vocab_size, self.embeddings_size))
 

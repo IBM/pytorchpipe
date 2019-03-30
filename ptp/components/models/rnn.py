@@ -37,13 +37,13 @@ class RNN(Model):
         #super(Model, self).__init__(name, params))
         Model.__init__(self, name, RNN, params)
 
-        # Set key mappings.
-        self.key_inputs = self.get_stream_key("inputs")
-        self.key_predictions = self.get_stream_key("predictions")
+        # Get key mappings.
+        self.key_inputs = self.stream_keys["inputs"]
+        self.key_predictions = self.stream_keys["predictions"]
 
         # Retrieve input size from global params.
-        self.key_input_size = self.get_global_key("input_size")
-        self.input_size = self.global_value["input_size"]
+        self.key_input_size = self.global_keys["input_size"]
+        self.input_size = self.globals["input_size"]
         if type(self.input_size) == list:
             if len(self.input_size) == 1:
                 self.input_size = self.input_size[0]
@@ -51,7 +51,7 @@ class RNN(Model):
                 raise ConfigurationError("RNN input size '{}' must be a single dimension (current {})".format(self.key_input_size, self.input_size))
 
         # Retrieve output (prediction) size from global params.
-        self.prediction_size = self.global_value["prediction_size"]
+        self.prediction_size = self.globals["prediction_size"]
         if type(self.prediction_size) == list:
             if len(self.prediction_size) == 1:
                 self.prediction_size = self.prediction_size[0]

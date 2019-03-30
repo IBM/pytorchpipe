@@ -56,8 +56,8 @@ class WikiTextLanguageModeling(Problem):
         Problem.__init__(self, name, WikiTextLanguageModeling, params) 
 
         # Set streams key mappings.
-        self.key_sources = self.get_stream_key("sources")
-        self.key_targets = self.get_stream_key("targets")
+        self.key_sources = self.stream_keys["sources"]
+        self.key_targets = self.stream_keys["targets"]
 
         # Get absolute path to data folder.
         self.data_folder = os.path.expanduser(self.params['data_folder'])

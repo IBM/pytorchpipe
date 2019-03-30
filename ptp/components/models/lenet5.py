@@ -41,12 +41,12 @@ class LeNet5(Model):
         """
         super(LeNet5, self).__init__(name, LeNet5, params)
 
-        # Set key mappings.
+        # Get key mappings.
         self.key_inputs = self.get_stream_key("inputs")
         self.key_predictions = self.get_stream_key("predictions")
 
         # Retrieve prediction size from globals.
-        self.prediction_size = self.global_value["prediction_size"]
+        self.prediction_size = self.globals["prediction_size"]
 
         # Create the LeNet-5 layers.
         self.conv1 = torch.nn.Conv2d(1, 6, kernel_size=(5, 5))

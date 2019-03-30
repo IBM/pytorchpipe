@@ -51,8 +51,8 @@ class SentenceEmbeddings(Model):
         super(SentenceEmbeddings, self).__init__(name, SentenceEmbeddings, params)
 
         # Set key mappings.
-        self.key_inputs = self.get_stream_key("inputs")
-        self.key_outputs = self.get_stream_key("outputs")
+        self.key_inputs = self.stream_keys["inputs"]
+        self.key_outputs = self.stream_keys["outputs"]
 
         # Read the actual configuration.
         self.data_folder = os.path.expanduser(params['data_folder'])
@@ -65,7 +65,7 @@ class SentenceEmbeddings(Model):
 
         # Retrieve embeddings size from configuration and export it to globals.
         self.embeddings_size = params['embeddings_size']
-        self.global_value["embeddings_size"] = self.embeddings_size
+        self.globals["embeddings_size"] = self.embeddings_size
 
         # Initialize the vocabulary.
         vocabulary_mappings_file_path = os.path.expanduser(self.data_folder) + "/" + self.vocabulary_mappings_file
@@ -90,8 +90,8 @@ class SentenceEmbeddings(Model):
                 self.word_to_ix[word] = len(self.word_to_ix)
 
         # Export vocabulary and its length to globals.
-        self.global_value["vocabulary"] = self.word_to_ix
-        self.global_value["vocabulary_size"] = len(self.word_to_ix)
+        self.globals["vocabulary"] = self.word_to_ix
+        self.globals["vocabulary_size"] = len(self.word_to_ix)
 
         # Create the embeddings layer.
         self.logger.info("Initializing embeddings layer with vocabulary size = {} and embeddings size = {}".format(len(self.word_to_ix), self.embeddings_size))

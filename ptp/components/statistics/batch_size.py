@@ -41,7 +41,7 @@ class BatchSize(Component):
         Component.__init__(self, name, BatchSize, params)
 
         # Set key mappings.
-        self.key_indices = self.get_stream_key("indices")
+        self.key_indices = self.stream_keys["indices"]
 
     def input_data_definitions(self):
         """ 

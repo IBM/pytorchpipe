@@ -50,8 +50,8 @@ class TokenEncoder(Component):
         self.additional_tokens = params.get("additional_tokens", "").split(',')
 
         # Default name mappings for all encoders.
-        self.key_inputs = self.get_stream_key("inputs")
-        self.key_outputs = self.get_stream_key("outputs")
+        self.key_inputs = self.stream_keys["inputs"]
+        self.key_outputs = self.stream_keys["outputs"]
 
         # Encodings file.
         encodings_file_path = self.data_folder + "/" + self.encodings_file

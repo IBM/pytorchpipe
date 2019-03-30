@@ -39,10 +39,9 @@ class LabelIndexer(TokenEncoder):
         TokenEncoder.__init__(self, name, LabelIndexer, params)
 
         # Export vocabulary size to global params.
-        self.key_vocab_size = self.get_global_key("label_vocab_size")
-        self.global_value["label_vocab_size"] = len(self.word_to_ix)
+        self.globals["label_vocab_size"] = len(self.word_to_ix)
 
-        self.logger.info("Initializing sentence indexer with vocabulary size '{}' = {}".format(self.key_vocab_size, len(self.word_to_ix)))
+        self.logger.info("Initializing sentence indexer with vocabulary size '{}' = {}".format(self.global_keys["label_vocab_size"], len(self.word_to_ix)))
 
     def input_data_definitions(self):
         """ 

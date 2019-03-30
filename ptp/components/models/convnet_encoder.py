@@ -63,13 +63,13 @@ class ConvNetEncoder(Model):
         super(ConvNetEncoder, self).__init__(name, ConvNetEncoder, params)
 
         # Set key mappings.
-        self.key_inputs = self.get_stream_key("inputs")
-        self.key_feature_maps = self.get_stream_key("feature_maps")
+        self.key_inputs = self.stream_keys["inputs"]
+        self.key_feature_maps = self.stream_keys["feature_maps"]
 
         # Get input image information from the global parameters.
-        self.input_width = self.global_value["input_width"]
-        self.input_height = self.global_value["input_height"]        
-        self.input_depth = self.global_value["input_depth"]
+        self.input_width = self.globals["input_width"]
+        self.input_height = self.globals["input_height"]        
+        self.input_depth = self.globals["input_depth"]
 
         # Retrieve the Conv1 parameters.
         self.out_channels_conv1 = params['conv1']['out_channels']
@@ -184,9 +184,9 @@ class ConvNetEncoder(Model):
             ((self.height_features_conv3 - self.maxpool1.kernel_size + 2 * self.maxpool3.padding) / self.maxpool3.stride) + 1)
 
         # Set global variables: output dims
-        self.global_value["feature_map_height"] = self.height_features_maxpool3
-        self.global_value["feature_map_width"] = self.width_features_maxpool3
-        self.global_value["feature_map_depth"] = self.out_channels_conv3
+        self.globals["feature_map_height"] = self.height_features_maxpool3
+        self.globals["feature_map_width"] = self.width_features_maxpool3
+        self.globals["feature_map_depth"] = self.out_channels_conv3
         
         # log some info.
         self.logger.info('Input: [-1, {}, {}, {}]'.format(self.input_depth, self.input_width, self.input_height))

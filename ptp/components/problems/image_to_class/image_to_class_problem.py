@@ -47,8 +47,8 @@ class ImageToClassProblem(Problem):
         super(ImageToClassProblem, self).__init__(name, class_type, params)
 
         # Set default key mappings.
-        self.key_inputs = self.get_stream_key("inputs")
-        self.key_targets = self.get_stream_key("targets")
+        self.key_inputs = self.stream_keys["inputs"]
+        self.key_targets = self.stream_keys["targets"]
 
 
     def show_sample(self, data_dict, sample_number=0):

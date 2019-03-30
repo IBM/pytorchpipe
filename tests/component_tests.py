@@ -87,17 +87,17 @@ class TestComponent(unittest.TestCase):
     def test_global_set_get(self):
         """ Tests setting and getting global value. """
         # Set global value.
-        self.component.global_value["embeddings_size"] = 10
+        self.component.globals["embeddings_size"] = 10
         # Get global value.
-        self.assertEqual(self.component.global_value["embeddings_size"], 10)
+        self.assertEqual(self.component.globals["embeddings_size"], 10)
 
     def test_global_overwrite(self):
         """ Tests global value overwrite """
         # Set global value.
-        self.component.global_value["value"] = "ala"
+        self.component.globals["value"] = "ala"
         # Overwrite with the same value - ok.
-        self.component.global_value["value"] = "ala"
+        self.component.globals["value"] = "ala"
         # Overwrite with the same value - error.
         with self.assertRaises(KeyError):
-            self.component.global_value["value"] = "ola"
+            self.component.globals["value"] = "ola"
 
