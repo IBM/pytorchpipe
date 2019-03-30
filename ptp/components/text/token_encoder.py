@@ -41,7 +41,7 @@ class TokenEncoder(Component):
         Component.__init__(self, name, class_type, params)
 
         # Read the actual configuration.
-        self.data_folder = params['data_folder']
+        self.data_folder = os.path.expanduser(params['data_folder'])
         self.source_files = params['source_files']
         self.encodings_file = params['encodings_file']
         self.mode_regenerate = params['regenerate']
@@ -54,7 +54,7 @@ class TokenEncoder(Component):
         self.key_outputs = self.get_stream_key("outputs")
 
         # Encodings file.
-        encodings_file_path = os.path.expanduser(self.data_folder) + "/" + self.encodings_file
+        encodings_file_path = self.data_folder + "/" + self.encodings_file
 
         # Check whether we want to (re)generate new  or load existing encodings.
         if self.mode_regenerate or not os.path.exists(encodings_file_path):

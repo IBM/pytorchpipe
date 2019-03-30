@@ -20,6 +20,7 @@ import abc
 import logging
 
 from ptp.configuration.app_state import AppState
+from ptp.configuration.global_facade import GlobalFacade
 from ptp.configuration.configs_parsing import load_default_configuration_file
 
 
@@ -62,6 +63,9 @@ class Component(abc.ABC):
 
         # Get access to AppState: for command line args, globals etc.
         self.app_state = AppState()
+
+        # Facade for accessing global parameters (stored anyway in AppState).
+        self.global_value = GlobalFacade(self)
 
         # Load default configuration.
         if class_type is not None:
