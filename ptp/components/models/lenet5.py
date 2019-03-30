@@ -42,8 +42,8 @@ class LeNet5(Model):
         super(LeNet5, self).__init__(name, LeNet5, params)
 
         # Get key mappings.
-        self.key_inputs = self.get_stream_key("inputs")
-        self.key_predictions = self.get_stream_key("predictions")
+        self.key_inputs = self.stream_keys["inputs"]
+        self.key_predictions = self.stream_keys["predictions"]
 
         # Retrieve prediction size from globals.
         self.prediction_size = self.globals["prediction_size"]
