@@ -42,12 +42,12 @@ class StatisticsCollector(Mapping):
         self.statistics = dict()
         self.formatting = dict()
 
-    def add_statistic(self, key, formatting):
+    def add_statistics(self, key, formatting):
         """
-        Add a statistic to collector.
+        Add a statistics to collector.
         The value of associated to the key is of type ``list``.
 
-        :param key: Key of the statistic.
+        :param key: Key of the statistics.
         :type key: str
 
         :param formatting: Formatting that will be used when logging and exporting to CSV.

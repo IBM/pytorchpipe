@@ -75,7 +75,7 @@ class BatchSize(Component):
         :param stat_col: ``StatisticsCollector``.
 
         """
-        stat_col.add_statistic('batch_size', '{:06d}')
+        stat_col.add_statistics('batch_size', '{:06d}')
 
     def collect_statistics(self, stat_col, data_dict):
         """

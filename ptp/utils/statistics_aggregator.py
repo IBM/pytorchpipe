@@ -57,7 +57,7 @@ class StatisticsAggregator(StatisticsCollector):
 
         :param key: Statistical aggregator to add. Such aggregator (e.g. min, max, mean, std...)\
          should be based on an existing statistics collected by the :py:class:`ptp.utils.StatisticsCollector` \
-         (e.g. added by :py:func:`StatisticsCollector.add_statistic()` and collected by \
+         (e.g. added by :py:func:`StatisticsCollector.add_statistics()` and collected by \
          :py:func:`ptp.models.Model.collect_statistics()` or \
          :py:func:`ptp.models.Problem.collect_statistics()`.
         :type key: str

@@ -324,8 +324,7 @@ class Worker(object):
 
         """
         # Add default statistics with formatting.
-        #stat_col.add_statistic('epoch', '{:02d}')
-        stat_col.add_statistic('episode', '{:06d}')
+        stat_col.add_statistics('episode', '{:06d}')
 
 
     def add_aggregators(self, stat_agg):

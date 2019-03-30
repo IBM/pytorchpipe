@@ -349,7 +349,7 @@ class Trainer(Worker):
         super(Trainer, self).add_statistics(stat_col)
 
         # Add default statistics with formatting.
-        stat_col.add_statistic('epoch', '{:02d}')
+        stat_col.add_statistics('epoch', '{:02d}')
 
 
     def add_aggregators(self, stat_agg):

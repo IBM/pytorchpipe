@@ -67,8 +67,8 @@ class Loss(Component):
         :param stat_col: ``StatisticsCollector``.
 
         """
-        # Add default statistics with formatting.
-        stat_col.add_statistic(self.key_loss, '{:12.10f}')
+        # Add loss statistics with formatting.
+        stat_col.add_statistics(self.key_loss, '{:12.10f}')
 
     def collect_statistics(self, stat_col, data_dict):
         """

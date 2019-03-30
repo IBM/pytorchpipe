@@ -1,4 +1,4 @@
-  # Training parameters:
+# Training parameters:
 training:
   problem:
     type: &p_type WikiTextLanguageModeling

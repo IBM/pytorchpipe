@@ -112,7 +112,7 @@ class Accuracy(Component):
         :param stat_col: ``StatisticsCollector``.
 
         """
-        stat_col.add_statistic(self.key_accuracies, '{:12.10f}')
+        stat_col.add_statistics(self.key_accuracies, '{:12.10f}')
 
     def collect_statistics(self, stat_col, data_dict):
         """
