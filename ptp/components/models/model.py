@@ -35,7 +35,7 @@ class Model(Module, Component):
 
     """
 
-    def __init__(self, name, class_type, params):
+    def __init__(self, name, class_type, config):
         """
         Initializes a Model object.
 
@@ -44,12 +44,12 @@ class Model(Module, Component):
 
         :param class_type: Class type of the component.
 
-        :param params: Parameters read from configuration file.
-        :type params: ``ptp.configuration.ParamInterface``
+        :param config: Parameters read from configuration file.
+        :type config: ``ptp.configuration.ConfigInterface``
 
         This constructor:
 
-        - calls base class constructors (save params, name, logger, app_state etc.)
+        - calls base class constructors (save config, name, logger, app_state etc.)
 
         - initializes the best model loss (used to select which model to save) to ``np.inf``:
 
@@ -57,7 +57,7 @@ class Model(Module, Component):
 
         """
         # Call constructors of parent classes.
-        Component.__init__(self, name, class_type, params)
+        Component.__init__(self, name, class_type, config)
         Module.__init__(self)
 
         # Flag indicating whether the model is frozen or not.

@@ -47,7 +47,7 @@ class OnlineTrainer(Trainer):
        :type name: str
 
         """ 
-        # Call base constructor to set up app state, registry and add default params.
+        # Call base constructor to set up app state, registry and add default config.
         super(OnlineTrainer, self).__init__(name)
 
     def setup_experiment(self):
@@ -65,13 +65,13 @@ class OnlineTrainer(Trainer):
         self.logger.info('Terminal conditions:\n' + '='*80)
 
         # Terminal condition I: loss. 
-        self.params['training']['terminal_conditions'].add_default_params({'loss_stop': 1e-5})
-        self.loss_stop = self.params['training']['terminal_conditions']['loss_stop']
+        self.config['training']['terminal_conditions'].add_default_params({'loss_stop': 1e-5})
+        self.loss_stop = self.config['training']['terminal_conditions']['loss_stop']
         self.logger.info("Setting Loss Stop threshold to {}".format(self.loss_stop))
 
         # In this trainer Partial Validation is mandatory, hence interval must be > 0.
-        self.params['validation'].add_default_params({'partial_validation_interval': 100})
-        self.partial_validation_interval = self.params['validation']['partial_validation_interval']
+        self.config['validation'].add_default_params({'partial_validation_interval': 100})
+        self.partial_validation_interval = self.config['validation']['partial_validation_interval']
         if self.partial_validation_interval <= 0:
             self.logger.error("Episodic Trainer relies on Partial Validation, thus interval must be a positive number!")
             exit(-4)
@@ -79,8 +79,8 @@ class OnlineTrainer(Trainer):
             self.logger.info("Partial Validation activated with interval equal to {} episodes".format(self.partial_validation_interval))
 
         # Terminal condition II: max epochs. Optional.
-        self.params["training"]["terminal_conditions"].add_default_params({'epoch_limit': -1})
-        self.epoch_limit = self.params["training"]["terminal_conditions"]["epoch_limit"]
+        self.config["training"]["terminal_conditions"].add_default_params({'epoch_limit': -1})
+        self.epoch_limit = self.config["training"]["terminal_conditions"]["epoch_limit"]
         if self.epoch_limit <= 0:
             self.logger.info("Termination based on Epoch Limit is disabled")
             # Set to infinity.
@@ -93,8 +93,8 @@ class OnlineTrainer(Trainer):
         self.logger.info('Epoch size in terms of training episodes: {}'.format(self.epoch_size))
 
         # Terminal condition III: max episodes. Mandatory.
-        self.params["training"]["terminal_conditions"].add_default_params({'episode_limit': 100000})
-        self.episode_limit = self.params['training']['terminal_conditions']['episode_limit']
+        self.config["training"]["terminal_conditions"].add_default_params({'episode_limit': 100000})
+        self.episode_limit = self.config['training']['terminal_conditions']['episode_limit']
         if self.episode_limit <= 0:
             self.logger.error("OnLine Trainer relies on episodes, thus Episode Limit must be a positive number!")
             exit(-5)
@@ -180,7 +180,7 @@ class OnlineTrainer(Trainer):
                 # Check the presence of the 'gradient_clipping'  parameter.
                 try:
                     # if present - clip gradients to a range (-gradient_clipping, gradient_clipping)
-                    val = self.params['training']['gradient_clipping']
+                    val = self.config['training']['gradient_clipping']
                     torch.nn.utils.clip_grad_value_(self.pipeline.parameters(), val)
                 except KeyError:
                     # Else - do nothing.

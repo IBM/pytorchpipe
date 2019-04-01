@@ -27,27 +27,26 @@ class BOWEncoder(Component):
     .. warning::
         BoW transformation is inreversible, thus decode-related methods in fact return original inputs.
     """
-    def  __init__(self, name, params):
+    def  __init__(self, name, config):
         """
         Initializes the bag-of-word encoded by creating dictionary mapping ALL words from training, validation and test sets into unique indices.
 
         :param name: Component name (read from configuration file).
         :type name: str
 
-        :param params: Dictionary of parameters (read from configuration ``.yaml`` file).
-        :type params: :py:class:`ptp.utils.ParamInterface`
+        :param config: Dictionary of parameters (read from configuration ``.yaml`` file).
+        :type config: :py:class:`ptp.configuration.ConfigInterface`
 
         """
         # Call constructors of parent classes.
-        Component.__init__(self, name, BOWEncoder, params)
+        Component.__init__(self, name, BOWEncoder, config)
 
         # Default name mappings for all encoders.
-        self.key_inputs = self.get_stream_key("inputs")
-        self.key_outputs = self.get_stream_key("outputs")
-        self.key_bow_size = self.get_global_key("bow_size")
+        self.key_inputs = self.stream_keys["inputs"]
+        self.key_outputs = self.stream_keys["outputs"]
 
-        # Retrieve output size from global params.
-        self.bow_size = self.app_state[self.key_bow_size]
+        # Retrieve bow size from global variables.
+        self.bow_size = self.globals["bow_size"]
 
     def input_data_definitions(self):
         """ 

@@ -26,21 +26,21 @@ class NLLLoss(Loss):
     Component calculating the negative log likelihood loss.
     """
 
-    def __init__(self, name, params):
+    def __init__(self, name, config):
         """
         Initializes object, calls base constructor, initializes names of input and output ports.
 
-        :param params: Dictionary of parameters (read from configuration ``.yaml`` file).
+        :param config: Dictionary of parameters (read from configuration ``.yaml`` file).
 
         """
         # Call constructors of parent classes.
-        Loss.__init__(self, name, NLLLoss, params)
+        Loss.__init__(self, name, NLLLoss, config)
 
         # Set loss.
         self.loss_function = nn.NLLLoss()
 
         # Get number of dimensions.
-        self.targets_dim = self.params["targets_dim"]
+        self.targets_dim = self.config["targets_dim"]
 
 
     def input_data_definitions(self):

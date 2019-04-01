@@ -34,7 +34,7 @@ class Problem(Component, Dataset):
 
     """
 
-    def __init__(self, name, class_type, params):
+    def __init__(self, name, class_type, config):
         """
         Initializes problem object:
             - calls base class constructors.
@@ -42,17 +42,17 @@ class Problem(Component, Dataset):
 
                 >>> self.key_indices = self.mapkey("indices")
 
-            - sets empry curriculim learning params
+            - sets empry curriculim learning configuration
 
-                >>> self.curriculum_params = {}
+                >>> self.curriculum_config = {}
         
         :param name: Problem name.
         :type name: str
 
         :param class_type: Class type of the component.
 
-        :param params: Dictionary of parameters (read from the configuration ``.yaml`` file).
-        :type params: :py:class:`ptp.utils.ParamInterface`
+        :param config: Dictionary of parameters (read from the configuration ``.yaml`` file).
+        :type config: :py:class:`ptp.configuration.ConfigInterface`
 
         .. note::
 
@@ -65,14 +65,14 @@ class Problem(Component, Dataset):
                 >>> val = self.app_state["new_global_value" # Gets global value.
         """
         # Call constructors of parent classes.
-        Component.__init__(self, name, class_type, params)
+        Component.__init__(self, name, class_type, config)
         Dataset.__init__(self)
 
         # Set default key mappings.
-        self.key_indices = self.get_stream_key("indices")
+        self.key_indices = self.stream_keys["indices"]
 
-        # Empty curriculum learning params - for now.
-        self.curriculum_params = {}
+        # Empty curriculum learning config - for now.
+        self.curriculum_config = {}
 
 
     def summarize_io(self, priority = -1):
@@ -189,22 +189,22 @@ class Problem(Component, Dataset):
         pass
 
 
-    def curriculum_learning_initialize(self, curriculum_params):
+    def curriculum_learning_initialize(self, curriculum_config):
         """
-        Initializes curriculum learning - simply saves the curriculum params.
+        Initializes curriculum learning - simply saves the curriculum config.
 
         .. note::
 
             This method can be overwritten in the derived classes.
 
 
-        :param curriculum_params: Interface to parameters accessing curriculum learning view of the registry tree.
-        :type param: :py:class:`ptp.utils.ParamInterface`
+        :param curriculum_config: Interface to parameters accessing curriculum learning view of the registry tree.
+        :type param: :py:class:`ptp.configuration.ConfigInterface`
 
 
         """
-        # Save params.
-        self.curriculum_params = curriculum_params
+        # Save config.
+        self.curriculum_config = curriculum_config
 
 
     def curriculum_learning_update_params(self, episode):

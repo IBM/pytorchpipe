@@ -24,7 +24,7 @@ class TokenEncoder(Component):
     """
     Abstract class responsible for encoding tokens. Please use derrived classes.
     """
-    def __init__(self, name, class_type, params):
+    def __init__(self, name, class_type, config):
         """
         Initializes the component.
 
@@ -33,25 +33,25 @@ class TokenEncoder(Component):
 
         :param class_type: Class type of the component (derrived from this class).
 
-        :param params: Dictionary of parameters (read from the configuration ``.yaml`` file).
-        :type params: :py:class:`ptp.utils.ParamInterface`
+        :param config: Dictionary of parameters (read from the configuration ``.yaml`` file).
+        :type config: :py:class:`ptp.configuration.ConfigInterface`
 
         """
         # Call constructors of parent classes.
-        Component.__init__(self, name, class_type, params)
+        Component.__init__(self, name, class_type, config)
 
         # Read the actual configuration.
-        self.data_folder = os.path.expanduser(params['data_folder'])
-        self.source_files = params['source_files']
-        self.encodings_file = params['encodings_file']
-        self.mode_regenerate = params['regenerate']
+        self.data_folder = os.path.expanduser(config['data_folder'])
+        self.source_files = config['source_files']
+        self.encodings_file = config['encodings_file']
+        self.mode_regenerate = config['regenerate']
 
         # Additional entries in the vocabulary.
-        self.additional_tokens = params.get("additional_tokens", "").split(',')
+        self.additional_tokens = config["additional_tokens"].split(',')
 
         # Default name mappings for all encoders.
-        self.key_inputs = self.get_stream_key("inputs")
-        self.key_outputs = self.get_stream_key("outputs")
+        self.key_inputs = self.stream_keys["inputs"]
+        self.key_outputs = self.stream_keys["outputs"]
 
         # Encodings file.
         encodings_file_path = self.data_folder + "/" + self.encodings_file

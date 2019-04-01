@@ -46,7 +46,7 @@ class AppState(metaclass=SingletonMetaClass):
 
     def __init__(self):
         """
-        Constructor:
+        Constructor. Initializes dictionary with global variables, sets CPU types as default.
 
         """
         # Empty commandline arguments.

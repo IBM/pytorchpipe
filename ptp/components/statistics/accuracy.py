@@ -28,25 +28,25 @@ class Accuracy(Component):
 
     """
 
-    def __init__(self, name, params):
+    def __init__(self, name, config):
         """
         Initializes object.
 
         :param name: Loss name.
         :type name: str
 
-        :param params: Dictionary of parameters (read from the configuration ``.yaml`` file).
-        :type params: :py:class:`ptp.utils.ParamInterface`
+        :param config: Dictionary of parameters (read from the configuration ``.yaml`` file).
+        :type config: :py:class:`ptp.configuration.ConfigInterface`
 
         """
         # Call constructors of parent classes.
-        Component.__init__(self, name, Accuracy, params)
+        Component.__init__(self, name, Accuracy, config)
 
         # Set key mappings.
-        self.key_targets = self.get_stream_key("targets")
-        self.key_predictions = self.get_stream_key("predictions")
+        self.key_targets = self.stream_keys["targets"]
+        self.key_predictions = self.stream_keys["predictions"]
 
-        self.key_accuracies = self.get_statistic_key("accuracies")
+        self.key_accuracies = self.statistics_keys["accuracies"]
 
 
     def input_data_definitions(self):
@@ -112,7 +112,7 @@ class Accuracy(Component):
         :param stat_col: ``StatisticsCollector``.
 
         """
-        stat_col.add_statistic(self.key_accuracies, '{:12.10f}')
+        stat_col.add_statistics(self.key_accuracies, '{:12.10f}')
 
     def collect_statistics(self, stat_col, data_dict):
         """

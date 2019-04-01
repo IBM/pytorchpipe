@@ -16,42 +16,27 @@
 
 __author__ = "Tomasz Kornuta"
 
-from ptp.configuration.app_state import AppState
-
-class GlobalFacade(object):
-
-    def __init__(self, parent_object):
+class KeyMappingsFacade(object):
+    """
+    Simple facility for accessing key names using provided mappings using list-like (read-only) access.
+    """
+    def __init__(self, key_mappings):
         """
-        Constructor.
+        Constructor. Stores key mappings.
+
+        :param key_mappings: Dictionary of key mappings of the parent object.
         """
-        # Remember parent object
-        self.parent_object = parent_object
-        self.app_state = AppState()
-
-    def __setitem__(self, key, value):
-        """
-        Sets global value using parent object key mapping.
-
-        :param key: Global key.
-
-        :param value: Value that will be set.
-        """
-        # Retrieve key using parent object global key mappings.
-        mapped_key = self.parent_object.get_global_key(key)
-        # Set global balue.
-        self.app_state[mapped_key] = value
-
+        # Remember parent object global keys.
+        self.keys_mappings = key_mappings
 
     def __getitem__(self, key):
         """
         Global value getter function.
         Uses parent object key mapping for accesing the value.
 
-        :param key: Dict Key.
+        :param key: Global key name (that will be mapped).
 
         :return: Associated Value.
         """
         # Retrieve key using parent object global key mappings.
-        mapped_key = self.parent_object.get_global_key(key)
-        # Retrieve the value.
-        return self.app_state[mapped_key]
+        return self.keys_mappings.get(key, key)

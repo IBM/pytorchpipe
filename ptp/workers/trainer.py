@@ -52,7 +52,7 @@ class Trainer(Worker):
         :type name: str
 
         """ 
-        # Call base constructor to set up app state, registry and add default params.
+        # Call base constructor to set up app state, registry and add default arguments.
         super(Trainer, self).__init__(name)
 
         # Add arguments to the specific parser.
@@ -95,7 +95,7 @@ class Trainer(Worker):
 
         - Set random seeds:
 
-            >>>  self.set_random_seeds(self.params['training'], 'training')
+            >>>  self.set_random_seeds(self.config['training'], 'training')
 
         - Creates the pipeline consisting of many components
 
@@ -103,7 +103,7 @@ class Trainer(Worker):
 
         - Handles curriculum learning if indicated:
 
-            >>> if 'curriculum_learning' in self.params['training']:
+            >>> if 'curriculum_learning' in self.config['training']:
             >>> ...
 
         - Creates training problem manager
@@ -154,27 +154,27 @@ class Trainer(Worker):
         # Log the resulting training configuration.
         conf_str = 'Loaded (initial) configuration:\n'
         conf_str += '='*80 + '\n'
-        conf_str += yaml.safe_dump(self.params.to_dict(), default_flow_style=False)
+        conf_str += yaml.safe_dump(self.config.to_dict(), default_flow_style=False)
         conf_str += '='*80 + '\n'
         print(conf_str)
 
         # Get training problem name.
         try:
-            training_problem_type = self.params['training']['problem']['type']
+            training_problem_type = self.config['training']['problem']['type']
         except KeyError:
             print("Error: Couldn't retrieve the problem 'type' from the 'training' section in the loaded configuration")
             exit(-1)
 
         # Get validation problem name
         try:
-            _ = self.params['validation']['problem']['type']
+            _ = self.config['validation']['problem']['type']
         except KeyError:
             print("Error: Couldn't retrieve the problem 'type' from the 'validation' section in the loaded configuration")
             exit(-1)
 
         # Get pipeline name.
         try:
-            pipeline_name = self.params['pipeline']['name']
+            pipeline_name = self.config['pipeline']['name']
         except KeyError:
             print("Error: Couldn't retrieve the pipeline 'name' from the loaded configuration")
             exit(-1)
@@ -204,7 +204,7 @@ class Trainer(Worker):
         os.makedirs(self.checkpoint_dir, exist_ok=False)
 
         # Set random seeds in the training section.
-        self.set_random_seeds('training', self.params['training'])
+        self.set_random_seeds('training', self.config['training'])
 
         # Total number of detected errors.
         errors =0
@@ -212,22 +212,22 @@ class Trainer(Worker):
         ################# TRAINING PROBLEM ################# 
 
         # Build training problem manager.
-        self.training = ProblemManager('training', self.params['training']) 
+        self.training = ProblemManager('training', self.config['training']) 
         errors += self.training.build()
         
         # parse the curriculum learning section in the loaded configuration.
-        if 'curriculum_learning' in self.params['training']:
+        if 'curriculum_learning' in self.config['training']:
 
             # Initialize curriculum learning - with values from loaded configuration.
-            self.training.problem.curriculum_learning_initialize(self.params['training']['curriculum_learning'])
+            self.training.problem.curriculum_learning_initialize(self.config['training']['curriculum_learning'])
 
             # Set initial values of curriculum learning.
             self.curric_done = self.training.problem.curriculum_learning_update_params(0)
 
             # If the 'must_finish' key is not present in config then then it will be finished by default
-            self.params['training']['curriculum_learning'].add_default_params({'must_finish': True})
+            self.config['training']['curriculum_learning'].add_default_params({'must_finish': True})
 
-            self.must_finish_curriculum = self.params['training']['curriculum_learning']['must_finish']
+            self.must_finish_curriculum = self.config['training']['curriculum_learning']['must_finish']
             self.logger.info("Curriculum Learning activated")
 
         else:
@@ -238,7 +238,7 @@ class Trainer(Worker):
         ################# VALIDATION PROBLEM ################# 
         
         # Build validation problem manager.
-        self.validation = ProblemManager('validation', self.params['validation'])
+        self.validation = ProblemManager('validation', self.config['validation'])
         errors += self.validation.build()
 
         # Generate a single batch used for partial validation.
@@ -248,7 +248,7 @@ class Trainer(Worker):
         ###################### PIPELINE ######################
         
         # Build the pipeline using the loaded configuration.
-        self.pipeline = PipelineManager(pipeline_name, self.params['pipeline'])
+        self.pipeline = PipelineManager(pipeline_name, self.config['pipeline'])
         errors += self.pipeline.build()
 
         # Check errors.
@@ -285,8 +285,8 @@ class Trainer(Worker):
             if self.app_state.args.load_checkpoint != "":
                 pipeline_name = self.app_state.args.load_checkpoint
                 msg = "command line (--load)"
-            elif "load" in self.params['pipeline']:
-                pipeline_name = self.params['pipeline']['load']
+            elif "load" in self.config['pipeline']:
+                pipeline_name = self.config['pipeline']['load']
                 msg = "'pipeline' section of the configuration file"
             else:
                 pipeline_name = ""
@@ -324,7 +324,7 @@ class Trainer(Worker):
         ################# OPTIMIZER ################# 
 
         # Set the optimizer.
-        optimizer_conf = dict(self.params['training']['optimizer'])
+        optimizer_conf = dict(self.config['training']['optimizer'])
         optimizer_name = optimizer_conf['name']
         del optimizer_conf['name']
 
@@ -349,7 +349,7 @@ class Trainer(Worker):
         super(Trainer, self).add_statistics(stat_col)
 
         # Add default statistics with formatting.
-        stat_col.add_statistic('epoch', '{:02d}')
+        stat_col.add_statistics('epoch', '{:02d}')
 
 
     def add_aggregators(self, stat_agg):

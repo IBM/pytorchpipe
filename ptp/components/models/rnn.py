@@ -26,24 +26,23 @@ class RNN(Model):
     """
     Simple Classifier consisting of fully connected layer with log softmax non-linearity.
     """
-    def __init__(self, name, params):
+    def __init__(self, name, config):
         """
         Initializes the model.
 
-        :param params: Dictionary of parameters (read from configuration ``.yaml`` file).
-        :type params: ``ptp.configuration.ParamInterface``
+        :param config: Dictionary of parameters (read from configuration ``.yaml`` file).
+        :type config: ``ptp.configuration.ConfigInterface``
         """
         # Call constructors of parent classes.
-        #super(Model, self).__init__(name, params))
-        Model.__init__(self, name, RNN, params)
+        Model.__init__(self, name, RNN, config)
 
-        # Set key mappings.
-        self.key_inputs = self.get_stream_key("inputs")
-        self.key_predictions = self.get_stream_key("predictions")
+        # Get key mappings.
+        self.key_inputs = self.stream_keys["inputs"]
+        self.key_predictions = self.stream_keys["predictions"]
 
-        # Retrieve input size from global params.
-        self.key_input_size = self.get_global_key("input_size")
-        self.input_size = self.app_state[self.key_input_size]
+        # Retrieve input size from global variables.
+        self.key_input_size = self.global_keys["input_size"]
+        self.input_size = self.globals["input_size"]
         if type(self.input_size) == list:
             if len(self.input_size) == 1:
                 self.input_size = self.input_size[0]
@@ -51,8 +50,7 @@ class RNN(Model):
                 raise ConfigurationError("RNN input size '{}' must be a single dimension (current {})".format(self.key_input_size, self.input_size))
 
         # Retrieve output (prediction) size from global params.
-        self.key_prediction_size = self.get_global_key("prediction_size")
-        self.prediction_size = self.app_state[self.key_prediction_size]
+        self.prediction_size = self.globals["prediction_size"]
         if type(self.prediction_size) == list:
             if len(self.prediction_size) == 1:
                 self.prediction_size = self.prediction_size[0]
@@ -60,7 +58,7 @@ class RNN(Model):
                 raise ConfigurationError("RNN prediction size '{}' must be a single dimension (current {})".format(self.key_prediction_size, self.prediction_size))
         
         # Retrieve hidden size from configuration.
-        self.hidden_size = self.params["hidden_size"]
+        self.hidden_size = self.config["hidden_size"]
         if type(self.hidden_size) == list:
             if len(self.hidden_size) == 1:
                 self.hidden_size = self.hidden_size[0]
@@ -70,15 +68,15 @@ class RNN(Model):
         self.logger.info("Initializing RNN with input size = {}, hidden size = {} and prediction size = {}".format(self.input_size, self.hidden_size, self.prediction_size))
 
         # Get dropout value from config.
-        dropout_rate = self.params["dropout_rate"]
+        dropout_rate = self.config["dropout_rate"]
         # Create dropout layer.
         self.dropout = torch.nn.Dropout(dropout_rate)
 
         # Get number of layers from config.
-        self.num_layers = self.params["num_layers"]
+        self.num_layers = self.config["num_layers"]
 
         # Create RNN depending on the configuration
-        self.rnn_type = self.params["rnn_type"]
+        self.rnn_type = self.config["rnn_type"]
         if self.rnn_type in ['LSTM', 'GRU']:
             # Create rnn cell.
             self.rnn_cell = getattr(torch.nn, self.rnn_type)(self.input_size, self.hidden_size, self.num_layers, dropout=dropout_rate, batch_first=True)
@@ -96,7 +94,7 @@ class RNN(Model):
         self.hidden2output = torch.nn.Linear(self.hidden_size, self.prediction_size)
         
         # Check if initial state (h0/c0) are trainable or not.
-        self.initial_state_trainable = self.params["initial_state_trainable"]
+        self.initial_state_trainable = self.config["initial_state_trainable"]
 
         # Parameters - for a single sample.        
         h0 = torch.zeros(self.num_layers, 1, self.hidden_size)

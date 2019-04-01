@@ -19,22 +19,22 @@ __author__ = "Alexis Asseman, Tomasz Kornuta"
 
 import yaml
 from collections.abc import Mapping
-from ptp.configuration.param_registry import ParamRegistry
+from ptp.configuration.config_registry import ConfigRegistry
 
 
-class ParamInterface(Mapping):
+class ConfigInterface(Mapping):
     """
-    Interface to the :py:class:`ParamRegistry` singleton.
+    Interface to the :py:class:`ConfigRegistry` singleton.
 
     Inherits :py:class:`collections.Mapping`, and therefore exposes functionality close to a `dict`.
 
     Offers a read (through :py:class:`collections.Mapping` interface) and write \
     (through :py:func:`add_default_params` and :py:func:`add_config_params` methods) \
-    view of the :py:class:`ParamRegistry`.
+    view of the :py:class:`ConfigRegistry`.
 
         .. warning::
 
-            This class is the only interface to :py:class:`ParamRegistry`, and thus the only way to \
+            This class is the only interface to :py:class:`ConfigRegistry`, and thus the only way to \
             interact with it.
 
     """
@@ -44,7 +44,7 @@ class ParamInterface(Mapping):
         Constructor:
 
             - Call base constructor (:py:class:`Mapping`),
-            - Initializes the :py:class:`ParamRegistry`,
+            - Initializes the :py:class:`ConfigRegistry`,
             - Initializes empty keys_path list
 
 
@@ -54,27 +54,27 @@ class ParamInterface(Mapping):
 
         .. note::
 
-            Calling :py:func:`to_dict` after initializing a :py:class:`ParamInterface` with ``keys``, \
+            Calling :py:func:`to_dict` after initializing a :py:class:`ConfigInterface` with ``keys``, \
             will throw a ``KeyError``.
 
             Adding `default` & `config` params should be done through :py:func:`add_default_param` and \
             :py:func:`add_config_param`.
 
-            ``keys`` is mainly purposed for the recursion of :py:class:`ParamInterface`.
+            ``keys`` is mainly purposed for the recursion of :py:class:`ConfigInterface`.
 
         """
         # call base constructor
-        super(ParamInterface, self).__init__()
+        super(ConfigInterface, self).__init__()
 
-        # empty ParamRegistry
-        self._param_registry = ParamRegistry()
+        # empty ConfigRegistry
+        self._config_registry = ConfigRegistry()
 
         # keys_path as a list
         self._keys_path = list(keys)
 
     def _lookup(self, *keys):
         """
-        Returns the :py:class:`ParamInterface` or the value living under ``keys``.
+        Returns the :py:class:`ConfigInterface` or the value living under ``keys``.
 
         :param keys: Sequence of keys to the subtree of the registry. If empty, shows the whole registry.
         :type keys: sequence / collection: dict, list etc.
@@ -90,10 +90,10 @@ class ParamInterface(Mapping):
         lookup_keys = self._keys_path + list(keys)
 
         if len(lookup_keys) > 0:
-            r = lookup_recursion(self._param_registry, *lookup_keys)
+            r = lookup_recursion(self._config_registry, *lookup_keys)
             return r
         else:
-            return self._param_registry
+            return self._config_registry
 
     def _nest_dict(self, d: dict):
         """
@@ -124,7 +124,7 @@ class ParamInterface(Mapping):
     def to_dict(self):
         """
 
-        :return: `dict` containing a snapshot of the current :py:class:`ParamInterface` tree.
+        :return: `dict` containing a snapshot of the current :py:class:`ConfigInterface` tree.
         """
         return dict(self._lookup())
 
@@ -134,22 +134,22 @@ class ParamInterface(Mapping):
 
         The parameter dict is derived from the default parameters updated with the config parameters.
 
-        :param key: key to value in the :py:class:`ParamInterface` tree.
+        :param key: key to value in the :py:class:`ConfigInterface` tree.
         :type key: str
 
-        :return: :py:class:`ParamInterface` ``[key]`` or value if leaf of the :py:class:`ParamRegistry` tree.
+        :return: :py:class:`ConfigInterface` ``[key]`` or value if leaf of the :py:class:`ConfigRegistry` tree.
 
         """
         v = self._lookup(key)
-        if isinstance(v, dict) or isinstance(v, ParamRegistry):
-            return ParamInterface(*self._keys_path, key)
+        if isinstance(v, dict) or isinstance(v, ConfigRegistry):
+            return ConfigInterface(*self._keys_path, key)
         else:  # We are at a leaf of the tree
             return v
 
     def __len__(self):
         """
 
-        :return: Length of the :py:class:`ParamInterface`.
+        :return: Length of the :py:class:`ConfigInterface`.
 
         """
         return len(self._lookup())
@@ -157,7 +157,7 @@ class ParamInterface(Mapping):
     def __iter__(self):
         """
 
-        :return: Iterator over the :py:class:`ParamInterface`.
+        :return: Iterator over the :py:class:`ConfigInterface`.
 
         """
         return iter(self._lookup())
@@ -168,18 +168,18 @@ class ParamInterface(Mapping):
         """
         if isinstance(other, self.__class__):
 
-            return self._param_registry == other._param_registry and self._keys_path == other._keys_path
+            return self._config_registry == other._config_registry and self._keys_path == other._keys_path
         else:
             return False
 
             
     def leafs(self):
         """
-        Yields the leafs of the current :py:class:`ParamInterface`.
+        Yields the leafs of the current :py:class:`ConfigInterface`.
 
         """
         for key, value in self.items():
-            if isinstance(value, ParamInterface):
+            if isinstance(value, ConfigInterface):
                 for inner_key in value.leafs():
                     yield inner_key
             else:
@@ -187,7 +187,7 @@ class ParamInterface(Mapping):
 
     def set_leaf(self, leaf_key, leaf_value):
         """
-        Update the value of the specified ``leaf_key`` of the current :py:class:`ParamInterface` \
+        Update the value of the specified ``leaf_key`` of the current :py:class:`ConfigInterface` \
         with the specified ``leaf_value``.
 
         :param leaf_key: leaf key to update.
@@ -196,7 +196,7 @@ class ParamInterface(Mapping):
         :param leaf_value: New value to set.
 
         :return: ``True`` if the leaf value has been changed, ``False`` if ``leaf_key`` is not in \
-        :py:func:`ParamInterface.leafs`.
+        :py:func:`ConfigInterface.leafs`.
 
         """
         # check first if we can access the leaf to change
@@ -205,8 +205,8 @@ class ParamInterface(Mapping):
 
         for key, value in self.items():
 
-            if isinstance(value, ParamInterface):
-                # hit a sub ParamInterface, recursion
+            if isinstance(value, ConfigInterface):
+                # hit a sub ConfigInterface, recursion
                 if value.set_leaf(leaf_key, leaf_value):
                     return True  # leaf has been changed, done
                 else:
@@ -217,7 +217,7 @@ class ParamInterface(Mapping):
 
     def add_default_params(self, default_params: dict):
         """
-        Appends ``default_params`` to the `config` parameter dict of the :py:class:`ParamRegistry`.
+        Appends ``default_params`` to the `config` parameter dict of the :py:class:`ConfigRegistry`.
 
         .. note::
 
@@ -228,16 +228,16 @@ class ParamInterface(Mapping):
         :type default_params: dict
 
         The dictionary will be inserted into the subtree keys path indicated at the initialization of the \
-        current :py:class:`ParamInterface`.
+        current :py:class:`ConfigInterface`.
 
         """
-        self._param_registry.add_default_params(
+        self._config_registry.add_default_params(
             self._nest_dict(default_params)
         )
 
     def add_config_params(self, config_params: dict):
         """
-        Appends ``config_params`` to the `config` parameter dict of the :py:class:`ParamRegistry`.
+        Appends ``config_params`` to the `config` parameter dict of the :py:class:`ConfigRegistry`.
 
         .. note::
 
@@ -247,10 +247,10 @@ class ParamInterface(Mapping):
         :type config_params: dict
 
         The dictionary will be inserted into the subtree keys path indicated at the initialization of the \
-        current :py:class:`ParamInterface`.
+        current :py:class:`ConfigInterface`.
 
         """
-        self._param_registry.add_config_params(
+        self._config_registry.add_config_params(
             self._nest_dict(config_params)
         )
 
@@ -264,7 +264,7 @@ class ParamInterface(Mapping):
         :type key: str
 
         """
-        self._param_registry.del_default_params(self._keys_path + [key])
+        self._config_registry.del_default_params(self._keys_path + [key])
 
     def del_config_params(self, key):
         """
@@ -276,7 +276,7 @@ class ParamInterface(Mapping):
         :type key: str
 
         """
-        self._param_registry.del_config_params(self._keys_path + [key])
+        self._config_registry.del_config_params(self._keys_path + [key])
 
     def add_config_params_from_yaml(self, yaml_path: str):
         """
@@ -299,8 +299,8 @@ class ParamInterface(Mapping):
 
 if __name__ == '__main__':
     # Test code
-    pi0 = ParamInterface()
-    pi1 = ParamInterface('level0', 'level1')
+    pi0 = ConfigInterface()
+    pi1 = ConfigInterface('level0', 'level1')
 
     pi0.add_default_params({
         'param0': "0_from_code",

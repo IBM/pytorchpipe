@@ -29,7 +29,7 @@ class WiLYNGramLanguageModeling(Problem):
     .. _dataset: https://zenodo.org/record/841984
     .. _arxiv: https://arxiv.org/abs/1801.07779
     """
-    def __init__(self, name, params):
+    def __init__(self, name, config):
         """
         Initializes problem object. Calls base constructor.
 
@@ -37,23 +37,23 @@ class WiLYNGramLanguageModeling(Problem):
 
         :param class_type: Class type of the component.
 
-        :param params: Dictionary of parameters (read from configuration ``.yaml`` file).
+        :param config: Dictionary of parameters (read from configuration ``.yaml`` file).
         """
         # Call constructors of parent classes.
-        Problem.__init__(self, name, WiLYNGramLanguageModeling, params) 
+        Problem.__init__(self, name, WiLYNGramLanguageModeling, config) 
 
         # Set key mappings.
-        self.key_inputs = self.get_stream_key("inputs")
-        self.key_targets = self.get_stream_key("targets")
+        self.key_inputs = self.stream_keys["inputs"]
+        self.key_targets = self.stream_keys["targets"]
 
         # Get absolute path.
-        self.data_folder = os.path.expanduser(self.params['data_folder'])
+        self.data_folder = os.path.expanduser(self.config['data_folder'])
 
         # Get size of context.
-        self.context = self.params['context']
+        self.context = self.config['context']
 
         # Select set.
-        if self.params['use_train_data']:
+        if self.config['use_train_data']:
             inputs_file = "x_train.txt"
             ngrams_file =  "ngrams_train.txt"
         else:
