@@ -64,15 +64,15 @@ class MNIST(ImageToClassProblem):
         self.use_train_data = self.config['use_train_data']
 
         # Add transformations depending on the resizing option.
-        if 'resize' in self.config:
+        if 'resize_image' in self.config:
             # Check the desired size.
-            if len(self.config['resize']) != 2:
-                self.logger.error("'resize' field must contain 2 values: the desired height and width")
+            if len(self.config['resize_image']) != 2:
+                self.logger.error("'resize_image' field must contain 2 values: the desired height and width")
                 exit(-1)
 
             # Output image dimensions.
-            self.height = self.config['resize'][0]
-            self.width = self.config['resize'][1]
+            self.height = self.config['resize_image'][0]
+            self.width = self.config['resize_image'][1]
 
             # Up-scale and transform to tensors.
             transform = transforms.Compose([transforms.Resize((self.height, self.width)), transforms.ToTensor()])

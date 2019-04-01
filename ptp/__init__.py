@@ -8,6 +8,7 @@ from .components.losses import *
 from .components.models import *
 
 from .components.problems.problem import Problem
+from .components.problems.image_text_to_class import *
 from .components.problems.image_to_class import *
 from .components.problems.text_to_class import *
 from .components.problems.text_to_text import *

@@ -4,17 +4,17 @@ default_configs: mnist/default_mnist.yml
 # Training parameters - overwrite defaults:
 training:
   problem: 
-    resize: [32, 32]
+    resize_image: [32, 32]
 
 # Validation parameters - overwrite defaults:
 validation:
   problem:
-    resize: [32, 32]
+    resize_image: [32, 32]
 
 # Testing parameters - overwrite defaults:
 testing:
   problem:
-    resize: [32, 32]
+    resize_image: [32, 32]
 
 # Definition of the pipeline.
 pipeline:
