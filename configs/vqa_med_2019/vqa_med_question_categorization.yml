@@ -79,12 +79,11 @@ pipeline:
   # Model 3: RNN
   lstm:
     type: RNN
-    #freeze: True
-    disable: True
+    prediction_mode: Last
     priority: 3
     #initial_state_trainable: False
     streams:
-      inputs: embedded_sources
+      inputs: embedded_questions
     globals:
       input_size: embeddings_size
       prediction_size: num_categories # C1,C2,C3,C4
@@ -93,9 +92,9 @@ pipeline:
   nllloss:
     type: NLLLoss
     priority: 6
-    targets_dim: 2
+    targets_dim: 1
     streams:
-      targets: indexed_targets
+      targets: categories
       loss: loss
 
   #: pipeline

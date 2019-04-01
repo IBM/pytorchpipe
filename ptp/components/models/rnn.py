@@ -57,6 +57,11 @@ class RNN(Model):
             else:
                 raise ConfigurationError("RNN prediction size '{}' must be a single dimension (current {})".format(self.key_prediction_size, self.prediction_size))
         
+        # Get prediction mode from configuration.
+        self.prediction_mode = self.config["prediction_mode"]
+        if self.prediction_mode not in ['Dense','Last']:
+            raise ConfigurationError("Invalid 'prediction_mode' (current {}, available {})".format(self.prediction_mode, ['Dense','Last']))
+
         # Retrieve hidden size from configuration.
         self.hidden_size = self.config["hidden_size"]
         if type(self.hidden_size) == list:
@@ -148,9 +153,16 @@ class RNN(Model):
 
         :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
         """
-        return {
-            self.key_predictions: DataDefinition([-1, -1, self.prediction_size], [torch.Tensor], "Batch of predictions, each represented as probability distribution over classes [BATCH_SIZE x SEQ_LEN x PREDICTION_SIZE]")
-            }
+    
+        if self.prediction_mode == "Dense":
+            return {
+                self.key_predictions: DataDefinition([-1, -1, self.prediction_size], [torch.Tensor], "Batch of predictions, each represented as probability distribution over classes [BATCH_SIZE x SEQ_LEN x PREDICTION_SIZE]")
+                }
+        else: # "Last"
+            return {
+                # Only last prediction.
+                self.key_predictions: DataDefinition([-1, self.prediction_size], [torch.Tensor], "Batch of predictions, each represented as probability distribution over classes [BATCH_SIZE x SEQ_LEN x PREDICTION_SIZE]")
+                }
 
 
     def forward(self, data_dict):
@@ -175,17 +187,25 @@ class RNN(Model):
         # Propagate activations through dropout layer.
         activations = self.dropout(activations)
 
-        # Reshape to 2D tensor [BATCH_SIZE * SEQ_LEN x HIDDEN_SIZE]
-        outputs = activations.contiguous().view(-1, self.hidden_size)
+        if self.prediction_mode == "Dense":
+            # Pass every hidden state through the output layer.
+            # Reshape to 2D tensor [BATCH_SIZE * SEQ_LEN x HIDDEN_SIZE]
+            outputs = activations.contiguous().view(-1, self.hidden_size)
 
-        # Propagate data through the output layer [BATCH_SIZE * SEQ_LEN x PREDICTION_SIZE]
-        outputs = self.hidden2output(outputs)
+            # Propagate data through the output layer [BATCH_SIZE * SEQ_LEN x PREDICTION_SIZE]
+            outputs = self.hidden2output(outputs)
 
-        # Reshape back to 3D tensor [BATCH_SIZE x SEQ_LEN x PREDICTION_SIZE]
-        outputs = outputs.view(activations.size(0), activations.size(1), outputs.size(1))
+            # Reshape back to 3D tensor [BATCH_SIZE x SEQ_LEN x PREDICTION_SIZE]
+            outputs = outputs.view(activations.size(0), activations.size(1), outputs.size(1))
 
-        # Log softmax - along PREDICTION dim.
-        predictions = F.log_softmax(outputs, dim=2)
+            # Log softmax - along PREDICTION dim.
+            predictions = F.log_softmax(outputs, dim=2)
+        else:
+            # Pass only the last hidden state through the output layer.
+            # Propagate data through the output layer [BATCH_SIZE x PREDICTION_SIZE]
+            outputs = self.hidden2output(hidden[-1])
+            # Log softmax - along PREDICTION dim.
+            predictions = F.log_softmax(outputs, dim=1)
 
         # Add predictions to datadict.
         data_dict.extend({self.key_predictions: predictions})
