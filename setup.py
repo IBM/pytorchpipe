@@ -168,6 +168,8 @@ setup(
     install_requires=[
         'tqdm',
         'nltk',
+        'pandas',
+        'pillow',
         #'torchtext',
         'torchvision',
         'torch',
