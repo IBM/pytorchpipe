@@ -18,9 +18,7 @@
 __author__ = "Chaitanya Shivade, Tomasz Kornuta"
 
 import tqdm
-import nltk
 import pandas as pd
-import pickle
 from PIL import Image
 from torchvision import transforms
 

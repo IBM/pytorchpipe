@@ -256,7 +256,7 @@ class SentenceEmbeddings(Model):
         indices_list.sort(key=lambda x: len(x), reverse=True)
 
         # Get lengths.
-        seq_lengths = [len(x) for x in indices_list]
+        #seq_lengths = [len(x) for x in indices_list]
 
         # Pad the indices list.
         padded_indices = torch.nn.utils.rnn.pad_sequence(indices_list, batch_first=True)
