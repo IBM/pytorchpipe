@@ -247,7 +247,7 @@ class SentenceEmbeddings(Model):
                 # Add index to outputs.
                 output_sample.append( output_index )
 
-            indices_list.append(torch.tensor(output_sample))
+            indices_list.append(torch.tensor(output_sample).type(self.app_state.LongTensor))
 
         # Transform the list of lists to tensor - use padding.
         # indices = torch.LongTensor(indices_list)
