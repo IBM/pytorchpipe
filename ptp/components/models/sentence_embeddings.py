@@ -95,7 +95,7 @@ class SentenceEmbeddings(Model):
 
         # Create the embeddings layer.
         self.logger.info("Initializing embeddings layer with vocabulary size = {} and embeddings size = {}".format(len(self.word_to_ix), self.embeddings_size))
-        self.embeddings = torch.nn.Embedding(len(self.word_to_ix), self.embeddings_size)
+        self.embeddings = torch.nn.Embedding(len(self.word_to_ix), self.embeddings_size, padding_idx=0) # Index of self.word_to_ix['<PAD>']
 
         # Load the embeddings first.
         if self.config["pretrained_embeddings"] != '':
@@ -117,8 +117,9 @@ class SentenceEmbeddings(Model):
 
         # Dictionary word_to_ix maps each word in the vocab to a unique integer.
         word_to_ix = {}
-        # Add special word (10 spaces), so the "real" enumeration will start from 1!
-        word_to_ix['          '] = 0
+        # Add special word <PAD> that we will use that during padding.
+        # As a result, the "real" enumeration will start from 1.
+        word_to_ix['<PAD>'] = 0
 
         for filename in source_files.split(','):
             # filename + path.
@@ -246,13 +247,25 @@ class SentenceEmbeddings(Model):
                 # Add index to outputs.
                 output_sample.append( output_index )
 
-            indices_list.append(output_sample)
+            indices_list.append(torch.tensor(output_sample))
 
-        # Transform the list of lists to tensor.
-        indices = torch.LongTensor(indices_list)
+        # Transform the list of lists to tensor - use padding.
+        # indices = torch.LongTensor(indices_list)
 
-        # Embedd.
-        embeds = self.embeddings(indices)
+        # Sort data by seq_length.
+        indices_list.sort(key=lambda x: len(x), reverse=True)
+
+        # Get lengths.
+        seq_lengths = [len(x) for x in indices_list]
+
+        # Pad the indices list.
+        padded_indices = torch.nn.utils.rnn.pad_sequence(indices_list, batch_first=True)
+
+        # Embedd indices.
+        embedds = self.embeddings(padded_indices)
+
+        # Pack embedded sentences.
+        #packed_embedds = torch.nn.utils.rnn.pack_padded_sequence(embeds, lengths= seq_lengths)#, batch_first=True)
 
         # Add embeddings to datadict.
-        data_dict.extend({self.key_outputs: embeds})
+        data_dict.extend({self.key_outputs: embedds})
