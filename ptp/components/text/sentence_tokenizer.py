@@ -14,6 +14,8 @@
 
 __author__ = "Tomasz Kornuta"
 
+from nltk.tokenize import WhitespaceTokenizer
+
 from ptp.components.component import Component
 from ptp.data_types.data_definition import DataDefinition
 
@@ -38,6 +40,9 @@ class SentenceTokenizer(Component):
 
         # Read the actual configuration.
         self.mode_detokenize = config['detokenize']
+
+        # Tokenizer.
+        self.tokenizer = WhitespaceTokenizer()
 
         # Set key mappings.
         self.key_inputs = self.stream_keys["inputs"]
@@ -84,7 +89,7 @@ class SentenceTokenizer(Component):
 
         :return: list of words (strings).
         """
-        return sample.split()
+        return self.tokenizer.tokenize(sample) # sample.split()
 
     def detokenize_sample(self, sample):
         """

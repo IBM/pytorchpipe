@@ -18,6 +18,11 @@ num_layers: 1
 # Options: LSTM | GRU | RNN_TANH | RNN_RELU
 rnn_type: LSTM
 
+# Predictions mode (LOADED)
+# Options: Dense (passes every activation through output layer) |
+#          Last (passes only last activation though output layer)
+prediction_mode: Dense
+
 # Flag informing the model to learn the intial state (h0/c0) (LOADED)
 # When false, (c0/c0) will be initialized as zeros.
 initial_state_trainable: True

@@ -166,7 +166,10 @@ setup(
     # (i.e. dependencies of your dependencies). This is overly-restrictive,
     # and prevents the user from gaining the benefit of dependency upgrades.
     install_requires=[
+        'tqdm',
         'nltk',
+        'pandas',
+        'pillow',
         #'torchtext',
         'torchvision',
         'torch',

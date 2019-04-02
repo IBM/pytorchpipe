@@ -1,0 +1,98 @@
+# Training parameters:
+training:
+  problem:
+    type: &p_type VQAMED2019
+    data_folder: &data_folder ~/data/vqa-med
+    split: training
+    resize_image: &resize_image [224, 224]
+    batch_size:  64
+
+  # optimizer parameters:
+  optimizer:
+    name: Adam
+    lr: 0.1
+
+  # settings parameters
+  terminal_conditions:
+    loss_stop: 1.0e-2
+    episode_limit: 10000
+    epoch_limit: 100
+
+# Validation parameters:
+validation:
+  partial_validation_interval: 10
+  problem:
+    type: *p_type
+    data_folder: *data_folder
+    split: validation
+    resize_image: *resize_image     
+    batch_size:  64
+
+# Testing parameters:
+testing:
+  problem:
+    type: *p_type 
+    data_folder: *data_folder
+    split: test
+    resize_image: *resize_image     
+    batch_size: 64
+
+pipeline:
+  name: vqa_med_question_categorization
+  #load: /users/tomaszkornuta/experiments/dummylanguageidentification/language_classifier/20190301_145416/checkpoints/language_classifier_best.pt
+  #freeze: True
+  #disable: prediction_decoder,accuracy
+
+  # Questions encoding.
+  question_tokenizer:
+    type: SentenceTokenizer
+    priority: 1.1
+    streams: 
+      inputs: questions
+      outputs: tokenized_questions
+
+  # Model 2: Embeddings
+  question_embedding:
+    type: SentenceEmbeddings
+    priority: 1.2
+    embeddings_size: 50
+    pretrained_embeddings: glove.6B.50d.txt
+    data_folder: *data_folder
+    vocabulary_mappings_file: question.all.vocabulary.mappings.csv
+    #additional_tokens: <eos>
+    streams:
+      inputs: tokenized_questions
+      outputs: embedded_questions
+    globals:
+      vocab_size: source_vocab_size
+      
+  
+  # Model 2: RNN
+  lstm:
+    type: RNN
+    prediction_mode: Last
+    priority: 3
+    #initial_state_trainable: False
+    streams:
+      inputs: embedded_questions
+    globals:
+      input_size: embeddings_size
+      prediction_size: num_categories # C1,C2,C3,C4
+
+  # Loss
+  nllloss:
+    type: NLLLoss
+    priority: 6
+    targets_dim: 1
+    streams:
+      targets: categories
+      loss: loss
+
+  # Statistics.
+  accuracy:
+    type: Accuracy
+    priority: 10
+    streams:
+      targets: categories
+
+  #: pipeline
