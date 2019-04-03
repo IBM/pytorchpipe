@@ -24,11 +24,34 @@ import torch
 import ptp.components.utils.io as io
 
 
-def load_pretrained_glove_embeddings(logger, data_folder, embeddings_name, word_to_ix, embeddings_size):
+def load_pretrained_glove_embeddings(logger, folder, embeddings_name, word_to_ix, embeddings_size):
     """
-    Loads the pretrained embeddings from GloVe project.
+    Creates embeddings vector for words from the provided (word:index) mappings (dictionary).
 
-    :return: Array with loaded (or random) vectors.
+    Loads the pretrained embeddings from the GloVe project - for the words found in the dictionary.
+    
+    For words out of dictionary initializes random vectors.
+
+    Available embeddings:
+        - glove.6B.50d.txt
+        - glove.6B.100d.txt
+        - glove.6B.200d.txt
+        - glove.6B.300d.txt
+        - glove.42B.300d.txt
+        - glove.840B.300d.txt
+        - glove.twitter.27B.txt
+
+    :param logger: Logger object.
+
+    :param folder: Relative path to to the folder.
+    :type folder: str
+
+    :param word_to_ix: (word:index) mappings
+    :type word_to_ix: dict
+
+    :param embeddings_size: Embeddings size. Warning: must match the length of vector in the selected file.
+
+    :return: Torch tensor with loaded (or random) vectors.
     """
     # https://medium.com/@martinpella/how-to-use-pre-trained-word-embeddings-in-pytorch-71ca59249f76
     # http://ronny.rest/blog/post_2017_08_04_glove/
@@ -50,18 +73,18 @@ def load_pretrained_glove_embeddings(logger, data_folder, embeddings_name, word_
         exit(1)
 
     # Check presence of the file.
-    if not io.check_file_existence(data_folder, embeddings_name):
+    if not io.check_file_existence(folder, embeddings_name):
         # Download and extract wikitext zip.
-        io.download_extract_zip_file(logger, data_folder, pretrained_embeddings_urls[embeddings_name][0], pretrained_embeddings_urls[embeddings_name][1])
+        io.download_extract_zip_file(logger, folder, pretrained_embeddings_urls[embeddings_name][0], pretrained_embeddings_urls[embeddings_name][1])
     else: 
-        logger.info("File '{}' containing pretrained embeddings found in '{}' folder".format(embeddings_name, data_folder))
+        logger.info("File '{}' containing pretrained embeddings found in '{}' folder".format(embeddings_name, folder))
 
     num_loaded_embs = 0
-    # Set zeros for words "out of vocabulary"
+    # Set random embeddings for words "out of vocabulary".
     # embeddings = np.zeros((len(word_to_ix), embeddings_size))
     embeddings = np.random.normal(scale=0.6, size=(len(word_to_ix), embeddings_size))
     # Open the embeddings file.
-    with open(os.path.join(data_folder, embeddings_name)) as f:
+    with open(os.path.join(folder, embeddings_name)) as f:
         # Parse file 
         for line in f.readlines():
             values = line.split()

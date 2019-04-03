@@ -76,14 +76,14 @@ class SentenceEmbeddings(Model):
         # Check whether we want to (re)generate new  or load existing encodings.
         if self.mode_regenerate or not os.path.exists(vocabulary_mappings_file_path):
             # Generate new vocabulary.
-            self.word_to_ix = wm.initialize_word_mappings_from_source_files(self.logger, self.data_folder, self.source_files)
-            assert (len(self.word_to_ix) > 0), "The created vocabulary cannot be empty!"
+            self.word_to_ix = wm.generate_word_mappings_from_source_files(self.logger, self.data_folder, self.source_files)
+            assert (len(self.word_to_ix) > 0), "The created word mappings cannot be empty!"
             # Ok, save mappings, so next time we will simply load them.
-            io.save_mappings_to_csv_file(self.data_folder, self.vocabulary_mappings_file, self.word_to_ix, ['word', 'index'])
+            wm.save_word_mappings_to_csv_file(self.logger, self.data_folder, self.vocabulary_mappings_file, self.word_to_ix)
         else:
             # Load encodings.
-            self.word_to_ix = io.load_mappings_from_csv_file(self.data_folder, self.vocabulary_mappings_file)
-            assert (len(self.word_to_ix) > 0), "The loaded encodings list is empty!"
+            self.word_to_ix = wm.load_word_mappings_from_csv_file(self.logger, self.data_folder, self.vocabulary_mappings_file)
+            assert (len(self.word_to_ix) > 0), "The loaded word mappings list is empty!"
 
         # Check if additional tokens are present.
         self.additional_tokens = self.config["additional_tokens"].split(',')

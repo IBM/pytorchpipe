@@ -18,17 +18,26 @@
 __author__ = "Tomasz Kornuta"
 
 import os
+import csv
 
-def generate_word_mappings_from_source_files(logger, data_folder, source_files):
+
+def generate_word_mappings_from_source_files(logger, folder, source_files):
     """
     Load list of files (containing raw text) and creates (word:index) mappings from all words (tokens).
     Indexing starts from 0.
 
-    :return: Dictionary with mapping "word-to-index".
+    :param logger: Logger object.
+
+    :param folder: Relative path to to the folder.
+    :type folder: str
+
+    :param source_files: Source files (separated by commas)
+
+    :return: Dictionary with (word:index) mappings
     """
-    assert len(source_files) > 0, 'Cannot create dictionary: "source_files" is empty, please provide comma separated list of files to be processed'
+    assert len(source_files) > 0, "Cannot create dictionary: list of 'source_files' is empty, please provide comma separated list of files to be processed"
     # Get absolute path.
-    data_folder = os.path.expanduser(data_folder)
+    folder = os.path.expanduser(folder)
 
     # Dictionary word_to_ix maps each word in the vocab to a unique integer.
     word_to_ix = {}
@@ -38,9 +47,9 @@ def generate_word_mappings_from_source_files(logger, data_folder, source_files):
 
     for filename in source_files.split(','):
         # filename + path.
-        fn = data_folder+ '/' + filename
+        fn = folder+ '/' + filename
         if not os.path.exists(fn):
-            logger.warning("Cannot load tokens files from {} because file does not exist".format(fn))
+            logger.warning("Cannot load tokens files from '{}' because file does not exist".format(fn))
             continue
         # File exists, try to parse.
         content = open(fn).read()
@@ -49,17 +58,25 @@ def generate_word_mappings_from_source_files(logger, data_folder, source_files):
             # If new token.
             if word not in word_to_ix:
                 word_to_ix[word] = len(word_to_ix)
+
+    logger.info("Generated mappings of size {}".format(len(word_to_ix)))
     return word_to_ix
 
 
-def load_word_mappings_from_csv_file(folder, filename):
+def load_word_mappings_from_csv_file(logger, folder, filename):
     """
     Loads (word:index) mappings from csv file.
 
     .. warning::
             There is an assumption that file will contain key:value pairs (no content checking for now!)
 
+    :param logger: Logger object.
+
+    :param folder: Relative path to to the folder.
+    :type folder: str
+
     :param filename: File with encodings (absolute path + filename).
+
     :return: dictionary with word:index keys
     """        
     file_path = os.path.join(os.path.expanduser(folder), filename)
@@ -76,16 +93,25 @@ def load_word_mappings_from_csv_file(folder, filename):
         if has_header:
             next(reader)  
         # Read the remaining rows.
-        ret_dict = {rows[0]:int(rows[1]) for rows in reader}
-    return ret_dict
+        word_to_ix = {rows[0]:int(rows[1]) for rows in reader}
+
+    logger.info("Loaded mappings of size {}".format(len(word_to_ix)))
+    return word_to_ix
 
 
-def save_word_mappings_to_csv_file(folder, filename, word_to_ix, fieldnames = []):
+def save_word_mappings_to_csv_file(logger, folder, filename, word_to_ix, fieldnames = ["word","index"]):
     """
     Saves (word:index) mappings dictionary to a file.
 
-    :param filename: File with encodings (absolute path + filename).
-    :param word_to_ix: dictionary with word:index keys
+    :param logger: Logger object.
+
+    :param folder: Relative path to to the folder.
+    :type folder: str
+
+    :param filename: Name of file with encodings.
+    
+    :param word_to_ix: Dictionary with word:index mappings to be saved.
+    
     """
     # Make sure directory exists.
     os.makedirs(os.path.dirname(folder +'/'), exist_ok=True)
@@ -101,3 +127,5 @@ def save_word_mappings_to_csv_file(folder, filename, word_to_ix, fieldnames = []
         for (k,v) in word_to_ix.items():
             #print("{} : {}".format(k,v))
             writer.writerow({fieldnames[0]:k, fieldnames[1]: v})
+
+    logger.info("Saved mappings of size {} to file '{}'".format(len(word_to_ix), file_path))

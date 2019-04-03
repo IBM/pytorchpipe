@@ -19,7 +19,6 @@ import sys
 import shutil
 import zipfile
 import time
-import csv
 import urllib
 from pathlib import Path
 
@@ -29,9 +28,15 @@ def save_string_list_to_txt_file(folder, filename, data):
     """ 
     Writes list of strings to txt file.
 
+    :param folder: Relative path to to folder.
+    :type folder: str
+
+    :param filename: Name of the file.
+    :type filename: str
+
     :param data: List containing strings (sententes, words etc.).
     """
-    # Make sure directory exists.
+    # Make sure folder exists.
     os.makedirs(os.path.dirname(folder +'/'), exist_ok=True)
 
     # Write elements in separate lines.        
@@ -62,35 +67,35 @@ def get_project_root() -> Path:
     return Path(__file__).parent.parent
 
 
-def check_file_existence(directory, filename):
+def check_file_existence(folder, filename):
     """
     Checks if file exists.
 
-    :param directory: Relative path to to folder.
-    :type directory: str
+    :param folder: Relative path to to folder.
+    :type folder: str
 
     :param filename: Name of the file.
-    :type directory: str
+    :type filename: str
     """
-    file_to_check = os.path.join(os.path.expanduser(directory), filename)
-    if os.path.isdir(directory) and os.path.isfile(file_to_check):
+    file_to_check = os.path.join(os.path.expanduser(folder), filename)
+    if os.path.isdir(folder) and os.path.isfile(file_to_check):
         return True
         #self.logger.info('Dataset found at {}'.format(file_folder_to_check))
     else:
         return False
 
-def check_files_existence(directory, filenames):
+def check_files_existence(folder, filenames):
     """
     Checks if all files in the list exist.
 
-    :param directory: Relative path to to folder.
-    :type directory: str
+    :param folder: Relative path to to folder.
+    :type folder: str
 
     :param filename: List of files
-    :type directory: List of strings or a single string with filenames separated by spaces)
+    :type lst: List of strings or a single string with filenames separated by spaces)
     """
-    # Check directory existence.
-    if not os.path.isdir(directory):
+    # Check folder existence.
+    if not os.path.isdir(folder):
         return False
 
     # Process list of files.
@@ -99,35 +104,35 @@ def check_files_existence(directory, filenames):
 
     # Check files one by one.
     for file in filenames:
-        file_to_check = os.path.join(os.path.expanduser(directory), file)
+        file_to_check = os.path.join(os.path.expanduser(folder), file)
         if not os.path.isfile(file_to_check):
             return False
     # Ok.
     return True
     
 
-def download(directory, filename, url):
+def download(folder, filename, url):
     """
     Checks whether a file or folder exists at given path (relative to storage folder), \
     otherwise downloads files from the given URL.
 
-    :param directory: Relative path to to folder.
-    :type directory: str
+    :param folder: Relative path to to the folder.
+    :type folder: str
 
     :param filename: Name of the file.
-    :type directory: str
+    :type filename: str
 
     :param url: URL to download the file from.
     :type url: str
     """
-    if check_file_existence(directory, filename):
+    if check_file_existence(folder, filename):
         return
     
-    # Make sure directory exists.
-    os.makedirs(os.path.dirname(directory +'/'), exist_ok=True)
+    # Make sure folder exists.
+    os.makedirs(os.path.dirname(folder +'/'), exist_ok=True)
 
     # Download.
-    file_result = os.path.join(os.path.expanduser(directory), filename)
+    file_result = os.path.join(os.path.expanduser(folder), filename)
     urllib.request.urlretrieve(url, os.path.expanduser(file_result), reporthook)
     #self.logger.info('Downloading {}'.format(url))
 
@@ -147,31 +152,31 @@ def reporthook(count, block_size, total_size):
                      (percent, progress_size / (1024 * 1024), speed, duration))
     sys.stdout.flush()
 
-def download_extract_zip_file(logger, data_folder, url, zipfile_name):
+def download_extract_zip_file(logger, folder, url, zipfile_name):
     """
     Method downloads zipfile from given URL and extracts it.
 
     :param logger: Logger object used for logging information during download.
 
-    :param data_folder: Folder in which data will be stored.
+    :param folder: Folder in which data will be stored.
 
     :param url: URL from which file will be downloaded.
 
     :param zipfile_name: Name of the zip file to be downloaded and extracted.
 
     """
-    logger.info("Initializing download in folder {}".format(data_folder))
+    logger.info("Initializing download in folder {}".format(folder))
 
-    if not check_file_existence(data_folder, zipfile_name):
+    if not check_file_existence(folder, zipfile_name):
         logger.info("Downloading file {} from {}".format(zipfile_name, url))
-        download(data_folder, zipfile_name, url)
+        download(folder, zipfile_name, url)
     else:
-        logger.info("File {} found in {}".format(zipfile_name, data_folder))
+        logger.info("File {} found in {}".format(zipfile_name, folder))
 
     # Extract data from zip.
     logger.info("Extracting data from {}".format(zipfile_name))
-    with zipfile.ZipFile(os.path.join(data_folder, zipfile_name), 'r') as zip_ref:
-        zip_ref.extractall(data_folder)
+    with zipfile.ZipFile(os.path.join(folder, zipfile_name), 'r') as zip_ref:
+        zip_ref.extractall(folder)
     
     logger.info("Download and extraciton finished")
 

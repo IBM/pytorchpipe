@@ -15,8 +15,8 @@
 __author__ = "Tomasz Kornuta"
 
 import os
-import ptp.utils.io_utils as io
 
+import ptp.components.utils.word_mappings as wm
 from ptp.components.component import Component
 
 
@@ -59,13 +59,13 @@ class TokenEncoder(Component):
         # Check whether we want to (re)generate new  or load existing encodings.
         if self.mode_regenerate or not os.path.exists(encodings_file_path):
             # Generate new encodings.
-            self.word_to_ix = self.create_encodings(self.data_folder, self.source_files)
+            self.word_to_ix = wm.generate_word_mappings_from_source_files(self.logger, self.data_folder, self.source_files)
             assert (len(self.word_to_ix) > 0), "The created encodings list is empty!"
             # Ok, save mappings, so next time we will simply load them.
-            io.save_mappings_to_csv_file(self.data_folder, self.encodings_file, self.word_to_ix, ['word', 'index'])
+            wm.save_word_mappings_to_csv_file(self.logger, self.data_folder, self.encodings_file, self.word_to_ix)
         else:
             # Load encodings.
-            self.word_to_ix = io.load_mappings_from_csv_file(self.data_folder, self.encodings_file)
+            self.word_to_ix = wm.load_word_mappings_from_csv_file(self.logger, self.data_folder, self.encodings_file)
             assert (len(self.word_to_ix) > 0), "The loaded encodings list is empty!"
 
         # Check if additional tokens are present.
@@ -73,36 +73,3 @@ class TokenEncoder(Component):
             # If new token.
             if word not in self.word_to_ix:
                 self.word_to_ix[word] = len(self.word_to_ix)
-
-        
-
-    def create_encodings(self, data_folder, source_files):
-        """
-        Load list of files (containing raw text) and creates a dictionary from all words (tokens).
-        Indexing starts from 0.
-
-        :return: Dictionary with mapping "word-to-index".
-        """
-        assert len(source_files) > 0, 'Cannot create dictionary: "source_files" is empty, please provide comma separated list of files to be processed'
-        # Get absolute path.
-        data_folder = os.path.expanduser(data_folder)
-
-        # Dictionary word_to_ix maps each word in the vocab to a unique integer.
-        word_to_ix = {}
-        # Add special word (10 spaces), so the "real" enumeration will start from 1!
-        word_to_ix['          '] = 0
-
-        for filename in source_files.split(','):
-            # filename + path.
-            fn = data_folder+ '/' + filename
-            if not os.path.exists(fn):
-                self.logger.warning("Cannot load tokens files from {} because file does not exist".format(fn))
-                continue
-            # File exists, try to parse.
-            content = open(fn).read()
-            # Parse tokens.
-            for word in content.split():
-                # If new token.
-                if word not in word_to_ix:
-                    word_to_ix[word] = len(word_to_ix)
-        return word_to_ix

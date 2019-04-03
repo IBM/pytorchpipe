@@ -18,7 +18,7 @@ import os
 
 from nltk.tokenize import WhitespaceTokenizer
 
-import ptp.utils.io_utils as io
+import ptp.components.utils.io as io
 from ptp.configuration import ConfigurationError
 from ptp.components.problems.problem import Problem
 from ptp.data_types.data_definition import DataDefinition

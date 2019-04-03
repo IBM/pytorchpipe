@@ -9,7 +9,6 @@ data_folder: '~/data/'
 
 # File containing pretrained embeddings (LOADED)
 # Empty means that no embeddings will be loaded.
-# Options: 
 pretrained_embeddings: ''
 
 # Source files that will be used to create the vocabulary  (LOADED)

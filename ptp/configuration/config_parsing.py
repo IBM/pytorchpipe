@@ -54,5 +54,5 @@ def load_default_configuration_file(class_type):
             return param_dict
 
     except yaml.YAMLError as e:
-        print("ERROR: Couldn't properly parse the {} default configuration file. YAML error:\n  {}".format(abs_default_config, e))
+        print("ERROR: Couldn't properly parse the '{}' default configuration file. YAML error:\n  {}".format(abs_default_config, e))
         exit(-2)
