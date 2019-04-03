@@ -40,8 +40,11 @@ globals:
   # 4. Keymappings associated with GLOBAL variables that will be SET.
   ####################################################################
 
-  # Length of the returned vector/vocabulary size (SET)
-  sentence_vocab_size: sentence_vocab_size
+  # The created word mappings (SET)
+  word_mappings: word_mappings
+
+  # Size of the vocabulary (SET)
+  vocabulary_size: vocabulary_size
 
   ####################################################################
   # 5. Keymappings associated with statistics that will be ADDED.

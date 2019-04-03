@@ -20,9 +20,9 @@ from ptp.components.mixins.word_mapping import WordMapping
 from ptp.data_types.data_definition import DataDefinition
 
 
-class SentenceEncoder(WordMapping):
+class SentenceOneHotEncoder(WordMapping):
     """
-    Class responsible for encoding of samples being sequences of words (1-hot encoding).
+    Class responsible for encoding of samples being sequences of words using 1-hot encoding.
     """
     def __init__(self, name, config):
         """
@@ -36,9 +36,7 @@ class SentenceEncoder(WordMapping):
 
         """
         # Call constructors of parent classes.
-        #TokenEncoder.__init__(self, name, SentenceEncoder, config)
-        #super(SentenceEncoder, self).__init__(name, SentenceEncoder, config)
-        WordMapping.__init__(self, name, SentenceEncoder, config)
+        WordMapping.__init__(self, name, SentenceOneHotEncoder, config)
 
         # Set key mappings.
         self.key_inputs = self.stream_keys["inputs"]

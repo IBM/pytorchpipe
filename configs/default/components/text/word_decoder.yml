@@ -7,18 +7,17 @@
 # Folder where problem will store data (LOADED)
 data_folder: '~/data/'
 
-# Source files that will be used to create a dictionary  LOADED)
-source_files: ''
+# Source files that will be used to create the vocabulary  (LOADED)
+source_vocabulary_files: ''
 
-# File containing encodings (LOADED)
-encodings_file: 'default_encodings.csv'
-
-# If set, component will always (re)generate data (LOADED)
-# True means that it will be regenerated despite the existence of file.
-regenerate: False 
-
-# Additional tokens, that will be added to vocabulary (LOADED)
+# Additional tokens that will be added to vocabulary (LOADED)
 additional_tokens: ''
+
+# File containing word (LOADED)
+word_mappings_file: 'word_mappings.csv'
+
+# If set, component will always (re)generate the vocabulary (LOADED)
+regenerate: False 
 
 streams: 
   ####################################################################
@@ -31,7 +30,7 @@ streams:
   # Stream containing output tensor (OUTPUT)
   outputs: outputs
 
-globals:
+globals: 
   ####################################################################
   # 3. Keymappings of variables that will be RETRIEVED from GLOBALS.
   ####################################################################
@@ -39,6 +38,12 @@ globals:
   ####################################################################
   # 4. Keymappings associated with GLOBAL variables that will be SET.
   ####################################################################
+
+  # The created word mappings (SET)
+  word_mappings: word_mappings
+
+  # Size of the vocabulary (SET)
+  vocabulary_size: vocabulary_size
 
   ####################################################################
   # 5. Keymappings associated with statistics that will be ADDED.

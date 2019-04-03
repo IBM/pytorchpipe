@@ -20,6 +20,7 @@ __author__ = "Tomasz Kornuta"
 import os
 import csv
 
+from ptp.configuration.configuration_error import ConfigurationError
 
 def generate_word_mappings_from_source_files(logger, folder, source_files):
     """
@@ -35,7 +36,11 @@ def generate_word_mappings_from_source_files(logger, folder, source_files):
 
     :return: Dictionary with (word:index) mappings
     """
-    assert len(source_files) > 0, "Cannot create dictionary: list of 'source_files' is empty, please provide comma separated list of files to be processed"
+    # Check if there are any source files to load.
+    if len(source_files) == 0:
+        logger.error("Cannot create dictionary: list of vocabulary source files is empty, please provide comma separated list of files to be processed")
+        exit(-1)
+
     # Get absolute path.
     folder = os.path.expanduser(folder)
 

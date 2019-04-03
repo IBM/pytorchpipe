@@ -1,4 +1,4 @@
-# This file defines the default values for Sentence Encoder.
+# This file defines the default values for Sentence 1-hot Encoder.
 
 ####################################################################
 # 1. CONFIGURATION PARAMETERS that will be LOADED by the component.

@@ -51,7 +51,6 @@ class WordMapping(Component):
         
         # Set aboslute path to file with word mappings.
         word_mappings_file_path = os.path.join(os.path.expanduser(self.data_folder), self.word_mappings_file)
-        print(word_mappings_file_path)
 
         # Check if we want to load preprocessed mappings.
         if self.word_mappings_file != "" and os.path.exists(word_mappings_file_path) and not self.config['regenerate']:
@@ -77,4 +76,5 @@ class WordMapping(Component):
         # Export word mappings and vocabulary size to globals.
         self.globals["word_mappings"] = self.word_to_ix
         self.globals["vocabulary_size"] = len(self.word_to_ix)
+
 
