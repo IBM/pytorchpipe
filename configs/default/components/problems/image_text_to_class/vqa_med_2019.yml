@@ -15,6 +15,10 @@ split: training
 # Options: all | c1 | c2 | c3 | c4 (or any combination of the latter 4)
 categories: [all]
 
+# Removes punctuation (LOADED)
+# Options: none | questions | answers | all
+remove_punctuation: questions
+
 # Resize parameter (LOADED)
 # When present, resizes the images from original size to [width, height]
 # Depth remains set to 3.

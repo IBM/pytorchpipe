@@ -86,7 +86,7 @@ class SentenceEmbeddings(Model):
         self.additional_tokens = self.config["additional_tokens"].split(',')
         for word in self.additional_tokens:
             # If new token.
-            if word not in self.word_to_ix:
+            if word != '' and word not in self.word_to_ix:
                 self.word_to_ix[word] = len(self.word_to_ix)
 
         # Export vocabulary and its length to globals.
@@ -190,11 +190,10 @@ class SentenceEmbeddings(Model):
                     # Increment counter.
                     num_loaded_embs += 1
         
-        self.logger.info("Loaded {} pretrained embeddings from {}".format(num_loaded_embs, embeddings_name))
+        self.logger.info("Loaded {} pretrained embeddings for vocabulary of size {} from {}".format(num_loaded_embs, len(word_to_ix), embeddings_name))
 
         # Return matrix with embeddings.
         return torch.from_numpy(embeddings).float()
-
 
 
     def input_data_definitions(self):
