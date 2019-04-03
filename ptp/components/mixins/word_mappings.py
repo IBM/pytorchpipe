@@ -20,7 +20,7 @@ import ptp.components.utils.word_mappings as wm
 from ptp.components.component import Component
 
 
-class WordMapping(Component):
+class WordMappings(Component):
     """
     Mixin class that handles the initialization of (word:index) mappings.
     """
@@ -52,15 +52,20 @@ class WordMapping(Component):
         # Set aboslute path to file with word mappings.
         word_mappings_file_path = os.path.join(os.path.expanduser(self.data_folder), self.word_mappings_file)
 
-        # Check if we want to load preprocessed mappings.
-        if self.word_mappings_file != "" and os.path.exists(word_mappings_file_path) and not self.config['regenerate']:
-            # Load word mappings.
+        # Check if we want to export word mappings to globals.
+        if self.config["import_word_mappings_from_globals"]:
+            self.word_to_ix = self.globals["word_mappings"]
+            assert (len(self.word_to_ix) > 0), "The word mappings imported from global variables are empty!"
+
+        elif self.word_mappings_file != "" and os.path.exists(word_mappings_file_path) and not self.config['regenerate']:
+            # Try to load the preprocessed word mappings.
             self.word_to_ix = wm.load_word_mappings_from_csv_file(self.logger, self.data_folder, self.word_mappings_file)
-            assert (len(self.word_to_ix) > 0), "The loaded word mappings list is empty!"
+            assert (len(self.word_to_ix) > 0), "The word mappings loaded from file are empty!"
+
         else:
             # Try to generate new word mappings from source files.
             self.word_to_ix = wm.generate_word_mappings_from_source_files(self.logger, self.data_folder, self.source_vocabulary_files)
-            assert (len(self.word_to_ix) > 0), "The created word mappings cannot be empty!"
+            assert (len(self.word_to_ix) > 0), "The word mappings generated from sources are empty!"
             # Ok, save mappings, so next time we will simply load them.
             wm.save_word_mappings_to_csv_file(self.logger, self.data_folder, self.word_mappings_file, self.word_to_ix)
 
@@ -73,8 +78,11 @@ class WordMapping(Component):
 
         self.logger.info("Initialized word mappings with vocabulary of size {}".format(len(self.word_to_ix)))
 
-        # Export word mappings and vocabulary size to globals.
-        self.globals["word_mappings"] = self.word_to_ix
+        # Exportvocabulary size to globals.
         self.globals["vocabulary_size"] = len(self.word_to_ix)
+
+        # Check if we want to export word mappings to globals.
+        if self.config["export_word_mappings_to_globals"]:
+            self.globals["word_mappings"] = self.word_to_ix
 
 

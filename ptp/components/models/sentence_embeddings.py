@@ -23,13 +23,13 @@ import torch
 import numpy as np
 
 from ptp.components.models.model import Model
-from ptp.components.mixins.word_mapping import WordMapping
+from ptp.components.mixins.word_mappings import WordMappings
 from ptp.data_types.data_definition import DataDefinition
 
 import ptp.components.utils.embeddings as emb
 
 
-class SentenceEmbeddings(Model, WordMapping):
+class SentenceEmbeddings(Model, WordMappings):
     """
     Model responsible of embedding of whole sentences.
 
@@ -51,9 +51,8 @@ class SentenceEmbeddings(Model, WordMapping):
         :type config: ``ptp.configuration.ConfigInterface``
         """
         # Call base class constructors.
-        #super(SentenceEmbeddings, self).__init__(name, SentenceEmbeddings, config)
         Model.__init__(self, name, SentenceEmbeddings, config)
-        WordMapping.__init__(self, name, SentenceEmbeddings, config)
+        WordMappings.__init__(self, name, SentenceEmbeddings, config)
 
         # Set key mappings.
         self.key_inputs = self.stream_keys["inputs"]

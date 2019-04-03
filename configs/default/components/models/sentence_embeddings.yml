@@ -19,6 +19,12 @@ word_mappings_file: 'word_mappings.csv'
 # If set, component will always (re)generate the vocabulary (LOADED)
 regenerate: False 
 
+# Flag informing whether word mappings will be imported from globals (LOADED)
+import_word_mappings_from_globals: False
+
+# Flag informing whether word mappings will be exported to globals (LOADED)
+export_word_mappings_to_globals: False
+
 # File containing pretrained embeddings (LOADED)
 # Empty means that no embeddings will be loaded.
 pretrained_embeddings_file: ''

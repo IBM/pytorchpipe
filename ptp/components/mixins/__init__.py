@@ -1,5 +1,5 @@
-from .word_mapping import WordMapping
+from .word_mappings import WordMappings
 
 __all__ = [
-    'WordMapping',
+    'WordMappings',
     ]

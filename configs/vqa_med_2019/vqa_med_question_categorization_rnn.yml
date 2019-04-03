@@ -59,20 +59,16 @@ pipeline:
     #pretrained_embeddings_file: glove.6B.50d.txt
     data_folder: *data_folder
     word_mappings_file: question.all.vocabulary.mappings.csv
-    #additional_tokens: <eos>
     streams:
       inputs: tokenized_questions
-      outputs: embedded_questions
-    globals:
-      vocab_size: source_vocab_size
-      
+      outputs: embedded_questions      
   
   # Model 2: RNN
   lstm:
     type: RNN
     prediction_mode: Last
     priority: 3
-    initial_state_trainable: False
+    #initial_state_trainable: False
     hidden_size: 50
     streams:
       inputs: embedded_questions

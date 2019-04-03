@@ -60,7 +60,6 @@ pipeline:
       outputs: encoded_sentences
     globals:
         vocabulary_size: sentence_vocab_size 
-        word_mappings: sentence_word_mappings
 
   bow_encoder:
     type: BOWEncoder
@@ -78,6 +77,8 @@ pipeline:
     data_folder: ~/data/language_identification/dummy
     source_vocabulary_files: y_training.txt,y_test.txt
     word_mappings_file: language_name_encodings.csv
+    # Export word mappings, so other can reuse them.
+    export_word_mappings_to_globals: True
     streams:
       inputs: languages
       outputs: indexed_languages
@@ -94,7 +95,7 @@ pipeline:
       inputs: bow_sencentes
     globals:
       input_size: sentence_vocab_size # Set by sentence_encoder.
-      prediction_size: label_vocab_size # Set by target_encoder.
+      prediction_size: label_vocab_size
   
   # Loss
   nllloss:
@@ -109,8 +110,8 @@ pipeline:
   prediction_decoder:
     type: WordDecoder
     priority: 8
-    data_folder: ~/data/language_identification/dummy
-    word_mappings_file: language_name_encodings.csv
+    # Use the same word mappings as label indexer.
+    import_word_mappings_from_globals: True
     streams:
       inputs: predictions
       outputs: predicted_labels

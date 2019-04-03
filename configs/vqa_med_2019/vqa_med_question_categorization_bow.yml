@@ -52,7 +52,7 @@ pipeline:
       outputs: tokenized_questions
 
   sentence_encoder:
-    type: SentenceEncoder
+    type: SentenceOneHotEncoder
     priority: 1.2
     data_folder: *data_folder
     word_mappings_file: question.all.vocabulary.mappings.csv
