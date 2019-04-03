@@ -67,8 +67,11 @@ class ComponentFactory(object):
             # Try to evaluate it directly.
             class_obj = eval(c_type)
         else:
-            # Try to find it in the main "ptp" namespace.
-            class_obj = getattr(ptp, c_type)
+            try:
+                # Try to find it in the main "ptp" namespace.
+                class_obj = getattr(ptp, c_type)
+            except AttributeError:
+                raise ConfigurationError("Class '{}' not found in the list of Component classes".format(c_type))
 
         # Check if class is derived (even indirectly) from Component.
         if not ComponentFactory.check_inheritance(class_obj, ptp.Component.__name__):
