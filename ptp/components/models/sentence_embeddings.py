@@ -22,9 +22,12 @@ import os
 import torch
 import numpy as np
 
-import ptp.utils.io_utils as io
 from ptp.components.models.model import Model
 from ptp.data_types.data_definition import DataDefinition
+
+import ptp.components.utils.io as io
+import ptp.components.utils.word_mappings as wm
+import ptp.components.utils.embeddings as emb
 
 
 class SentenceEmbeddings(Model):
@@ -73,7 +76,7 @@ class SentenceEmbeddings(Model):
         # Check whether we want to (re)generate new  or load existing encodings.
         if self.mode_regenerate or not os.path.exists(vocabulary_mappings_file_path):
             # Generate new vocabulary.
-            self.word_to_ix = self.initialize_word_mappings(self.data_folder, self.source_files)
+            self.word_to_ix = wm.initialize_word_mappings_from_source_files(self.logger, self.data_folder, self.source_files)
             assert (len(self.word_to_ix) > 0), "The created vocabulary cannot be empty!"
             # Ok, save mappings, so next time we will simply load them.
             io.save_mappings_to_csv_file(self.data_folder, self.vocabulary_mappings_file, self.word_to_ix, ['word', 'index'])
@@ -101,99 +104,6 @@ class SentenceEmbeddings(Model):
         if self.config["pretrained_embeddings"] != '':
             emb_vectors = self.load_pretrained_glove_embeddings(self.data_folder, self.config["pretrained_embeddings"], self.word_to_ix, self.embeddings_size)
             self.embeddings.weight = torch.nn.Parameter(emb_vectors)
-
-
-
-    def initialize_word_mappings(self, data_folder, source_files):
-        """
-        Load list of files (containing raw text) and creates a vocabulary from all words (tokens).
-        Indexing starts from 0.
-
-        :return: Dictionary with mapping "word-to-index".
-        """
-        assert len(source_files) > 0, 'Cannot create dictionary: "source_files" is empty, please provide comma separated list of files to be processed'
-        # Get absolute path.
-        data_folder = os.path.expanduser(data_folder)
-
-        # Dictionary word_to_ix maps each word in the vocab to a unique integer.
-        word_to_ix = {}
-        # Add special word <PAD> that we will use that during padding.
-        # As a result, the "real" enumeration will start from 1.
-        word_to_ix['<PAD>'] = 0
-
-        for filename in source_files.split(','):
-            # filename + path.
-            fn = data_folder+ '/' + filename
-            if not os.path.exists(fn):
-                self.logger.warning("Cannot load tokens files from {} because file does not exist".format(fn))
-                continue
-            # File exists, try to parse.
-            content = open(fn).read()
-            # Parse tokens.
-            for word in content.split():
-                # If new token.
-                if word not in word_to_ix:
-                    word_to_ix[word] = len(word_to_ix)
-        return word_to_ix
-
-
-    def load_pretrained_glove_embeddings(self, data_folder, embeddings_name, word_to_ix, embeddings_size):
-        """
-        Loads the pretrained embeddings from GloVe project.
-
-        :return: Array with loaded (or random) vectors.
-        """
-        # https://medium.com/@martinpella/how-to-use-pre-trained-word-embeddings-in-pytorch-71ca59249f76
-        # http://ronny.rest/blog/post_2017_08_04_glove/
-
-        # Check th presence of the file.
-        # Available options.
-        # https://nlp.stanford.edu/projects/glove/
-        pretrained_embeddings_urls = {}
-        pretrained_embeddings_urls["glove.6B.50d.txt"] = ("http://nlp.stanford.edu/data/glove.6B.zip", "glove.6B.zip")
-        pretrained_embeddings_urls["glove.6B.100d.txt"] = ("http://nlp.stanford.edu/data/glove.6B.zip", "glove.6B.zip")
-        pretrained_embeddings_urls["glove.6B.200d.txt"] = ("http://nlp.stanford.edu/data/glove.6B.zip", "glove.6B.zip")
-        pretrained_embeddings_urls["glove.6B.300d.txt"] = ("http://nlp.stanford.edu/data/glove.6B.zip", "glove.6B.zip")
-        pretrained_embeddings_urls["glove.42B.300d.txt"] = ("http://nlp.stanford.edu/data/glove.42B.300d.zip", "glove.42B.300d.zip")
-        pretrained_embeddings_urls["glove.840B.300d.txt"] = ("http://nlp.stanford.edu/data/glove.840B.300d.zip", "glove.840B.300d.zip")
-        pretrained_embeddings_urls["glove.twitter.27B.txt"] = ("http://nlp.stanford.edu/data/glove.twitter.27B.zip", "glove.twitter.27B.zip")
-
-        if (embeddings_name not in pretrained_embeddings_urls.keys()):
-            self.logger.error("Cannot load the indicated pretrained embeddings (current '{}' must be one of {})".format(embeddings_name, pretrained_embeddings_urls.keys()))
-            exit(1)
-
-        # Check presence of the file.
-        if not io.check_file_existence(data_folder, embeddings_name):
-            # Download and extract wikitext zip.
-            io.download_extract_zip_file(self.logger, data_folder, pretrained_embeddings_urls[embeddings_name][0], pretrained_embeddings_urls[embeddings_name][1])
-        else: 
-            self.logger.info("File '{}' containing pretrained embeddings found in '{}' folder".format(embeddings_name, data_folder))
-
-        num_loaded_embs = 0
-        # Set zeros for words "out of vocabulary"
-        # embeddings = np.zeros((len(word_to_ix), embeddings_size))
-        embeddings = np.random.normal(scale=0.6, size=(len(word_to_ix), embeddings_size))
-        # Open the embeddings file.
-        with open(os.path.join(data_folder, embeddings_name)) as f:
-            # Parse file 
-            for line in f.readlines():
-                values = line.split()
-                # Get word.
-                word = values[0]
-                # Get index.
-                index = word_to_ix.get(word)
-                if index:
-                    vector = np.array(values[1:], dtype='float32')
-                    assert (len(vector) == embeddings_size), "Embeddings size must be equal to the size of pretrained embeddings!"
-                    # Ok, set vector.
-                    embeddings[index] = vector
-                    # Increment counter.
-                    num_loaded_embs += 1
-        
-        self.logger.info("Loaded {} pretrained embeddings for vocabulary of size {} from {}".format(num_loaded_embs, len(word_to_ix), embeddings_name))
-
-        # Return matrix with embeddings.
-        return torch.from_numpy(embeddings).float()
 
 
     def input_data_definitions(self):

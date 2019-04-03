@@ -55,57 +55,6 @@ def load_string_list_from_txt_file(folder, filename):
     return data
 
 
-def load_mappings_from_csv_file(folder, filename):
-    """
-    Loads mappings (word:id) from csv file.
-
-    .. warning::
-            There is an assumption that file will contain key:value pairs (no content checking for now!)
-
-    :param filename: File with encodings (absolute path + filename).
-    :return: dictionary with word:index keys
-    """        
-    file_path = os.path.join(os.path.expanduser(folder), filename)
-
-    with open(file_path, mode='rt') as csvfile:
-        # Check the presence of the header.
-        sniffer = csv.Sniffer()
-        first_bytes = str(csvfile.read(256))
-        has_header = sniffer.has_header(first_bytes)
-        # Rewind.
-        csvfile.seek(0)  
-        reader = csv.reader(csvfile)
-        # Skip the header row.
-        if has_header:
-            next(reader)  
-        # Read the remaining rows.
-        ret_dict = {rows[0]:int(rows[1]) for rows in reader}
-    return ret_dict
-
-
-def save_mappings_to_csv_file(folder, filename, word_to_ix, fieldnames = []):
-    """
-    Saves mappings dictionary to a file.
-
-    :param filename: File with encodings (absolute path + filename).
-    :param word_to_ix: dictionary with word:index keys
-    """
-    # Make sure directory exists.
-    os.makedirs(os.path.dirname(folder +'/'), exist_ok=True)
-
-    file_path = os.path.join(os.path.expanduser(folder), filename)
-
-    with open(file_path, mode='w+') as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        # Create header.
-        writer.writeheader()
-
-        # Write word-index pairs.
-        for (k,v) in word_to_ix.items():
-            #print("{} : {}".format(k,v))
-            writer.writerow({fieldnames[0]:k, fieldnames[1]: v})
-
-
 def get_project_root() -> Path:
     """
     Returns project root folder.
