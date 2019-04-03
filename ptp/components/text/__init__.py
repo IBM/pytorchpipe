@@ -3,7 +3,6 @@ from .label_indexer import LabelIndexer
 from .sentence_encoder import SentenceEncoder
 from .sentence_indexer import SentenceIndexer
 from .sentence_tokenizer import SentenceTokenizer
-from .token_encoder import TokenEncoder
 from .word_decoder import WordDecoder
 
 __all__ = [
@@ -12,6 +11,5 @@ __all__ = [
     'SentenceEncoder',
     'SentenceIndexer',
     'SentenceTokenizer',
-    'TokenEncoder',
     'WordDecoder'
     ]

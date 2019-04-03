@@ -23,14 +23,13 @@ import torch
 import numpy as np
 
 from ptp.components.models.model import Model
+from ptp.components.mixins.word_mapping import WordMapping
 from ptp.data_types.data_definition import DataDefinition
 
-import ptp.components.utils.io as io
-import ptp.components.utils.word_mappings as wm
 import ptp.components.utils.embeddings as emb
 
 
-class SentenceEmbeddings(Model):
+class SentenceEmbeddings(Model, WordMapping):
     """
     Model responsible of embedding of whole sentences.
 
@@ -51,58 +50,26 @@ class SentenceEmbeddings(Model):
         :param config: Parameters read from configuration file.
         :type config: ``ptp.configuration.ConfigInterface``
         """
-        super(SentenceEmbeddings, self).__init__(name, SentenceEmbeddings, config)
+        # Call base class constructors.
+        #super(SentenceEmbeddings, self).__init__(name, SentenceEmbeddings, config)
+        Model.__init__(self, name, SentenceEmbeddings, config)
+        WordMapping.__init__(self, name, SentenceEmbeddings, config)
 
         # Set key mappings.
         self.key_inputs = self.stream_keys["inputs"]
         self.key_outputs = self.stream_keys["outputs"]
 
-        # Read the actual configuration.
-        self.data_folder = os.path.expanduser(self.config['data_folder'])
-
-        # Source and resulting (indexed) vocabulary.
-        self.source_vocabulary_files = self.config['source_vocabulary_files']
-        self.vocabulary_mappings_file = self.config['vocabulary_mappings_file']
-        # Regenerate vocabulary.
-        self.mode_regenerate = self.config['regenerate']
-
         # Retrieve embeddings size from configuration and export it to globals.
         self.embeddings_size = self.config['embeddings_size']
         self.globals["embeddings_size"] = self.embeddings_size
-
-        # Initialize the vocabulary.
-        vocabulary_mappings_file_path = os.path.expanduser(self.data_folder) + "/" + self.vocabulary_mappings_file
-
-        # Check whether we want to (re)generate new  or load existing encodings.
-        if self.mode_regenerate or not os.path.exists(vocabulary_mappings_file_path):
-            # Generate new vocabulary.
-            self.word_to_ix = wm.generate_word_mappings_from_source_files(self.logger, self.data_folder, self.source_files)
-            assert (len(self.word_to_ix) > 0), "The created word mappings cannot be empty!"
-            # Ok, save mappings, so next time we will simply load them.
-            wm.save_word_mappings_to_csv_file(self.logger, self.data_folder, self.vocabulary_mappings_file, self.word_to_ix)
-        else:
-            # Load encodings.
-            self.word_to_ix = wm.load_word_mappings_from_csv_file(self.logger, self.data_folder, self.vocabulary_mappings_file)
-            assert (len(self.word_to_ix) > 0), "The loaded word mappings list is empty!"
-
-        # Check if additional tokens are present.
-        self.additional_tokens = self.config["additional_tokens"].split(',')
-        for word in self.additional_tokens:
-            # If new token.
-            if word != '' and word not in self.word_to_ix:
-                self.word_to_ix[word] = len(self.word_to_ix)
-
-        # Export vocabulary and its length to globals.
-        self.globals["vocabulary"] = self.word_to_ix
-        self.globals["vocabulary_size"] = len(self.word_to_ix)
 
         # Create the embeddings layer.
         self.logger.info("Initializing embeddings layer with vocabulary size = {} and embeddings size = {}".format(len(self.word_to_ix), self.embeddings_size))
         self.embeddings = torch.nn.Embedding(len(self.word_to_ix), self.embeddings_size, padding_idx=0) # Index of self.word_to_ix['<PAD>']
 
         # Load the embeddings first.
-        if self.config["pretrained_embeddings"] != '':
-            emb_vectors = self.load_pretrained_glove_embeddings(self.data_folder, self.config["pretrained_embeddings"], self.word_to_ix, self.embeddings_size)
+        if self.config["pretrained_embeddings_file"] != '':
+            emb_vectors = emb.load_pretrained_glove_vectors(self.data_folder, self.config["pretrained_embeddings_file"], self.word_to_ix, self.embeddings_size)
             self.embeddings.weight = torch.nn.Parameter(emb_vectors)
 
 

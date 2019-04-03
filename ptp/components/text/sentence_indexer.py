@@ -16,11 +16,11 @@ __author__ = "Tomasz Kornuta"
 
 import torch
 
-from ptp.components.text.token_encoder import TokenEncoder
+from ptp.components.mixins.word_mapping import WordMapping
 from ptp.data_types.data_definition import DataDefinition
 
 
-class SentenceIndexer(TokenEncoder):
+class SentenceIndexer(WordMapping):
     """
     Class responsible for encoding of sequences of words into list of indices.
     Those can be letter embedded, encoded with 1-hot encoding or else.
@@ -37,13 +37,12 @@ class SentenceIndexer(TokenEncoder):
 
         """
         # Call constructors of parent classes.
-        TokenEncoder.__init__(self, name, SentenceIndexer, config)
+        WordMapping.__init__(self, name, SentenceIndexer, config)
 
-        # Export vocabulary size to global variables.
-        self.globals["sentence_vocab_size"] = len(self.word_to_ix)
-
-        self.logger.info("Initializing sentence indexer with vocabulary size '{}' = {}".format(self.global_keys["sentence_vocab_size"], len(self.word_to_ix)))
-
+        # Set key mappings.
+        self.key_inputs = self.stream_keys["inputs"]
+        self.key_outputs = self.stream_keys["outputs"]
+        
 
     def input_data_definitions(self):
         """ 

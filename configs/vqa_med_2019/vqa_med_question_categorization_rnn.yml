@@ -56,9 +56,9 @@ pipeline:
     type: SentenceEmbeddings
     priority: 1.2
     embeddings_size: 50
-    #pretrained_embeddings: glove.6B.50d.txt
+    #pretrained_embeddings_file: glove.6B.50d.txt
     data_folder: *data_folder
-    vocabulary_mappings_file: question.all.vocabulary.mappings.csv
+    word_mappings_file: question.all.vocabulary.mappings.csv
     #additional_tokens: <eos>
     streams:
       inputs: tokenized_questions

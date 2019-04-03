@@ -24,9 +24,9 @@ import torch
 import ptp.components.utils.io as io
 
 
-def load_pretrained_glove_embeddings(logger, folder, embeddings_name, word_to_ix, embeddings_size):
+def load_pretrained_glove_vectors(logger, folder, embeddings_name, word_to_ix, embeddings_size):
     """
-    Creates embeddings vector for words from the provided (word:index) mappings (dictionary).
+    Creates embedding vector for words from the provided (word:index) mappings (dictionary).
 
     Loads the pretrained embeddings from the GloVe project - for the words found in the dictionary.
     
