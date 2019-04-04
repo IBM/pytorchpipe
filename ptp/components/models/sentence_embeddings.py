@@ -142,7 +142,7 @@ class SentenceEmbeddings(Model, WordMappings):
         unsorted_padded_indices = [padded_indices[sorted_new_old_order[i][0]] for i in range(len(indices_list))]
         
         # Change to tensor.
-        unsorted_padded_indices_tensor = torch.stack( [torch.LongTensor(lst) for lst in unsorted_padded_indices] ).type(self.app_state.LongTensor)
+        unsorted_padded_indices_tensor = torch.stack( [torch.LongTensor(lst).type(self.app_state.LongTensor) for lst in unsorted_padded_indices] )
 
         # Embedd indices.
         embedds = self.embeddings(unsorted_padded_indices_tensor)
