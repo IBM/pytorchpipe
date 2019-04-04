@@ -16,7 +16,8 @@ pipeline:
     type: SentenceOneHotEncoder
     priority: 1.2
     data_folder: ~/data/vqa-med
-    word_mappings_file: question.all.vocabulary.mappings.csv
+    word_mappings_file: questions.all.word.mappings.csv
+    export_word_mappings_to_globals: True
     streams:
       inputs: tokenized_questions
       outputs: encoded_questions
@@ -43,13 +44,26 @@ pipeline:
       input_size: sentence_vocabulary_size # Set by sentence_encoder.
       prediction_size: num_categories # C1,C2,C3,C4
 
+  # Predictions decoder.
+  prediction_decoder:
+    type: WordDecoder
+    priority: 4
+    # Use the same word mappings as label indexer.
+    import_word_mappings_from_globals: True
+    streams:
+      inputs: predictions
+      outputs: predicted_categories
+    globals:
+      vocabulary_size: num_categories
+      word_mappings: category_word_mappings
+
   # Loss
   nllloss:
     type: NLLLoss
     priority: 6
     targets_dim: 1
     streams:
-      targets: categories
+      targets: category_ids
       loss: loss
 
   # Statistics.
@@ -57,6 +71,15 @@ pipeline:
     type: Accuracy
     priority: 10
     streams:
-      targets: categories
+      targets: category_ids
+  batch_size:
+    type: BatchSize
+    priority: 11
+
+  # Viewers.
+  viewer:
+    type: StreamViewer
+    priority: 12
+    stream_names: questions,category_names,predicted_categories
 
   #: pipeline

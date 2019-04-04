@@ -60,6 +60,7 @@ class AppState(metaclass=SingletonMetaClass):
 
         # Set CPU types as default.
         self.set_cpu_types()
+        self.use_gpu = False
 
 
     def set_types(self):
@@ -71,6 +72,7 @@ class AppState(metaclass=SingletonMetaClass):
         if torch.cuda.is_available() and self.args.use_gpu:
             self.logger.info('Running computations on GPU using CUDA')
             self.set_gpu_types()
+            self.use_gpu = True
         elif self.args.use_gpu:
             self.logger.warning('GPU utilization is demanded but there are no available GPU devices! Using CPUs instead')
         else:

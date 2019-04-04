@@ -1,5 +1,3 @@
-from .configuration import *
-
 # Components.
 from .components.component import Component
 
@@ -19,7 +17,10 @@ from .components.text import *
 
 from .components.transforms import *
 
+from .components.viewers import *
+
 # Rest.
+from .configuration import *
 from .data_types import *
 from .utils import *
 

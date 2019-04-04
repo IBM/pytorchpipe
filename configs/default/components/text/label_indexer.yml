@@ -45,11 +45,12 @@ globals:
   # 4. Keymappings associated with GLOBAL variables that will be SET.
   ####################################################################
 
-  # The created word mappings (SET/RETRIEVED)
+  # The loaded/exported word mappings (RETRIEVED/SET)
   # This depends on the import/export configuration flags above.
   word_mappings: word_mappings
 
-  # Size of the vocabulary (SET)
+  # Size of the vocabulary (RETRIEVED/SET)
+  # This depends on the import/export configuration flags above.
   vocabulary_size: vocabulary_size
 
   ####################################################################

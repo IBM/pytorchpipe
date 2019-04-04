@@ -52,8 +52,6 @@ class ListToTensor(Component):
         # Get size of a single input item (last dimension) from globals.
         self.input_size =  self.globals["input_size"]
 
-        # TODO: input tensor type: from configuration.
-        # For now I have hadcoded self.app_state.FloatTensor
 
 
     def input_data_definitions(self):
@@ -110,8 +108,12 @@ class ListToTensor(Component):
         elif self.num_inputs_dims == 3:
             # CASE: List of lists of tensors.
 
+            # Get type.
+            ttype = type(inputs[0][0])
             # Generate tensor that will be added as padding - all zeros.
-            pad_tensor = self.app_state.FloatTensor([0]*self.input_size)
+            pad_tensor = ttype([0]*self.input_size)
+            if self.app_state.use_gpu:
+                pad_tensor = pad_tensor.cuda()
 
             # Get max length of lists.
             max_len = max([len(lst) for lst in inputs])

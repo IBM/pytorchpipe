@@ -16,7 +16,7 @@ num_layers: 1
 
 # Type of recurrent cell (LOADED)
 # Options: LSTM | GRU | RNN_TANH | RNN_RELU
-rnn_type: LSTM
+cell_type: LSTM
 
 # Predictions mode (LOADED)
 # Options: Dense (passes every activation through output layer) |

@@ -56,6 +56,7 @@ class WordMappings(Component):
         if self.config["import_word_mappings_from_globals"]:
             self.word_to_ix = self.globals["word_mappings"]
             assert (len(self.word_to_ix) > 0), "The word mappings imported from global variables are empty!"
+            # We could also get vocabulary_size from globals... but what for;)
 
         elif self.word_mappings_file != "" and os.path.exists(word_mappings_file_path) and not self.config['regenerate']:
             # Try to load the preprocessed word mappings.
@@ -78,11 +79,11 @@ class WordMappings(Component):
 
         self.logger.info("Initialized word mappings with vocabulary of size {}".format(len(self.word_to_ix)))
 
-        # Exportvocabulary size to globals.
-        self.globals["vocabulary_size"] = len(self.word_to_ix)
-
         # Check if we want to export word mappings to globals.
         if self.config["export_word_mappings_to_globals"]:
             self.globals["word_mappings"] = self.word_to_ix
+            # Export vocabulary size to globals.
+            self.globals["vocabulary_size"] = len(self.word_to_ix)
+
 
 

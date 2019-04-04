@@ -118,10 +118,12 @@ def save_word_mappings_to_csv_file(logger, folder, filename, word_to_ix, fieldna
     :param word_to_ix: Dictionary with word:index mappings to be saved.
     
     """
+    # Expand path.
+    folder = os.path.expanduser(folder)
     # Make sure directory exists.
     os.makedirs(os.path.dirname(folder +'/'), exist_ok=True)
 
-    file_path = os.path.join(os.path.expanduser(folder), filename)
+    file_path = os.path.join(folder, filename)
 
     with open(file_path, mode='w+') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)

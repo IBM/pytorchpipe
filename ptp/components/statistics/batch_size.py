@@ -84,7 +84,7 @@ class BatchSize(Component):
         :param stat_col: ``StatisticsCollector``.
 
         """
-        stat_col['batch_size'] = data_dict[self.key_indices].shape[0] # Batch major.
+        stat_col['batch_size'] = len(data_dict[self.key_indices])
 
     def add_aggregators(self, stat_agg):
         """

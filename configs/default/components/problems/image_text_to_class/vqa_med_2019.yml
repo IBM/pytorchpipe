@@ -13,7 +13,7 @@ split: training
 
 # Defines the categoriees that will be used (LOADED)
 # Options: all | c1 | c2 | c3 | c4 (or any combination of the latter 4)
-categories: [all]
+categories: all
 
 # Removes punctuation (LOADED)
 # Options: none | questions | answers | all
@@ -39,17 +39,20 @@ streams:
   # Stream containing batch of image names (OUTPUT)
   image_ids: image_ids
 
+  # Stream containing batch with original sizes of images (OUTPUT)
+  image_sizes: image_sizes
+
   # Stream containing batch of questions (OUTPUT)
   questions: questions
 
   # Stream containing targets - answers (OUTPUT)
   answers: answers
 
-  # Stream containing batch with question categories (OUTPUT)
-  categories: categories
+  # Stream containing batch with question categories - indices (OUTPUT)
+  category_ids: category_ids
 
-  # Stream containing batch with original sizes of images (OUTPUT)
-  original_sizes: original_sizes
+  # Stream containing batch with question categories - names (OUTPUT)
+  category_names: category_names
 
 globals:
   ####################################################################
@@ -66,7 +69,9 @@ globals:
   input_height: image_height
   # Depth of the image (SET)
   input_depth: image_depth
-
+  # Category (word-idx) mappings (SET)
+  category_word_mappings: category_word_mappings
+  
   ####################################################################
   # 5. Keymappings associated with statistics that will be ADDED.
   ####################################################################
