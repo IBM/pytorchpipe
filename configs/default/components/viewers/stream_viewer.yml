@@ -1,22 +1,20 @@
-# This file defines the default values for the List to Tensor transformation.
+# This file defines the default values for the Stream Viewer.
 
 ####################################################################
 # 1. CONFIGURATION PARAMETERS that will be LOADED by the component.
 ####################################################################
 
-# Number of input dimensions, including last tensor (LOADED)
-num_inputs_dims: 1
+# Comma separated names of streams that will be displayed (LOADED)
+stream_names: ''
+
+# Number of sample that will be printed (LOADED)
+# Default: -1 (means random)
+sample_number: -1
 
 streams: 
   ####################################################################
   # 2. Keymappings associated with INPUT and OUTPUT streams.
   ####################################################################
-
-  # Stream containing input tensor (INPUT)
-  inputs: inputs
-
-  # Stream containing output tensor (OUTPUT)
-  outputs: outputs
 
 globals:
   ####################################################################
@@ -26,10 +24,6 @@ globals:
   ####################################################################
   # 4. Keymappings associated with GLOBAL variables that will be SET.
   ####################################################################
-
-  # Size of the intput_item (GET)
-  # (last dimenstion)
-  input_size: input_size
 
   ####################################################################
   # 5. Keymappings associated with statistics that will be ADDED.

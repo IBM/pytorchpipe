@@ -68,7 +68,7 @@ class Problem(Component, Dataset):
         Component.__init__(self, name, class_type, config)
         Dataset.__init__(self)
 
-        # Set default key mappings.
+        # Get key mappings for indices.
         self.key_indices = self.stream_keys["indices"]
 
         # Empty curriculum learning config - for now.

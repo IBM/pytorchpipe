@@ -58,5 +58,14 @@ pipeline:
     priority: 10
     streams:
       targets: categories
+  batch_size:
+    type: BatchSize
+    priority: 11
+
+  # Viewers.
+  viewer:
+    type: StreamViewer
+    priority: 12
+    stream_names: questions,answers,categories,predictions
 
   #: pipeline
