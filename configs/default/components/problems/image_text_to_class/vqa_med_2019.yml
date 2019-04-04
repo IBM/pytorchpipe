@@ -20,9 +20,13 @@ categories: all
 remove_punctuation: questions
 
 # Resize parameter (LOADED)
-# When present, resizes the images from original size to [width, height]
+# When present, resizes the images from original size to [height, width]
 # Depth remains set to 3.
 #resize_image: [height, width]
+
+# Scale parameter [height, width] (LOADED)
+# Problem will use those values to rescale the image_sizes to range (0, 1).
+scale_image_size: [2414, 2323]
 
 streams:
   ####################################################################
