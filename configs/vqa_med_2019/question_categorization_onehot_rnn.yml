@@ -2,7 +2,7 @@
 default_configs: vqa_med_2019/default_vqa_med_2019.yml
 
 pipeline:
-  name: vqa_med_question_categorization_onehot_bow
+  name: vqa_med_question_categorization_onehot_rnn
 
   # Questions encoding.
   question_tokenizer:
@@ -17,31 +17,48 @@ pipeline:
     priority: 1.2
     data_folder: ~/data/vqa-med
     word_mappings_file: question.all.vocabulary.mappings.csv
+    export_word_mappings_to_globals: True
     streams:
       inputs: tokenized_questions
       outputs: encoded_questions
     globals:
       vocabulary_size: sentence_vocabulary_size
 
-  bow_encoder:
-    type: BOWEncoder
+  sentence_to_tensor:
+    type: ListToTensor
     priority: 1.3
+    num_inputs_dims: 3
     streams:
       inputs: encoded_questions
-      outputs: bow_questions
+      outputs: tensor_questions
     globals:
-        bow_size: sentence_vocabulary_size # Set by sentence_encoder.
+      input_size: sentence_vocabulary_size
 
-  # Model
-  classifier:
-    type: SoftmaxClassifier
-    #freeze: True
+  # Model 1: RNN
+  lstm:
+    type: RNN
+    prediction_mode: Last
     priority: 3
+    initial_state_trainable: False
+    hidden_size: 50
     streams:
-      inputs: bow_questions
+      inputs: tensor_questions
     globals:
-      input_size: sentence_vocabulary_size # Set by sentence_encoder.
+      input_size: sentence_vocabulary_size
       prediction_size: num_categories # C1,C2,C3,C4
+
+  # Predictions decoder.
+  prediction_decoder:
+    type: WordDecoder
+    priority: 4
+    # Use the same word mappings as label indexer.
+    import_word_mappings_from_globals: True
+    streams:
+      inputs: predictions
+      outputs: predicted_categories
+    globals:
+      vocabulary_size: num_categories
+      word_mappings: category_word_mappings
 
   # Loss
   nllloss:
@@ -49,7 +66,7 @@ pipeline:
     priority: 6
     targets_dim: 1
     streams:
-      targets: categories
+      targets: category_ids
       loss: loss
 
   # Statistics.
@@ -57,7 +74,7 @@ pipeline:
     type: Accuracy
     priority: 10
     streams:
-      targets: categories
+      targets: category_ids
   batch_size:
     type: BatchSize
     priority: 11
@@ -66,6 +83,6 @@ pipeline:
   viewer:
     type: StreamViewer
     priority: 12
-    stream_names: questions,answers,categories,predictions
+    stream_names: questions,category_names,predicted_categories
 
   #: pipeline

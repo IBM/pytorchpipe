@@ -72,8 +72,9 @@ class VQAMED2019(Problem):
         self.key_image_ids = self.stream_keys["image_ids"]
         self.key_questions = self.stream_keys["questions"]
         self.key_answers = self.stream_keys["answers"]
-        self.key_categories = self.stream_keys["categories"]
-        self.key_original_sizes = self.stream_keys["original_sizes"]
+        self.key_category_ids = self.stream_keys["category_ids"]
+        self.key_category_names = self.stream_keys["category_names"]
+        self.key_image_sizes = self.stream_keys["image_sizes"]
 
         # Check the desired image size.
         if len(self.config['resize_image']) != 2:
@@ -90,9 +91,11 @@ class VQAMED2019(Problem):
         self.globals["image_width"] = self.width
         self.globals["image_depth"] = self.depth
 
-        # Set other globals.
-        #self.globals["num_classes"] = 10
+        # Set parameters and globals related to categories.
         self.globals["num_categories"] = 4
+        self.globals["category_word_mappings"] = {'C1': 0, 'C2': 1, 'C3': 2, 'C4': 3}
+        self.category_idx_to_word = {0: 'C1', 1: 'C2', 2: 'C3', 3: 'C4'}
+
 
         # Check if we want to remove punctuation from questions/answer
         self.remove_punctuation = self.config["remove_punctuation"]
@@ -132,11 +135,11 @@ class VQAMED2019(Problem):
         self.logger.info("Loaded dataset consisting of {} samples".format(len(self.dataset)))
 
         # Display exemplary sample.
-        self.logger.info("Exemplary sample:\n  image_ids: {}\t question: {}\t answer: {}\t category: {}\t".format(
+        self.logger.info("Exemplary sample:\n [ category: {}\t image_ids: {}\t question: {}\t answer: {} ]".format(
             self.dataset[0][self.key_image_ids],
             self.dataset[0][self.key_questions],
             self.dataset[0][self.key_answers],
-            self.dataset[0][self.key_categories]            
+            self.dataset[0][self.key_category_ids]            
             ))
 
 
@@ -177,7 +180,7 @@ class VQAMED2019(Problem):
                     self.key_questions: question,
                     self.key_answers: answer,
                     # Add category.
-                    self.key_categories: category
+                    self.key_category_ids: category
                     })
 
                 t.update()
@@ -205,12 +208,12 @@ class VQAMED2019(Problem):
             self.key_indices: DataDefinition([-1, 1], [list, int], "Batch of sample indices [BATCH_SIZE] x [1]"),
             self.key_images: DataDefinition([-1, self.depth, self.height, self.width], [torch.Tensor], "Batch of images [BATCH_SIZE x IMAGE_DEPTH x IMAGE_HEIGHT x IMAGE_WIDTH]"),
             self.key_image_ids: DataDefinition([-1, 1], [list, str], "Batch of image names, each being a single word [BATCH_SIZE] x [STRING]"),
+            self.key_image_sizes: DataDefinition([-1, 2], [torch.Tensor], "Batch of original sizes (height, width) of images [BATCH_SIZE x 2]"),
             self.key_questions: DataDefinition([-1, 1], [list, str], "Batch of questions, each being a string consisting of many words [BATCH_SIZE] x [STRING]"),
-            self.key_answers: DataDefinition([-1, 1], [list, str], "Batch of answers, each being a string consisting of many words [BATCH_SIZE] x [STRING]"),
-            self.key_categories: DataDefinition([-1], [torch.Tensor], "Batch of categories, each being a single index [BATCH_SIZE]"),
-            self.key_original_sizes: DataDefinition([-1, 2], [torch.Tensor], "Batch of original sizes (height, width) of images [BATCH_SIZE x 2]"),
+            self.key_answers: DataDefinition([-1, 1], [list, str], "Batch of target answers, each being a string consisting of many words [BATCH_SIZE] x [STRING]"),
+            self.key_category_ids: DataDefinition([-1], [torch.Tensor], "Batch of target category indices, each being a single index [BATCH_SIZE]"),
+            self.key_category_names: DataDefinition([-1, 1], [list, str], "Batch of category target names, each being a single word [BATCH_SIZE] x [STRING]"),
             }
-
 
 
     def __getitem__(self, index):
@@ -220,7 +223,7 @@ class VQAMED2019(Problem):
         :param index: index of the sample to return.
         :type index: int
 
-        :return: DataDict({'indices', 'images', 'images_ids','questions', 'answers', 'categories', 'original_sizes'})
+        :return: DataDict({'indices', 'images', 'images_ids','questions', 'answers', 'category_ids', 'image_sizes'})
         """
         # Get item.
         item = self.dataset[index]
@@ -241,16 +244,23 @@ class VQAMED2019(Problem):
                     ])
             img = transfroms_com(img).type(torch.FloatTensor).squeeze()
 
-        # Create the resulting data dict.
+        # Create the resulting sample (data dict).
         data_dict = self.create_data_dict(index)
+
+        # Image related variables.
         data_dict[self.key_images] = img
         data_dict[self.key_image_ids] = img_id
+        data_dict[self.key_image_sizes] = torch.Tensor([width, height])
+
+        # Question.
         data_dict[self.key_questions] = item[self.key_questions]
         data_dict[self.key_answers] = item[self.key_answers]
-        data_dict[self.key_categories] = item[self.key_categories]
-        data_dict[self.key_original_sizes] = torch.Tensor([width, height])
 
-        # Return it.
+        # Question category related variables.
+        data_dict[self.key_category_ids] = item[self.key_category_ids]
+        data_dict[self.key_category_names] = self.category_idx_to_word[item[self.key_category_ids]]
+
+        # Return sample.
         return data_dict
 
 
@@ -261,7 +271,7 @@ class VQAMED2019(Problem):
         :param batch: list of individual samples to combine
         :type batch: list
 
-        :return: DataDict({'indices', 'images', 'images_ids','questions', 'answers', 'categories', 'original_sizes'})
+        :return: DataDict({'indices', 'images', 'images_ids','questions', 'answers', 'category_ids', 'image_sizes'})
 
         """
         # Collate indices.
@@ -269,18 +279,16 @@ class VQAMED2019(Problem):
 
         # Stack images.
         data_dict[self.key_images] = torch.stack([item[self.key_images] for item in batch]).type(torch.FloatTensor)
-        # Collate lists.
         data_dict[self.key_image_ids] = [item[self.key_image_ids] for item in batch]
+        data_dict[self.key_image_sizes] = torch.stack([item[self.key_image_sizes] for item in batch]).type(torch.LongTensor)
+
+        # Collate lists.
         data_dict[self.key_questions] = [item[self.key_questions] for item in batch]
         data_dict[self.key_answers] = [item[self.key_answers] for item in batch]
 
         # Stack categories.
-        data_dict[self.key_categories] = torch.tensor([item[self.key_categories] for item in batch])
-
-        # Set original sizes.
-        data_dict[self.key_original_sizes] = torch.stack([item[self.key_original_sizes] for item in batch]).type(torch.LongTensor)
-
-        print("Question: {} -> Category: {}".format(data_dict[self.key_questions][0], data_dict[self.key_categories][0]))
+        data_dict[self.key_category_ids] = torch.tensor([item[self.key_category_ids] for item in batch])
+        data_dict[self.key_category_names] = [item[self.key_category_names] for item in batch]
 
         # Return collated dict.
         return data_dict

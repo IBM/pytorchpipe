@@ -46,7 +46,7 @@ class StreamViewer(Component):
         self.key_indices = self.stream_keys["indices"]
 
         # Load names of streams.
-        self.stream_names = self.config["stream_names"].split(",")
+        self.stream_names = self.config["stream_names"].replace(" ", "").split(",")
 
         # Get sample number.
         self.sample_number = self.config["sample_number"]

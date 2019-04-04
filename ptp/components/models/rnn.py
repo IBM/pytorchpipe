@@ -81,19 +81,19 @@ class RNN(Model):
         self.num_layers = self.config["num_layers"]
 
         # Create RNN depending on the configuration
-        self.rnn_type = self.config["rnn_type"]
-        if self.rnn_type in ['LSTM', 'GRU']:
+        self.cell_type = self.config["cell_type"]
+        if self.cell_type in ['LSTM', 'GRU']:
             # Create rnn cell.
-            self.rnn_cell = getattr(torch.nn, self.rnn_type)(self.input_size, self.hidden_size, self.num_layers, dropout=dropout_rate, batch_first=True)
+            self.rnn_cell = getattr(torch.nn, self.cell_type)(self.input_size, self.hidden_size, self.num_layers, dropout=dropout_rate, batch_first=True)
         else:
             try:
                 # Retrieve the non-linearity.
-                nonlinearity = {'RNN_TANH': 'tanh', 'RNN_RELU': 'relu'}[self.rnn_type]
+                nonlinearity = {'RNN_TANH': 'tanh', 'RNN_RELU': 'relu'}[self.cell_type]
                 # Create rnn cell.
                 self.rnn_cell = torch.nn.RNN(self.input_size, self.hidden_size, self.num_layers, nonlinearity=nonlinearity, dropout=dropout_rate, batch_first=True)
 
             except KeyError:
-                raise ConfigurationError( "Invalid RNN type, available options for 'rnn_type' are ['LSTM', 'GRU', 'RNN_TANH', 'RNN_RELU'] (currently '{}')".format(self.rnn_type))
+                raise ConfigurationError( "Invalid RNN type, available options for 'cell_type' are ['LSTM', 'GRU', 'RNN_TANH', 'RNN_RELU'] (currently '{}')".format(self.cell_type))
         
         # Create the output layer.
         self.activation2output = torch.nn.Linear(self.hidden_size, self.prediction_size)
@@ -113,20 +113,20 @@ class RNN(Model):
             # It will be trainable, i.e. the system will learn what should be the right initialization state.
             self.init_hidden = torch.nn.Parameter(h0, requires_grad=True)
             # Initilize memory cell in a similar way.
-            if self.rnn_type == 'LSTM':
+            if self.cell_type == 'LSTM':
                 torch.nn.init.xavier_uniform(c0)
                 self.init_memory = torch.nn.Parameter(c0, requires_grad=True)
         else:
             self.logger.info("Using zero initial (h0/c0) state")
             # We will still embedd it into parameter to enable storing/loading of both types of models by each other.
             self.init_hidden = torch.nn.Parameter(h0, requires_grad=False)
-            if self.rnn_type == 'LSTM':
+            if self.cell_type == 'LSTM':
                 self.init_memory = torch.nn.Parameter(c0, requires_grad=False)
 
 
     def initialize_hiddens_state(self, batch_size):
 
-        if self.rnn_type == 'LSTM':
+        if self.cell_type == 'LSTM':
             # Return tuple (hidden_state, memory_cell).
             return (self.init_hidden.expand(self.num_layers, batch_size, self.hidden_size).contiguous(),
                 self.init_memory.expand(self.num_layers, batch_size, self.hidden_size).contiguous() )

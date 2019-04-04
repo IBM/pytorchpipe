@@ -68,7 +68,7 @@ class SentenceEmbeddings(Model, WordMappings):
 
         # Load the embeddings first.
         if self.config["pretrained_embeddings_file"] != '':
-            emb_vectors = emb.load_pretrained_glove_vectors(self.data_folder, self.config["pretrained_embeddings_file"], self.word_to_ix, self.embeddings_size)
+            emb_vectors = emb.load_pretrained_glove_vectors(self.logger, self.data_folder, self.config["pretrained_embeddings_file"], self.word_to_ix, self.embeddings_size)
             self.embeddings.weight = torch.nn.Parameter(emb_vectors)
 
 
