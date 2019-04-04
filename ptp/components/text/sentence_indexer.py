@@ -93,6 +93,6 @@ class SentenceIndexer(WordMappings):
             outputs_list.append(output_sample)
 
         # Transform the list of lists to tensor.
-        output = torch.LongTensor(outputs_list)
+        output = self.app_state.LongTensor(outputs_list)
         # Create the returned dict.
         data_dict.extend({self.key_outputs: output})
