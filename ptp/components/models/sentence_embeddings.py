@@ -122,7 +122,7 @@ class SentenceEmbeddings(Model, WordMappings):
                 # Add index to outputs.
                 output_sample.append( output_index )
 
-            indices_list.append(torch.tensor(output_sample).type(self.app_state.LongTensor))
+            indices_list.append(self.app_state.LongTensor(output_sample))
 
         # Create list of (index,len) tuples.
         order_len = [(i, len(indices_list[i])) for i in range(len(indices_list))]
@@ -142,13 +142,10 @@ class SentenceEmbeddings(Model, WordMappings):
         unsorted_padded_indices = [padded_indices[sorted_new_old_order[i][0]] for i in range(len(indices_list))]
         
         # Change to tensor.
-        unsorted_padded_indices_tensor = torch.stack( [torch.LongTensor(lst) for lst in unsorted_padded_indices] )
+        unsorted_padded_indices_tensor = torch.stack( [self.app_state.LongTensor(lst) for lst in unsorted_padded_indices] )
 
         # Embedd indices.
         embedds = self.embeddings(unsorted_padded_indices_tensor)
-
-        # Pack embedded sentences.
-        #packed_embedds = torch.nn.utils.rnn.pack_padded_sequence(embeds, lengths= seq_lengths)#, batch_first=True)
 
         # Add embeddings to datadict.
         data_dict.extend({self.key_outputs: embedds})
