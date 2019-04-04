@@ -93,8 +93,8 @@ class VQAMED2019(Problem):
 
         # Set parameters and globals related to categories.
         self.globals["num_categories"] = 4
-        self.globals["category_word_mappings"] = {'C1': 0, 'C2': 1, 'C3': 2, 'C4': 3}
-        self.category_idx_to_word = {0: 'C1', 1: 'C2', 2: 'C3', 3: 'C4'}
+        self.globals["category_word_mappings"] = {'C1': 0, 'C2': 1, 'C3': 2, 'C4': 3, '<UNK>': 4}
+        self.category_idx_to_word = {0: 'C1', 1: 'C2', 2: 'C3', 3: 'C4', 4: '<UNK>'}
 
 
         # Check if we want to remove punctuation from questions/answer
@@ -106,32 +106,39 @@ class VQAMED2019(Problem):
         # Set split-dependent data.
         if self.config['split'] == 'training':
             self.split_folder = os.path.join(self.data_folder, "ImageClef-2019-VQA-Med-Training")
-            self.image_source = os.path.join(self.split_folder, 'Train_images')
+            self.image_folder = os.path.join(self.split_folder, 'Train_images')
             # Set source files.
-            self.source_files = [
+            source_files = [
                 "QAPairsByCategory/C1_Modality_train.txt",
                 "QAPairsByCategory/C2_Plane_train.txt",
                 "QAPairsByCategory/C3_Organ_train.txt",
                 "QAPairsByCategory/C4_Abnormality_train.txt"
                 ]
             # Set the categories associated with each of those files.
-            self.source_categories = [0, 1, 2, 3]
+            source_categories = [0, 1, 2, 3]
+
+            # Filter lists taking into account configuration.
+            source_files, source_categories = self.filter_sources(source_files, source_categories)
 
         elif self.config['split'] == 'validation':
             self.split_folder = os.path.join(self.data_folder, "ImageClef-2019-VQA-Med-Validation")
-            self.image_source = os.path.join(self.split_folder, 'Val_images')
+            self.image_folder = os.path.join(self.split_folder, 'Val_images')
             # Set source files.
-            self.source_files = [
+            source_files = [
                 "QAPairsByCategory/C1_Modality_val.txt",
                 "QAPairsByCategory/C2_Plane_val.txt",
                 "QAPairsByCategory/C3_Organ_val.txt",
                 "QAPairsByCategory/C4_Abnormality_val.txt"
                 ]
             # Set the categories associated with each of those files.
-            self.source_categories = [0, 1, 2, 3]
+            source_categories = [0, 1, 2, 3]
+
+            # Filter lists taking into account configuration.
+            source_files, source_categories = self.filter_sources(source_files, source_categories)
 
         # Load dataset.
-        self.dataset = self.load_dataset()
+        self.logger.info("Loading dataset from files:\n {}".format(source_files))
+        self.dataset = self.load_dataset(source_files, source_categories)
         self.logger.info("Loaded dataset consisting of {} samples".format(len(self.dataset)))
 
         # Display exemplary sample.
@@ -142,8 +149,41 @@ class VQAMED2019(Problem):
             self.dataset[0][self.key_category_ids]            
             ))
 
+    def filter_sources(self, source_files, source_categories):
+        """
+        Loads the dataset from one or more files.
 
-    def load_dataset(self):
+        :param source_files: List of source files.
+
+        :param source_categories: List of categories associated with each of those files. (<UNK> unknown)
+
+        :return: Tuple consisting of: filtered source_files and filtered source_categories
+        """
+        # Check categories that user want to use.
+        use_files = [False] * 4
+        categs = {'C1': 0, 'C2': 1, 'C3': 2, 'C4': 3}
+        for cat in self.config["categories"].replace(" ","").split(","):
+            # "Special" case.
+            if cat == "all":
+                use_files = [True] * 4
+                # Make no sense to continue.
+                break
+            else:
+                if cat in categs.keys():
+                    use_files[categs[cat]] = True
+        # Filter.
+        _, source_files, source_categories = zip(*(filter(lambda x: x[0], zip(use_files, source_files,source_categories))))
+        return source_files, source_categories
+
+
+    def load_dataset(self, source_files, source_categories):
+        """
+        Loads the dataset from one or more files.
+
+        :param source_files: List of source files.
+
+        :param source_categories: List of categories associated with each of those files. (<UNK> unknown)
+        """
         # Set containing list of tuples.
         dataset = []
 
@@ -151,7 +191,7 @@ class VQAMED2019(Problem):
         table = str.maketrans({key: None for key in string.punctuation})
 
         # Process files with categories.
-        for data_file, category in zip(self.source_files, self.source_categories):
+        for data_file, category in zip(source_files, source_categories):
             # Set absolute path to file.
             data_file = os.path.join(self.split_folder, data_file)
             self.logger.info('Loading dataset from {} (category: {})...'.format(data_file, category))
@@ -231,7 +271,7 @@ class VQAMED2019(Problem):
         # Load the adequate image.
         img_id = item[self.key_image_ids]
         extension = '.jpg'
-        with open(os.path.join(self.image_source, img_id + extension),'rb') as f:
+        with open(os.path.join(self.image_folder, img_id + extension),'rb') as f:
             # Load the image.
             img = Image.open(f).convert('RGB')
             # Get its width and height.

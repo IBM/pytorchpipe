@@ -83,7 +83,7 @@ pipeline:
         vocabulary_size: sentence_vocab_size 
         
 
-  # Targets encoding/
+  # Targets encoding.
   target_indexer:
     type: LabelIndexer
     priority: 2

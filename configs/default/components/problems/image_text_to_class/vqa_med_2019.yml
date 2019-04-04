@@ -13,7 +13,7 @@ split: training
 
 # Defines the categoriees that will be used (LOADED)
 # Options: all | c1 | c2 | c3 | c4 (or any combination of the latter 4)
-categories: [all]
+categories: all
 
 # Removes punctuation (LOADED)
 # Options: none | questions | answers | all
