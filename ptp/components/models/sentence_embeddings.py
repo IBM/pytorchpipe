@@ -122,30 +122,35 @@ class SentenceEmbeddings(Model, WordMappings):
                 # Add index to outputs.
                 output_sample.append( output_index )
 
+            #indices_list.append(self.app_state.FloatTensor(output_sample))
             indices_list.append(self.app_state.LongTensor(output_sample))
 
         # Create list of (index,len) tuples.
-        order_len = [(i, len(indices_list[i])) for i in range(len(indices_list))]
+        #order_len = [(i, len(indices_list[i])) for i in range(len(indices_list))]
 
         # Sort by seq_length.
-        sorted_order_len = sorted(order_len, key=lambda x: x[1], reverse=True)
+        #sorted_order_len = sorted(order_len, key=lambda x: x[1], reverse=True)
 
         # Now sort indices list.
-        sorted_indices_list = [indices_list[sorted_order_len[i][0]] for i in range(len(indices_list))]
+        #sorted_indices_list = [indices_list[sorted_order_len[i][0]] for i in range(len(indices_list))]
 
         # Pad the indices list.
-        padded_indices = torch.nn.utils.rnn.pad_sequence(sorted_indices_list, batch_first=True)
+        #padded_indices = torch.nn.utils.rnn.pad_sequence(sorted_indices_list, batch_first=True)
 
         # Revert to the original batch order!!!
-        new_old_order = [(i, sorted_order_len[i][0]) for i in range(len(indices_list))]
-        sorted_new_old_order = sorted(new_old_order, key=lambda x: x[1])
-        unsorted_padded_indices = [padded_indices[sorted_new_old_order[i][0]] for i in range(len(indices_list))]
+        #new_old_order = [(i, sorted_order_len[i][0]) for i in range(len(indices_list))]
+        #sorted_new_old_order = sorted(new_old_order, key=lambda x: x[1])
+        #unsorted_padded_indices = [padded_indices[sorted_new_old_order[i][0]] for i in range(len(indices_list))]
         
         # Change to tensor.
-        unsorted_padded_indices_tensor = torch.stack( [self.app_state.LongTensor(lst) for lst in unsorted_padded_indices] )
+        #unsorted_padded_indices_tensor = torch.stack( [self.app_state.FloatTensor(lst) for lst in unsorted_padded_indices] )
 
         # Embedd indices.
-        embedds = self.embeddings(unsorted_padded_indices_tensor)
+        #embedds = self.embeddings(unsorted_padded_indices_tensor)
+
+        padded_indices = torch.nn.utils.rnn.pad_sequence(indices_list, batch_first=True)
+        embedds = self.embeddings(padded_indices)
+        
 
         # Add embeddings to datadict.
         data_dict.extend({self.key_outputs: embedds})
