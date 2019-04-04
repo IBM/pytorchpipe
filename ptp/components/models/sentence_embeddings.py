@@ -18,9 +18,7 @@
 __author__ = "Tomasz Kornuta"
 
 
-import os
 import torch
-import numpy as np
 
 from ptp.components.models.model import Model
 from ptp.components.mixins.word_mappings import WordMappings
