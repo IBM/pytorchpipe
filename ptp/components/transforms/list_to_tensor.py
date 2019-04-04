@@ -112,6 +112,8 @@ class ListToTensor(Component):
             ttype = type(inputs[0][0])
             # Generate tensor that will be added as padding - all zeros.
             pad_tensor = ttype([0]*self.input_size)
+            if self.app_state.use_gpu:
+                pad_tensor = pad_tensor.cuda()
 
             # Get max length of lists.
             max_len = max([len(lst) for lst in inputs])
