@@ -16,7 +16,7 @@ __author__ = "Tomasz Kornuta"
 
 import os
 
-import ptp.utils.io_utils as io
+import ptp.components.utils.io as io
 from .language_identification import LanguageIdentification
 
 

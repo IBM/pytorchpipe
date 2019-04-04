@@ -88,6 +88,8 @@ class NLLLoss(Loss):
         # reshape.
         last_dim = predictions.size(-1)
 
+        #print("Target: {} -> Prediction: {}".format(targets[0], predictions[0]))
+
         # Calculate loss.
         loss = self.loss_function(predictions.view(-1, last_dim), targets.view(-1))
         # Add it to datadict.

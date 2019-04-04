@@ -17,6 +17,7 @@
 
 __author__ = "Chaitanya Shivade, Tomasz Kornuta"
 
+import string
 import tqdm
 import pandas as pd
 from PIL import Image
@@ -93,6 +94,9 @@ class VQAMED2019(Problem):
         #self.globals["num_classes"] = 10
         self.globals["num_categories"] = 4
 
+        # Check if we want to remove punctuation from questions/answer
+        self.remove_punctuation = self.config["remove_punctuation"]
+
         # Get the absolute path.
         self.data_folder = os.path.expanduser(self.config['data_folder'])
 
@@ -140,6 +144,9 @@ class VQAMED2019(Problem):
         # Set containing list of tuples.
         dataset = []
 
+        # Create table used for removing punctuations.
+        table = str.maketrans({key: None for key in string.punctuation})
+
         # Process files with categories.
         for data_file, category in zip(self.source_files, self.source_categories):
             # Set absolute path to file.
@@ -151,12 +158,24 @@ class VQAMED2019(Problem):
 
             # Add tdqm bar.
             t = tqdm.tqdm(total=len(df.index))
-            for index, row in df.iterrows():
+            for _, row in df.iterrows():
+                # Retrieve question and answer.
+                question = row[self.key_questions]
+                answer = row[self.key_answers]
+
+                # Process question - if required.
+                if self.remove_punctuation in ["questions","all"]:
+                    question = question.translate(table)
+
+                # Process answer - if required.
+                if self.remove_punctuation in ["answers","all"]:
+                    answer = answer.translate(table)
+
                 # Add record to dataset.
                 dataset.append({
                     self.key_image_ids: row[self.key_image_ids],
-                    self.key_questions: row[self.key_questions],
-                    self.key_answers: row[self.key_answers],
+                    self.key_questions: question,
+                    self.key_answers: answer,
                     # Add category.
                     self.key_categories: category
                     })
@@ -260,6 +279,8 @@ class VQAMED2019(Problem):
 
         # Set original sizes.
         data_dict[self.key_original_sizes] = torch.stack([item[self.key_original_sizes] for item in batch]).type(torch.LongTensor)
+
+        print("Question: {} -> Category: {}".format(data_dict[self.key_questions][0], data_dict[self.key_categories][0]))
 
         # Return collated dict.
         return data_dict

@@ -95,7 +95,7 @@ class ConfigRegistry(Mapping, metaclass=MetaSingletonABC):
 
     def add_default_params(self, default_params: dict):
         """
-        Appends ``default_params`` to the `default` parameter dict of the current :py:class:`ParamRegistry`, \
+        Appends ``default_params`` to the `default` parameter dict of the current :py:class:`ConfigRegistry`, \
         and update the resulting parameters dict.
 
         .. note::
@@ -114,7 +114,7 @@ class ConfigRegistry(Mapping, metaclass=MetaSingletonABC):
 
     def add_config_params(self, config_params: dict):
         """
-        Appends ``config_params`` to the `config` parameter dict of the current :py:class:`ParamRegistry`, \
+        Appends ``config_params`` to the `config` parameter dict of the current :py:class:`ConfigRegistry`, \
         and update the resulting parameters dict.
 
         .. note::
@@ -132,7 +132,7 @@ class ConfigRegistry(Mapping, metaclass=MetaSingletonABC):
 
     def del_default_params(self, keypath: list):
         """
-        Removes an entry from the `default` parameter dict of the current :py:class:`ParamRegistry`, \
+        Removes an entry from the `default` parameter dict of the current :py:class:`ConfigRegistry`, \
         and update the resulting parameters dict.
 
         The entry can either be a subtree or a leaf of the `default` parameter dict.
@@ -146,7 +146,7 @@ class ConfigRegistry(Mapping, metaclass=MetaSingletonABC):
 
     def del_config_params(self, keypath: list):
         """
-        Removes an entry from the `config` parameter dict of the current :py:class:`ParamRegistry`, \
+        Removes an entry from the `config` parameter dict of the current :py:class:`ConfigRegistry`, \
         and update the resulting parameters dict.
 
         The entry can either be a subtree or a leaf of the `config` parameter dict.
@@ -164,7 +164,7 @@ class ConfigRegistry(Mapping, metaclass=MetaSingletonABC):
 
         The parameter dict is derived from the default parameters updated with the config parameters.
 
-        :param key: key to value in the :py:class:`ParamRegistry`.
+        :param key: key to value in the :py:class:`ConfigRegistry`.
         :type key: str
 
         :return: Parameter value
@@ -175,7 +175,7 @@ class ConfigRegistry(Mapping, metaclass=MetaSingletonABC):
     def __iter__(self):
         """
 
-        :return: Iterator over the :py:class:`ParamRegistry`.
+        :return: Iterator over the :py:class:`ConfigRegistry`.
 
         """
         return iter(self._params)
@@ -183,7 +183,7 @@ class ConfigRegistry(Mapping, metaclass=MetaSingletonABC):
     def __len__(self):
         """
 
-        :return: Length of the :py:class:`ParamRegistry`.
+        :return: Length of the :py:class:`ConfigRegistry`.
 
         """
         return len(self._params)
@@ -201,23 +201,26 @@ class ConfigRegistry(Mapping, metaclass=MetaSingletonABC):
             
     def update_dict_recursively(self, current_node, update_node):
         """
-        Recursively update the ``current_node`` of the :py:class:`ParamRegistry` with the values of \
+        Recursively update the ``current_node`` of the :py:class:`ConfigRegistry` with the values of \
         the ``update_node``.
 
         Starts from the root of the ``current_node``.
 
         :param current_node: Current (default or config) node.
-        :type current_node: :py:class:`ParamRegistry` (inheriting from :py:class:`Mapping`)
+        :type current_node: :py:class:`ConfigRegistry` (inheriting from :py:class:`Mapping`)
 
         :param update_node: Values to be added/updated to the ``current_node``.
-        :type update_node: :py:class:`ParamRegistry` (inheriting from :py:class:`Mapping`)
+        :type update_node: :py:class:`ConfigRegistry` (inheriting from :py:class:`Mapping`)
 
         :return: Updated current node.
 
         """
         for k, v in update_node.items():
             if isinstance(v, Mapping):
-                current_node[k] = self.update_dict_recursively(current_node.get(k, {}), v)
+                # Make sure that key exists and it is not None.
+                if k not in current_node.keys() or current_node[k] == None:
+                    current_node[k] = {}
+                current_node[k] = self.update_dict_recursively(current_node[k], v)
             else:
                 current_node[k] = v
         return current_node

@@ -7,23 +7,27 @@
 # Folder where problem will store data (LOADED)
 data_folder: '~/data/'
 
-# File containing pretrained embeddings (LOADED)
-# Empty means that no embeddings will be loaded.
-# Options: 
-pretrained_embeddings: ''
-
 # Source files that will be used to create the vocabulary  (LOADED)
 source_vocabulary_files: ''
 
-# Additional tokens, that will be added to vocabulary (LOADED)
+# Additional tokens that will be added to vocabulary (LOADED)
 additional_tokens: ''
 
-# File containing resulting (LOADED)
-vocabulary_mappings_file: 'default_mappings.csv'
+# File containing word (LOADED)
+word_mappings_file: 'word_mappings.csv'
 
-# If set, component will always (re)generate vocabulary (LOADED)
-# True means that it will be regenerated despite the existence of file.
+# If set, component will always (re)generate the vocabulary (LOADED)
 regenerate: False 
+
+# Flag informing whether word mappings will be imported from globals (LOADED)
+import_word_mappings_from_globals: False
+
+# Flag informing whether word mappings will be exported to globals (LOADED)
+export_word_mappings_to_globals: False
+
+# File containing pretrained embeddings (LOADED)
+# Empty means that no embeddings will be loaded.
+pretrained_embeddings_file: ''
 
 streams: 
   ####################################################################
@@ -45,8 +49,8 @@ globals:
   # 4. Keymappings associated with GLOBAL variables that will be SET.
   ####################################################################
 
-  # The created vocabulary (SET)
-  vocabulary: vocabulary
+  # The created word mappings (SET)
+  word_mappings: word_mappings
 
   # Size of the vocabulary (SET)
   vocabulary_size: vocabulary_size

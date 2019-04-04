@@ -89,6 +89,7 @@ class Accuracy(Component):
         # Get indices of the max log-probability.
         #pred = data_dict[self.key_predictions].max(1, keepdim=True)[1]
         preds = data_dict[self.key_predictions].max(1)[1]
+        #print("Max: {} ".format(data_dict[self.key_predictions].max(1)[1]))
 
         # Calculate the number of correct predictinos.
         correct = preds.eq(data_dict[self.key_targets]).sum().item()
@@ -96,6 +97,8 @@ class Accuracy(Component):
         #print ("PREDICTIONS = ",data_dict[self.key_predictions])
         #print ("MAX PREDICTIONS = ", preds)
         #print("CORRECTS = ", correct)
+
+        #print(" Target: {}\n Prediction: {}\n Correct: {} ".format(data_dict[self.key_targets], preds, preds.eq(data_dict[self.key_targets])))
 
         # Normalize.
         batch_size = data_dict[self.key_predictions].shape[0]       

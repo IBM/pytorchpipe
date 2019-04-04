@@ -16,7 +16,7 @@ __author__ = "Tomasz Kornuta"
 
 import os
 
-import ptp.utils.io_utils as io
+import ptp.components.utils.io as io
 from ptp.components.problems.problem import Problem
 from ptp.data_types.data_definition import DataDefinition
 
