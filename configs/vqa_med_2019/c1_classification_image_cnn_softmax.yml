@@ -12,42 +12,32 @@ validation:
     categories: C1
 
 pipeline:
-  name: vqa_med_c1_classification_question_onehot_bow
+  name: vqa_med_c1_classification_image_cnn_softmax
 
-  # Questions encoding.
-  question_tokenizer:
-    type: SentenceTokenizer
+  # Image encoder.
+  image_encoder:
+    type: ConvNetEncoder
     priority: 1.1
-    streams: 
-      inputs: questions
-      outputs: tokenized_questions
+    streams:
+      inputs: images
 
-  question_onehot_encoder:
-    type: SentenceOneHotEncoder
+  # Reshape inputs
+  reshaper:
+    type: ReshapeTensor
+    input_dims: [-1, 16, 26, 26]
+    output_dims: [-1, 10816]
     priority: 1.2
-    data_folder: &data_folder ~/data/vqa-med
-    word_mappings_file: questions.all.word.mappings.csv
-    export_word_mappings_to_globals: True
     streams:
-      inputs: tokenized_questions
-      outputs: encoded_questions
+      inputs: feature_maps
+      outputs: reshaped_maps
     globals:
-      vocabulary_size: sentence_vocabulary_size
-
-  question_bow_encoder:
-    type: BOWEncoder
-    priority: 1.3
-    streams:
-      inputs: encoded_questions
-      outputs: bow_questions
-    globals:
-        bow_size: sentence_vocabulary_size
+      output_size: reshaped_maps_size
 
   # Answer encoding.
   answer_indexer:
     type: LabelIndexer
     priority: 2
-    data_folder: *data_folder
+    data_folder: &data_folder ~/data/vqa-med
     word_mappings_file: answers.c1.word.mappings.csv
     # Export mappings and size to globals.
     export_word_mappings_to_globals: True
@@ -58,15 +48,15 @@ pipeline:
       vocabulary_size: vocabulary_size_ci1
       word_mappings: word_mappings_c1
 
-  # Model
+  # Model - image classifier.
   classifier:
-    type: SoftmaxClassifier
-    hidden_sizes: [100, 100]
+    type: SoftmaxClassifier 
+    hidden_sizes: [1000]
     priority: 3
     streams:
-      inputs: bow_questions
+      inputs: reshaped_maps
     globals:
-      input_size: sentence_vocabulary_size
+      input_size: reshaped_maps_size
       prediction_size: vocabulary_size_ci1
   
   # Predictions decoder.
