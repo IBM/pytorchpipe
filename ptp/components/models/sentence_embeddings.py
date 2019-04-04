@@ -124,20 +124,28 @@ class SentenceEmbeddings(Model, WordMappings):
 
             indices_list.append(torch.tensor(output_sample).type(self.app_state.LongTensor))
 
-        # Transform the list of lists to tensor - use padding.
-        # indices = torch.LongTensor(indices_list)
+        # Create list of (index,len) tuples.
+        order_len = [(i, len(indices_list[i])) for i in range(len(indices_list))]
 
-        # Sort data by seq_length.
-        indices_list.sort(key=lambda x: len(x), reverse=True)
+        # Sort by seq_length.
+        sorted_order_len = sorted(order_len, key=lambda x: x[1], reverse=True)
 
-        # Get lengths.
-        #seq_lengths = [len(x) for x in indices_list]
+        # Now sort indices list.
+        sorted_indices_list = [indices_list[sorted_order_len[i][0]] for i in range(len(indices_list))]
 
         # Pad the indices list.
-        padded_indices = torch.nn.utils.rnn.pad_sequence(indices_list, batch_first=True)
+        padded_indices = torch.nn.utils.rnn.pad_sequence(sorted_indices_list, batch_first=True)
+
+        # Revert to the original batch order!!!
+        new_old_order = [(i, sorted_order_len[i][0]) for i in range(len(indices_list))]
+        sorted_new_old_order = sorted(new_old_order, key=lambda x: x[1])
+        unsorted_padded_indices = [padded_indices[sorted_new_old_order[i][0]] for i in range(len(indices_list))]
+        
+        # Change to tensor.
+        unsorted_padded_indices_tensor = torch.stack( [torch.LongTensor(lst) for lst in unsorted_padded_indices] ).type(self.app_state.LongTensor)
 
         # Embedd indices.
-        embedds = self.embeddings(padded_indices)
+        embedds = self.embeddings(unsorted_padded_indices_tensor)
 
         # Pack embedded sentences.
         #packed_embedds = torch.nn.utils.rnn.pack_padded_sequence(embeds, lengths= seq_lengths)#, batch_first=True)

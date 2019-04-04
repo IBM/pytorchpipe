@@ -1,47 +1,8 @@
-# Training parameters:
-training:
-  problem:
-    type: &p_type VQAMED2019
-    data_folder: &data_folder ~/data/vqa-med
-    split: training
-    resize_image: &resize_image [224, 224]
-    batch_size:  64
-
-  # optimizer parameters:
-  optimizer:
-    name: Adam
-    lr: 0.1
-
-  # settings parameters
-  terminal_conditions:
-    loss_stop: 1.0e-2
-    episode_limit: 10000
-    epoch_limit: 100
-
-# Validation parameters:
-validation:
-  partial_validation_interval: 100
-  problem:
-    type: *p_type
-    data_folder: *data_folder
-    split: validation
-    resize_image: *resize_image     
-    batch_size:  64
-
-# Testing parameters:
-testing:
-  problem:
-    type: *p_type 
-    data_folder: *data_folder
-    split: test
-    resize_image: *resize_image     
-    batch_size: 64
+# Load config defining problems for training, validation and testing.
+default_configs: vqa_med_2019/default_vqa_med_2019.yml
 
 pipeline:
-  name: vqa_med_question_categorization_bow
-  #load: /users/tomaszkornuta/experiments/dummylanguageidentification/language_classifier/20190301_145416/checkpoints/language_classifier_best.pt
-  #freeze: True
-  #disable: prediction_decoder,accuracy
+  name: vqa_med_question_categorization_onehot_bow
 
   # Questions encoding.
   question_tokenizer:
@@ -54,7 +15,7 @@ pipeline:
   sentence_encoder:
     type: SentenceOneHotEncoder
     priority: 1.2
-    data_folder: *data_folder
+    data_folder: ~/data/vqa-med
     word_mappings_file: question.all.vocabulary.mappings.csv
     streams:
       inputs: tokenized_questions

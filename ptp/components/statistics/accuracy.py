@@ -98,7 +98,7 @@ class Accuracy(Component):
         #print ("MAX PREDICTIONS = ", preds)
         #print("CORRECTS = ", correct)
 
-        print(" Target: {}\n Prediction: {}\n Correct: {} ".format(data_dict[self.key_targets], preds, preds.eq(data_dict[self.key_targets])))
+        #print(" Target: {}\n Prediction: {}\n Correct: {} ".format(data_dict[self.key_targets], preds, preds.eq(data_dict[self.key_targets])))
 
         # Normalize.
         batch_size = data_dict[self.key_predictions].shape[0]       

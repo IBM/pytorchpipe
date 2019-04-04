@@ -85,7 +85,7 @@ class SentenceOneHotEncoder(WordMappings):
             # Encode sample (list of words)
             for token in sample:
                 # Create empty vector.
-                output_token = torch.zeros(len(self.word_to_ix))
+                output_token = torch.zeros(len(self.word_to_ix)).type(self.app_state.FloatTensor)
                 # Add one for given word
                 output_token[self.word_to_ix[token]] += 1
                 # Add to outputs.
