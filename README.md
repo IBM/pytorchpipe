@@ -13,10 +13,13 @@
 
 ## Description
 
-PyTorchPipe (PTP) aims at _accelerating reproducible Machine Learning Research_ by fostering the development and comparison of diverse neural network-based models. 
+PyTorchPipe (PTP) aims at _accelerating reproducible Machine Learning Research_ by fostering the development of computational _pipelines_ and comparison of diverse neural network-based models. 
+
 In its core, to _accelerate the computations_ on their own, PTP relies on PyTorch and extensively uses its mechanisms for distribution of computations on CPUs/GPUs.
+
 PTP frames training and testing procedures as _pipelines_ consisting of many components communicating through data streams.
 Each such a stream can consist of several components, including one problem instance (providing batches of data), (zero-or-more) trainable models and (any number of) additional components providing required transformations and computations.
+
 As a result, the training & testing mechanisms are no longer pinned to a specific model or problem, and built-in mechanisms for compatibility checking (handshaking), configuration management & statistics collection facilitate running diverse experiments.
 
 ## Mainainers
