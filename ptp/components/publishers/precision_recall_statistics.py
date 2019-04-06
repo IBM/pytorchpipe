@@ -60,8 +60,8 @@ class PrecisionRecallStatistics(Component):
             # Get labels from word mappings.
             self.labels = []
             # Assume they are ordered, starting from 0.
-            for (_,value) in self.globals["word_mappings"]:
-                self.labels.append(value)
+            for key in self.globals["word_mappings"].keys():
+                self.labels.append(key)
         else:
             self.labels = list(range(self.num_classes))
 
@@ -91,10 +91,9 @@ class PrecisionRecallStatistics(Component):
         """
         return {}
 
-
     def __call__(self, data_dict):
         """
-        Calculates prediction recall statistics.
+        Calculates precission recall statistics.
 
         :param data_dict: DataDict containing the targets.
         :type data_dict: DataDict
@@ -103,70 +102,17 @@ class PrecisionRecallStatistics(Component):
         # Use worker interval.
         if self.episode % self.app_state.args.logging_interval == 0:
 
-            targets = data_dict[self.key_targets]
-            #print("Targets :", targets)
-
-            # Get indices of the max log-probability.
-            preds = data_dict[self.key_predictions].max(1)[1]
-            #print("Predictions :", preds)
-
-            # Create the confusion matrix, use SciKit learn order:
-            # Column - predicted class
-            # Row - target (actual) class
-            confunsion_matrix = np.zeros([self.num_classes, self.num_classes], dtype=int)
-            for (target, pred) in zip(targets, preds):
-                confunsion_matrix[target][pred] += 1
+            # Calculate main statistics.
+            confusion_matrix, precision, recall, f1score, support = self.calculate_statistics(data_dict)
 
             if self.show_confusion_matrix:
-                self.logger.info("Confusion matrix:\n{}".format(confunsion_matrix))
-
-            # Calculate true positive (TP), eqv. with hit.
-            tp = np.zeros([self.num_classes], dtype=int)
-            for i in range(self.num_classes):
-                tp[i] = confunsion_matrix[i][i]
-            #print("TP = ",tp)        
-
-            # Calculate false positive (FP) eqv. with false alarm, Type I error
-            # Predictions that incorrectly labelled as belonging to a given class.
-            # Sum wrong predictions along the column.
-            fp = np.sum(confunsion_matrix, axis=0) - tp
-            #print("FP = ",fp)
-
-            # Calculate false negative (FN), eqv. with miss, Type II error
-            # The target belonged to a given class, but it wasn't correctly labeled.
-            # Sum wrong predictions along the row.
-            fn = np.sum(confunsion_matrix, axis=1) - tp
-            #print("FN = ",fn)        
-
-            # Precision is the fraction of events where we correctly declared i
-            # out of all instances where the algorithm declared i.
-            precision = [float(tpi) / float(tpi+fpi) if (tpi+fpi) > 0 else 0.0 for (tpi,fpi) in zip(tp,fp)]
-
-            # Recall is the fraction of events where we correctly declared i 
-            # out of all of the cases where the true of state of the world is i.
-            recall = [float(tpi) / float(tpi+fni) if (tpi+fni) > 0 else 0.0 for (tpi,fni) in zip(tp,fn)]
-
-            # Calcualte f1-score.
-            f1score = [ 2 * pi * ri / (pi+ri) if (pi+ri) > 0 else 0.0 for (pi,ri) in zip(precision,recall)]
-
-            # Get support.
-            support = np.sum(confunsion_matrix, axis=1)
+                self.logger.info("Confusion matrix:\n{}".format(confusion_matrix))
 
             # Calculate weighted averages.
             support_sum = sum(support)
             precision_avg = sum([pi*si / support_sum for (pi,si) in zip(precision,support)])
             recall_avg = sum([ri*si / support_sum for (ri,si) in zip(recall,support)])
             f1score_avg = sum([fi*si / support_sum for (fi,si) in zip(f1score,support)])
-
-            # Remember those values so can be used in statistics.
-            self.precision = precision_avg
-            self.recall = recall_avg
-            self.f1score = f1score_avg
-
-            #print('precision: {}'.format(precision))
-            #print('recall: {}'.format(recall))
-            #print('f1score: {}'.format(f1score))
-            #print('support: {}'.format(support))
 
             # Log class scores.
             if self.show_class_scores:
@@ -184,6 +130,68 @@ class PrecisionRecallStatistics(Component):
         self.episode += 1
 
 
+    def calculate_statistics(self, data_dict):
+        """
+        Calculates confusion_matrix, precission, recall, f1score and support statistics.
+
+        :param data_dict: DataDict containing the targets.
+        :type data_dict: DataDict
+
+        :return: Calculated statistics.
+        """
+        targets = data_dict[self.key_targets]
+        #print("Targets :", targets)
+
+        # Get indices of the max log-probability.
+        preds = data_dict[self.key_predictions].max(1)[1]
+        #print("Predictions :", preds)
+
+        # Create the confusion matrix, use SciKit learn order:
+        # Column - predicted class
+        # Row - target (actual) class
+        confusion_matrix = np.zeros([self.num_classes, self.num_classes], dtype=int)
+        for (target, pred) in zip(targets, preds):
+            confusion_matrix[target][pred] += 1
+
+        # Calculate true positive (TP), eqv. with hit.
+        tp = np.zeros([self.num_classes], dtype=int)
+        for i in range(self.num_classes):
+            tp[i] = confusion_matrix[i][i]
+        #print("TP = ",tp)        
+
+        # Calculate false positive (FP) eqv. with false alarm, Type I error
+        # Predictions that incorrectly labelled as belonging to a given class.
+        # Sum wrong predictions along the column.
+        fp = np.sum(confusion_matrix, axis=0) - tp
+        #print("FP = ",fp)
+
+        # Calculate false negative (FN), eqv. with miss, Type II error
+        # The target belonged to a given class, but it wasn't correctly labeled.
+        # Sum wrong predictions along the row.
+        fn = np.sum(confusion_matrix, axis=1) - tp
+        #print("FN = ",fn)        
+
+        # Precision is the fraction of events where we correctly declared i
+        # out of all instances where the algorithm declared i.
+        precision = [float(tpi) / float(tpi+fpi) if (tpi+fpi) > 0 else 0.0 for (tpi,fpi) in zip(tp,fp)]
+
+        # Recall is the fraction of events where we correctly declared i 
+        # out of all of the cases where the true of state of the world is i.
+        recall = [float(tpi) / float(tpi+fni) if (tpi+fni) > 0 else 0.0 for (tpi,fni) in zip(tp,fn)]
+
+        # Calcualte f1-score.
+        f1score = [ 2 * pi * ri / (pi+ri) if (pi+ri) > 0 else 0.0 for (pi,ri) in zip(precision,recall)]
+
+        # Get support.
+        support = np.sum(confusion_matrix, axis=1)
+
+        #print('precision: {}'.format(precision))
+        #print('recall: {}'.format(recall))
+        #print('f1score: {}'.format(f1score))
+        #print('support: {}'.format(support))
+
+        return confusion_matrix, precision, recall, f1score, support
+
     def add_statistics(self, stat_col):
         """
         Adds 'accuracy' statistics to ``StatisticsCollector``.
@@ -191,9 +199,9 @@ class PrecisionRecallStatistics(Component):
         :param stat_col: ``StatisticsCollector``.
 
         """
-        stat_col.add_statistics(self.key_precision, '{:12.10f}')
-        stat_col.add_statistics(self.key_recall, '{:12.10f}')
-        stat_col.add_statistics(self.key_f1score, '{:12.10f}')
+        stat_col.add_statistics(self.key_precision, '{:05.3f}')
+        stat_col.add_statistics(self.key_recall, '{:05.3f}')
+        stat_col.add_statistics(self.key_f1score, '{:05.3f}')
 
     def collect_statistics(self, stat_col, data_dict):
         """
@@ -202,9 +210,19 @@ class PrecisionRecallStatistics(Component):
         :param stat_col: ``StatisticsCollector``.
 
         """
-        stat_col[self.key_precision] = self.precision
-        stat_col[self.key_recall] = self.recall
-        stat_col[self.key_f1score] = self.f1score
+        # Calculate main statistics.
+        _, precision, recall, f1score, support = self.calculate_statistics(data_dict)
+
+        # Calculate weighted averages.
+        support_sum = sum(support)
+        precision_avg = sum([pi*si / support_sum for (pi,si) in zip(precision,support)])
+        recall_avg = sum([ri*si / support_sum for (ri,si) in zip(recall,support)])
+        f1score_avg = sum([fi*si / support_sum for (fi,si) in zip(f1score,support)])
+
+        # Export to statistics.
+        stat_col[self.key_precision] = precision_avg
+        stat_col[self.key_recall] = recall_avg
+        stat_col[self.key_f1score] = f1score_avg
 
     def add_aggregators(self, stat_agg):
         """
@@ -213,12 +231,12 @@ class PrecisionRecallStatistics(Component):
         :param stat_agg: ``StatisticsAggregator``.
 
         """
-        stat_agg.add_aggregator(self.key_precision, '{:12.10f}') 
-        stat_agg.add_aggregator(self.key_precision+'_std', '{:12.10f}')
-        stat_agg.add_aggregator(self.key_recall, '{:12.10f}') 
-        stat_agg.add_aggregator(self.key_recall+'_std', '{:12.10f}')
-        stat_agg.add_aggregator(self.key_f1score, '{:12.10f}') 
-        stat_agg.add_aggregator(self.key_f1score+'_std', '{:12.10f}')
+        stat_agg.add_aggregator(self.key_precision, '{:05.3f}') 
+        stat_agg.add_aggregator(self.key_precision+'_std', '{:05.3f}')
+        stat_agg.add_aggregator(self.key_recall, '{:05.3f}') 
+        stat_agg.add_aggregator(self.key_recall+'_std', '{:05.3f}')
+        stat_agg.add_aggregator(self.key_f1score, '{:05.3f}') 
+        stat_agg.add_aggregator(self.key_f1score+'_std', '{:05.3f}')
 
 
     def aggregate_statistics(self, stat_col, stat_agg):

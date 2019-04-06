@@ -98,7 +98,10 @@ class MNIST(ImageToClassProblem):
         self.globals["image_depth"] = 1
 
         # Class names.
-        #self.labels = 'Zero One Two Three Four Five Six Seven Eight Nine'.split(' ')
+        labels = 'Zero One Two Three Four Five Six Seven Eight Nine'.split(' ')
+        word_to_ix = {labels[i]: i for i in range(10)}
+        # Export to globals.
+        self.globals["label_word_mappings"] = word_to_ix
 
     def __len__(self):
         """

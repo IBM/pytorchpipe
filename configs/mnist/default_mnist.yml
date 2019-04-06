@@ -59,5 +59,9 @@ pipeline:
   precision_recall:
     type: PrecisionRecallStatistics
     priority: 100.3
+    use_word_mappings: True
+    show_class_scores: True
+    globals:
+      word_mappings: label_word_mappings
         
 

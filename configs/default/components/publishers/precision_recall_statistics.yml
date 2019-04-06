@@ -8,7 +8,7 @@
 show_confusion_matrix: False
 
 # Flag indicating whether detailed scores for each class will be shown (LOADED)
-show_class_scores: True
+show_class_scores: False
 
 # When set to true, will use the provided word mappings as labels (LOADED)
 use_word_mappings: False

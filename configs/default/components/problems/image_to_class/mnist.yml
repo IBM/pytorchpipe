@@ -45,8 +45,11 @@ globals:
   input_height: image_height
   # Depth of the image (SET)
   input_depth: image_depth
+  
   # Number of output classes: 10 (SET)
   num_classes: num_classes
+  # Label (word-idx) mappings (SET)
+  label_word_mappings: label_word_mappings
 
   ####################################################################
   # 5. Keymappings associated with statistics that will be ADDED.

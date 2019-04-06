@@ -23,21 +23,6 @@ pipeline:
     globals:
       output_size: reshaped_maps_size
 
-  # Answer encoding.
-  answer_indexer:
-    type: LabelIndexer
-    priority: 2
-    data_folder: &data_folder ~/data/vqa-med
-    word_mappings_file: answers.c1.word.mappings.csv
-    # Export mappings and size to globals.
-    export_word_mappings_to_globals: True
-    streams:
-      inputs: answers
-      outputs: answers_ids
-    globals:
-      vocabulary_size: vocabulary_size_ci1
-      word_mappings: word_mappings_c1
-
   # Model - image classifier.
   classifier:
     type: SoftmaxClassifier 
@@ -47,7 +32,7 @@ pipeline:
       inputs: reshaped_maps
     globals:
       input_size: reshaped_maps_size
-      prediction_size: vocabulary_size_ci1
+      prediction_size: vocabulary_size_c1
   
   # Predictions decoder.
   prediction_decoder:

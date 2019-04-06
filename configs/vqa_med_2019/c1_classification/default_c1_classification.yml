@@ -10,8 +10,25 @@ training:
 validation:
   problem:
     categories: C1
+    batch_size: 500
 
 pipeline:
+
+  # Answer encoding.
+  answer_indexer:
+    type: LabelIndexer
+    priority: 2
+    data_folder: ~/data/vqa-med
+    word_mappings_file: answers.c1.word.mappings.csv
+    # Export mappings and size to globals.
+    export_word_mappings_to_globals: True
+    streams:
+      inputs: answers
+      outputs: answers_ids
+    globals:
+      vocabulary_size: vocabulary_size_c1
+      word_mappings: word_mappings_c1
+
 
   # Predictions decoder.
   prediction_decoder:
@@ -23,7 +40,7 @@ pipeline:
       inputs: predictions
       outputs: predicted_answers
     globals:
-      vocabulary_size: vocabulary_size_ci1
+      vocabulary_size: vocabulary_size_c1
       word_mappings: word_mappings_c1
 
   # Loss
@@ -41,14 +58,26 @@ pipeline:
     priority: 100.1
     streams:
       targets: answers_ids
+
   batch_size:
     type: BatchSizeStatistics
     priority: 100.2
 
+  precision_recall:
+    type: PrecisionRecallStatistics
+    priority: 100.3
+    use_word_mappings: True
+    show_class_scores: True
+    streams:
+      targets: answers_ids
+    globals:
+      word_mappings: word_mappings_c1
+      num_classes: vocabulary_size_c1
+
   # Viewers.
   viewer:
     type: StreamViewer
-    priority: 100.3
+    priority: 100.4
     stream_names: questions,category_names,answers,predicted_answers
 
 #: pipeline

@@ -15,7 +15,7 @@ pipeline:
   question_onehot_encoder:
     type: SentenceOneHotEncoder
     priority: 1.2
-    data_folder: &data_folder ~/data/vqa-med
+    data_folder: ~/data/vqa-med
     word_mappings_file: questions.all.word.mappings.csv
     export_word_mappings_to_globals: True
     streams:
@@ -33,21 +33,6 @@ pipeline:
     globals:
         bow_size: sentence_vocabulary_size
 
-  # Answer encoding.
-  answer_indexer:
-    type: LabelIndexer
-    priority: 2
-    data_folder: *data_folder
-    word_mappings_file: answers.c1.word.mappings.csv
-    # Export mappings and size to globals.
-    export_word_mappings_to_globals: True
-    streams:
-      inputs: answers
-      outputs: answers_ids
-    globals:
-      vocabulary_size: vocabulary_size_ci1
-      word_mappings: word_mappings_c1
-
   # Model
   classifier:
     type: SoftmaxClassifier
@@ -57,6 +42,6 @@ pipeline:
       inputs: bow_questions
     globals:
       input_size: sentence_vocabulary_size
-      prediction_size: vocabulary_size_ci1
+      prediction_size: vocabulary_size_c1
   
 #: pipeline
