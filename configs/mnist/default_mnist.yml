@@ -39,3 +39,19 @@ testing:
     batch_size: *b
     use_train_data: False
     #resize: [32, 32]
+
+pipeline:
+
+  # Loss
+  nllloss:
+    type: NLLLoss
+    priority: 10
+
+  # Statistics.
+  batch_size:
+    type: BatchSizeStatistics
+    priority: 100.1
+
+  accuracy:
+    type: AccuracyStatistics
+    priority: 100.2

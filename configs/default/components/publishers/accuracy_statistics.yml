@@ -30,5 +30,6 @@ statistics:
   ####################################################################
 
   # Name used for collected statistics (ADDED).
-  accuracies: accuracies
+  accuracy: accuracy
+
 

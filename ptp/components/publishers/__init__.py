@@ -1,9 +1,9 @@
-from .accuracy import Accuracy
-from .batch_size import BatchSize
+from .accuracy_statistics import AccuracyStatistics
+from .batch_size_statistics import BatchSizeStatistics
 from .global_variable_publisher import GlobalVariablePublisher
 
 __all__ = [
-    'Accuracy',
-    'BatchSize',
+    'AccuracyStatistics',
+    'BatchSizeStatistics',
     'GlobalVariablePublisher',
     ]

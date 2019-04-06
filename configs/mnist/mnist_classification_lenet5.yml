@@ -19,7 +19,7 @@ testing:
 # Definition of the pipeline.
 pipeline:
   name: mnist_lenet5_classifier
-  #disable: nllloss
+
   # Image classifier.
   image_classifier:
     type: LeNet5
@@ -27,16 +27,4 @@ pipeline:
     globals:
       prediction_size: num_classes
 
-  # Loss
-  nllloss:
-    type: NLLLoss
-    priority: 2
-  
-  # Statistics.
-  batch_size:
-    type: BatchSize
-    priority: 3
-  accuracy:
-    type: Accuracy
-    priority: 4
 #: pipeline

@@ -139,7 +139,7 @@ pipeline:
 
   # Statistics.
   accuracy:
-    type: Accuracy
+    type: AccuracyStatistics
     priority: 10
     streams:
       targets: indexed_targets
