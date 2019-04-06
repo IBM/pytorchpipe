@@ -1,6 +1,9 @@
 # Load config defining MNIST problems for training, validation and testing.
 default_configs: mnist/default_mnist.yml
-
+training:
+  seed_numpy: 3243312775
+  seed_torch: 2231067176
+  
 pipeline:
   name: mnist_softmax_classifier
 

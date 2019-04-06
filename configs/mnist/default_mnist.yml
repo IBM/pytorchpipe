@@ -55,3 +55,9 @@ pipeline:
   accuracy:
     type: AccuracyStatistics
     priority: 100.2
+
+  precision_recall:
+    type: PrecisionRecallStatistics
+    priority: 100.3
+        
+
