@@ -16,8 +16,6 @@
 
 __author__ = "Tomasz Kornuta"
 
-import torch
-
 from ptp.components.component import Component
 from ptp.configuration.configuration_error import ConfigurationError
 
