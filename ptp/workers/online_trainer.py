@@ -151,12 +151,12 @@ class OnlineTrainer(Trainer):
             Main training and validation loop.
             '''
             # Reset the counters.
-            episode = 0
-            epoch = 0
-            self.logger.info('Starting next epoch: {}'.format(epoch))
+            self.app_state.episode = 0
+            self.app_state.epoch = 0
+            self.logger.info('Starting next epoch: {}'.format(self.app_state.epoch))
 
             # Inform the training problem class that epoch has started.
-            self.training.problem.initialize_epoch(epoch)
+            self.training.problem.initialize_epoch(self.app_state.epoch)
 
             # Set initial status.
             training_status = "Not Converged"
@@ -172,7 +172,7 @@ class OnlineTrainer(Trainer):
                 self.pipeline.forward(training_dict)
 
                 # 2. Calculate statistics.
-                self.collect_all_statistics(self.training, self.pipeline, training_dict, self.training_stat_col, episode, epoch)
+                self.collect_all_statistics(self.training, self.pipeline, training_dict, self.training_stat_col)
 
                 # 3. Backward gradient flow.
                 self.pipeline.backward(training_dict)
@@ -194,15 +194,16 @@ class OnlineTrainer(Trainer):
                 self.training_stat_col.export_to_csv()
 
                 # 5.2. Export data to TensorBoard - at logging frequency.
-                if (self.training_batch_writer is not None) and (episode % self.app_state.args.logging_interval == 0):
+                if (self.training_batch_writer is not None) and \
+                        (self.app_state.episode % self.app_state.args.logging_interval == 0):
                     self.training_stat_col.export_to_tensorboard()
 
                     # Export histograms.
                     if self.app_state.args.tensorboard >= 1:
                         for name, param in self.pipeline.named_parameters():
                             try:
-                                self.training_batch_writer.add_histogram(name, param.data.cpu().numpy(), episode,
-                                                                         bins='doane')
+                                self.training_batch_writer.add_histogram(name, 
+                                    param.data.cpu().numpy(), self.app_state.episode, bins='doane')
 
                             except Exception as e:
                                 self.logger.error("  {} :: data :: {}".format(name, e))
@@ -211,28 +212,28 @@ class OnlineTrainer(Trainer):
                     if self.app_state.args.tensorboard >= 2:
                         for name, param in self.pipeline.named_parameters():
                             try:
-                                self.training_batch_writer.add_histogram(name + '/grad', param.grad.data.cpu().numpy(),
-                                                                         episode, bins='doane')
+                                self.training_batch_writer.add_histogram(name + '/grad', 
+                                    param.grad.data.cpu().numpy(), self.app_state.episode, bins='doane')
 
                             except Exception as e:
                                 self.logger.error("  {} :: grad :: {}".format(name, e))
 
                 # 5.3. Log to logger - at logging frequency.
-                if episode % self.app_state.args.logging_interval == 0:
+                if self.app_state.episode % self.app_state.args.logging_interval == 0:
                     self.logger.info(self.training_stat_col.export_to_string())
 
                 #  6. Validate and (optionally) save the model.
-                if (episode % self.partial_validation_interval) == 0:
+                if (self.app_state.episode % self.partial_validation_interval) == 0:
 
                     # Clear the validation batch from all items aside of the ones originally returned by the problem.
                     self.validation_dict.reinitialize(self.validation.problem.output_data_definitions())
                     # Perform validation.
-                    self.validate_on_batch(self.validation_dict, episode, epoch)
+                    self.validate_on_batch(self.validation_dict)
                     # Get loss.
                     validation_loss = self.pipeline.get_loss(self.validation_dict)
 
                     # Save the pipeline using the latest validation statistics.
-                    self.pipeline.save(self.checkpoint_dir, training_status, validation_loss, episode, epoch)
+                    self.pipeline.save(self.checkpoint_dir, training_status, validation_loss)
 
                     # Terminal conditions.
                     # I. the loss is < threshold (only when curriculum learning is finished if set.)
@@ -246,7 +247,7 @@ class OnlineTrainer(Trainer):
                                 "Loss Stop threshold)"
 
                             # ... and THEN save the pipeline (update its statistics).
-                            self.pipeline.save(self.checkpoint_dir, training_status, validation_loss, episode, epoch)
+                            self.pipeline.save(self.checkpoint_dir, training_status, validation_loss)
                             break
 
                     # II. Early stopping is set and loss hasn't improved by delta in n epochs.
@@ -254,64 +255,63 @@ class OnlineTrainer(Trainer):
                     # training_status = 'Early Stopping.'
 
                 # III. The episodes number limit has been reached.
-                if episode+1 >= self.episode_limit:
+                if self.app_state.episode+1 >= self.episode_limit:
                     # If we reach this condition, then it is possible that the model didn't converge correctly
                     # but it currently might get better since last validation.
                     training_status = "Not converged: Episode Limit reached"
                     break
 
                 # Check if we are at the end of the 'epoch': indicate that the DataLoader is now cycling.
-                if ((episode + 1) % self.epoch_size) == 0:
+                if ((self.app_state.episode+1) % self.epoch_size) == 0:
 
                     # Epoch just ended!
                     # Inform the problem class that the epoch has ended.
-                    self.training.problem.finalize_epoch(epoch)
+                    self.training.problem.finalize_epoch(self.app_state.epoch)
 
                     # Aggregate training statistics for the epoch.
-                    self.aggregate_all_statistics(self.training, self.pipeline, 
-                            self.training_stat_col, self.training_stat_agg, episode, epoch)
+                    self.aggregate_all_statistics(self.training, self.pipeline, self.training_stat_col, self.training_stat_agg)
                     self.export_all_statistics( self.training_stat_agg,  '[Full Training]')
 
                     # Apply curriculum learning - change some of the Problem parameters
-                    self.curric_done = self.training.problem.curriculum_learning_update_params(episode)
+                    self.curric_done = self.training.problem.curriculum_learning_update_params(self.app_state.episode)
 
                     # IV. Epoch limit has been reached.
-                    if epoch+1 >= self.epoch_limit:
+                    if self.app_state.epoch+1 >= self.epoch_limit:
                         training_status = "Not converged: Epoch Limit reached"
                         # "Finish" the training.
                         break
 
                     # Next epoch!
-                    epoch += 1
-                    self.logger.info('Starting next epoch: {}'.format(epoch))
+                    self.app_state.epoch += 1
+                    self.logger.info('Starting next epoch: {}'.format(self.app_state.epoch))
                     # Inform the training problem class that epoch has started.
-                    self.training.problem.initialize_epoch(epoch)
+                    self.training.problem.initialize_epoch(self.app_state.epoch)
                     # Empty the statistics collector.
                     self.training_stat_col.empty()
 
                 # Move on to next episode.
-                episode += 1
+                self.app_state.episode += 1
 
             '''
             End of main training and validation loop. Perform final full validation.
             '''
             # Eventually perform "last" validation on batch.
-            if self.validation_stat_col["episode"][-1] != episode:
+            if self.validation_stat_col["episode"][-1] != self.app_state.episode:
                 # We still must validate and try to save the model as it may perform better during this episode.
 
                 # Clear the validation batch from all items aside of the ones originally returned by the problem.
                 self.validation_dict.reinitialize(self.validation.problem.output_data_definitions())
                 # Perform validation.
-                self.validate_on_batch(self.validation_dict, episode, epoch)
+                self.validate_on_batch(self.validation_dict)
 
                 # Try to save the model using the latest validation statistics.
-                self.pipeline.save(self.checkpoint_dir, training_status, validation_loss, episode, epoch)
+                self.pipeline.save(self.checkpoint_dir, training_status, validation_loss)
 
             self.logger.info('\n' + '='*80)
             self.logger.info('Training finished because {}'.format(training_status))
 
             # Validate over the entire validation set.
-            self.validate_on_set(episode, epoch)
+            self.validate_on_set()
 
             # Do not save the model, as we tried it already on "last" validation batch.
 

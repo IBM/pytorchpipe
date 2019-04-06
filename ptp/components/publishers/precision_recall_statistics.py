@@ -69,9 +69,6 @@ class PrecisionRecallStatistics(Component):
         self.show_confusion_matrix = self.config["show_confusion_matrix"]
         self.show_class_scores = self.config["show_class_scores"]
 
-        # Internal counter, as we do not have access to episode number.
-        self.episode = 0
-
     def input_data_definitions(self):
         """ 
         Function returns a dictionary with definitions of input data that are required by the component.
@@ -100,7 +97,7 @@ class PrecisionRecallStatistics(Component):
 
         """
         # Use worker interval.
-        if self.episode % self.app_state.args.logging_interval == 0:
+        if self.app_state.episode % self.app_state.args.logging_interval == 0:
 
             # Calculate main statistics.
             confusion_matrix, precision, recall, f1score, support = self.calculate_statistics(data_dict)
@@ -110,9 +107,9 @@ class PrecisionRecallStatistics(Component):
 
             # Calculate weighted averages.
             support_sum = sum(support)
-            precision_avg = sum([pi*si / support_sum for (pi,si) in zip(precision,support)])
-            recall_avg = sum([ri*si / support_sum for (ri,si) in zip(recall,support)])
-            f1score_avg = sum([fi*si / support_sum for (fi,si) in zip(f1score,support)])
+            self.precision_avg = sum([pi*si / support_sum for (pi,si) in zip(precision,support)])
+            self.recall_avg = sum([ri*si / support_sum for (ri,si) in zip(recall,support)])
+            self.f1score_avg = sum([fi*si / support_sum for (fi,si) in zip(f1score,support)])
 
             # Log class scores.
             if self.show_class_scores:
@@ -123,11 +120,8 @@ class PrecisionRecallStatistics(Component):
                         precision[i], recall[i], f1score[i], support[i], self.labels[i])
                 log_str+= "|-----------|--------|---------|---------|-------\n"
                 log_str += "|     {:05.3f} |  {:05.3f} |   {:05.3f} |   {:5d} | weighted avg\n".format(
-                        precision_avg, recall_avg, f1score_avg, support_sum)
+                        self.precision_avg, self.recall_avg, self.f1score_avg, support_sum)
                 self.logger.info(log_str)
-
-        # Increment episode.
-        self.episode += 1
 
 
     def calculate_statistics(self, data_dict):
@@ -210,19 +204,10 @@ class PrecisionRecallStatistics(Component):
         :param stat_col: ``StatisticsCollector``.
 
         """
-        # Calculate main statistics.
-        _, precision, recall, f1score, support = self.calculate_statistics(data_dict)
-
-        # Calculate weighted averages.
-        support_sum = sum(support)
-        precision_avg = sum([pi*si / support_sum for (pi,si) in zip(precision,support)])
-        recall_avg = sum([ri*si / support_sum for (ri,si) in zip(recall,support)])
-        f1score_avg = sum([fi*si / support_sum for (fi,si) in zip(f1score,support)])
-
         # Export to statistics.
-        stat_col[self.key_precision] = precision_avg
-        stat_col[self.key_recall] = recall_avg
-        stat_col[self.key_f1score] = f1score_avg
+        stat_col[self.key_precision] = self.precision_avg
+        stat_col[self.key_recall] = self.recall_avg
+        stat_col[self.key_f1score] = self.f1score_avg
 
     def add_aggregators(self, stat_agg):
         """

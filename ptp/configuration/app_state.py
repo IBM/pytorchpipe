@@ -62,6 +62,10 @@ class AppState(metaclass=SingletonMetaClass):
         self.set_cpu_types()
         self.use_gpu = False
 
+        # Reset global counters.
+        self.epoch = None # Processor is not using the notion of epoch.
+        self.episode = 0
+
 
     def set_types(self):
         """

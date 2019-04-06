@@ -188,7 +188,7 @@ class PipelineManager(object):
         return errors
 
 
-    def save(self, chkpt_dir, training_status, loss, episode, epoch):
+    def save(self, chkpt_dir, training_status, loss):
         """
         Generic method saving the parameters of all models in the pipeline to a file.
 
@@ -198,14 +198,12 @@ class PipelineManager(object):
         :param training_status: String representing the current status of training.
         :type training_status: str
 
-
         :return: True if this is currently the best model (until the current episode, considering the loss).
-
         """
         # Checkpoint to be saved.
         chkpt = {'name': self.name,
                  'timestamp': datetime.now(),
-                 'episode': episode,
+                 'episode': self.app_state.episode,
                  'loss': loss,
                  'status': training_status,
                  'status_timestamp': datetime.now(),
@@ -219,7 +217,7 @@ class PipelineManager(object):
 
         # Save the intermediate checkpoint.
         if self.app_state.args.save_intermediate:
-            filename = chkpt_dir + self.name + '_episode_{:05d}.pt'.format(episode)
+            filename = chkpt_dir + self.name + '_episode_{:05d}.pt'.format(self.app_state.episode)
             torch.save(chkpt, filename)
             log_str = "Exporting pipeline '{}' parameters to checkpoint:\n {}\n".format(self.name, filename)
             log_str += model_str

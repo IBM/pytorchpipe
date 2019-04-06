@@ -51,9 +51,6 @@ class StreamViewer(Component):
         # Get sample number.
         self.sample_number = self.config["sample_number"]
         
-        # Internal counter, as we do not have access to episode number.
-        self.episode = 0
-
 
     def input_data_definitions(self):
         """ 
@@ -83,7 +80,7 @@ class StreamViewer(Component):
 
         """
         # Use worker interval.
-        if self.episode % self.app_state.args.logging_interval == 0:
+        if self.app_state.episode % self.app_state.args.logging_interval == 0:
 
             # Get indices.
             indices = data_dict[self.key_indices]
@@ -102,6 +99,3 @@ class StreamViewer(Component):
                     disp_str += " '{}': {}\n".format(stream, data_dict[stream][sample_number])
 
             self.logger.info(disp_str)
-
-        # Increment episode.
-        self.episode += 1

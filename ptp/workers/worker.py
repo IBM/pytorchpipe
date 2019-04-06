@@ -425,7 +425,7 @@ class Worker(object):
             print('Info: Loaded configuration from file {}'.format(abs_config_path + config))
 
 
-    def collect_all_statistics(self, problem_mgr, pipeline_mgr, data_dict, stat_col, episode, epoch=None):
+    def collect_all_statistics(self, problem_mgr, pipeline_mgr, data_dict, stat_col):
         """
         Function that collects statistics
 
@@ -440,17 +440,11 @@ class Worker(object):
         :param stat_col: statistics collector used for logging accuracy etc.
         :type stat_col: ``StatisticsCollector``
 
-        :param episode: current episode index
-        :type episode: int
-
-        :param epoch: current epoch index (DEFAULT: None)
-        :type epoch: int, optional
-
         """
         # Collect "local" statistics.
-        stat_col['episode'] = episode
-        if ('epoch' in stat_col) and (epoch is not None):
-            stat_col['epoch'] = epoch
+        stat_col['episode'] = self.app_state.episode
+        if ('epoch' in stat_col) and (self.app_state.epoch is not None):
+            stat_col['epoch'] = self.app_state.epoch
 
         # Collect rest of statistics.
         problem_mgr.problem.collect_statistics(stat_col, data_dict)
@@ -458,7 +452,7 @@ class Worker(object):
 
         
 
-    def aggregate_all_statistics(self, problem_mgr, pipeline_mgr, stat_col, stat_agg, episode, epoch=None):
+    def aggregate_all_statistics(self, problem_mgr, pipeline_mgr, stat_col, stat_agg):
         """
         Aggregates the collected statistics. Exports the aggregations to logger, csv and TB. \
         Empties statistics collector for the next episode.
@@ -471,18 +465,11 @@ class Worker(object):
         :param stat_col: ``StatisticsCollector`` object.
 
         :param stat_agg: ``StatisticsAggregator`` object.
-
-        :param episode: current episode index
-        :type episode: int
-
-        :param epoch: current epoch index (DEFAULT: None)
-        :type epoch: int, optional
-
         """ 
         # Aggregate "local" statistics.
-        if ('epoch' in stat_col) and ('epoch' in stat_agg) and (epoch is not None):
-            stat_agg.aggregators['epoch'] = epoch
-        stat_agg.aggregators['episode'] = episode
+        if ('epoch' in stat_col) and ('epoch' in stat_agg) and (self.app_state.epoch is not None):
+            stat_agg.aggregators['epoch'] = self.app_state.epoch
+        stat_agg.aggregators['episode'] = self.app_state.episode
         stat_agg.aggregators['episodes_aggregated'] = len(stat_col['episode'])
         # Aggregate rest of statistics.
         problem_mgr.problem.aggregate_statistics(stat_col, stat_agg)
