@@ -98,7 +98,7 @@ pipeline:
 
   # Model
   classifier:
-    type: SoftmaxClassifier
+    type: FeedForwardNetwork 
     #freeze: True
     priority: 5
     streams:

@@ -108,7 +108,7 @@ pipeline:
 
   # Model 2: classifier.
   classifier:
-    type: SoftmaxClassifier 
+    type: FeedForwardNetwork 
     priority: 6
     hidden_sizes: [100]
     streams:
