@@ -17,8 +17,9 @@ pipeline:
 
   # Classifier.
   classifier:
-    type: SoftmaxClassifier 
+    type: FeedForwardNetwork 
     priority: 2
+    dropout_rate: 0.1
     hidden_sizes: [100, 100]
     streams:
       inputs: reshaped_images

@@ -72,11 +72,6 @@ class RNN(Model):
         
         self.logger.info("Initializing RNN with input size = {}, hidden size = {} and prediction size = {}".format(self.input_size, self.hidden_size, self.prediction_size))
 
-        # Get dropout value from config.
-        dropout_rate = self.config["dropout_rate"]
-        # Create dropout layer.
-        self.dropout = torch.nn.Dropout(dropout_rate)
-
         # Get number of layers from config.
         self.num_layers = self.config["num_layers"]
 
@@ -95,6 +90,11 @@ class RNN(Model):
             except KeyError:
                 raise ConfigurationError( "Invalid RNN type, available options for 'cell_type' are ['LSTM', 'GRU', 'RNN_TANH', 'RNN_RELU'] (currently '{}')".format(self.cell_type))
         
+        # Get dropout rate value from config.
+        dropout_rate = self.config["dropout_rate"]
+        # Create dropout layer.
+        self.dropout = torch.nn.Dropout(dropout_rate)
+
         # Create the output layer.
         self.activation2output = torch.nn.Linear(self.hidden_size, self.prediction_size)
         
