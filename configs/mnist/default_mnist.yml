@@ -39,3 +39,29 @@ testing:
     batch_size: *b
     use_train_data: False
     #resize: [32, 32]
+
+pipeline:
+
+  # Loss
+  nllloss:
+    type: NLLLoss
+    priority: 10
+
+  # Statistics.
+  batch_size:
+    type: BatchSizeStatistics
+    priority: 100.1
+
+  accuracy:
+    type: AccuracyStatistics
+    priority: 100.2
+
+  precision_recall:
+    type: PrecisionRecallStatistics
+    priority: 100.3
+    use_word_mappings: True
+    show_class_scores: True
+    globals:
+      word_mappings: label_word_mappings
+        
+

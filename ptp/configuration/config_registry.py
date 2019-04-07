@@ -218,7 +218,7 @@ class ConfigRegistry(Mapping, metaclass=MetaSingletonABC):
         for k, v in update_node.items():
             if isinstance(v, Mapping):
                 # Make sure that key exists and it is not None.
-                if k not in current_node.keys() or current_node[k] == None:
+                if k not in current_node.keys() or current_node[k] is None:
                     current_node[k] = {}
                 current_node[k] = self.update_dict_recursively(current_node[k], v)
             else:

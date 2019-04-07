@@ -91,11 +91,14 @@ class VQAMED2019(Problem):
         self.globals["image_width"] = self.width
         self.globals["image_depth"] = self.depth
 
+        # Those values will be used to rescale the image_sizes to range (0, 1).
+        self.scale_image_height = self.config['scale_image_size'][0]
+        self.scale_image_width = self.config['scale_image_size'][1]
+
         # Set parameters and globals related to categories.
         self.globals["num_categories"] = 4
         self.globals["category_word_mappings"] = {'C1': 0, 'C2': 1, 'C3': 2, 'C4': 3, '<UNK>': 4}
         self.category_idx_to_word = {0: 'C1', 1: 'C2', 2: 'C3', 3: 'C4', 4: '<UNK>'}
-
 
         # Check if we want to remove punctuation from questions/answer
         self.remove_punctuation = self.config["remove_punctuation"]
@@ -290,7 +293,8 @@ class VQAMED2019(Problem):
         # Image related variables.
         data_dict[self.key_images] = img
         data_dict[self.key_image_ids] = img_id
-        data_dict[self.key_image_sizes] = torch.Tensor([width, height])
+        # Scale width and height to range (0,1).
+        data_dict[self.key_image_sizes] = torch.FloatTensor([float(height/self.scale_image_height), float(width/self.scale_image_width)])
 
         # Question.
         data_dict[self.key_questions] = item[self.key_questions]
@@ -320,7 +324,7 @@ class VQAMED2019(Problem):
         # Stack images.
         data_dict[self.key_images] = torch.stack([item[self.key_images] for item in batch]).type(torch.FloatTensor)
         data_dict[self.key_image_ids] = [item[self.key_image_ids] for item in batch]
-        data_dict[self.key_image_sizes] = torch.stack([item[self.key_image_sizes] for item in batch]).type(torch.LongTensor)
+        data_dict[self.key_image_sizes] = torch.stack([item[self.key_image_sizes] for item in batch]).type(torch.FloatTensor)
 
         # Collate lists.
         data_dict[self.key_questions] = [item[self.key_questions] for item in batch]

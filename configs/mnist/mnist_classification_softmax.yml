@@ -1,9 +1,8 @@
 # Load config defining MNIST problems for training, validation and testing.
 default_configs: mnist/default_mnist.yml
-
+  
 pipeline:
   name: mnist_softmax_classifier
-  #disable: nllloss
 
   # Reshapes tensors.
   reshaper:
@@ -26,19 +25,5 @@ pipeline:
     globals:
       input_size: reshaped_image_size
       prediction_size: num_classes
-
-  # Loss
-  nllloss:
-    type: NLLLoss
-    priority: 3
-  
-  # Statistics.
-  batch_size:
-    type: BatchSize
-    priority: 4
-  accuracy:
-    type: Accuracy
-    priority: 5
-
 
 #: pipeline

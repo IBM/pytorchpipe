@@ -121,10 +121,10 @@ pipeline:
 
   # Statistics.
   batch_size:
-    type: BatchSize
+    type: BatchSizeStatistics
     priority: 9
   accuracy:
-    type: Accuracy
+    type: AccuracyStatistics
     priority: 10
     streams:
       targets: indexed_languages

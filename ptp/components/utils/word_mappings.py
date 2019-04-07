@@ -20,7 +20,6 @@ __author__ = "Tomasz Kornuta"
 import os
 import csv
 
-from ptp.configuration.configuration_error import ConfigurationError
 
 def generate_word_mappings_from_source_files(logger, folder, source_files):
     """

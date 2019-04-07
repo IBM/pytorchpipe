@@ -20,7 +20,7 @@ from ptp.components.component import Component
 from ptp.data_types.data_definition import DataDefinition
 
 
-class BatchSize(Component):
+class BatchSizeStatistics(Component):
     """
     Class collecting statistics: batch size.
 
@@ -38,7 +38,7 @@ class BatchSize(Component):
 
         """
         # Call constructors of parent classes.
-        Component.__init__(self, name, BatchSize, config)
+        Component.__init__(self, name, BatchSizeStatistics, config)
 
         # Set key mappings.
         self.key_indices = self.stream_keys["indices"]

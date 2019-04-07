@@ -10,34 +10,15 @@ training:
 validation:
   problem:
     categories: C1
+    batch_size: 500
 
 pipeline:
-  name: vqa_med_c1_classification_image_cnn_softmax
-
-  # Image encoder.
-  image_encoder:
-    type: ConvNetEncoder
-    priority: 1.1
-    streams:
-      inputs: images
-
-  # Reshape inputs
-  reshaper:
-    type: ReshapeTensor
-    input_dims: [-1, 16, 26, 26]
-    output_dims: [-1, 10816]
-    priority: 1.2
-    streams:
-      inputs: feature_maps
-      outputs: reshaped_maps
-    globals:
-      output_size: reshaped_maps_size
 
   # Answer encoding.
   answer_indexer:
     type: LabelIndexer
     priority: 2
-    data_folder: &data_folder ~/data/vqa-med
+    data_folder: ~/data/vqa-med
     word_mappings_file: answers.c1.word.mappings.csv
     # Export mappings and size to globals.
     export_word_mappings_to_globals: True
@@ -45,37 +26,27 @@ pipeline:
       inputs: answers
       outputs: answers_ids
     globals:
-      vocabulary_size: vocabulary_size_ci1
+      vocabulary_size: vocabulary_size_c1
       word_mappings: word_mappings_c1
 
-  # Model - image classifier.
-  classifier:
-    type: SoftmaxClassifier 
-    hidden_sizes: [1000]
-    priority: 3
-    streams:
-      inputs: reshaped_maps
-    globals:
-      input_size: reshaped_maps_size
-      prediction_size: vocabulary_size_ci1
-  
+
   # Predictions decoder.
   prediction_decoder:
     type: WordDecoder
-    priority: 4
+    priority: 10.1
     # Use the same word mappings as label indexer.
     import_word_mappings_from_globals: True
     streams:
       inputs: predictions
       outputs: predicted_answers
     globals:
-      vocabulary_size: vocabulary_size_ci1
+      vocabulary_size: vocabulary_size_c1
       word_mappings: word_mappings_c1
 
   # Loss
   nllloss:
     type: NLLLoss
-    priority: 6
+    priority: 10.2
     targets_dim: 1
     streams:
       targets: answers_ids
@@ -83,18 +54,30 @@ pipeline:
 
   # Statistics.
   accuracy:
-    type: Accuracy
-    priority: 10
+    type: AccuracyStatistics
+    priority: 100.1
     streams:
       targets: answers_ids
+
   batch_size:
-    type: BatchSize
-    priority: 11
+    type: BatchSizeStatistics
+    priority: 100.2
+
+  precision_recall:
+    type: PrecisionRecallStatistics
+    priority: 100.3
+    use_word_mappings: True
+    show_class_scores: True
+    streams:
+      targets: answers_ids
+    globals:
+      word_mappings: word_mappings_c1
+      num_classes: vocabulary_size_c1
 
   # Viewers.
   viewer:
     type: StreamViewer
-    priority: 12
+    priority: 100.4
     stream_names: questions,category_names,answers,predicted_answers
 
-  #: pipeline
+#: pipeline

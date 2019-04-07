@@ -11,7 +11,7 @@ from .components.problems.image_to_class import *
 from .components.problems.text_to_class import *
 from .components.problems.text_to_text import *
 
-from .components.statistics import *
+from .components.publishers import *
 
 from .components.text import *
 

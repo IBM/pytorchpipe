@@ -22,7 +22,7 @@ from ptp.components.component import Component
 from ptp.data_types.data_definition import DataDefinition
 
 
-class Accuracy(Component):
+class AccuracyStatistics(Component):
     """
     Class collecting statistics: batch size.
 
@@ -40,13 +40,13 @@ class Accuracy(Component):
 
         """
         # Call constructors of parent classes.
-        Component.__init__(self, name, Accuracy, config)
+        Component.__init__(self, name, AccuracyStatistics, config)
 
         # Set key mappings.
         self.key_targets = self.stream_keys["targets"]
         self.key_predictions = self.stream_keys["predictions"]
 
-        self.key_accuracies = self.statistics_keys["accuracies"]
+        self.key_accuracy = self.statistics_keys["accuracy"]
 
 
     def input_data_definitions(self):
@@ -115,7 +115,7 @@ class Accuracy(Component):
         :param stat_col: ``StatisticsCollector``.
 
         """
-        stat_col.add_statistics(self.key_accuracies, '{:12.10f}')
+        stat_col.add_statistics(self.key_accuracy, '{:12.10f}')
 
     def collect_statistics(self, stat_col, data_dict):
         """
@@ -124,7 +124,7 @@ class Accuracy(Component):
         :param stat_col: ``StatisticsCollector``.
 
         """
-        stat_col[self.key_accuracies] = self.calculate_accuracy(data_dict)
+        stat_col[self.key_accuracy] = self.calculate_accuracy(data_dict)
 
     def add_aggregators(self, stat_agg):
         """
@@ -133,10 +133,10 @@ class Accuracy(Component):
         :param stat_agg: ``StatisticsAggregator``.
 
         """
-        stat_agg.add_aggregator(self.key_accuracies, '{:12.10f}')  # represents the average accuracy
-        stat_agg.add_aggregator(self.key_accuracies+'_min', '{:12.10f}')
-        stat_agg.add_aggregator(self.key_accuracies+'_max', '{:12.10f}')
-        stat_agg.add_aggregator(self.key_accuracies+'_std', '{:12.10f}')
+        stat_agg.add_aggregator(self.key_accuracy, '{:12.10f}')  # represents the average accuracy
+        stat_agg.add_aggregator(self.key_accuracy+'_min', '{:12.10f}')
+        stat_agg.add_aggregator(self.key_accuracy+'_max', '{:12.10f}')
+        stat_agg.add_aggregator(self.key_accuracy+'_std', '{:12.10f}')
 
 
     def aggregate_statistics(self, stat_col, stat_agg):
@@ -148,9 +148,9 @@ class Accuracy(Component):
         :param stat_agg: ``StatisticsAggregator``
 
         """
-        acc = stat_col[self.key_accuracies]
+        acc = stat_col[self.key_accuracy]
         # TODO: instead of mean use weighted sum + mean.
-        stat_agg[self.key_accuracies] = torch.mean(torch.tensor(acc))
-        stat_agg[self.key_accuracies+'_min'] = min(acc)
-        stat_agg[self.key_accuracies+'_max'] = max(acc)
-        stat_agg[self.key_accuracies+'_std'] = 0.0 if len(acc) <= 1 else torch.std(torch.tensor(acc))
+        stat_agg[self.key_accuracy] = torch.mean(torch.tensor(acc))
+        stat_agg[self.key_accuracy+'_min'] = min(acc)
+        stat_agg[self.key_accuracy+'_max'] = max(acc)
+        stat_agg[self.key_accuracy+'_std'] = 0.0 if len(acc) <= 1 else torch.std(torch.tensor(acc))

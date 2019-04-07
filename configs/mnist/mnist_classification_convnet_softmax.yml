@@ -3,7 +3,6 @@ default_configs: mnist/default_mnist.yml
 
 pipeline:
   name: mnist_convnet_softmax_classifier
-  #disable: nllloss
 
   # Model consisting of two components.
   image_encoder:
@@ -31,19 +30,5 @@ pipeline:
     globals:
       input_size: reshaped_maps_size
       prediction_size: num_classes
-
-  # Loss
-  nllloss:
-    type: NLLLoss
-    priority: 5
-  
-  # Statistics.
-  batch_size:
-    type: BatchSize
-    priority: 6
-
-  accuracy:
-    type: Accuracy
-    priority: 7
 
 #: pipeline
