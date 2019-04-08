@@ -22,10 +22,13 @@ sampler_factory.py: Factory building samplers used by PyTorch's DataLoaders.
 __author__ = "Tomasz Kornuta"
 
 import os
+import numpy as np
 import logging
 
 import torch.utils.data.sampler
 
+from ptp.configuration.configuration_error import ConfigurationError
+import ptp.components.utils.io
 
 class SamplerFactory(object):
     """
@@ -34,7 +37,7 @@ class SamplerFactory(object):
     """
 
     @staticmethod
-    def build(problem, config):
+    def build(problem, config, problem_size):
         """
         Static method returning particular sampler, depending on the name \
         provided in the list of parameters & the specified problem class.
@@ -52,12 +55,12 @@ class SamplerFactory(object):
 
         .. warning::
 
-            ``torch.utils.data.sampler.WeightedRandomSampler``, ``torch.utils.data.sampler.BatchSampler``, \
-            ``torch.utils.data.sampler.DistributedSampler`` are not yet supported.
+            ``torch.utils.data.sampler.BatchSampler``, \
+            ``torch.utils.data.sampler.DistributedSampler`` are not supported yet.
 
         .. note::
 
-            ``torch.utils.data.sampler.SubsetRandomSampler`` expects indices to index a subset of the dataset. \
+            ``torch.utils.data.sampler.SubsetRandomSampler`` expects 'indices' to index a subset of the dataset. \
              Currently, the user can specify these indices using one of the following options:
 
             - Option 1: range.
@@ -72,6 +75,11 @@ class SamplerFactory(object):
             - Option 4: name of the file containing indices.
                 >>> filename = "~/data/mnist/training_indices.txt"
 
+        .. note::
+
+            ``torch.utils.data.sampler.WeightedRandomSampler`` expercse additional parameter 'weights'.
+
+        :param problem_size: Size of the problem (number of samples)
 
         :return: Instance of a given sampler or ``None`` if the section not present or couldn't build the sampler.
 
@@ -81,20 +89,20 @@ class SamplerFactory(object):
 
         # Check if sampler is required, i.e. 'sampler' section is empty.
         if not config:
-            logger.info("The sampler configuration section is not present - using default 'random' sampling")
+            logger.info("The sampler configuration section is not present, using default 'random' sampling")
             return None
 
         try: 
             # Check presence of the name attribute.
             if 'name' not in config:
-                raise Exception("The sampler configuration section does not contain the key 'name'.")
+                raise ConfigurationError("The sampler configuration section does not contain the key 'name'")
 
             # Get the class name.
             name = config['name']
 
             # Verify that the specified class is in the samplers package.
             if name not in dir(torch.utils.data.sampler):
-                raise Exception("Could not find the specified class '{}' in the samplers package".format(name))
+                raise ConfigurationError("Could not find the specified class '{}' in the samplers package".format(name))
 
             # Get the actual class.
             sampler_class = getattr(torch.utils.data.sampler, name)
@@ -107,7 +115,7 @@ class SamplerFactory(object):
 
                 # Check presence of the name attribute.
                 if 'indices' not in config:
-                    raise Exception("The sampler configuration section does not contain the key 'indices' "
+                    raise ConfigurationError("The sampler configuration section does not contain the key 'indices' "
                                     "required by SubsetRandomSampler.")
 
                 indices = config['indices']
@@ -151,7 +159,19 @@ class SamplerFactory(object):
                 # Create the sampler object.
                 sampler = sampler_class(indices)
 
-            elif sampler_class.__name__ in ['WeightedRandomSampler', 'BatchSampler', 'DistributedSampler']:
+            elif sampler_class.__name__ == 'WeightedRandomSampler':
+
+                # Check presence of the name attribute.
+                if 'weights' not in config:
+                    raise ConfigurationError("The sampler configuration section does not contain the key 'weights' "
+                                    "required by WeightedRandomSampler.")
+
+                # Load weights from file.
+                weights = np.fromfile(os.path.expanduser(config['weights']), dtype=float, count=-1, sep=',')
+                # Create sampler class.
+                sampler = sampler_class(weights, problem_size, replacement=True)
+
+            elif sampler_class.__name__ in ['BatchSampler', 'DistributedSampler']:
                 # Sorry, don't support those. Yet;)
                 logger.error("Sampler Factory currently does not support {} sampler. Please pick one of the others "
                              "or use defaults random sampling.".format(sampler_class.__name__))
@@ -163,7 +183,7 @@ class SamplerFactory(object):
             # Return sampler.
             return sampler
 
-        except Exception as e:
+        except ConfigurationError as e:
             logger.error(e)
             logger.warning("Using default sampling without sampler.")
             return None
