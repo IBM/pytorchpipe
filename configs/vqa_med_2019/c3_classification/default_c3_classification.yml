@@ -8,6 +8,8 @@ training:
   sampler:
     name: WeightedRandomSampler
     weights: ~/data/vqa-med/answers.c3.weights.csv
+  dataloader:
+    num_workers: 4
 
 # Validation parameters:
 validation:
