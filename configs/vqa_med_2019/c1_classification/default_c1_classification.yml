@@ -5,12 +5,20 @@ default_configs: vqa_med_2019/default_vqa_med_2019.yml
 training:
   problem:
     categories: C1
+  sampler:
+    name: WeightedRandomSampler
+    weights: ~/data/vqa-med/answers.c1.weights.csv
+  dataloader:
+    num_workers: 4
 
 # Validation parameters:
 validation:
   problem:
     categories: C1
     batch_size: 500
+  dataloader:
+    num_workers: 4
+
 
 pipeline:
 
@@ -68,6 +76,7 @@ pipeline:
     priority: 100.3
     use_word_mappings: True
     show_class_scores: True
+    show_confusion_matrix: True
     streams:
       targets: answers_ids
     globals:

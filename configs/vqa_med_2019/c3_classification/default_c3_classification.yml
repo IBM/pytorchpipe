@@ -16,6 +16,9 @@ validation:
   problem:
     categories: C3
     batch_size: 500
+  dataloader:
+    num_workers: 4
+
 
 pipeline:
 
@@ -73,6 +76,7 @@ pipeline:
     priority: 100.3
     use_word_mappings: True
     show_class_scores: True
+    show_confusion_matrix: True
     streams:
       targets: answers_ids
     globals:
