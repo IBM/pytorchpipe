@@ -15,14 +15,13 @@
 __author__ = "Tomasz Kornuta"
 
 import torch
-import torch.nn.functional as F
 
 from ptp.configuration.configuration_error import ConfigurationError
 from ptp.components.models.model import Model
 from ptp.data_types.data_definition import DataDefinition
 
 
-class RNN(Model): 
+class RecurrentNeuralNetwork(Model): 
     """
     Simple Classifier consisting of fully connected layer with log softmax non-linearity.
     """
@@ -34,7 +33,7 @@ class RNN(Model):
         :type config: ``ptp.configuration.ConfigInterface``
         """
         # Call constructors of parent classes.
-        Model.__init__(self, name, RNN, config)
+        Model.__init__(self, name, RecurrentNeuralNetwork, config)
 
         # Get key mappings.
         self.key_inputs = self.stream_keys["inputs"]
@@ -72,13 +71,11 @@ class RNN(Model):
         
         self.logger.info("Initializing RNN with input size = {}, hidden size = {} and prediction size = {}".format(self.input_size, self.hidden_size, self.prediction_size))
 
-        # Get dropout value from config.
-        dropout_rate = self.config["dropout_rate"]
-        # Create dropout layer.
-        self.dropout = torch.nn.Dropout(dropout_rate)
-
         # Get number of layers from config.
         self.num_layers = self.config["num_layers"]
+
+        # Get dropout rate value from config.
+        dropout_rate = self.config["dropout_rate"]
 
         # Create RNN depending on the configuration
         self.cell_type = self.config["cell_type"]
@@ -94,9 +91,6 @@ class RNN(Model):
 
             except KeyError:
                 raise ConfigurationError( "Invalid RNN type, available options for 'cell_type' are ['LSTM', 'GRU', 'RNN_TANH', 'RNN_RELU'] (currently '{}')".format(self.cell_type))
-        
-        # Create the output layer.
-        self.activation2output = torch.nn.Linear(self.hidden_size, self.prediction_size)
         
         # Check if initial state (h0/c0) are trainable or not.
         self.initial_state_trainable = self.config["initial_state_trainable"]
@@ -123,6 +117,21 @@ class RNN(Model):
             if self.cell_type == 'LSTM':
                 self.init_memory = torch.nn.Parameter(c0, requires_grad=False)
 
+        # Create dropout layer.
+        self.dropout = torch.nn.Dropout(dropout_rate)
+
+        # Create the output layer.
+        self.activation2output = torch.nn.Linear(self.hidden_size, self.prediction_size)
+        
+        # Create the final non-linearity.
+        self.use_logsoftmax = self.config["use_logsoftmax"]
+        if self.use_logsoftmax:
+            if self.prediction_mode == "Dense":
+                # Used then returning dense prediction, i.e. every output of unfolded model.
+                self.log_softmax = torch.nn.LogSoftmax(dim=2)
+            else:
+                # Used when returning only the last output.
+                self.log_softmax = torch.nn.LogSoftmax(dim=1)
 
     def initialize_hiddens_state(self, batch_size):
 
@@ -200,14 +209,16 @@ class RNN(Model):
             outputs = outputs.view(activations.size(0), activations.size(1), outputs.size(1))
 
             # Log softmax - along PREDICTION dim.
-            predictions = F.log_softmax(outputs, dim=2)
+            if self.use_logsoftmax:
+                outputs = self.log_softmax(outputs)
         else:
             # Pass only the last activation through the output layer.
             outputs = activations.contiguous()[:, -1, :].squeeze()
             # Propagate data through the output layer [BATCH_SIZE x PREDICTION_SIZE]
             outputs = self.activation2output(outputs)
             # Log softmax - along PREDICTION dim.
-            predictions = F.log_softmax(outputs, dim=1)
+            if self.use_logsoftmax:
+                outputs = self.log_softmax(outputs)
 
         # Add predictions to datadict.
-        data_dict.extend({self.key_predictions: predictions})
+        data_dict.extend({self.key_predictions: outputs})

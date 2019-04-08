@@ -26,7 +26,7 @@ pipeline:
   
   # Model 2: RNN
   lstm:
-    type: RNN
+    type: RecurrentNeuralNetwork
     cell_type: LSTM
     prediction_mode: Last
     priority: 3

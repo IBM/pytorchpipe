@@ -13,7 +13,7 @@ pipeline:
 
   # Model - image size classifier.
   classifier:
-    type: SoftmaxClassifier 
+    type: FeedForwardNetwork 
     hidden_sizes: [100]
     priority: 3
     streams:

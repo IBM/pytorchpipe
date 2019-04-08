@@ -36,7 +36,7 @@ pipeline:
 
   # Model 1: RNN
   lstm:
-    type: RNN
+    type: RecurrentNeuralNetwork
     prediction_mode: Last
     priority: 3
     initial_state_trainable: False

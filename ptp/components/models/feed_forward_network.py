@@ -15,16 +15,16 @@
 __author__ = "Tomasz Kornuta"
 
 import torch
-import torch.nn.functional as F
 
 from ptp.configuration.configuration_error import ConfigurationError
 from ptp.components.models.model import Model
 from ptp.data_types.data_definition import DataDefinition
 
 
-class SoftmaxClassifier(Model): 
+class FeedForwardNetwork(Model): 
     """
-    Simple Classifier consisting of fully connected layer with log softmax non-linearity.
+    Simple model consisting of several stacked fully connected layers with ReLU non-linearities and dropout between them.
+    Additionally, applies log softmax non-linearity to the output.
     """
     def __init__(self, name, config):
         """
@@ -34,7 +34,7 @@ class SoftmaxClassifier(Model):
         :type config: ``ptp.configuration.ConfigInterface``
         """
         # Call constructors of parent classes.
-        Model.__init__(self, name, SoftmaxClassifier, config)
+        Model.__init__(self, name, FeedForwardNetwork, config)
 
         # Get key mappings.
         self.key_inputs = self.stream_keys["inputs"]
@@ -61,10 +61,6 @@ class SoftmaxClassifier(Model):
         # Create the model.
         self.layers = torch.nn.ModuleList()
 
-        # Retrieve dropout parameter - if set, will put dropout between every layer.
-        # TODO!
-        #dropout = self.config["dropout"]
-
         # Retrieve number of hidden layers, along with their sizes (numbers of hidden neurons from configuration).
         try:
             hidden_sizes = self.config["hidden_sizes"]
@@ -75,6 +71,16 @@ class SoftmaxClassifier(Model):
                     # Add linear layer.
                     self.layers.append( torch.nn.Linear(input_dim, hidden_dim) )
                     input_dim = hidden_dim
+
+                # Create activation layer.
+                self.activation = torch.nn.ReLU()
+
+                # Retrieve dropout rate value - if set, will put dropout between every layer.
+                dropout_rate = self.config["dropout_rate"]
+
+                # Create dropout layer.
+                self.dropout = torch.nn.Dropout(dropout_rate)
+
                 # Add output layer.
                 self.layers.append( torch.nn.Linear(input_dim, self.prediction_size) )
 
@@ -83,11 +89,15 @@ class SoftmaxClassifier(Model):
             else:
                 raise ConfigurationError("SoftmaxClassifier 'hidden_sizes' must contain a list with numbers of neurons in hidden layers (currently {})".format(self.hidden_sizes))
 
-
         except KeyError:
             # Not present, in that case create a simple classifier with 1 linear layer.
             self.layers.append( torch.nn.Linear(self.input_size, self.prediction_size) )
         
+        # Create the final non-linearity.
+        self.use_logsoftmax = self.config["use_logsoftmax"]
+        if self.use_logsoftmax:
+            self.log_softmax = torch.nn.LogSoftmax(dim=1)
+
 
     def input_data_definitions(self):
         """ 
@@ -126,13 +136,16 @@ class SoftmaxClassifier(Model):
         # Propagate inputs through all but last layer.
         for layer in self.layers[:-1]:
             x = layer(x)
-            x = F.relu(x)
+            # Apply activation and dropout.
+            x = self.activation(x)
+            x = self.dropout(x)
 
-        # Propagate activations through the last layer.
+        # Propagate activations through the last (output) layer.
         x = self.layers[-1](x)
 
         # Log softmax.
-        predictions = F.log_softmax(x, dim=1)
+        if self.use_logsoftmax:
+            x = self.log_softmax(x)
 
         # Add predictions to datadict.
-        data_dict.extend({self.key_predictions: predictions})
+        data_dict.extend({self.key_predictions: x})

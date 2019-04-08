@@ -23,9 +23,9 @@ pipeline:
     globals:
       output_size: reshaped_maps_size
 
-  # Model - image classifier.
+  # Model - softmax classifier.
   classifier:
-    type: SoftmaxClassifier 
+    type: FeedForwardNetwork 
     hidden_sizes: [1000]
     priority: 3
     streams:
