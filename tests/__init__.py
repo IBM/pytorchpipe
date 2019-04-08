@@ -6,6 +6,7 @@ from .data_definition_tests import TestDataDefinition
 from .handshaking_tests import TestHandshaking
 from .pipeline_tests import TestPipeline
 from .problem_tests import TestProblem
+from .sampler_factory_tests import TestSamplerFactory
 
 __all__ = [
     'TestAppState',
@@ -15,5 +16,6 @@ __all__ = [
     'TestDataDefinition',
     'TestHandshaking',
     'TestPipeline',
-    'TestProblem'
+    'TestProblem',
+    'TestSamplerFactory',
     ]

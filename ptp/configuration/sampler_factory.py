@@ -15,10 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-sampler_factory.py: Factory building samplers used by PyTorch's DataLoaders.
-
-"""
 __author__ = "Tomasz Kornuta"
 
 import os
@@ -28,7 +24,6 @@ import logging
 import torch.utils.data.sampler
 
 from ptp.configuration.configuration_error import ConfigurationError
-import ptp.components.utils.io
 
 class SamplerFactory(object):
     """
@@ -37,7 +32,7 @@ class SamplerFactory(object):
     """
 
     @staticmethod
-    def build(problem, config, problem_size):
+    def build(problem, config):
         """
         Static method returning particular sampler, depending on the name \
         provided in the list of parameters & the specified problem class.
@@ -78,8 +73,6 @@ class SamplerFactory(object):
         .. note::
 
             ``torch.utils.data.sampler.WeightedRandomSampler`` expercse additional parameter 'weights'.
-
-        :param problem_size: Size of the problem (number of samples)
 
         :return: Instance of a given sampler or ``None`` if the section not present or couldn't build the sampler.
 
@@ -169,7 +162,7 @@ class SamplerFactory(object):
                 # Load weights from file.
                 weights = np.fromfile(os.path.expanduser(config['weights']), dtype=float, count=-1, sep=',')
                 # Create sampler class.
-                sampler = sampler_class(weights, problem_size, replacement=True)
+                sampler = sampler_class(weights, len(problem), replacement=True)
 
             elif sampler_class.__name__ in ['BatchSampler', 'DistributedSampler']:
                 # Sorry, don't support those. Yet;)
@@ -187,37 +180,3 @@ class SamplerFactory(object):
             logger.error(e)
             logger.warning("Using default sampling without sampler.")
             return None
-
-
-if __name__ == "__main__":
-    """
-    Tests the factory.
-    """
-    from ptp.configuration.config_interface import ConfigInterface
-    import yaml
-
-    # Problem.
-    class TestProblem(object):
-        def __len__(self):
-            return 50
-
-    # All samplers operate on TestProblem only,
-    # whereas SubsetRandomSampler additionally accepts 'indices' with the following options:
-    # Option 1: range.
-    indices = range(20)
-    # Option 2: range as str.
-    range_str = '0, 20'
-    # Option 3: list of indices.
-    yaml_list = yaml.load('[0, 2, 5, 10]')
-    # Option 4: name of the file containing indices.
-    filename = "~/data/mnist/training_indices.txt"
-
-    config = ConfigInterface()
-    config.add_default_params({'name': 'SubsetRandomSampler',
-                               'indices': yaml_list})
-
-    sampler = SamplerFactory.build(TestProblem(), config)
-    print(type(sampler))
-
-    for i, index in enumerate(sampler):
-        print('{}: index {}'.format(i, index))

@@ -89,7 +89,7 @@ class ProblemManager(object):
             self.problem = component
 
             # Try to build the sampler.
-            self.sampler = SamplerFactory.build(self.problem, self.config["sampler"], len(self.problem))
+            self.sampler = SamplerFactory.build(self.problem, self.config["sampler"])
 
             if self.sampler is not None:
                 # Set shuffle to False - REQUIRED as those two are exclusive.
