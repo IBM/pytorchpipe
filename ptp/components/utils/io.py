@@ -16,11 +16,59 @@ __author__ = "Tomasz Kornuta"
 
 import os
 import sys
+import numpy as np
 import shutil
 import zipfile
 import time
 import urllib
 from pathlib import Path
+
+
+def save_nparray_to_csv_file(folder, filename, nparray, sep=','):
+    """ 
+    Writes numpy array to csv file.
+
+    :param folder: Relative path to to folder.
+    :type folder: str
+
+    :param filename: Name of the file.
+    :type filename: str
+
+    :param nparray: Numpy array.
+
+    :param sep: Separator (DEFAULT: ',')
+    """
+    # Make sure folder exists.
+    os.makedirs(os.path.dirname(os.path.expanduser(folder) +'/'), exist_ok=True)
+
+    name = os.path.join(os.path.expanduser(folder), filename)
+    
+    # Write array to file, separate elements with commas.
+    nparray.tofile(name, sep=sep, format="%s")
+
+
+def load_nparray_from_csv_file(folder, filename, dtype=float, sep=','):
+    """ 
+    Loads numpy array from csv file.
+
+    :param folder: Relative path to to folder.
+    :type folder: str
+
+    :param filename: Name of the file.
+    :type filename: str
+
+    :param dtype: Type of the array to load (DEFAULT: float)
+
+    :return: Numpy array.
+    """
+    # Absolute pathname of the file.
+    name = os.path.join(os.path.expanduser(folder), filename)
+    
+    # Load array from file
+    nparray = np.fromfile(name, dtype, count=-1, sep=',')
+
+    # Return it.
+    return nparray
 
 
 
@@ -37,10 +85,10 @@ def save_string_list_to_txt_file(folder, filename, data):
     :param data: List containing strings (sententes, words etc.).
     """
     # Make sure folder exists.
-    os.makedirs(os.path.dirname(folder +'/'), exist_ok=True)
+    os.makedirs(os.path.dirname(os.path.expanduser(folder) +'/'), exist_ok=True)
 
     # Write elements in separate lines.        
-    with open(os.path.join(folder, filename), mode='w+') as txtfile:
+    with open(os.path.join(os.path.expanduser(folder), filename), mode='w+') as txtfile:
         txtfile.write('\n'.join(data))
 
 
@@ -51,7 +99,7 @@ def load_string_list_from_txt_file(folder, filename):
     :return: List of strings (e.g. list of sententes).
     """
     data = []
-    with open(os.path.join(folder, filename), mode='rt') as txtfile:
+    with open(os.path.join(os.path.expanduser(folder), filename), mode='rt') as txtfile:
         for line in txtfile:
             # Remove next line char.
             if line[-1] == '\n':

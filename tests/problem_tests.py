@@ -56,3 +56,5 @@ class TestProblem(unittest.TestCase):
         self.assertEqual(data_dict['inputs'], None)
         self.assertEqual(data_dict['targets'], None)
 
+#if __name__ == "__main__":
+#    unittest.main()

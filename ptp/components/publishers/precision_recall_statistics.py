@@ -116,10 +116,10 @@ class PrecisionRecallStatistics(Component):
                 log_str = "\n| Precision | Recall | F1Score | Support | Label\n"
                 log_str+= "|-----------|--------|---------|---------|-------\n"
                 for i in range(self.num_classes):
-                    log_str += "|     {:05.3f} |  {:05.3f} |   {:05.3f} |   {:5d} | {}\n".format(
+                    log_str += "|    {:05.4f} | {:05.4f} |  {:05.4f} |   {:5d} | {}\n".format(
                         precision[i], recall[i], f1score[i], support[i], self.labels[i])
                 log_str+= "|-----------|--------|---------|---------|-------\n"
-                log_str += "|     {:05.3f} |  {:05.3f} |   {:05.3f} |   {:5d} | weighted avg\n".format(
+                log_str += "|    {:05.4f} | {:05.4f} |  {:05.4f} |   {:5d} | Weighted Avg\n".format(
                         self.precision_avg, self.recall_avg, self.f1score_avg, support_sum)
                 self.logger.info(log_str)
 
@@ -193,9 +193,9 @@ class PrecisionRecallStatistics(Component):
         :param stat_col: ``StatisticsCollector``.
 
         """
-        stat_col.add_statistics(self.key_precision, '{:05.3f}')
-        stat_col.add_statistics(self.key_recall, '{:05.3f}')
-        stat_col.add_statistics(self.key_f1score, '{:05.3f}')
+        stat_col.add_statistics(self.key_precision, '{:05.4f}')
+        stat_col.add_statistics(self.key_recall, '{:05.4f}')
+        stat_col.add_statistics(self.key_f1score, '{:05.4f}')
 
     def collect_statistics(self, stat_col, data_dict):
         """
@@ -216,12 +216,12 @@ class PrecisionRecallStatistics(Component):
         :param stat_agg: ``StatisticsAggregator``.
 
         """
-        stat_agg.add_aggregator(self.key_precision, '{:05.3f}') 
-        stat_agg.add_aggregator(self.key_precision+'_std', '{:05.3f}')
-        stat_agg.add_aggregator(self.key_recall, '{:05.3f}') 
-        stat_agg.add_aggregator(self.key_recall+'_std', '{:05.3f}')
-        stat_agg.add_aggregator(self.key_f1score, '{:05.3f}') 
-        stat_agg.add_aggregator(self.key_f1score+'_std', '{:05.3f}')
+        stat_agg.add_aggregator(self.key_precision, '{:05.4f}') 
+        stat_agg.add_aggregator(self.key_precision+'_std', '{:05.4f}')
+        stat_agg.add_aggregator(self.key_recall, '{:05.4f}') 
+        stat_agg.add_aggregator(self.key_recall+'_std', '{:05.4f}')
+        stat_agg.add_aggregator(self.key_f1score, '{:05.4f}') 
+        stat_agg.add_aggregator(self.key_f1score+'_std', '{:05.4f}')
 
 
     def aggregate_statistics(self, stat_col, stat_agg):

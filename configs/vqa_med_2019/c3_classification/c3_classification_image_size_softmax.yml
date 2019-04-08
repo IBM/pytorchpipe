@@ -14,7 +14,7 @@ pipeline:
   # Model - image size classifier.
   classifier:
     type: FeedForwardNetwork 
-    hidden_sizes: [100]
+    #hidden_sizes: [100]
     priority: 3
     streams:
       inputs: image_sizes

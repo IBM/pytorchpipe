@@ -115,7 +115,7 @@ class AccuracyStatistics(Component):
         :param stat_col: ``StatisticsCollector``.
 
         """
-        stat_col.add_statistics(self.key_accuracy, '{:12.10f}')
+        stat_col.add_statistics(self.key_accuracy, '{:6.4f}')
 
     def collect_statistics(self, stat_col, data_dict):
         """
@@ -133,10 +133,10 @@ class AccuracyStatistics(Component):
         :param stat_agg: ``StatisticsAggregator``.
 
         """
-        stat_agg.add_aggregator(self.key_accuracy, '{:12.10f}')  # represents the average accuracy
-        stat_agg.add_aggregator(self.key_accuracy+'_min', '{:12.10f}')
-        stat_agg.add_aggregator(self.key_accuracy+'_max', '{:12.10f}')
-        stat_agg.add_aggregator(self.key_accuracy+'_std', '{:12.10f}')
+        stat_agg.add_aggregator(self.key_accuracy, '{:7.5f}')  # represents the average accuracy
+        stat_agg.add_aggregator(self.key_accuracy+'_min', '{:7.5f}')
+        stat_agg.add_aggregator(self.key_accuracy+'_max', '{:7.5f}')
+        stat_agg.add_aggregator(self.key_accuracy+'_std', '{:7.5f}')
 
 
     def aggregate_statistics(self, stat_col, stat_agg):

@@ -5,19 +5,27 @@ default_configs: vqa_med_2019/default_vqa_med_2019.yml
 training:
   problem:
     categories: C3
+  sampler:
+    name: WeightedRandomSampler
+    weights: ~/data/vqa-med/answers.c3.weights.csv
+  dataloader:
+    num_workers: 4
 
 # Validation parameters:
 validation:
   problem:
     categories: C3
     batch_size: 500
+  dataloader:
+    num_workers: 4
+
 
 pipeline:
 
   # Answer encoding.
   answer_indexer:
     type: LabelIndexer
-    priority: 2
+    priority: 0.1
     data_folder: ~/data/vqa-med
     word_mappings_file: answers.c3.word.mappings.csv
     # Export mappings and size to globals.
@@ -68,6 +76,7 @@ pipeline:
     priority: 100.3
     use_word_mappings: True
     show_class_scores: True
+    show_confusion_matrix: True
     streams:
       targets: answers_ids
     globals:
@@ -78,6 +87,6 @@ pipeline:
   viewer:
     type: StreamViewer
     priority: 100.4
-    stream_names: questions,category_names,answers,predicted_answers
+    input_streams: questions,category_names,answers,predicted_answers
 
 #: pipeline
