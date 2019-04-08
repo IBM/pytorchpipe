@@ -245,4 +245,4 @@ class PrecisionRecallStatistics(Component):
         stat_agg[self.key_recall+'_std'] = 0.0 if len(recalls) <= 1 else torch.std(torch.tensor(recalls))
 
         stat_agg[self.key_f1score] = torch.mean(torch.tensor(f1scores))
-        stat_agg[self.key_f1score+'_std'] = 0.0 if len(f1s) <= 1 else torch.std(torch.tensor(f1scores))
+        stat_agg[self.key_f1score+'_std'] = 0.0 if len(f1scores) <= 1 else torch.std(torch.tensor(f1scores))
