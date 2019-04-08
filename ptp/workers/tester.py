@@ -41,7 +41,7 @@ class Tester(Worker):
 
     def __init__(self, name="Tester"):
         """
-        Calls the ``Worker`` constructor, adds some additional params to parser.
+        Calls the ``Worker`` constructor, adds some additional arguments to parser.
 
        :param name: Name of the worker (DEFAULT: "Tester").
        :type name: str
@@ -65,7 +65,7 @@ class Tester(Worker):
 
             - Create the configuration:
 
-                >>> self.params.add_config_params_from_yaml(config)
+                >>> self.config.add_config_params_from_yaml(config)
 
         The rest of the experiment setup is done in :py:func:`setup_individual_experiment()` \
         to allow for multiple tests suppport.
@@ -133,7 +133,7 @@ class Tester(Worker):
 
         - Set random seeds:
 
-            >>>  self.set_random_seeds('testing', self.params['testing'])
+            >>>  self.set_random_seeds('testing', self.config['testing'])
 
         - Creates the pipeline consisting of many components
 
@@ -145,14 +145,14 @@ class Tester(Worker):
 
         # Get testing problem type.
         try:
-            _ = self.params['testing']['problem']['type']
+            _ = self.config['testing']['problem']['type']
         except KeyError:
             print("Error: Couldn't retrieve the problem 'type' from the 'testing' section in the loaded configuration")
             exit(-5)
 
         # Get pipeline name.
         try:
-            pipeline_name = self.params['pipeline']['name']
+            pipeline_name = self.config['pipeline']['name']
         except KeyError:
             print("Error: Couldn't retrieve the pipeline 'name' from the loaded configuration")
             exit(-6)
@@ -179,7 +179,7 @@ class Tester(Worker):
         self.logger.info("Logger directory set to: {}".format(self.log_dir ))
 
         # Set random seeds in the testing section.
-        self.set_random_seeds('testing', self.params['testing'])
+        self.set_random_seeds('testing', self.config['testing'])
 
         # Total number of detected errors.
         errors =0
@@ -187,7 +187,7 @@ class Tester(Worker):
         ################# TESTING PROBLEM ################# 
 
         # Build training problem manager.
-        self.testing = ProblemManager('testing', self.params['testing']) 
+        self.testing = ProblemManager('testing', self.config['testing']) 
         errors += self.testing.build()
 
 
@@ -196,23 +196,23 @@ class Tester(Worker):
         # So that by default, we loop over the test set once.
         max_test_episodes = len(self.testing)
 
-        self.params['testing']['problem'].add_default_params({'max_test_episodes': max_test_episodes})
-        if self.params["testing"]["problem"]["max_test_episodes"] == -1:
+        self.config['testing']['problem'].add_default_params({'max_test_episodes': max_test_episodes})
+        if self.config["testing"]["problem"]["max_test_episodes"] == -1:
             # Overwrite the config value!
-            self.params['testing']['problem'].add_config_params({'max_test_episodes': max_test_episodes})
+            self.config['testing']['problem'].add_config_params({'max_test_episodes': max_test_episodes})
 
         # Warn if indicated number of episodes is larger than an epoch size:
-        if self.params["testing"]["problem"]["max_test_episodes"] > max_test_episodes:
+        if self.config["testing"]["problem"]["max_test_episodes"] > max_test_episodes:
             self.logger.warning('Indicated maximum number of episodes is larger than one epoch, reducing it.')
-            self.params['testing']['problem'].add_config_params({'max_test_episodes': max_test_episodes})
+            self.config['testing']['problem'].add_config_params({'max_test_episodes': max_test_episodes})
 
         self.logger.info("Setting the max number of episodes to: {}".format(
-            self.params["testing"]["problem"]["max_test_episodes"]))
+            self.config["testing"]["problem"]["max_test_episodes"]))
 
         ###################### PIPELINE ######################
         
         # Build the pipeline using the loaded configuration and global variables.
-        self.pipeline = PipelineManager(pipeline_name, self.params['pipeline'])
+        self.pipeline = PipelineManager(pipeline_name, self.config['pipeline'])
         errors += self.pipeline.build()
 
         # Show pipeline.
@@ -248,8 +248,8 @@ class Tester(Worker):
             if self.app_state.args.load_checkpoint != "":
                 pipeline_name = self.app_state.args.load_checkpoint
                 msg = "command line (--load)"
-            elif "load" in self.params['pipeline']:
-                pipeline_name = self.params['pipeline']['load']
+            elif "load" in self.config['pipeline']:
+                pipeline_name = self.config['pipeline']['load']
                 msg = "'pipeline' section of the configuration file"
             else:
                 pipeline_name = ""
@@ -348,7 +348,7 @@ class Tester(Worker):
                 for test_dict in self.testing.dataloader:
 
                     # Terminal condition 0: max test episodes reached.
-                    if episode == self.params["testing"]["problem"]["max_test_episodes"]:
+                    if episode == self.config["testing"]["problem"]["max_test_episodes"]:
                         break
 
                     # Forward pass.

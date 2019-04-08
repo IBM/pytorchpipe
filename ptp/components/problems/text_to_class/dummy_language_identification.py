@@ -18,7 +18,7 @@ from .language_identification import LanguageIdentification
 
 import os
 
-import ptp.utils.io_utils as io
+import ptp.components.utils.io as io
 
 
 class DummyLanguageIdentification(LanguageIdentification):
@@ -28,7 +28,7 @@ class DummyLanguageIdentification(LanguageIdentification):
 
     .. _example: https://pytorch.org/tutorials/beginner/nlp/deep_learning_tutorial.html
     """
-    def __init__(self, name, params):
+    def __init__(self, name, config):
         """
         Initializes the problem object. Calls base constructor and generates the files, if not present.
 
@@ -36,21 +36,21 @@ class DummyLanguageIdentification(LanguageIdentification):
 
         :param class_type: Class type of the component.
 
-        :param params: Dictionary of parameters (read from configuration ``.yaml`` file).
+        :param config: Dictionary of parameters (read from configuration ``.yaml`` file).
         """
         # Call constructors of parent classes.
-        LanguageIdentification.__init__(self, name, DummyLanguageIdentification, params) 
+        LanguageIdentification.__init__(self, name, DummyLanguageIdentification, config) 
 
         # Get absolute path.
-        self.data_folder = os.path.expanduser(self.params['data_folder'])
+        self.data_folder = os.path.expanduser(self.config['data_folder'])
 
         # Generate the dataset (can be turned off).
         filenames = ["x_training.txt", "y_training.txt", "x_test.txt", "y_test.txt"]
-        if self.params['regenerate'] or not io.check_files_existence(self.data_folder, filenames):
+        if self.config['regenerate'] or not io.check_files_existence(self.data_folder, filenames):
             self.generate_dataset()
 
         # Select set.
-        if self.params['use_train_data']:
+        if self.config['use_train_data']:
             inputs_file = "x_training.txt"
             targets_file = "y_training.txt"
         else:

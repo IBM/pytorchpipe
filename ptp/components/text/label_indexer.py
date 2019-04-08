@@ -16,33 +16,32 @@ __author__ = "Tomasz Kornuta"
 
 import torch
 
-from ptp.components.text.token_encoder import TokenEncoder
+from ptp.components.mixins.word_mappings import WordMappings
 from ptp.data_types.data_definition import DataDefinition
 
 
-class LabelIndexer(TokenEncoder):
+class LabelIndexer(WordMappings):
     """
     Class responsible for changing of samples consisting of single words/labels into indices (that e.g. can be latter used for loss calculation, PyTorch-style).
     """
-    def __init__(self, name, params):
+    def __init__(self, name, config):
         """
         Initializes the component.
 
         :param name: Component name (read from configuration file).
         :type name: str
 
-        :param params: Dictionary of parameters (read from the configuration ``.yaml`` file).
-        :type params: :py:class:`ptp.utils.ParamInterface`
+        :param config: Dictionary of parameters (read from the configuration ``.yaml`` file).
+        :type config: :py:class:`ptp.configuration.ConfigInterface`
 
         """
-        # Call constructors of parent classes.
-        TokenEncoder.__init__(self, name, LabelIndexer, params)
+        # Call constructor(s) of parent class(es).
+        WordMappings.__init__(self, name, LabelIndexer, config)
 
-        # Export vocabulary size to global params.
-        self.key_vocab_size = self.get_global_key("label_vocab_size")
-        self.app_state[self.key_vocab_size] = len(self.word_to_ix)
+        # Set key mappings.
+        self.key_inputs = self.stream_keys["inputs"]
+        self.key_outputs = self.stream_keys["outputs"]
 
-        self.logger.info("Initializing sentence indexer with vocabulary size '{}' = {}".format(self.key_vocab_size, len(self.word_to_ix)))
 
     def input_data_definitions(self):
         """ 

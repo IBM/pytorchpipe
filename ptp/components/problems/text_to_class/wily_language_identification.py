@@ -16,7 +16,7 @@ __author__ = "Tomasz Kornuta"
 
 import os
 
-import ptp.utils.io_utils as io
+import ptp.components.utils.io as io
 from .language_identification import LanguageIdentification
 
 
@@ -30,7 +30,7 @@ class WiLYLanguageIdentification(LanguageIdentification):
     .. _dataset: https://zenodo.org/record/841984
     .. _arxiv: https://arxiv.org/abs/1801.07779
     """
-    def __init__(self, name, params):
+    def __init__(self, name, config):
         """
         Initializes problem object. Calls base constructor. Downloads the dataset if not present and loads the adequate files depending on the mode.
 
@@ -38,13 +38,13 @@ class WiLYLanguageIdentification(LanguageIdentification):
 
         :param class_type: Class type of the component.
 
-        :param params: Dictionary of parameters (read from configuration ``.yaml`` file).
+        :param config: Dictionary of parameters (read from configuration ``.yaml`` file).
         """
         # Call constructors of parent classes.
-        LanguageIdentification.__init__(self, name, WiLYLanguageIdentification, params) 
+        LanguageIdentification.__init__(self, name, WiLYLanguageIdentification, config) 
 
         # Get absolute path.
-        self.data_folder = os.path.expanduser(self.params['data_folder'])
+        self.data_folder = os.path.expanduser(self.config['data_folder'])
 
         # Generate the dataset (can be turned off).
         filenames = ["x_train.txt", "y_train.txt", "x_test.txt", "y_test.txt"]
@@ -55,7 +55,7 @@ class WiLYLanguageIdentification(LanguageIdentification):
             io.download_extract_zip_file(self.logger, self.data_folder, url, zipfile_name)
 
         # Select set.
-        if self.params['use_train_data']:
+        if self.config['use_train_data']:
             inputs_file = "x_train.txt"
             targets_file = "y_train.txt"
         else:

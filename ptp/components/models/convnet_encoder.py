@@ -31,7 +31,7 @@ class ConvNetEncoder(Model):
     The parameters of input image (width, height and depth) are not hardcoded so the encoder can be adjusted for given application.
     """
 
-    def __init__(self, name, params):
+    def __init__(self, name, config):
         """
         Constructor of the ``SimpleConvNet``. \
 
@@ -55,53 +55,48 @@ class ConvNetEncoder(Model):
 
         :param name: Name of the model (tken from the configuration file).
 
-        :param params: dict of parameters (read from configuration ``.yaml`` file).
-        :type params: ``ptp.configuration.ParamInterface``
+        :param config: dict of parameters (read from configuration ``.yaml`` file).
+        :type config: ``ptp.configuration.ConfigInterface``
 
         """
         # Call base constructor.
-        super(ConvNetEncoder, self).__init__(name, ConvNetEncoder, params)
+        super(ConvNetEncoder, self).__init__(name, ConvNetEncoder, config)
 
         # Set key mappings.
-        self.key_inputs = self.get_stream_key("inputs")
-        self.key_feature_maps = self.get_stream_key("feature_maps")
+        self.key_inputs = self.stream_keys["inputs"]
+        self.key_feature_maps = self.stream_keys["feature_maps"]
 
         # Get input image information from the global parameters.
-        self.key_input_width = self.get_global_key("input_width")
-        self.input_width = self.app_state[self.key_input_width]
-        
-        self.key_input_height = self.get_global_key("input_height")
-        self.input_height = self.app_state[self.key_input_height]
-        
-        self.key_input_depth = self.get_global_key("input_depth")
-        self.input_depth = self.app_state[self.key_input_depth]
+        self.input_width = self.globals["input_width"]
+        self.input_height = self.globals["input_height"]        
+        self.input_depth = self.globals["input_depth"]
 
         # Retrieve the Conv1 parameters.
-        self.out_channels_conv1 = params['conv1']['out_channels']
-        self.kernel_size_conv1 = params['conv1']['kernel_size']
-        self.stride_conv1 = params['conv1']['stride']
-        self.padding_conv1 = params['conv1']['padding']
+        self.out_channels_conv1 = config['conv1']['out_channels']
+        self.kernel_size_conv1 = config['conv1']['kernel_size']
+        self.stride_conv1 = config['conv1']['stride']
+        self.padding_conv1 = config['conv1']['padding']
 
         # Retrieve the MaxPool1 parameter.
-        self.kernel_size_maxpool1 = params['maxpool1']['kernel_size']
+        self.kernel_size_maxpool1 = config['maxpool1']['kernel_size']
 
         # Retrieve the Conv2 parameters.
-        self.out_channels_conv2 = params['conv2']['out_channels']
-        self.kernel_size_conv2 = params['conv2']['kernel_size']
-        self.stride_conv2 = params['conv2']['stride']
-        self.padding_conv2 = params['conv2']['padding']
+        self.out_channels_conv2 = config['conv2']['out_channels']
+        self.kernel_size_conv2 = config['conv2']['kernel_size']
+        self.stride_conv2 = config['conv2']['stride']
+        self.padding_conv2 = config['conv2']['padding']
 
         # Retrieve the MaxPool2 parameter.
-        self.kernel_size_maxpool2 = params['maxpool2']['kernel_size']
+        self.kernel_size_maxpool2 = config['maxpool2']['kernel_size']
 
         # Retrieve the Conv3 parameters.
-        self.out_channels_conv3 = params['conv3']['out_channels']
-        self.kernel_size_conv3 = params['conv3']['kernel_size']
-        self.stride_conv3 = params['conv3']['stride']
-        self.padding_conv3 = params['conv3']['padding']
+        self.out_channels_conv3 = config['conv3']['out_channels']
+        self.kernel_size_conv3 = config['conv3']['kernel_size']
+        self.stride_conv3 = config['conv3']['stride']
+        self.padding_conv3 = config['conv3']['padding']
 
         # Retrieve the MaxPool3 parameter.
-        self.kernel_size_maxpool3 = params['maxpool3']['kernel_size']
+        self.kernel_size_maxpool3 = config['maxpool3']['kernel_size']
 
         # We can compute the spatial size of the output volume as a function of the input volume size (W),
         # the receptive field size of the Conv Layer neurons (F), the stride with which they are applied (S),
@@ -189,12 +184,9 @@ class ConvNetEncoder(Model):
             ((self.height_features_conv3 - self.maxpool1.kernel_size + 2 * self.maxpool3.padding) / self.maxpool3.stride) + 1)
 
         # Set global variables: output dims
-        self.key_feature_map_height = self.get_global_key("feature_map_height")
-        self.app_state[self.key_feature_map_height] = self.height_features_maxpool3
-        self.key_feature_map_width = self.get_global_key("feature_map_width")
-        self.app_state[self.key_feature_map_width] = self.width_features_maxpool3
-        self.key_feature_map_depth = self.get_global_key("feature_map_depth")
-        self.app_state[self.key_feature_map_depth] = self.out_channels_conv3
+        self.globals["feature_map_height"] = self.height_features_maxpool3
+        self.globals["feature_map_width"] = self.width_features_maxpool3
+        self.globals["feature_map_depth"] = self.out_channels_conv3
         
         # log some info.
         self.logger.info('Input: [-1, {}, {}, {}]'.format(self.input_depth, self.input_width, self.input_height))

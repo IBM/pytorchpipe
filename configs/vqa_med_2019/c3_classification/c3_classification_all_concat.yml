@@ -1,0 +1,124 @@
+# Load config defining problems for training, validation and testing.
+default_configs: vqa_med_2019/c3_classification/default_c3_classification.yml
+
+pipeline:
+  name: vqa_med_c3_classification_all_concat
+
+  global_publisher:
+    type: GlobalVariablePublisher
+    priority: 0
+    # Add input_size to globals.
+    keys: [image_size_dims,latent_size]
+    values: [2,100]
+
+  # First subpipeline: question.
+  # Questions encoding.
+  question_tokenizer:
+    type: SentenceTokenizer
+    priority: 1.1
+    streams: 
+      inputs: questions
+      outputs: tokenized_questions
+
+  # Model 1: Embeddings
+  question_embeddings:
+    type: SentenceEmbeddings
+    priority: 1.2
+    embeddings_size: 50
+    pretrained_embeddings_file: glove.6B.50d.txt
+    data_folder: ~/data/vqa-med
+    word_mappings_file: questions.all.word.mappings.csv
+    streams:
+      inputs: tokenized_questions
+      outputs: embedded_questions      
+  
+  # Model 2: RNN
+  question_lstm:
+    type: RecurrentNeuralNetwork
+    cell_type: LSTM
+    prediction_mode: Last
+    priority: 1.3
+    use_logsoftmax: False
+    initial_state_trainable: False
+    #num_layers: 5
+    hidden_size: 50
+    streams:
+      inputs: embedded_questions
+      predictions: question_activations
+    globals:
+      input_size: embeddings_size
+      prediction_size: latent_size
+
+  # 2nd subpipeline: image size.
+  # Model - image size classifier.
+  image_size_ffn:
+    type: FeedForwardNetwork 
+    #hidden_sizes: [100]
+    priority: 2
+    streams:
+      inputs: image_sizes
+      predictions: image_size_activations
+    globals:
+      input_size: image_size_dims
+      prediction_size: latent_size
+
+  # 3rd subpipeline: image.
+  # Image encoder.
+  image_encoder:
+    type: ConvNetEncoder
+    priority: 3.1
+    streams:
+      inputs: images
+
+  # Reshape inputs
+  reshaper:
+    type: ReshapeTensor
+    input_dims: [-1, 16, 26, 26]
+    output_dims: [-1, 10816]
+    priority: 3.2
+    streams:
+      inputs: feature_maps
+      outputs: reshaped_maps
+    globals:
+      output_size: reshaped_maps_size
+
+  # Model - feed-forward.
+  image_ffn:
+    type: FeedForwardNetwork 
+    hidden_sizes: [1000]
+    priority: 3.3
+    streams:
+      inputs: reshaped_maps
+      predictions: image_activations
+    globals:
+      input_size: reshaped_maps_size
+      prediction_size: latent_size
+
+  # 4th subpipeline: concatenation + FF.
+  concat:
+    type: Concatenation
+    priority: 4.1
+    input_streams: [question_activations,image_size_activations,image_activations]
+    # Concatenation 
+    dim: 1 # default
+    input_dims: [[-1,100],[-1,100],[-1,100]]
+    output_dims: [-1,300]
+    streams:
+      outputs: concatenated_activations
+    globals:
+      #input_sizes: [latent_size,latent_size,latent_size]
+      output_size: output_size
+
+
+  classifier:
+    type: FeedForwardNetwork 
+    hidden_sizes: [100]
+    priority: 4.2
+    streams:
+      inputs: concatenated_activations
+    globals:
+      input_size: output_size
+      prediction_size: vocabulary_size_c3
+
+
+  #: pipeline

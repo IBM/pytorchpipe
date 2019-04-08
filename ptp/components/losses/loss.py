@@ -29,7 +29,7 @@ class Loss(Component):
 
     """
 
-    def __init__(self, name, class_type, params):
+    def __init__(self, name, class_type, config):
         """
         Initializes loss object.
 
@@ -38,17 +38,17 @@ class Loss(Component):
 
         :param class_type: Class type of the component.
 
-        :param params: Dictionary of parameters (read from the configuration ``.yaml`` file).
-        :type params: :py:class:`ptp.utils.ParamInterface`
+        :param config: Dictionary of parameters (read from the configuration ``.yaml`` file).
+        :type config: :py:class:`ptp.utils.ConfigInterface`
 
         """
         # Call constructors of parent classes.
-        Component.__init__(self, name, class_type, params)
+        Component.__init__(self, name, class_type, config)
 
         # Set key mappings.
-        self.key_targets = self.get_stream_key("targets")
-        self.key_predictions = self.get_stream_key("predictions")
-        self.key_loss = self.get_stream_key("loss")
+        self.key_targets = self.stream_keys["targets"]
+        self.key_predictions = self.stream_keys["predictions"]
+        self.key_loss = self.stream_keys["loss"]
 
     def loss_keys(self):
         """ 
@@ -67,8 +67,8 @@ class Loss(Component):
         :param stat_col: ``StatisticsCollector``.
 
         """
-        # Add default statistics with formatting.
-        stat_col.add_statistic(self.key_loss, '{:12.10f}')
+        # Add loss statistics with formatting.
+        stat_col.add_statistics(self.key_loss, '{:12.10f}')
 
     def collect_statistics(self, stat_col, data_dict):
         """

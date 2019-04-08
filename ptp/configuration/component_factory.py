@@ -25,7 +25,7 @@ from ptp.configuration.configuration_error import ConfigurationError
 
 class ComponentFactory(object):
     """
-    Class instantiating the components using the passed params.
+    Class instantiating the components using the passed config.
     """
 
     @staticmethod
@@ -42,39 +42,42 @@ class ComponentFactory(object):
 
 
     @staticmethod
-    def build(name, params):
+    def build(name, config):
         """
         Method creates a single component on the basis of configuration section.
         Raises ConfigurationError exception when encountered issues.
 
         :param name: Name of the section/component.
 
-        :param params: Parameters used to instantiate all components.
-        :type params: ``utils.param_interface.ParamInterface``
+        :param config: Parameters used to instantiate all components.
+        :type config: :py:class:`ptp.configuration.ConfigInterface`
 
         :return: tuple (component, component class).
         """
 
         # Check presence of type.
-        if 'type' not in params:
+        if 'type' not in config:
             raise ConfigurationError("Section {} does not contain the key 'type' defining the component type".format(name))
 
         # Get the class type.
-        c_type = params["type"]
+        c_type = config["type"]
 
         # Get class object.
         if c_type.find("ptp.") != -1:
             # Try to evaluate it directly.
             class_obj = eval(c_type)
         else:
-            # Try to find it in the main "ptp" namespace.
-            class_obj = getattr(ptp, c_type)
+            try:
+                # Try to find it in the main "ptp" namespace.
+                class_obj = getattr(ptp, c_type)
+            except AttributeError:
+                raise ConfigurationError("Class '{}' not found in the list of Component classes".format(c_type))
 
         # Check if class is derived (even indirectly) from Component.
         if not ComponentFactory.check_inheritance(class_obj, ptp.Component.__name__):
             raise ConfigurationError("Class '{}' is not derived from the Component class".format(c_type))
 
         # Instantiate component.
-        component = class_obj(name, params)
+        component = class_obj(name, config)
 
         return component, class_obj

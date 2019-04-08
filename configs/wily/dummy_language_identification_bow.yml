@@ -50,14 +50,16 @@ pipeline:
       outputs: tokenized_sentences
 
   sentence_encoder:
-    type: SentenceEncoder
+    type: SentenceOneHotEncoder
     priority: 2
     data_folder: ~/data/language_identification/dummy
-    source_files: x_training.txt,x_test.txt
-    encodings_file: word_encodings.csv
+    source_vocabulary_files: x_training.txt,x_test.txt
+    word_mappings_file: word_encodings.csv
     streams:
       inputs: tokenized_sentences
       outputs: encoded_sentences
+    globals:
+        vocabulary_size: sentence_vocab_size 
 
   bow_encoder:
     type: BOWEncoder
@@ -73,22 +75,27 @@ pipeline:
     type: LabelIndexer
     priority: 4
     data_folder: ~/data/language_identification/dummy
-    source_files: y_training.txt,y_test.txt
-    encodings_file: language_name_encodings.csv
+    source_vocabulary_files: y_training.txt,y_test.txt
+    word_mappings_file: language_name_encodings.csv
+    # Export word mappings, so other can reuse them.
+    export_word_mappings_to_globals: True
     streams:
       inputs: languages
       outputs: indexed_languages
-  
+    globals:
+      vocabulary_size: label_vocab_size 
+      word_mappings: label_word_mappings
+
   # Model
   classifier:
-    type: SoftmaxClassifier
+    type: FeedForwardNetwork 
     #freeze: True
     priority: 5
     streams:
       inputs: bow_sencentes
     globals:
       input_size: sentence_vocab_size # Set by sentence_encoder.
-      prediction_size: label_vocab_size # Set by target_encoder.
+      prediction_size: label_vocab_size
   
   # Loss
   nllloss:
@@ -103,18 +110,21 @@ pipeline:
   prediction_decoder:
     type: WordDecoder
     priority: 8
-    data_folder: ~/data/language_identification/dummy
-    encodings_file: language_name_encodings.csv
+    # Use the same word mappings as label indexer.
+    import_word_mappings_from_globals: True
     streams:
       inputs: predictions
       outputs: predicted_labels
+    globals:
+      vocabulary_size: label_vocab_size
+      word_mappings: label_word_mappings
 
   # Statistics.
   batch_size:
-    type: BatchSize
+    type: BatchSizeStatistics
     priority: 9
   accuracy:
-    type: Accuracy
+    type: AccuracyStatistics
     priority: 10
     streams:
       targets: indexed_languages

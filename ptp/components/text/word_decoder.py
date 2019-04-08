@@ -16,29 +16,35 @@ __author__ = "Tomasz Kornuta"
 
 import torch
 
-from ptp.components.text.token_encoder import TokenEncoder
+from ptp.components.mixins.word_mappings import WordMappings
 from ptp.data_types.data_definition import DataDefinition
 
 
-class WordDecoder(TokenEncoder):
+class WordDecoder(WordMappings):
     """
     Class responsible for decoding of samples encoded in the form of vectors ("probability distributions").
     """
-    def __init__(self, name, params):
+    def __init__(self, name, config):
         """
         Initializes the component.
 
         :param name: Component name (read from configuration file).
         :type name: str
 
-        :param params: Dictionary of parameters (read from the configuration ``.yaml`` file).
-        :type params: :py:class:`ptp.utils.ParamInterface`
+        :param config: Dictionary of parameters (read from the configuration ``.yaml`` file).
+        :type config: :py:class:`ptp.configuration.ConfigInterface`
 
         """
-        # Call constructors of parent classes.
-        TokenEncoder.__init__(self, name, WordDecoder, params)
+        # Call constructor(s) of parent class(es).
+        WordMappings.__init__(self, name, WordDecoder, config)
+
         # Construct reverse mapping for faster processing.
         self.ix_to_word = dict((v,k) for k,v in self.word_to_ix.items())
+
+        # Set key mappings.
+        self.key_inputs = self.stream_keys["inputs"]
+        self.key_outputs = self.stream_keys["outputs"]
+
 
     def input_data_definitions(self):
         """ 

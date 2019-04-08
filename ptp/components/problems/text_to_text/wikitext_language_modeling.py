@@ -18,7 +18,7 @@ import os
 
 from nltk.tokenize import WhitespaceTokenizer
 
-import ptp.utils.io_utils as io
+import ptp.components.utils.io as io
 from ptp.configuration import ConfigurationError
 from ptp.components.problems.problem import Problem
 from ptp.data_types.data_definition import DataDefinition
@@ -39,7 +39,7 @@ class WikiTextLanguageModeling(Problem):
     .. _dataset103: https://s3.amazonaws.com/research.metamind.io/wikitext/wikitext-103-v1.zip
     .. _arxiv: https://arxiv.org/abs/1609.07843
     """
-    def __init__(self, name, params):
+    def __init__(self, name, config):
         """
         The init method downloads the required files, loads the file associated with a given subset (train/valid/test), 
         concatenates all sencentes and tokenizes them using NLTK's WhitespaceTokenizer.
@@ -50,30 +50,30 @@ class WikiTextLanguageModeling(Problem):
 
         :param class_type: Class type of the component.
 
-        :param params: Dictionary of parameters (read from configuration ``.yaml`` file).
+        :param config: Dictionary of parameters (read from configuration ``.yaml`` file).
         """
         # Call constructor of parent classes.
-        Problem.__init__(self, name, WikiTextLanguageModeling, params) 
+        Problem.__init__(self, name, WikiTextLanguageModeling, config) 
 
         # Set streams key mappings.
-        self.key_sources = self.get_stream_key("sources")
-        self.key_targets = self.get_stream_key("targets")
+        self.key_sources = self.stream_keys["sources"]
+        self.key_targets = self.stream_keys["targets"]
 
         # Get absolute path to data folder.
-        self.data_folder = os.path.expanduser(self.params['data_folder'])
+        self.data_folder = os.path.expanduser(self.config['data_folder'])
 
         # Get dataset.
-        if (self.params['dataset'] is None) or (self.params['dataset'] not in ["wikitext-2", "wikitext-103"]):
+        if (self.config['dataset'] is None) or (self.config['dataset'] not in ["wikitext-2", "wikitext-103"]):
             raise ConfigurationError("Problem supports two 'dataset' options: 'wikitext-2', 'wikitext-103' ")
-        dataset = self.params['dataset']
+        dataset = self.config['dataset']
 
         # Get (sub)set: train/valid/test.
-        if (self.params['subset'] is None) or (self.params['subset'] not in ['train', 'valid', 'test']):
+        if (self.config['subset'] is None) or (self.config['subset'] not in ['train', 'valid', 'test']):
             raise ConfigurationError("Problem supports three 'subset' options: 'train', 'valid', 'test' ")
-        subset = self.params['subset']
+        subset = self.config['subset']
 
         # Check if file with tokenized words exists.
-        filename_tokenized_words = "wiki."+self.params['subset']+".tokenized_words"
+        filename_tokenized_words = "wiki."+self.config['subset']+".tokenized_words"
 
         if not io.check_files_existence(self.data_folder, filename_tokenized_words):
             # If not, we must generate (and save it) using source files.
@@ -120,16 +120,13 @@ class WikiTextLanguageModeling(Problem):
             self.logger.info("Load text consisting of {} tokens from '{}'".format(len(self.tokens), filename_tokenized_words))
 
         # Get the required sample length.
-        self.sentence_length = self.params['sentence_length']
+        self.sentence_length = self.config['sentence_length']
         # Calculate the size of dataset.
         self.dataset_length = len(self.tokens) - self.sentence_length - 1 # as target is "shifted" by 1.
 
         # Display exemplary sample.
         self.logger.info("Exemplary sample:\n  source: {}\n  target: {}".format(self.tokens[0:self.sentence_length], self.tokens[1:self.sentence_length+1]))
         
-
-
-
 
     def output_data_definitions(self):
         """ 

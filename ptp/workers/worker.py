@@ -30,7 +30,7 @@ from abc import abstractmethod
 
 # Import configuration.
 from ptp.configuration.app_state import AppState
-from ptp.configuration.param_interface import ParamInterface
+from ptp.configuration.config_interface import ConfigInterface
 
 
 class Worker(object):
@@ -47,9 +47,9 @@ class Worker(object):
 
                 >>> self.app_state = AppState()
 
-            - Initializes the Parameter Registry:
+            - Initializes the Configuration Registry:
 
-                >>> self.params = ParamInterface()
+                >>> self.config = ConfigInterface()
 
             - Defines the logger:
 
@@ -74,7 +74,7 @@ class Worker(object):
         self.app_state = AppState()
 
         # Initialize parameter interface/registry.
-        self.params = ParamInterface()
+        self.config = ConfigInterface()
 
         # Initialize logger using the configuration.
         self.initialize_logger()
@@ -233,7 +233,7 @@ class Worker(object):
 
             - Parses command line arguments.
 
-            - Sets the 3 default sections (training / validation / test) and sets their dataloaders params.
+            - Sets the 3 default config sections (training / validation / test) and sets their dataloaders params.
 
         .. note::
 
@@ -249,9 +249,9 @@ class Worker(object):
         self.logger.setLevel(getattr(logging, self.app_state.args.log_level.upper(), None))
 
         # add empty sections
-        self.params.add_default_params({"training": {'terminal_conditions': {}}})
-        self.params.add_default_params({"validation": {}})
-        self.params.add_default_params({"testing": {}})
+        self.config.add_default_params({"training": {'terminal_conditions': {}}})
+        self.config.add_default_params({"validation": {}})
+        self.config.add_default_params({"testing": {}})
 
 
     def display_parsing_results(self):
@@ -300,13 +300,13 @@ class Worker(object):
         # Log the resulting training configuration.
         conf_str = 'Final parameter registry configuration:\n'
         conf_str += '='*80 + '\n'
-        conf_str += yaml.safe_dump(self.params.to_dict(), default_flow_style=False)
+        conf_str += yaml.safe_dump(self.config.to_dict(), default_flow_style=False)
         conf_str += '='*80 + '\n'
         self.logger.info(conf_str)
 
         # Save the resulting configuration into a .yaml settings file, under log_dir
         with open(log_dir + filename, 'w') as yaml_backup_file:
-            yaml.dump(self.params.to_dict(), yaml_backup_file, default_flow_style=False)
+            yaml.dump(self.config.to_dict(), yaml_backup_file, default_flow_style=False)
 
         # Ask for confirmation - optional.
         if user_confirm:
@@ -324,8 +324,7 @@ class Worker(object):
 
         """
         # Add default statistics with formatting.
-        #stat_col.add_statistic('epoch', '{:02d}')
-        stat_col.add_statistic('episode', '{:06d}')
+        stat_col.add_statistics('episode', '{:06d}')
 
 
     def add_aggregators(self, stat_agg):
@@ -421,12 +420,12 @@ class Worker(object):
 
     def recurrent_config_load(self,configs_to_load, abs_config_path):
         for config in reversed(configs_to_load):
-            # Load params from YAML file.
-            self.params.add_config_params_from_yaml(abs_config_path + config)
+            # Load config from YAML file.
+            self.config.add_config_params_from_yaml(abs_config_path + config)
             print('Info: Loaded configuration from file {}'.format(abs_config_path + config))
 
 
-    def collect_all_statistics(self, problem_mgr, pipeline_mgr, data_dict, stat_col, episode, epoch=None):
+    def collect_all_statistics(self, problem_mgr, pipeline_mgr, data_dict, stat_col):
         """
         Function that collects statistics
 
@@ -441,17 +440,11 @@ class Worker(object):
         :param stat_col: statistics collector used for logging accuracy etc.
         :type stat_col: ``StatisticsCollector``
 
-        :param episode: current episode index
-        :type episode: int
-
-        :param epoch: current epoch index (DEFAULT: None)
-        :type epoch: int, optional
-
         """
         # Collect "local" statistics.
-        stat_col['episode'] = episode
-        if ('epoch' in stat_col) and (epoch is not None):
-            stat_col['epoch'] = epoch
+        stat_col['episode'] = self.app_state.episode
+        if ('epoch' in stat_col) and (self.app_state.epoch is not None):
+            stat_col['epoch'] = self.app_state.epoch
 
         # Collect rest of statistics.
         problem_mgr.problem.collect_statistics(stat_col, data_dict)
@@ -459,7 +452,7 @@ class Worker(object):
 
         
 
-    def aggregate_all_statistics(self, problem_mgr, pipeline_mgr, stat_col, stat_agg, episode, epoch=None):
+    def aggregate_all_statistics(self, problem_mgr, pipeline_mgr, stat_col, stat_agg):
         """
         Aggregates the collected statistics. Exports the aggregations to logger, csv and TB. \
         Empties statistics collector for the next episode.
@@ -472,18 +465,11 @@ class Worker(object):
         :param stat_col: ``StatisticsCollector`` object.
 
         :param stat_agg: ``StatisticsAggregator`` object.
-
-        :param episode: current episode index
-        :type episode: int
-
-        :param epoch: current epoch index (DEFAULT: None)
-        :type epoch: int, optional
-
         """ 
         # Aggregate "local" statistics.
-        if ('epoch' in stat_col) and ('epoch' in stat_agg) and (epoch is not None):
-            stat_agg.aggregators['epoch'] = epoch
-        stat_agg.aggregators['episode'] = episode
+        if ('epoch' in stat_col) and ('epoch' in stat_agg) and (self.app_state.epoch is not None):
+            stat_agg.aggregators['epoch'] = self.app_state.epoch
+        stat_agg.aggregators['episode'] = self.app_state.episode
         stat_agg.aggregators['episodes_aggregated'] = len(stat_col['episode'])
         # Aggregate rest of statistics.
         problem_mgr.problem.aggregate_statistics(stat_col, stat_agg)
@@ -514,7 +500,7 @@ class Worker(object):
         stat_obj.export_to_tensorboard()
 
 
-    def set_random_seeds(self, section_name, params):
+    def set_random_seeds(self, section_name, config):
         """
         Set ``torch`` & ``NumPy`` random seeds from the ``ParamRegistry``: \
         If one was indicated, use it, or set a random one.
@@ -522,26 +508,26 @@ class Worker(object):
         :param section_name: Name of the section (for logging purposes only).
         :type section_name: str
 
-        :param params: Section in config/param registry that will be changed \
+        :param config: Section in config registry that will be changed \
             ("training" or "testing" only will be taken into account.)
 
         """
         # Set the random seeds: either from the loaded configuration or a default randomly selected one.
-        params.add_default_params({"seed_numpy": -1})
-        if params["seed_numpy"] == -1:
+        config.add_default_params({"seed_numpy": -1})
+        if config["seed_numpy"] == -1:
             seed = randrange(0, 2 ** 32)
             # Overwrite the config param!
-            params.add_config_params({"seed_numpy": seed})
+            config.add_config_params({"seed_numpy": seed})
 
-        self.logger.info("Setting numpy random seed in {} to: {}".format(section_name, params["seed_numpy"]))
-        np.random.seed(params["seed_numpy"])
+        self.logger.info("Setting numpy random seed in {} to: {}".format(section_name, config["seed_numpy"]))
+        np.random.seed(config["seed_numpy"])
 
-        params.add_default_params({"seed_torch": -1})
-        if params["seed_torch"] == -1:
+        config.add_default_params({"seed_torch": -1})
+        if config["seed_torch"] == -1:
             seed = randrange(0, 2 ** 32)
             # Overwrite the config param!
-            params.add_config_params({"seed_torch": seed})
+            config.add_config_params({"seed_torch": seed})
 
-        self.logger.info("Setting torch random seed in {} to: {}".format(section_name, params["seed_torch"]))
-        torch.manual_seed(params["seed_torch"])
-        torch.cuda.manual_seed_all(params["seed_torch"])
+        self.logger.info("Setting torch random seed in {} to: {}".format(section_name, config["seed_torch"]))
+        torch.manual_seed(config["seed_torch"])
+        torch.cuda.manual_seed_all(config["seed_torch"])

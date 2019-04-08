@@ -34,18 +34,18 @@ class ProblemManager(object):
     Class that instantiates and manages problem and associated entities (dataloader, sampler etc.).
     """
 
-    def __init__(self, name, params):
+    def __init__(self, name, config):
         """
         Initializes the manager.
 
         :param name: Name of the manager (e.g. 'training', 'validation').
 
-        :param params: 'ParamInterface' object, referring to one of main sections (training/validation/testing).
-        :type params: ptp.utils.ParamInterface
+        :param config: 'ConfigInterface' object, referring to one of main sections (training/validation/testing/...).
+        :type config: :py:class:`ptp.configuration.ConfigInterface`
 
         """
         self.name = name
-        self.params = params
+        self.config = config
 
         # Initialize the logger.
         self.logger = logging.getLogger(name)
@@ -66,23 +66,20 @@ class ProblemManager(object):
             'sampler': {},  # not using sampler by default
             }
 
-        self.params.add_default_params(dataloader_config)
+        self.config.add_default_params(dataloader_config)
 
 
     def build(self, log=True):
         """
         Method creates a problem on the basis of configuration section.
 
-        :param params: Parameters used to instantiate the problem/sampler/data loader etc.
-        :type params: ``utils.param_interface.ParamInterface``
-
-        :param log_errors: Logs the detected errors (DEFAULT: TRUE)
+        :param log: Logs information and the detected errors (DEFAULT: TRUE)
 
         :return: number of detected errors
         """
         try: 
             # Create component.
-            component, class_obj = ComponentFactory.build("problem", self.params["problem"])
+            component, class_obj = ComponentFactory.build("problem", self.config["problem"])
 
             # Check if class is derived (even indirectly) from Problem.
             if not ComponentFactory.check_inheritance(class_obj, ptp.Problem.__name__):
@@ -92,23 +89,23 @@ class ProblemManager(object):
             self.problem = component
 
             # Try to build the sampler.
-            self.sampler = SamplerFactory.build(self.problem, self.params['sampler'])
+            self.sampler = SamplerFactory.build(self.problem, self.config["sampler"])
 
             if self.sampler is not None:
                 # Set shuffle to False - REQUIRED as those two are exclusive.
-                self.params['dataloader'].add_config_params({'shuffle': False})
+                self.config['dataloader'].add_config_params({'shuffle': False})
 
             # build the DataLoader on top of the validation problem
             self.dataloader = DataLoader(dataset=self.problem,
-                                batch_size=self.params['problem']['batch_size'],
-                                shuffle=self.params['dataloader']['shuffle'],
+                                batch_size=self.config['problem']['batch_size'],
+                                shuffle=self.config['dataloader']['shuffle'],
                                 sampler=self.sampler,
-                                batch_sampler=self.params['dataloader']['batch_sampler'],
-                                num_workers=self.params['dataloader']['num_workers'],
+                                batch_sampler=self.config['dataloader']['batch_sampler'],
+                                num_workers=self.config['dataloader']['num_workers'],
                                 collate_fn=self.problem.collate_fn,
-                                pin_memory=self.params['dataloader']['pin_memory'],
-                                drop_last=self.params['dataloader']['drop_last'],
-                                timeout=self.params['dataloader']['timeout'],
+                                pin_memory=self.config['dataloader']['pin_memory'],
+                                drop_last=self.config['dataloader']['drop_last'],
+                                timeout=self.config['dataloader']['timeout'],
                                 worker_init_fn=self.worker_init_fn)
 
             # Display sizes.

@@ -34,17 +34,17 @@ class PipelineManager(object):
     Class responsible for instantiating the pipeline consisting of several components.
     """
 
-    def __init__(self, name, params):
+    def __init__(self, name, config):
         """
         Initializes the pipeline manager.
 
-        :param params: Parameters used to instantiate all required components.
-        :type params: ``utils.param_interface.ParamInterface``
+        :param config: Parameters used to instantiate all required components.
+        :type config: :py:class:`ptp.configuration.ConfigInterface`
 
         """
         # Initialize the logger.
         self.name = name
-        self.params = params
+        self.config = config
         self.app_state = AppState()
         self.logger = logging.getLogger(name)
 
@@ -80,14 +80,14 @@ class PipelineManager(object):
         sections_to_skip = "name load freeze disable".split()
         disabled_components = ''
         # Add components to disable by the ones from configuration file.
-        if "disable" in self.params:
-            disabled_components = [*disabled_components, *self.params["disable"].split(",")]
+        if "disable" in self.config:
+            disabled_components = [*disabled_components, *self.config["disable"].split(",")]
         # Add components to disable by the ones from command line arguments.
         if (self.app_state.args is not None) and (self.app_state.args.disable != ''):
             disabled_components = [*disabled_components, *self.app_state.args.disable.split(",")]
 
         # Organize all components according to their priorities.
-        for c_key, c_params in self.params.items():
+        for c_key, c_config in self.config.items():
 
             try:
                 # Skip "special" pipeline sections.
@@ -100,14 +100,14 @@ class PipelineManager(object):
                     continue
 
                 # Check presence of priority.
-                if 'priority' not in c_params:
+                if 'priority' not in c_config:
                     raise KeyError("Section '{}' does not contain the key 'priority' defining the pipeline order".format(c_key))
 
                 # Get the priority.
                 try:
-                    c_priority = float(c_params["priority"])
+                    c_priority = float(c_config["priority"])
                 except ValueError:
-                    raise ConfigurationError("Priority [{}] in section '{}' is not a floating point number".format(c_params["priority"], c_key))
+                    raise ConfigurationError("Priority [{}] in section '{}' is not a floating point number".format(c_config["priority"], c_key))
 
                 # Check uniqueness of the priority.
                 if c_priority in self.__components.keys():
@@ -145,13 +145,13 @@ class PipelineManager(object):
                 # The section "key" will be used as "component" name.
                 c_key = self.__components[c_priority]
                 # Get section.
-                c_params = self.params[c_key]
+                c_config = self.config[c_key]
                 
                 if use_logger:
-                    self.logger.info("Creating component '{}' ({}) with priority [{}]".format(c_key, c_params["type"], c_priority))
+                    self.logger.info("Creating component '{}' ({}) with priority [{}]".format(c_key, c_config["type"], c_priority))
 
                 # Create component.
-                component, class_obj = ComponentFactory.build(c_key, c_params)
+                component, class_obj = ComponentFactory.build(c_key, c_config)
 
                 # Check if class is derived (even indirectly) from Problem.
                 if ComponentFactory.check_inheritance(class_obj, ptp.Problem.__name__):
@@ -188,7 +188,7 @@ class PipelineManager(object):
         return errors
 
 
-    def save(self, chkpt_dir, training_status, loss, episode, epoch):
+    def save(self, chkpt_dir, training_status, loss):
         """
         Generic method saving the parameters of all models in the pipeline to a file.
 
@@ -198,14 +198,12 @@ class PipelineManager(object):
         :param training_status: String representing the current status of training.
         :type training_status: str
 
-
         :return: True if this is currently the best model (until the current episode, considering the loss).
-
         """
         # Checkpoint to be saved.
         chkpt = {'name': self.name,
                  'timestamp': datetime.now(),
-                 'episode': episode,
+                 'episode': self.app_state.episode,
                  'loss': loss,
                  'status': training_status,
                  'status_timestamp': datetime.now(),
@@ -219,7 +217,7 @@ class PipelineManager(object):
 
         # Save the intermediate checkpoint.
         if self.app_state.args.save_intermediate:
-            filename = chkpt_dir + self.name + '_episode_{:05d}.pt'.format(episode)
+            filename = chkpt_dir + self.name + '_episode_{:05d}.pt'.format(self.app_state.episode)
             torch.save(chkpt, filename)
             log_str = "Exporting pipeline '{}' parameters to checkpoint:\n {}\n".format(self.name, filename)
             log_str += model_str
@@ -299,10 +297,10 @@ class PipelineManager(object):
         log_str = ''
         # Iterate over models.
         for model in self.models:
-            if "load" in model.params.keys():
+            if "load" in model.config.keys():
                 try:
                     # Check if file exists. 
-                    checkpoint_filename = model.params["load"]
+                    checkpoint_filename = model.config["load"]
                     if not os.path.isfile(checkpoint_filename):
                         log_str += "Coud not import parameters of model '{}' from checkpoint {} as file does not exist\n".format(
                             model.name,
@@ -346,15 +344,15 @@ class PipelineManager(object):
             - individual models when their 'freeze' flags are set.
         """
         # Check freeze all option.
-        if "freeze" in self.params.keys():
-            freeze_all = bool(self.params["freeze"])
+        if "freeze" in self.config.keys():
+            freeze_all = bool(self.config["freeze"])
         else: 
             freeze_all = False
                 
         # Iterate over models.
         for model in self.models:
-            if "freeze" in model.params.keys():
-                if bool(model.params["freeze"]):
+            if "freeze" in model.config.keys():
+                if bool(model.config["freeze"]):
                     model.freeze()
             elif freeze_all:
                 model.freeze()

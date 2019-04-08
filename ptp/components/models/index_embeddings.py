@@ -30,29 +30,27 @@ class IndexEmbeddings(Model):
     Embedds words using the provided indices of words.
     Assumes presence of a Word/Sencence Indexer.
     """ 
-    def __init__(self, name, params):
+    def __init__(self, name, config):
         """
         Initializes the ``Embeddings`` layer.
 
         :param name: Name of the model (taken from the configuration file).
 
-        :param params: Parameters read from configuration file.
-        :type params: ``ptp.configuration.ParamInterface``
+        :param config: Parameters read from configuration file.
+        :type config: ``ptp.configuration.ConfigInterface``
         """
-        super(IndexEmbeddings, self).__init__(name, IndexEmbeddings, params)
+        super(IndexEmbeddings, self).__init__(name, IndexEmbeddings, config)
 
-        # Set key mappings.
-        self.key_inputs = self.get_stream_key("inputs")
-        self.key_outputs = self.get_stream_key("outputs")
+        # Get key mappings.
+        self.key_inputs = self.stream_keys["inputs"]
+        self.key_outputs = self.stream_keys["outputs"]
 
         # Retrieve vocabulary size from globals.
-        self.key_vocab_size = self.get_global_key("vocab_size")
-        vocab_size = self.app_state[self.key_vocab_size]
+        vocab_size = self.globals["vocab_size"]
 
         # Retrieve embeddings size from configuration and export it to globals.
-        self.embeddings_size = params['embeddings_size']
-        self.key_embeddings_size = self.get_global_key("embeddings_size")
-        self.app_state[self.key_embeddings_size] = self.embeddings_size
+        self.embeddings_size = config['embeddings_size']
+        self.globals["embeddings_size"] = self.embeddings_size
 
         self.logger.info("Initializing embeddings layer with vocabulary size = {} and embeddings size = {}".format(vocab_size, self.embeddings_size))
 

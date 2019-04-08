@@ -20,15 +20,15 @@ import unittest
 
 from ptp.components.problems.problem import Problem
 from ptp.data_types.data_definition import DataDefinition
-from ptp.configuration.param_interface import ParamInterface
+from ptp.configuration.config_interface import ConfigInterface
 
 
 class MockupProblem (Problem):
     """
     Mockup problem class.
     """
-    def __init__(self, name, params):
-        Problem.__init__(self, name, None, params)
+    def __init__(self, name, config):
+        Problem.__init__(self, name, None, config)
 
     def output_data_definitions(self):
         return {
@@ -45,8 +45,8 @@ class TestProblem(unittest.TestCase):
         # Overwrite abc abstract methods.
         MockupProblem.__abstractmethods__=set()
         # Create mocked-up problem.
-        params = ParamInterface()
-        self.problem = MockupProblem("test", params)
+        config = ConfigInterface()
+        self.problem = MockupProblem("test", config)
 
     def test_crete_data_dict_key_present(self):
         """ Tests whether the created data dict contains required keys. """
@@ -56,3 +56,5 @@ class TestProblem(unittest.TestCase):
         self.assertEqual(data_dict['inputs'], None)
         self.assertEqual(data_dict['targets'], None)
 
+#if __name__ == "__main__":
+#    unittest.main()

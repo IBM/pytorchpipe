@@ -14,6 +14,8 @@
 
 __author__ = "Tomasz Kornuta"
 
+from nltk.tokenize import WhitespaceTokenizer
+
 from ptp.components.component import Component
 from ptp.data_types.data_definition import DataDefinition
 
@@ -22,26 +24,29 @@ class SentenceTokenizer(Component):
     """
     Class responsible for tokenizing the sentence.
     """
-    def __init__(self, name, params):
+    def __init__(self, name, config):
         """
         Initializes the component.
 
         :param name: Component name (read from configuration file).
         :type name: str
 
-        :param params: Dictionary of parameters (read from the configuration ``.yaml`` file).
-        :type params: :py:class:`ptp.utils.ParamInterface`
+        :param config: Dictionary of parameters (read from the configuration ``.yaml`` file).
+        :type config: :py:class:`ptp.configuration.ConfigInterface`
 
         """
         # Call constructors of parent classes.
-        Component.__init__(self, name, SentenceTokenizer, params)
+        Component.__init__(self, name, SentenceTokenizer, config)
 
         # Read the actual configuration.
-        self.mode_detokenize = params['detokenize']
+        self.mode_detokenize = config['detokenize']
+
+        # Tokenizer.
+        self.tokenizer = WhitespaceTokenizer()
 
         # Set key mappings.
-        self.key_inputs = self.get_stream_key("inputs")
-        self.key_outputs = self.get_stream_key("outputs")
+        self.key_inputs = self.stream_keys["inputs"]
+        self.key_outputs = self.stream_keys["outputs"]
 
         if self.mode_detokenize:
             # list of strings -> sentence.
@@ -84,7 +89,7 @@ class SentenceTokenizer(Component):
 
         :return: list of words (strings).
         """
-        return sample.split()
+        return self.tokenizer.tokenize(sample) # sample.split()
 
     def detokenize_sample(self, sample):
         """

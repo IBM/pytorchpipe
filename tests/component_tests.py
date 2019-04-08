@@ -21,14 +21,14 @@ import unittest
 from ptp.components.component import Component
 from ptp.components.problems.problem import Problem
 from ptp.data_types.data_definition import DataDefinition
-from ptp.configuration.param_interface import ParamInterface
+from ptp.configuration.config_interface import ConfigInterface
 
 class MockupProblem (Problem):
     """
     Mockup problem class.
     """
-    def __init__(self, name, params):
-        Problem.__init__(self, name, None, params)
+    def __init__(self, name, config):
+        Problem.__init__(self, name, None, config)
 
     def output_data_definitions(self):
         return {
@@ -40,13 +40,8 @@ class MockupComponent (Component):
     """
     Mockup component class.
     """
-    def __init__(self, name, params):
-        Component.__init__(self, name, None, params)
-
-    def output_data_definitions(self):
-        return {
-            "targets": DataDefinition([-1, -1, -1], [list, list, str], "targets")
-            }
+    def __init__(self, name, config):
+        Component.__init__(self, name, None, config)
 
 
 class TestComponent(unittest.TestCase):
@@ -59,9 +54,9 @@ class TestComponent(unittest.TestCase):
         MockupProblem.__abstractmethods__=set()
 
         # Create mocked-up component.
-        params = ParamInterface()
-        self.problem = MockupProblem("test_problem", params)
-        self.component = MockupComponent("test_component", params)
+        config = ConfigInterface()
+        self.problem = MockupProblem("test_problem", config)
+        self.component = MockupComponent("test_component", config)
 
     def test_create_data_dict_key_present(self):
         """ Tests whether the created data dict contains required keys. """
@@ -84,21 +79,20 @@ class TestComponent(unittest.TestCase):
         self.assertEqual(data_dict['inputs'], None)
         self.assertEqual(data_dict['targets'], 3)
 
-
     def test_global_set_get(self):
         """ Tests setting and getting global value. """
         # Set global value.
-        self.component.global_value["embeddings_size"] = 10
+        self.component.globals["embeddings_size"] = 10
         # Get global value.
-        self.assertEqual(self.component.global_value["embeddings_size"], 10)
+        self.assertEqual(self.component.globals["embeddings_size"], 10)
 
     def test_global_overwrite(self):
         """ Tests global value overwrite """
         # Set global value.
-        self.component.global_value["value"] = "ala"
+        self.component.globals["value"] = "ala"
         # Overwrite with the same value - ok.
-        self.component.global_value["value"] = "ala"
+        self.component.globals["value"] = "ala"
         # Overwrite with the same value - error.
         with self.assertRaises(KeyError):
-            self.component.global_value["value"] = "ola"
+            self.component.globals["value"] = "ola"
 

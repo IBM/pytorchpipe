@@ -1,0 +1,39 @@
+# Training parameters:
+training:
+  problem:
+    type: &p_type VQAMED2019
+    data_folder: &data_folder ~/data/vqa-med
+    split: training
+    resize_image: &resize_image [224, 224]
+    batch_size:  64
+
+  # optimizer parameters:
+  optimizer:
+    name: Adam
+    lr: 0.1
+
+  # settings parameters
+  terminal_conditions:
+    loss_stop: 1.0e-2
+    episode_limit: 10000
+    epoch_limit: 100
+
+# Validation parameters:
+validation:
+  partial_validation_interval: 100
+  problem:
+    type: *p_type
+    data_folder: *data_folder
+    split: validation
+    resize_image: *resize_image     
+    batch_size:  64
+
+# Testing parameters:
+testing:
+  problem:
+    type: *p_type 
+    data_folder: *data_folder
+    split: test
+    resize_image: *resize_image     
+    batch_size: 64
+
