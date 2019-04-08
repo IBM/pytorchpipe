@@ -15,7 +15,6 @@
 __author__ = "Tomasz Kornuta"
 
 import torch
-import torch.nn.functional as F
 
 from ptp.configuration.configuration_error import ConfigurationError
 from ptp.components.models.model import Model
@@ -94,8 +93,10 @@ class FeedForwardNetwork(Model):
             # Not present, in that case create a simple classifier with 1 linear layer.
             self.layers.append( torch.nn.Linear(self.input_size, self.prediction_size) )
         
-        # Retrieve final activation.
+        # Create the final non-linearity.
         self.use_logsoftmax = self.config["use_logsoftmax"]
+        if self.use_logsoftmax:
+            self.log_softmax = torch.nn.LogSoftmax(dim=1)
 
 
     def input_data_definitions(self):
@@ -144,7 +145,7 @@ class FeedForwardNetwork(Model):
 
         # Log softmax.
         if self.use_logsoftmax:
-            x = F.log_softmax(x, dim=1)
+            x = self.log_softmax(x)
 
         # Add predictions to datadict.
         data_dict.extend({self.key_predictions: x})

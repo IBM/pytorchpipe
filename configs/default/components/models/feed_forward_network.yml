@@ -12,7 +12,7 @@
 # Default: 0 (means that it is turned off)
 dropout_rate: 0
 
-# Indicates that output of the last layer will be additionally processed with Log Softmax (LOADED)
+# If true, output of the last layer will be additionally processed with Log Softmax (LOADED)
 use_logsoftmax: True
 
 streams: 

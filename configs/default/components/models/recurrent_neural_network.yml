@@ -7,25 +7,29 @@
 # Size of the hidden state (LOADED)
 hidden_size: 100
 
-# Dropout rate (LOADED)
-# Default: 0 (means that it is turned off)
-dropout_rate: 0
-
-# Number of "stacked" layers (LOADED)
-num_layers: 1
+# Flag informing the model to learn the intial state (h0/c0) (LOADED)
+# When false, (c0/c0) will be initialized as zeros.
+initial_state_trainable: True
 
 # Type of recurrent cell (LOADED)
 # Options: LSTM | GRU | RNN_TANH | RNN_RELU
 cell_type: LSTM
 
-# Predictions mode (LOADED)
-# Options: Dense (passes every activation through output layer) |
-#          Last (passes only last activation though output layer)
+# Number of "stacked" layers (LOADED)
+num_layers: 1
+
+# Dropout rate (LOADED)
+# Default: 0 (means that it is turned off)
+dropout_rate: 0
+
+# Prediction mode (LOADED)
+# Options: 
+#   * Dense (passes every activation through output layer) |
+#   * Last (passes only the last activation though output layer)
 prediction_mode: Dense
 
-# Flag informing the model to learn the intial state (h0/c0) (LOADED)
-# When false, (c0/c0) will be initialized as zeros.
-initial_state_trainable: True
+# If true, output of the last layer will be additionally processed with Log Softmax (LOADED)
+use_logsoftmax: True
 
 streams: 
   ####################################################################
