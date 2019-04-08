@@ -43,11 +43,6 @@ class MockupComponent (Component):
     def __init__(self, name, config):
         Component.__init__(self, name, None, config)
 
-    def output_data_definitions(self):
-        return {
-            "targets": DataDefinition([-1, -1, -1], [list, list, str], "targets")
-            }
-
 
 class TestComponent(unittest.TestCase):
 
