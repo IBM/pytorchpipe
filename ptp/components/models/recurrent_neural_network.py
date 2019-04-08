@@ -15,7 +15,6 @@
 __author__ = "Tomasz Kornuta"
 
 import torch
-import torch.nn.functional as F
 
 from ptp.configuration.configuration_error import ConfigurationError
 from ptp.components.models.model import Model
