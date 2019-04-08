@@ -31,14 +31,27 @@ pipeline:
     priority: 100.1
     streams:
       targets: category_ids
+
   batch_size:
     type: BatchSizeStatistics
     priority: 100.2
 
+  precision_recall:
+    type: PrecisionRecallStatistics
+    priority: 100.3
+    use_word_mappings: True
+    show_class_scores: True
+    streams:
+      targets: category_ids
+    globals:
+      num_classes: num_categories
+      word_mappings: category_word_mappings
+      
+
   # Viewers.
   viewer:
     type: StreamViewer
-    priority: 100.3
+    priority: 100.4
     stream_names: questions,category_names,predicted_categories
 
 #: pipeline
