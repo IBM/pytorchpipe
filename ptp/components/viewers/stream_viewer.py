@@ -45,9 +45,11 @@ class StreamViewer(Component):
         # Get key mappings for indices.
         self.key_indices = self.stream_keys["indices"]
 
-        # Load names of streams.
-        self.stream_names = self.config["stream_names"].replace(" ", "").split(",")
-
+        # Load list of streams names (keys).
+        self.input_stream_keys = self.config["input_streams"]
+        if type(self.input_stream_keys) == str:
+            self.input_stream_keys = self.input_stream_keys.replace(" ", "").split(",")
+        
         # Get sample number.
         self.sample_number = self.config["sample_number"]
         
@@ -94,8 +96,8 @@ class StreamViewer(Component):
 
             # Generate displayed string.
             disp_str = "Showing selected streams for sample {}:\n".format(sample_number)
-            for stream in self.stream_names:
-                if stream in data_dict.keys():
-                    disp_str += " '{}': {}\n".format(stream, data_dict[stream][sample_number])
+            for stream_key in self.input_stream_keys:
+                if stream_key in data_dict.keys():
+                    disp_str += " '{}': {}\n".format(stream_key, data_dict[stream_key][sample_number])
 
             self.logger.info(disp_str)

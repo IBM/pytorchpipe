@@ -52,6 +52,6 @@ pipeline:
   viewer:
     type: StreamViewer
     priority: 100.4
-    stream_names: questions,category_names,predicted_categories
+    input_streams: questions,category_names,predicted_categories
 
 #: pipeline
