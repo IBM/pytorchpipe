@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__author__ = "Tomasz Kornuta & Vincent Marois"
+__author__ = "Tomasz Kornuta"
 
 
 import torch
