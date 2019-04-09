@@ -45,7 +45,7 @@ class Loss(Component):
         # Call constructors of parent classes.
         Component.__init__(self, name, class_type, config)
 
-        # Set key mappings.
+        # Get key mappings.
         self.key_targets = self.stream_keys["targets"]
         self.key_predictions = self.stream_keys["predictions"]
         self.key_loss = self.stream_keys["loss"]

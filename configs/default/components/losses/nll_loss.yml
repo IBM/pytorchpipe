@@ -4,9 +4,13 @@
 # 1. CONFIGURATION PARAMETERS that will be LOADED by the component.
 ####################################################################
 
-# Number of dimensions of the target, so the loss can work with 
+# Number of dimensions of targets, so the loss can work with 
 # diffent inputs/targets (LOADED)
-targets_dim: 1
+num_targets_dims: 1
+
+# Loss function (LOADED)
+# Options: NLLLoss | CrossEntropyLoss (NOT OPERATIONAL YET!)
+# loss_function: NLLLoss
 
 streams: 
   ####################################################################

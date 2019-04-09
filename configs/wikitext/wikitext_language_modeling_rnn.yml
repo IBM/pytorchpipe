@@ -83,7 +83,7 @@ pipeline:
   nllloss:
     type: NLLLoss
     priority: 6
-    targets_dim: 2
+    num_targets_dims: 2
     streams:
       targets: indexed_targets
       loss: loss

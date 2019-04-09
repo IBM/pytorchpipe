@@ -10,7 +10,7 @@ training:
   # optimizer parameters:
   optimizer:
     name: Adam
-    lr: 0.1
+    lr: 0.001
 
   # settings parameters
   terminal_conditions:
