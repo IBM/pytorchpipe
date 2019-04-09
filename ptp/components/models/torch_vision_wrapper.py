@@ -19,14 +19,15 @@ __author__ = "Tomasz Kornuta & Vincent Marois"
 
 
 import torch
+import torchvision.models as models
 
 from ptp.components.models.model import Model
 from ptp.data_types.data_definition import DataDefinition
 
 
-class LeNet5(Model):
+class TorchVisionWrapper(Model):
     """
-    A classical LeNet-5 model for MNIST digits classification. 
+    Class
     """ 
     def __init__(self, name, config):
         """
@@ -38,7 +39,7 @@ class LeNet5(Model):
         :type config: ``ptp.configuration.ConfigInterface``
 
         """
-        super(LeNet5, self).__init__(name, LeNet5, config)
+        super(TorchVisionWrapper, self).__init__(name, TorchVisionWrapper, config)
 
         # Get key mappings.
         self.key_inputs = self.stream_keys["inputs"]
@@ -47,14 +48,11 @@ class LeNet5(Model):
         # Retrieve prediction size from globals.
         self.prediction_size = self.globals["prediction_size"]
 
-        # Create the LeNet-5 layers.
-        self.conv1 = torch.nn.Conv2d(1, 6, kernel_size=(5, 5))
-        self.maxpool1 = torch.nn.MaxPool2d(kernel_size=(2, 2), stride=2)
-        self.conv2 = torch.nn.Conv2d(6, 16, kernel_size=(5, 5))
-        self.maxpool2 = torch.nn.MaxPool2d(kernel_size=(2, 2), stride=2)
-        self.conv3 = torch.nn.Conv2d(16, 120, kernel_size=(5, 5))
-        self.linear1 = torch.nn.Linear(120, 84)
-        self.linear2 = torch.nn.Linear(84, self.prediction_size)
+        # Get VGG16
+        self.model = models.vgg16(pretrained=True)
+        # "Replace" last layer.
+        self.model.classifier._modules['6'] = torch.nn.Linear(4096, self.prediction_size)
+
 
     def input_data_definitions(self):
         """ 
@@ -63,7 +61,7 @@ class LeNet5(Model):
         :return: dictionary containing input data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
         """
         return {
-            self.key_inputs: DataDefinition([-1, 1, 32, 32], [torch.Tensor], "Batch of images [BATCH_SIZE x IMAGE_DEPTH x IMAGE_HEIGHT x IMAGE WIDTH]"),
+            self.key_inputs: DataDefinition([-1, 3, 224, 224], [torch.Tensor], "Batch of images [BATCH_SIZE x IMAGE_DEPTH x IMAGE_HEIGHT x IMAGE WIDTH]"),
             }
 
 
@@ -79,44 +77,21 @@ class LeNet5(Model):
 
     def forward(self, data_dict):
         """
-        Main forward pass of the ``LeNet5`` model.
+        Main forward pass of the model.
 
-        :param data_dict: DataDict({'images',**}), where:
+        :param data_dict: DataDict({'inputs', ....}), where:
 
-            - images: [batch_size, num_channels, width, height]
+            - inputs: expected stream containing images [BATCH_SIZE x IMAGE_DEPTH x IMAGE_HEIGHT x IMAGE WIDTH]
+            - outpus: added stream containing predictions [BATCH_SIZE x PREDICTION_SIZE]
 
-        :type data_dict: ``miprometheus.utils.DataDict``
-
-        :return: Predictions [batch_size, num_classes]
+        :type data_dict: ``ptp.data_types.DataDict``
 
         """
-        # Add noise to weights
-        #for _, param in self.named_parameters():
-        #    if param.requires_grad:
-        #        #print (name, param.data)
-        #        #noise = -torch.randn(param.data.shape)*0.3
-        #        noise = 0.3
-        #        param.data = param.data * (1 + noise)
-        #        #print (name, param.data)
-
 
         # Unpack DataDict.
         img = data_dict[self.key_inputs]
 
-        # Pass inputs through layers.
-        x = self.conv1(img)
-        x = torch.nn.functional.relu(x)
-        x = self.maxpool1(x)
-        x = self.conv2(x)
-        x = torch.nn.functional.relu(x)
-        x = self.maxpool2(x)
-        x = self.conv3(x)
-        x = torch.nn.functional.relu(x)
-        x = x.view(-1, 120)
-        x = self.linear1(x)
-        x = torch.nn.functional.relu(x)
-        x = self.linear2(x)
-        # Log softmax.
-        predictions = torch.nn.functional.log_softmax(x, dim=1)
+        predictions = self.model(img)
+
         # Add predictions to datadict.
         data_dict.extend({self.key_predictions: predictions})

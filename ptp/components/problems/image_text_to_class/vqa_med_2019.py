@@ -274,18 +274,21 @@ class VQAMED2019(Problem):
         # Load the adequate image.
         img_id = item[self.key_image_ids]
         extension = '.jpg'
-        with open(os.path.join(self.image_folder, img_id + extension),'rb') as f:
-            # Load the image.
-            img = Image.open(f).convert('RGB')
-            # Get its width and height.
-            width, height = img.size
+        # Load the image.
+        img = Image.open(os.path.join(self.image_folder, img_id + extension))
+        # Get its width and height.
+        width, height = img.size
 
-            # Resize the image and transform to Torch Tensor.
-            transfroms_com = transforms.Compose([
-                    transforms.Resize([self.height,self.width]),
-                    transforms.ToTensor()
-                    ])
-            img = transfroms_com(img).type(torch.FloatTensor).squeeze()
+        # Resize the image and transform to Torch Tensor.
+        transfroms_com = transforms.Compose([
+                transforms.Resize([self.height,self.width]),
+                transforms.ToTensor(),
+                # Use normalization that the pretrained models from TorchVision require.
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+                ])
+        img = transfroms_com(img) #.type(torch.FloatTensor).squeeze()
+
+        #print("img: min_val = {} max_val = {}".format(torch.min(img),torch.max(img)) )
 
         # Create the resulting sample (data dict).
         data_dict = self.create_data_dict(index)

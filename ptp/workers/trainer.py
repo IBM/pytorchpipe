@@ -506,9 +506,6 @@ class Trainer(Worker):
         # Turn on evaluation mode.
         self.pipeline.eval()
 
-        # Get a random batch index which will be used for visualization
-        #vis_index = randrange(len(self.validation.dataloader))
-
         # Reset the statistics.
         self.validation_stat_col.empty()
 
