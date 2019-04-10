@@ -5,12 +5,12 @@ training:
     data_folder: &data_folder ~/data/vqa-med
     split: training
     resize_image: &resize_image [224, 224]
-    batch_size:  64
+    batch_size:  32
 
   # optimizer parameters:
   optimizer:
     name: Adam
-    lr: 0.1
+    lr: 0.0001
 
   # settings parameters
   terminal_conditions:
@@ -26,7 +26,7 @@ validation:
     data_folder: *data_folder
     split: validation
     resize_image: *resize_image     
-    batch_size:  64
+    batch_size:  32
 
 # Testing parameters:
 testing:
@@ -35,5 +35,5 @@ testing:
     data_folder: *data_folder
     split: test
     resize_image: *resize_image     
-    batch_size: 64
+    batch_size: 32
 

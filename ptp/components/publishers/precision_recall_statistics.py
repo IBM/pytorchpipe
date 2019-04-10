@@ -133,11 +133,11 @@ class PrecisionRecallStatistics(Component):
 
         :return: Calculated statistics.
         """
-        targets = data_dict[self.key_targets]
+        targets = data_dict[self.key_targets].data.cpu().numpy()
         #print("Targets :", targets)
 
         # Get indices of the max log-probability.
-        preds = data_dict[self.key_predictions].max(1)[1]
+        preds = data_dict[self.key_predictions].max(1)[1].data.cpu().numpy()
         #print("Predictions :", preds)
 
         # Create the confusion matrix, use SciKit learn order:

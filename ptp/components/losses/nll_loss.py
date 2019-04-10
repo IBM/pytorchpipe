@@ -39,8 +39,8 @@ class NLLLoss(Loss):
         # Set loss.
         self.loss_function = nn.NLLLoss()
 
-        # Get number of dimensions.
-        self.targets_dim = self.config["targets_dim"]
+        # Get number of targets dimensions.
+        self.num_targets_dims = self.config["num_targets_dims"]
 
 
     def input_data_definitions(self):
@@ -50,8 +50,8 @@ class NLLLoss(Loss):
         :return: dictionary containing input data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
         """
         return {
-            self.key_targets: DataDefinition([-1]*self.targets_dim, [torch.Tensor], "Batch of targets (indices) [DIM 1 x DIM 2 x ... ]"),
-            self.key_predictions: DataDefinition([-1]*(self.targets_dim+1), [torch.Tensor], "Batch of predictions, represented as tensor with probability distribution over classes [DIM 1 x DIM x ... x NUM_CLASSES]")
+            self.key_targets: DataDefinition([-1]*self.num_targets_dims, [torch.Tensor], "Batch of targets (indices) [DIM 1 x DIM 2 x ... ]"),
+            self.key_predictions: DataDefinition([-1]*(self.num_targets_dims+1), [torch.Tensor], "Batch of predictions, represented as tensor with probability distribution over classes [DIM 1 x DIM x ... x NUM_CLASSES]")
             }
 
     def output_data_definitions(self):
@@ -61,7 +61,7 @@ class NLLLoss(Loss):
         :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
         """
         return {
-            self.key_loss: DataDefinition([1], [torch.Tensor], "Loss value (scalar, i.e. 1D tensor)")
+            self.key_loss: DataDefinition([1], [torch.Tensor], "Loss value (single value for the whole batch - a scalar)")
             }
 
 
@@ -88,7 +88,7 @@ class NLLLoss(Loss):
         # reshape.
         last_dim = predictions.size(-1)
 
-        #print("Target: {} -> Prediction: {}".format(targets[0], predictions[0]))
+        #print("\nTarget: {}\n Prediction: {}".format(targets.view(-1), predictions.view(-1, last_dim)))
 
         # Calculate loss.
         loss = self.loss_function(predictions.view(-1, last_dim), targets.view(-1))

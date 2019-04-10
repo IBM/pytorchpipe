@@ -1,35 +1,31 @@
-# This file defines the default values for the NLL Loss.
+# This file defines the default values for the LeNet5 model.
 
 ####################################################################
 # 1. CONFIGURATION PARAMETERS that will be LOADED by the component.
 ####################################################################
 
-# Number of dimensions of targets, so the loss can work with 
-# diffent inputs/targets (LOADED)
-num_targets_dims: 1
-
-# Loss function (LOADED)
-# Options: NLLLoss | CrossEntropyLoss (NOT OPERATIONAL YET!)
-# loss_function: NLLLoss
+# Model type (LOADED)
+#model_type: VGG16
+# HARDCODED FOR NOW!
 
 streams: 
   ####################################################################
   # 2. Keymappings associated with INPUT and OUTPUT streams.
   ####################################################################
 
-  # Stream containing targets (label ids) (INPUT)
-  targets: targets
+  # Stream containing batch of images (INPUT)
+  inputs: inputs
 
-  # Stream containing batch of predictions (INPUT)
+  # Stream containing predictions (OUTPUT)
   predictions: predictions
-
-  # Stream containing loss (OUTPUT)
-  loss: loss
 
 globals:
   ####################################################################
   # 3. Keymappings of variables that will be RETRIEVED from GLOBALS.
   ####################################################################
+
+  # Size of the prediction (RETRIEVED)
+  prediction_size: prediction_size
 
   ####################################################################
   # 4. Keymappings associated with GLOBAL variables that will be SET.
