@@ -16,8 +16,9 @@
 
 __author__ = "Tomasz Kornuta"
 
-import numpy as np
 import torch
+import numpy as np
+import math
 
 from ptp.components.component import Component
 from ptp.data_types.data_definition import DataDefinition
@@ -245,13 +246,41 @@ class PrecisionRecallStatistics(Component):
         precisions = stat_col[self.key_precision]
         recalls = stat_col[self.key_recall]
         f1scores = stat_col[self.key_f1score]
-        
-        # TODO: instead of mean use weighted sum + mean.
-        stat_agg[self.key_precision] = np.mean(precisions)
-        stat_agg[self.key_precision+'_std'] = 0.0 if len(precisions) <= 1 else np.std(precisions)
 
-        stat_agg[self.key_recall] = np.mean(recalls)
-        stat_agg[self.key_recall+'_std'] = 0.0 if len(recalls) <= 1 else np.std(recalls)
+        # Check if batch size was collected.
+        if "batch_size" in stat_col.keys():
+            batch_sizes = stat_col['batch_size']
 
-        stat_agg[self.key_f1score] = np.mean(f1scores)
-        stat_agg[self.key_f1score+'_std'] = 0.0 if len(f1scores) <= 1 else np.std(f1scores)
+            # Calculate weighted precision.
+            precisions_avg = np.average(precisions, weights=batch_sizes)
+            precisions_var = np.average((precisions-precisions_avg)**2, weights=batch_sizes)
+            
+            stat_agg[self.key_precision] = precisions_avg
+            stat_agg[self.key_precision+'_std'] = math.sqrt(precisions_var)
+
+            # Calculate weighted recall.
+            recalls_avg = np.average(recalls, weights=batch_sizes)
+            recalls_var = np.average((recalls-recalls_avg)**2, weights=batch_sizes)
+
+            stat_agg[self.key_recall] = recalls_avg
+            stat_agg[self.key_recall+'_std'] = math.sqrt(recalls_var)
+
+            # Calculate weighted f1 score.
+            f1scores_avg = np.average(f1scores, weights=batch_sizes)
+            f1scores_var = np.average((f1scores-f1scores_avg)**2, weights=batch_sizes)
+
+            stat_agg[self.key_f1score] = f1scores_avg
+            stat_agg[self.key_f1score+'_std'] = math.sqrt(f1scores_var)
+
+        else:
+            # Else: use simple mean.
+            stat_agg[self.key_precision] = np.mean(precisions)
+            stat_agg[self.key_precision+'_std'] = 0.0 if len(precisions) <= 1 else np.std(precisions)
+
+            stat_agg[self.key_recall] = np.mean(recalls)
+            stat_agg[self.key_recall+'_std'] = 0.0 if len(recalls) <= 1 else np.std(recalls)
+
+            stat_agg[self.key_f1score] = np.mean(f1scores)
+            stat_agg[self.key_f1score+'_std'] = 0.0 if len(f1scores) <= 1 else np.std(f1scores)
+            # But inform user about that!
+            self.logger.warning("Aggregated statistics might contain errors due to the lack of information about sizes of aggregated batches")

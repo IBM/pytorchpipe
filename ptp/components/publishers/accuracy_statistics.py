@@ -17,6 +17,8 @@
 __author__ = "Tomasz Kornuta"
 
 import torch
+import math
+import numpy as np
 
 from ptp.components.component import Component
 from ptp.data_types.data_definition import DataDefinition
@@ -148,9 +150,25 @@ class AccuracyStatistics(Component):
         :param stat_agg: ``StatisticsAggregator``
 
         """
-        acc = stat_col[self.key_accuracy]
-        # TODO: instead of mean use weighted sum + mean.
-        stat_agg[self.key_accuracy] = torch.mean(torch.tensor(acc))
-        stat_agg[self.key_accuracy+'_min'] = min(acc)
-        stat_agg[self.key_accuracy+'_max'] = max(acc)
-        stat_agg[self.key_accuracy+'_std'] = 0.0 if len(acc) <= 1 else torch.std(torch.tensor(acc))
+        accuracies = stat_col[self.key_accuracy]
+
+        # Check if batch size was collected.
+        if "batch_size" in stat_col.keys():
+            batch_sizes = stat_col['batch_size']
+
+            # Calculate weighted precision.
+            accuracies_avg = np.average(accuracies, weights=batch_sizes)
+            accuracies_var = np.average((accuracies-accuracies_avg)**2, weights=batch_sizes)
+
+            stat_agg[self.key_accuracy] = accuracies_avg
+            stat_agg[self.key_accuracy+'_min'] = np.min(accuracies)
+            stat_agg[self.key_accuracy+'_max'] = np.max(accuracies)
+            stat_agg[self.key_accuracy+'_std'] = math.sqrt(accuracies_var)
+        else:
+            # Else: use simple mean.
+            stat_agg[self.key_accuracy] = np.mean(accuracies)
+            stat_agg[self.key_accuracy+'_min'] = np.min(accuracies)
+            stat_agg[self.key_accuracy+'_max'] = np.max(accuracies)
+            stat_agg[self.key_accuracy+'_std'] = np.std(accuracies)
+            # But inform user about that!
+            self.logger.warning("Aggregated statistics might contain errors due to the lack of information about sizes of aggregated batches")
