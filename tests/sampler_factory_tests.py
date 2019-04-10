@@ -21,8 +21,8 @@ import unittest
 import yaml
 import numpy as np
 
-from ptp.configuration.sampler_factory import SamplerFactory
 from ptp.configuration.config_interface import ConfigInterface
+from ptp.application.sampler_factory import SamplerFactory
 
 # Problem.
 class TestProblemMockup(object):

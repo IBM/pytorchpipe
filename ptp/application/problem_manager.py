@@ -25,8 +25,8 @@ from torch.utils.data import DataLoader
 import ptp
 
 from ptp.configuration.configuration_error import ConfigurationError
-from ptp.configuration.component_factory import ComponentFactory
-from ptp.configuration.sampler_factory import SamplerFactory
+from ptp.application.component_factory import ComponentFactory
+from ptp.application.sampler_factory import SamplerFactory
 
 
 class ProblemManager(object):

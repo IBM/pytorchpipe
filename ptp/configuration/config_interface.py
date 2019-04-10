@@ -19,6 +19,7 @@ __author__ = "Alexis Asseman, Tomasz Kornuta"
 
 import yaml
 from collections.abc import Mapping
+
 from ptp.configuration.config_registry import ConfigRegistry
 
 

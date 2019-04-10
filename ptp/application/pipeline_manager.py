@@ -19,15 +19,15 @@ __author__ = "Tomasz Kornuta"
 
 import os
 import torch
-import logging
 from datetime import datetime
 from numpy import inf
 
-import ptp
+import ptp.components
 
+import ptp.utils.logger as logging
+from ptp.utils.app_state import AppState
 from ptp.configuration.configuration_error import ConfigurationError
-from ptp.configuration.component_factory import ComponentFactory
-from ptp.configuration.app_state import AppState
+from ptp.application.component_factory import ComponentFactory
 
 class PipelineManager(object):
     """
@@ -46,7 +46,7 @@ class PipelineManager(object):
         self.name = name
         self.config = config
         self.app_state = AppState()
-        self.logger = logging.getLogger(name)
+        self.logger = logging.initialize_logger(name)
 
         # Set initial values of all pipeline elements.
         # Empty list of all components, sorted by their priorities.

@@ -20,6 +20,7 @@ import torch
 import numpy as np
 
 from ptp.workers.trainer import Trainer
+import ptp.configuration.config_parsing as config_parsing
 from ptp.configuration.configuration_error import ConfigurationError
 
 
@@ -103,7 +104,8 @@ class OnlineTrainer(Trainer):
         self.logger.info('\n' + '='*80)
 
         # Export and log configuration, optionally asking the user for confirmation.
-        self.export_experiment_configuration(self.log_dir, "training_configuration.yaml", self.app_state.args.confirm)
+        config_parsing.display_parsing_results(self.logger, self.app_state.args, self.unparsed)
+        config_parsing.export_experiment_configuration_to_yml(self.logger, self.log_dir, "training_configuration.yaml", self.config, self.app_state.args.confirm)
 
     def run_experiment(self):
         """

@@ -19,10 +19,10 @@ __author__ = "Tomasz Kornuta"
 
 import os
 import numpy as np
-import logging
 
 import torch.utils.data.sampler
 
+import ptp.utils.logger as logging
 from ptp.configuration.configuration_error import ConfigurationError
 
 class SamplerFactory(object):
@@ -77,8 +77,9 @@ class SamplerFactory(object):
         :return: Instance of a given sampler or ``None`` if the section not present or couldn't build the sampler.
 
         """
-        logging.basicConfig(level=logging.INFO)
-        logger = logging.getLogger('SamplerFactory')
+        # Initialize logger.
+        logger = logging.initialize_logger('SamplerFactory')
+
 
         # Check if sampler is required, i.e. 'sampler' section is empty.
         if not config:

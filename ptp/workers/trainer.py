@@ -23,10 +23,13 @@ import torch
 from time import sleep
 from datetime import datetime
 
+import ptp.configuration.config_parsing as config_parse
+import ptp.utils.logger as logging
+
 from ptp.workers.worker import Worker
 
-from ptp.configuration.problem_manager import ProblemManager
-from ptp.configuration.pipeline_manager import PipelineManager
+from ptp.application.problem_manager import ProblemManager
+from ptp.application.pipeline_manager import PipelineManager
 
 from ptp.utils.statistics_collector import StatisticsCollector
 from ptp.utils.statistics_aggregator import StatisticsAggregator
@@ -128,9 +131,6 @@ class Trainer(Worker):
             self.logger.error("Cannot use GPU as there are no CUDA-compatible devices present in the system!")
             exit(-2)
 
-        # Set cpu/gpu types.
-        self.app_state.set_types()
-
         # Check if config file exists.            
         root_config = self.app_state.args.config
         if not os.path.isfile(root_config):
@@ -145,10 +145,10 @@ class Trainer(Worker):
         rel_config_path = abs_config_path[abs_config_path.find("configs")+8:]
 
         # Get the list of configurations which need to be loaded.
-        configs_to_load = self.recurrent_config_parse(rel_config_path, [], self.app_state.absolute_config_path)
+        configs_to_load = config_parse.recurrent_config_parse(rel_config_path, [], self.app_state.absolute_config_path)
 
         # Read the YAML files one by one - but in reverse order -> overwrite the first indicated config(s)
-        self.recurrent_config_load(configs_to_load, self.app_state.absolute_config_path)
+        config_parse.reverse_order_config_load(self.config, configs_to_load, self.app_state.absolute_config_path)
 
         # -> At this point, the Param Registry contains the configuration loaded (and overwritten) from several files.
         # Log the resulting training configuration.
@@ -194,10 +194,16 @@ class Trainer(Worker):
             else:
                 break
 
-        # Set log dir and add the handler for the logfile to the logger.
-        self.log_file = self.log_dir + 'trainer.log'
-        self.add_file_handler_to_logger(self.log_file)
+        # Set log dir.
+        self.app_state.log_file = self.log_dir + 'trainer.log'
+        # Initialize logger in app state.
+        self.app_state.logger = logging.initialize_logger("AppState")
+        # Add handlers for the logfile to worker logger.
+        logging.add_file_handler_to_logger(self.logger)
         self.logger.info("Logger directory set to: {}".format(self.log_dir ))
+
+        # Set cpu/gpu types.
+        self.app_state.set_types()
 
         # Models dir.
         self.checkpoint_dir = self.log_dir + 'checkpoints/'

@@ -19,10 +19,10 @@ __author__ = "Tomasz Kornuta"
 import unittest
 import os
 
+from ptp.utils.app_state import AppState
 from ptp.configuration.config_interface import ConfigInterface
 from ptp.configuration.config_registry import ConfigRegistry
-from ptp.configuration.app_state import AppState
-from ptp.configuration.pipeline_manager import PipelineManager
+from ptp.application.pipeline_manager import PipelineManager
 
 class TestPipeline(unittest.TestCase):
 

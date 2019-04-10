@@ -1,3 +1,7 @@
+from .utils import *
+
+from .application import *
+
 # Components.
 from .components.component import Component
 
@@ -22,7 +26,6 @@ from .components.viewers import *
 # Rest.
 from .configuration import *
 from .data_types import *
-from .utils import *
 
 # Workers.
 from .workers import *
