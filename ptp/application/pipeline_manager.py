@@ -466,10 +466,11 @@ class PipelineManager(object):
         # Log final definition.
         if errors == 0 and log:
             self.logger.info("Handshake successfull")
-            def_str = "Final definition of DataDict used in pipeline:"
-            def_str += '\n' + '='*80 + '\n'
-            def_str += '{}'.format(data_dict)
-            def_str += '\n' + '='*80 + '\n'
+            def_str = "Final definition of DataDict used in pipeline:\n"
+            def_str += '='*80 + '\n'
+            for item in data_dict.items():
+                def_str += '  {}\n'.format(item)
+            def_str += '='*80 + '\n'
             self.logger.info(def_str)
 
         return errors
