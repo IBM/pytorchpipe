@@ -16,8 +16,9 @@
 
 __author__ = "Tomasz Kornuta"
 
-import numpy as np
 import torch
+import numpy as np
+import math
 
 from ptp.components.component import Component
 from ptp.data_types.data_definition import DataDefinition
@@ -99,7 +100,7 @@ class PrecisionRecallStatistics(Component):
         # Use worker interval.
         if self.app_state.episode % self.app_state.args.logging_interval == 0:
 
-            # Calculate main statistics.
+            # Calculate all four statistics.
             confusion_matrix, precision, recall, f1score, support = self.calculate_statistics(data_dict)
 
             if self.show_confusion_matrix:
@@ -107,9 +108,9 @@ class PrecisionRecallStatistics(Component):
 
             # Calculate weighted averages.
             support_sum = sum(support)
-            self.precision_avg = sum([pi*si / support_sum for (pi,si) in zip(precision,support)])
-            self.recall_avg = sum([ri*si / support_sum for (ri,si) in zip(recall,support)])
-            self.f1score_avg = sum([fi*si / support_sum for (fi,si) in zip(f1score,support)])
+            precision_avg = sum([pi*si / support_sum for (pi,si) in zip(precision,support)])
+            recall_avg = sum([ri*si / support_sum for (ri,si) in zip(recall,support)])
+            f1score_avg = sum([fi*si / support_sum for (fi,si) in zip(f1score,support)])
 
             # Log class scores.
             if self.show_class_scores:
@@ -120,7 +121,7 @@ class PrecisionRecallStatistics(Component):
                         precision[i], recall[i], f1score[i], support[i], self.labels[i])
                 log_str+= "|-----------|--------|---------|---------|-------\n"
                 log_str += "|    {:05.4f} | {:05.4f} |  {:05.4f} |   {:5d} | Weighted Avg\n".format(
-                        self.precision_avg, self.recall_avg, self.f1score_avg, support_sum)
+                        precision_avg, recall_avg, f1score_avg, support_sum)
                 self.logger.info(log_str)
 
 
@@ -204,10 +205,19 @@ class PrecisionRecallStatistics(Component):
         :param stat_col: ``StatisticsCollector``.
 
         """
+        # Calculate all four statistics.
+        _, precision, recall, f1score, support = self.calculate_statistics(data_dict)
+
+        # Calculate weighted averages.
+        support_sum = sum(support)
+        precision_avg = sum([pi*si / support_sum for (pi,si) in zip(precision,support)])
+        recall_avg = sum([ri*si / support_sum for (ri,si) in zip(recall,support)])
+        f1score_avg = sum([fi*si / support_sum for (fi,si) in zip(f1score,support)])
+
         # Export to statistics.
-        stat_col[self.key_precision] = self.precision_avg
-        stat_col[self.key_recall] = self.recall_avg
-        stat_col[self.key_f1score] = self.f1score_avg
+        stat_col[self.key_precision] = precision_avg
+        stat_col[self.key_recall] = recall_avg
+        stat_col[self.key_f1score] = f1score_avg
 
     def add_aggregators(self, stat_agg):
         """
@@ -236,13 +246,41 @@ class PrecisionRecallStatistics(Component):
         precisions = stat_col[self.key_precision]
         recalls = stat_col[self.key_recall]
         f1scores = stat_col[self.key_f1score]
-        
-        # TODO: instead of mean use weighted sum + mean.
-        stat_agg[self.key_precision] = torch.mean(torch.tensor(precisions))
-        stat_agg[self.key_precision+'_std'] = 0.0 if len(precisions) <= 1 else torch.std(torch.tensor(precisions))
 
-        stat_agg[self.key_recall] = torch.mean(torch.tensor(recalls))
-        stat_agg[self.key_recall+'_std'] = 0.0 if len(recalls) <= 1 else torch.std(torch.tensor(recalls))
+        # Check if batch size was collected.
+        if "batch_size" in stat_col.keys():
+            batch_sizes = stat_col['batch_size']
 
-        stat_agg[self.key_f1score] = torch.mean(torch.tensor(f1scores))
-        stat_agg[self.key_f1score+'_std'] = 0.0 if len(f1scores) <= 1 else torch.std(torch.tensor(f1scores))
+            # Calculate weighted precision.
+            precisions_avg = np.average(precisions, weights=batch_sizes)
+            precisions_var = np.average((precisions-precisions_avg)**2, weights=batch_sizes)
+            
+            stat_agg[self.key_precision] = precisions_avg
+            stat_agg[self.key_precision+'_std'] = math.sqrt(precisions_var)
+
+            # Calculate weighted recall.
+            recalls_avg = np.average(recalls, weights=batch_sizes)
+            recalls_var = np.average((recalls-recalls_avg)**2, weights=batch_sizes)
+
+            stat_agg[self.key_recall] = recalls_avg
+            stat_agg[self.key_recall+'_std'] = math.sqrt(recalls_var)
+
+            # Calculate weighted f1 score.
+            f1scores_avg = np.average(f1scores, weights=batch_sizes)
+            f1scores_var = np.average((f1scores-f1scores_avg)**2, weights=batch_sizes)
+
+            stat_agg[self.key_f1score] = f1scores_avg
+            stat_agg[self.key_f1score+'_std'] = math.sqrt(f1scores_var)
+
+        else:
+            # Else: use simple mean.
+            stat_agg[self.key_precision] = np.mean(precisions)
+            stat_agg[self.key_precision+'_std'] = 0.0 if len(precisions) <= 1 else np.std(precisions)
+
+            stat_agg[self.key_recall] = np.mean(recalls)
+            stat_agg[self.key_recall+'_std'] = 0.0 if len(recalls) <= 1 else np.std(recalls)
+
+            stat_agg[self.key_f1score] = np.mean(f1scores)
+            stat_agg[self.key_f1score+'_std'] = 0.0 if len(f1scores) <= 1 else np.std(f1scores)
+            # But inform user about that!
+            self.logger.warning("Aggregated statistics might contain errors due to the lack of information about sizes of aggregated batches")
