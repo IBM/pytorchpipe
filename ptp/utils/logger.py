@@ -77,7 +77,7 @@ def add_file_handler_to_logger(logger):
 
     """
     # This makes 
-    if AppState().log_file == None:
+    if AppState().log_file is None:
         return
 
     # Create file handler which logs even DEBUG messages.

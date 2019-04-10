@@ -17,9 +17,6 @@
 
 __author__ = "Vincent Marois, Tomasz Kornuta, Ryan L. McAvoy"
 
-import os
-import yaml
-
 import torch
 import argparse
 import numpy as np
