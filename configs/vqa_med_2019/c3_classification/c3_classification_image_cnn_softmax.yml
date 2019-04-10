@@ -13,9 +13,9 @@ training:
     #momentum: 0.9
     #weight_decay: 0.0001
 
-validation:
-  problem:
-    resize_image: *resize_image
+#validation:
+#  problem:
+#    resize_image: *resize_image
 
 
 pipeline:
