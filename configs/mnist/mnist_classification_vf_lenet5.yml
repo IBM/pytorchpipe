@@ -1,0 +1,68 @@
+# Load config defining MNIST problems for training, validation and testing.
+default_configs: mnist/default_mnist.yml
+
+# Training parameters - overwrite defaults:
+training:
+  problem: 
+    resize_image: [32, 32]
+
+# Validation parameters - overwrite defaults:
+validation:
+  problem:
+    resize_image: [32, 32]
+
+# Testing parameters - overwrite defaults:
+testing:
+  problem:
+    resize_image: [32, 32]
+
+# Definition of the pipeline.
+pipeline:
+  name: mnist_variational_flow_lenet5
+
+  # Add global variables.
+  global_publisher:
+    type: GlobalVariablePublisher
+    priority: 0
+    keys: [num_classes1, num_classes2, word_to_ix1, word_to_ix2]
+    values: [3, 7, {"Zero": 0, "One": 1, "Two": 2}, {"Three": 3, "Four": 4, "Five": 5, "Six": 6, "Seven": 7, "Eight": 8, "Nine": 9}]
+
+  # Image classifier.
+  image_classifier:
+    type: VariationalFlowLeNet5
+    priority: 1
+    globals:
+        flow1_prediction_size: num_classes1
+        flow2_prediction_size: num_classes2
+        flow1_word_mappings: word_to_ix1
+        flow2_word_mappings: word_to_ix2
+
+  # Masked loss.
+  nllloss:
+    type: NLLLoss
+    use_masks: True
+    streams:
+      predictions: flow1_predictions
+      masks: flow1_masks
+
+  # Statistics.
+  batch_size:
+    type: BatchSizeStatistics
+    streams:
+      predictions: flow1_predictions
+
+  accuracy:
+    type: AccuracyStatistics
+    streams:
+      predictions: flow1_predictions
+
+  precision_recall:
+    type: PrecisionRecallStatistics
+    priority: 100.3
+    use_word_mappings: True
+    show_class_scores: True
+    streams:
+      predictions: flow1_predictions
+    globals:
+      word_mappings: label_word_mappings
+#: pipeline
