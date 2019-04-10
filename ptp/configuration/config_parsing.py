@@ -36,7 +36,7 @@ def display_parsing_results(logger, parsed_args, unparsed_args):
     flags_str = 'Properly parsed command line arguments: \n'
     flags_str += '='*80 + '\n'
     for arg in vars(parsed_args): 
-        flags_str += "{}= {} \n".format(arg, getattr(parsed_args, arg))
+        flags_str += "  {}= {} \n".format(arg, getattr(parsed_args, arg))
     flags_str += '='*80 + '\n'
     logger.info(flags_str)
 
@@ -45,7 +45,7 @@ def display_parsing_results(logger, parsed_args, unparsed_args):
         flags_str = 'Invalid command line arguments: \n'
         flags_str += '='*80 + '\n'
         for arg in unparsed_args: 
-            flags_str += "{} \n".format(arg)
+            flags_str += "  {} \n".format(arg)
         flags_str += '='*80 + '\n'
         logger.warning(flags_str)
 

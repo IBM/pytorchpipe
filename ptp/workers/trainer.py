@@ -343,9 +343,9 @@ class Trainer(Worker):
         self.optimizer = getattr(torch.optim, optimizer_name)(
             filter(lambda p: p.requires_grad, self.pipeline.parameters()), **optimizer_conf)
 
-        log_str = 'Optimizer:\n' + '='*80
-        log_str += " " + optimizer_name + "\n"
-        log_str += " Params: " + optimizer_conf
+        log_str = 'Optimizer:\n' + '='*80 + "\n"
+        log_str += "  Name: " + optimizer_name + "\n"
+        log_str += "  Params: {}".format(optimizer_conf)
 
         self.logger.info(log_str)
 
