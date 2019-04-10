@@ -1,15 +1,14 @@
 # PyTorchPipe
 
 ![Language](https://img.shields.io/badge/language-Python-blue.svg)
-[![GitHub license](https://img.shields.io/github/license/ibm/pytorchpipe.svg)](https://github.com/ibm/pytorchpipe/blob/develop/LICENSE)
-[![GitHub version](https://badge.fury.io/gh/ibm%2Fpytorchpipe.svg)](https://badge.fury.io/gh/ibm%2Fpytorchpipe)
+[![GitHub license](https://img.shields.io/github/license/IBM/pytorchpipe.svg)](https://github.com/IBM/pytorchpipe/blob/develop/LICENSE)
+[![GitHub version](https://badge.fury.io/gh/IBM%2Fpytorchpipe.svg)](https://badge.fury.io/gh/IBM%2Fpytorchpipe)
 
-
-[![Build Status](https://travis-ci.com/ibm/pytorchpipe.svg?branch=develop)](https://travis-ci.com/ibm/pytorchpipe)
-[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/ibm/pytorchpipe.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/ibm/pytorchpipe/context:python)
-[![Total alerts](https://img.shields.io/lgtm/alerts/g/ibm/pytorchpipe.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/ibm/pytorchpipe/alerts/)
-[![Coverage Status](https://coveralls.io/repos/github/ibm/pytorchpipe/badge.svg?branch=develop)](https://coveralls.io/github/ibm/pytorchpipe?branch=develop)
-
+[![Build Status](https://travis-ci.com/IBM/pytorchpipe.svg?branch=develop)](https://travis-ci.com/IBM/pytorchpipe)
+[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/IBM/pytorchpipe.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/IBM/pytorchpipe/context:python)
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/IBM/pytorchpipe.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/IBM/pytorchpipe/alerts/)
+[![Coverage Status](https://coveralls.io/repos/github/IBM/pytorchpipe/badge.svg?branch=develop)](https://coveralls.io/github/IBM/pytorchpipe?branch=develop)
+[![Coverage Status](https://coveralls.io/repos/github/IBM/pytorchpipe/badge.svg?branch=master)](https://coveralls.io/github/IBM/pytorchpipe?branch=master)
 
 ## Description
 
