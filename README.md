@@ -1,14 +1,14 @@
 # PyTorchPipe
 
 ![Language](https://img.shields.io/badge/language-Python-blue.svg)
-[![GitHub license](https://img.shields.io/github/license/tkornut/pytorchpipe.svg)](https://github.com/tkornut/pytorchpipe/blob/master/LICENSE)
-[![GitHub version](https://badge.fury.io/gh/tkornut%2Fpytorchpipe.svg)](https://badge.fury.io/gh/tkornut%2Fpytorchpipe)
+[![GitHub license](https://img.shields.io/github/license/ibm/pytorchpipe.svg)](https://github.com/ibm/pytorchpipe/blob/develop/LICENSE)
+[![GitHub version](https://badge.fury.io/gh/ibm%2Fpytorchpipe.svg)](https://badge.fury.io/gh/ibm%2Fpytorchpipe)
 
 
-[![Build Status](https://travis-ci.com/tkornut/pytorchpipe.svg?branch=master)](https://travis-ci.com/tkornut/pytorchpipe)
-[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/tkornut/pytorchpipe.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/tkornut/pytorchpipe/context:python)
-[![Total alerts](https://img.shields.io/lgtm/alerts/g/tkornut/pytorchpipe.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/tkornut/pytorchpipe/alerts/)
-[![Coverage Status](https://coveralls.io/repos/github/tkornut/pytorchpipe/badge.svg?branch=develop)](https://coveralls.io/github/tkornut/pytorchpipe?branch=develop)
+[![Build Status](https://travis-ci.com/ibm/pytorchpipe.svg?branch=develop)](https://travis-ci.com/ibm/pytorchpipe)
+[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/ibm/pytorchpipe.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/ibm/pytorchpipe/context:python)
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/ibm/pytorchpipe.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/ibm/pytorchpipe/alerts/)
+[![Coverage Status](https://coveralls.io/repos/github/ibm/pytorchpipe/badge.svg?branch=develop)](https://coveralls.io/github/ibm/pytorchpipe?branch=develop)
 
 
 ## Description
@@ -29,4 +29,3 @@ A project of the Machine Intelligence team, IBM Research, Almaden.
 * Tomasz Kornuta (tkornut@us.ibm.com)
 
 [![HitCount](http://hits.dwyl.io/tkornut/tkornut/pytorchpipe.svg)](http://hits.dwyl.io/tkornut/tkornut/pytorchpipe)
-
