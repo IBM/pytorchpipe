@@ -20,7 +20,8 @@ __author__ = "Alexis Asseman, Tomasz Kornuta"
 import copy
 from abc import ABCMeta
 from collections.abc import Mapping
-from ptp.configuration.singleton import SingletonMetaClass
+
+from ptp.utils.singleton import SingletonMetaClass
 
 
 class MetaSingletonABC(SingletonMetaClass, ABCMeta):

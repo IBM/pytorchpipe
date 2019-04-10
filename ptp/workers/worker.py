@@ -17,19 +17,14 @@
 
 __author__ = "Vincent Marois, Tomasz Kornuta, Ryan L. McAvoy"
 
-import os
-import yaml
-
 import torch
-import logging
-import logging.config
 import argparse
 import numpy as np
 from random import randrange
 from abc import abstractmethod
 
-# Import configuration.
-from ptp.configuration.app_state import AppState
+import ptp.utils.logger as logging
+from ptp.utils.app_state import AppState
 from ptp.configuration.config_interface import ConfigInterface
 
 
@@ -51,10 +46,6 @@ class Worker(object):
 
                 >>> self.config = ConfigInterface()
 
-            - Defines the logger:
-
-                >>> self.logger = logging.getLogger(name=self.name)
-
             - Creates parser and adds default worker command line arguments.
 
         :param name: Name of the worker.
@@ -75,9 +66,6 @@ class Worker(object):
 
         # Initialize parameter interface/registry.
         self.config = ConfigInterface()
-
-        # Initialize logger using the configuration.
-        self.initialize_logger()
 
         # Create parser with a list of runtime arguments.
         self.parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
@@ -155,76 +143,6 @@ class Worker(object):
                 help='Request user confirmation just after loading the settings, '
                     'before starting the experiment. (DEFAULT: False)')
 
-    def initialize_logger(self):
-        """
-        Initializes the logger, with a specific configuration:
-
-        >>> logger_config = {'version': 1,
-        >>>                  'disable_existing_loggers': False,
-        >>>                  'formatters': {
-        >>>                      'simple': {
-        >>>                          'format': '[%(asctime)s] - %(levelname)s - %(name)s >>> %(message)s',
-        >>>                          'datefmt': '%Y-%m-%d %H:%M:%S'}},
-        >>>                  'handlers': {
-        >>>                      'console': {
-        >>>                          'class': 'logging.StreamHandler',
-        >>>                          'level': 'INFO',
-        >>>                          'formatter': 'simple',
-        >>>                          'stream': 'ext://sys.stdout'}},
-        >>>                  'root': {'level': 'DEBUG',
-        >>>                           'handlers': ['console']}}
-
-        """
-        # Load the default logger configuration.
-        logger_config = {'version': 1,
-                         'disable_existing_loggers': False,
-                         'formatters': {
-                             'simple': {
-                                 'format': '[%(asctime)s] - %(levelname)s - %(name)s >>> %(message)s',
-                                 'datefmt': '%Y-%m-%d %H:%M:%S'}},
-                         'handlers': {
-                             'console': {
-                                 'class': 'logging.StreamHandler',
-                                 'level': 'INFO',
-                                 'formatter': 'simple',
-                                 'stream': 'ext://sys.stdout'}},
-                         'root': {'level': 'DEBUG',
-                                  'handlers': ['console']}}
-
-        logging.config.dictConfig(logger_config)
-
-        # Create the Logger, set its label and logging level.
-        self.logger = logging.getLogger(name=self.name)
-
-
-    def add_file_handler_to_logger(self, logfile):
-        """
-        Add a ``logging.FileHandler`` to the logger of the current ``Worker``.
-
-        Specifies a ``logging.Formatter``:
-
-            >>> logging.Formatter(fmt='[%(asctime)s] - %(levelname)s - %(name)s >>> %(message)s',
-            >>>                   datefmt='%Y-%m-%d %H:%M:%S')
-
-
-        :param logfile: File used by the ``FileHandler``.
-
-        """
-        # create file handler which logs even DEBUG messages
-        fh = logging.FileHandler(logfile)
-
-        # set logging level for this file
-        fh.setLevel(logging.DEBUG)
-
-        # create formatter and add it to the handlers
-        formatter = logging.Formatter(fmt='[%(asctime)s] - %(levelname)s - %(name)s >>> %(message)s',
-                                      datefmt='%Y-%m-%d %H:%M:%S')
-        fh.setFormatter(formatter)
-
-        # add the handler to the logger
-        self.logger.addHandler(fh)
-
-
     def setup_experiment(self):
         """
         Setups a specific experiment.
@@ -232,6 +150,8 @@ class Worker(object):
         Base method:
 
             - Parses command line arguments.
+
+            - Initializes logger with worker name.
 
             - Sets the 3 default config sections (training / validation / test) and sets their dataloaders params.
 
@@ -245,75 +165,14 @@ class Worker(object):
         # Parse arguments.
         self.app_state.args, self.unparsed = self.parser.parse_known_args()
 
-        # Set logger depending on the settings.
-        self.logger.setLevel(getattr(logging, self.app_state.args.log_level.upper(), None))
+        # Initialize logger using the configuration.
+        # For now do not add file handler, as path to logfile is not known yet.
+        self.logger = logging.initialize_logger(self.name, False)
 
         # add empty sections
         self.config.add_default_params({"training": {'terminal_conditions': {}}})
         self.config.add_default_params({"validation": {}})
         self.config.add_default_params({"testing": {}})
-
-
-    def display_parsing_results(self):
-        """
-        Displays the properly & improperly parsed arguments (if any).
-
-        """
-        # Log the parsed flags.
-        flags_str = 'Properly parsed command line arguments: \n'
-        flags_str += '='*80 + '\n'
-        for arg in vars(self.app_state.args): 
-            flags_str += "{}= {} \n".format(arg, getattr(self.app_state.args, arg))
-        flags_str += '='*80 + '\n'
-        self.logger.info(flags_str)
-
-        # Log the unparsed flags if any.
-        if self.unparsed:
-            flags_str = 'Invalid command line arguments: \n'
-            flags_str += '='*80 + '\n'
-            for arg in self.unparsed: 
-                flags_str += "{} \n".format(arg)
-            flags_str += '='*80 + '\n'
-            self.logger.warning(flags_str)
-
-
-    def export_experiment_configuration(self, log_dir, filename, user_confirm):
-        """
-        Dumps the configuration to ``yaml`` file.
-
-        :param log_dir: Directory used to host log files (such as the collected statistics).
-        :type log_dir: str
-
-        :param filename: Name of the ``yaml`` file to write to.
-        :type filename: str
-
-        :param user_confirm: Whether to request user confirmation.
-        :type user_confirm: bool
-
-
-        """
-        # -> At this point, all configuration for experiment is complete.
-
-        # Display results of parsing.
-        self.display_parsing_results()
-
-        # Log the resulting training configuration.
-        conf_str = 'Final parameter registry configuration:\n'
-        conf_str += '='*80 + '\n'
-        conf_str += yaml.safe_dump(self.config.to_dict(), default_flow_style=False)
-        conf_str += '='*80 + '\n'
-        self.logger.info(conf_str)
-
-        # Save the resulting configuration into a .yaml settings file, under log_dir
-        with open(log_dir + filename, 'w') as yaml_backup_file:
-            yaml.dump(self.config.to_dict(), yaml_backup_file, default_flow_style=False)
-
-        # Ask for confirmation - optional.
-        if user_confirm:
-            try:
-                input('Press <Enter> to confirm and start the experiment\n')
-            except KeyboardInterrupt:
-                exit(0)            
 
 
     def add_statistics(self, stat_col):
@@ -350,79 +209,7 @@ class Worker(object):
         .. note::
 
             Abstract. Should be implemented in the subclasses.
-
-
         """
-
-
-    def recurrent_config_parse(self, configs: str, configs_parsed: list, abs_config_path: str):
-        """
-        Parses names of configuration files in a recursive manner, i.e. \
-        by looking for ``default_config`` sections and trying to load and parse those \
-        files one by one.
-
-        :param configs: String containing names of configuration files (with paths), separated by comas.
-        :type configs: str
-
-        :param configs_parsed: Configurations that were already parsed (so we won't parse them many times).
-        :type configs_parsed: list
-
-        :param abs_config_path: Absolute path to ``config`` directory.
-
-        :return: list of parsed configuration files.
-
-        """
-        # Split and remove spaces.
-        configs_to_parse = configs.replace(" ", "").split(',')
-
-        # Terminal condition.
-        while len(configs_to_parse) > 0:
-
-            # Get config.
-            config = configs_to_parse.pop(0)
-            abs_config = abs_config_path + config
-
-            # Skip empty names (after lose comas).
-            if config == '':
-                continue
-            print("Info: Parsing the {} configuration file".format(abs_config))
-
-            # Check if it was already loaded.
-            if config in configs_parsed:
-                print('Warning: Configuration file {} already parsed - skipping'.format(abs_config))
-                continue
-
-            # Check if file exists.
-            if not os.path.isfile(abs_config):
-                print('Error: Configuration file {} does not exist'.format(abs_config))
-                exit(-1)
-
-            try:
-                # Open file and get parameter dictionary.
-                with open(abs_config, 'r') as stream:
-                    param_dict = yaml.safe_load(stream)
-            except yaml.YAMLError as e:
-                print("Error: Couldn't properly parse the {} configuration file".format(abs_config))
-                print('yaml.YAMLERROR:', e)
-                exit(-1)
-
-            # Remember that we loaded that config.
-            configs_parsed.append(config)
-
-            # Check if there are any default configs to load.
-            if 'default_configs' in param_dict:
-                # If there are - recursion!
-                configs_parsed = self.recurrent_config_parse(
-                    param_dict['default_configs'], configs_parsed, abs_config_path)
-
-        # Done, return list of loaded configs.
-        return configs_parsed
-
-    def recurrent_config_load(self,configs_to_load, abs_config_path):
-        for config in reversed(configs_to_load):
-            # Load config from YAML file.
-            self.config.add_config_params_from_yaml(abs_config_path + config)
-            print('Info: Loaded configuration from file {}'.format(abs_config_path + config))
 
 
     def collect_all_statistics(self, problem_mgr, pipeline_mgr, data_dict, stat_col):

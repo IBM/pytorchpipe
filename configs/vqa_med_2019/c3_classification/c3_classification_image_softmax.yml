@@ -4,16 +4,14 @@ default_configs: vqa_med_2019/c3_classification/default_c3_classification.yml
 training:
   problem:
     resize_image: &resize_image [28, 28]
-    batch_size: 64
 
 validation:
   problem:
     resize_image: *resize_image
-    batch_size: 32
 
 
 pipeline:
-  name: vqa_med_c3_classification_image_cnn_softmax
+  name: vqa_med_c3_classification_image_softmax
 
   # Reshape inputs
   reshaper:

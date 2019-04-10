@@ -15,7 +15,6 @@ training:
 validation:
   problem:
     categories: C3
-    batch_size: 500
   dataloader:
     num_workers: 4
 

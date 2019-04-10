@@ -16,7 +16,7 @@
 
 __author__ = "Tomasz Kornuta"
 
-from ptp.configuration.app_state import AppState
+from ptp.utils.app_state import AppState
 
 class GlobalsFacade(object):
     """

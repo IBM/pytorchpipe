@@ -17,6 +17,7 @@
 __author__ = "Tomasz Kornuta"
 
 import unittest
+
 from ptp.data_types.data_dict import DataDict
 
 class TestDataDict(unittest.TestCase):

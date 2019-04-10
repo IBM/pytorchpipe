@@ -17,12 +17,14 @@
 __author__ = "Tomasz Kornuta"
 
 import abc
-import logging
 
-from ptp.configuration.app_state import AppState
-from ptp.configuration.globals_facade import GlobalsFacade
-from ptp.configuration.key_mappings_facade import KeyMappingsFacade
-from ptp.configuration.config_parsing import load_default_configuration_file
+import ptp.utils.logger as logging
+
+from ptp.utils.app_state import AppState
+from ptp.utils.globals_facade import GlobalsFacade
+from ptp.utils.key_mappings_facade import KeyMappingsFacade
+
+from ptp.configuration.config_parsing import load_class_default_config_file
 
 
 class Component(abc.ABC):
@@ -59,15 +61,15 @@ class Component(abc.ABC):
         self.name = name
         self.config = config
 
-        # Initialize logger.
-        self.logger = logging.getLogger(self.name)        
-
         # Get access to AppState: for command line args, globals etc.
         self.app_state = AppState()
 
+        # Initialize logger.
+        self.logger = logging.initialize_logger(self.name)        
+
         # Load default configuration.
         if class_type is not None:
-            self.config.add_default_params(load_default_configuration_file(class_type))
+            self.config.add_default_params(load_class_default_config_file(class_type))
 
         # Initialize the "streams mapping facility".
         if "streams" not in config or config["streams"] is None:

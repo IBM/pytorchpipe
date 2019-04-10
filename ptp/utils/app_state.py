@@ -17,11 +17,9 @@
 
 __author__ = "Alexis Asseman, Tomasz Kornuta"
 
-import logging
-
 import torch
 
-from ptp.configuration.singleton import SingletonMetaClass
+from ptp.utils.singleton import SingletonMetaClass
 
 
 class AppState(metaclass=SingletonMetaClass):
@@ -55,8 +53,9 @@ class AppState(metaclass=SingletonMetaClass):
         # Field storing global variables.
         self.__globals = dict()
 
-        # Initialize logger.
-        self.logger = logging.getLogger("AppState")        
+        # Initialize logger logfile (as empty for now).
+        self.log_file = None
+        self.logger = None
 
         # Set CPU types as default.
         self.set_cpu_types()

@@ -17,7 +17,7 @@
 __author__ = "Tomasz Kornuta"
 
 import unittest
-from ptp.configuration.app_state import AppState
+from ptp.utils.app_state import AppState
 
 class TestAppState(unittest.TestCase):
 
