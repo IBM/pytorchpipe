@@ -3,7 +3,7 @@ default_configs: vqa_med_2019/c3_classification/default_c3_classification.yml
 
 training:
   problem:
-    resize_image: &resize_image [64, 64]
+    #resize_image: &resize_image [64, 64]
     batch_size: 32
 
   # optimizer parameters:
@@ -31,10 +31,10 @@ pipeline:
   # Reshape inputs
   reshaper:
     type: ReshapeTensor
-    #input_dims: [-1, 16, 26, 26]
-    #output_dims: [-1, 10816]
-    input_dims: [-1, 16, 6, 6]
-    output_dims: [-1, 576]
+    input_dims: [-1, 16, 26, 26]
+    output_dims: [-1, 10816]
+    #input_dims: [-1, 16, 6, 6]
+    #output_dims: [-1, 576]
     priority: 1.2
     streams:
       inputs: feature_maps
