@@ -137,7 +137,7 @@ class Trainer(Worker):
             print('Error: Configuration file {} does not exist'.format(root_config))
             exit(-3)
         
-        # Extract absolute path to config.
+        # Extract absolute path to main ptp 'config' directory.
         abs_config_path = os.path.abspath(root_config)
         # Save it in app_state!
         self.app_state.absolute_config_path = abs_config_path[:abs_config_path.find("configs")+8] 
