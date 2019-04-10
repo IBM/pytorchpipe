@@ -1,0 +1,24 @@
+# Load config defining problems for training, validation and testing.
+default_configs: vqa_med_2019/c1_classification/default_c1_classification.yml
+
+pipeline:
+  name: vqa_med_c1_classification_image_size_softmax
+
+  global_publisher:
+    type: GlobalVariablePublisher
+    priority: 1
+    # Add input_size to globals, so classifier will use it.
+    keys: input_size
+    values: 2
+
+  # Model - image size classifier.
+  classifier:
+    type: FeedForwardNetwork 
+    hidden_sizes: [100]
+    priority: 3
+    streams:
+      inputs: image_sizes
+    globals:
+      prediction_size: vocabulary_size_c1
+  
+#: pipeline

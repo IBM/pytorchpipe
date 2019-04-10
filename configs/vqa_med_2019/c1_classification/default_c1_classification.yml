@@ -1,0 +1,92 @@
+# Load config defining problems for training, validation and testing.
+default_configs: vqa_med_2019/default_vqa_med_2019.yml
+
+# Training parameters:
+training:
+  problem:
+    categories: C1
+  sampler:
+    name: WeightedRandomSampler
+    weights: ~/data/vqa-med/answers.c1.weights.csv
+  dataloader:
+    num_workers: 4
+
+# Validation parameters:
+validation:
+  problem:
+    categories: C1
+    batch_size: 500
+  dataloader:
+    num_workers: 4
+
+
+pipeline:
+
+  # Answer encoding.
+  answer_indexer:
+    type: LabelIndexer
+    priority: 2
+    data_folder: ~/data/vqa-med
+    word_mappings_file: answers.c1.word.mappings.csv
+    # Export mappings and size to globals.
+    export_word_mappings_to_globals: True
+    streams:
+      inputs: answers
+      outputs: answers_ids
+    globals:
+      vocabulary_size: vocabulary_size_c1
+      word_mappings: word_mappings_c1
+
+
+  # Predictions decoder.
+  prediction_decoder:
+    type: WordDecoder
+    priority: 10.1
+    # Use the same word mappings as label indexer.
+    import_word_mappings_from_globals: True
+    streams:
+      inputs: predictions
+      outputs: predicted_answers
+    globals:
+      vocabulary_size: vocabulary_size_c1
+      word_mappings: word_mappings_c1
+
+  # Loss
+  nllloss:
+    type: NLLLoss
+    priority: 10.2
+    targets_dim: 1
+    streams:
+      targets: answers_ids
+      loss: loss
+
+  # Statistics.
+  accuracy:
+    type: AccuracyStatistics
+    priority: 100.1
+    streams:
+      targets: answers_ids
+
+  batch_size:
+    type: BatchSizeStatistics
+    priority: 100.2
+
+  precision_recall:
+    type: PrecisionRecallStatistics
+    priority: 100.3
+    use_word_mappings: True
+    show_class_scores: True
+    show_confusion_matrix: True
+    streams:
+      targets: answers_ids
+    globals:
+      word_mappings: word_mappings_c1
+      num_classes: vocabulary_size_c1
+
+  # Viewers.
+  viewer:
+    type: StreamViewer
+    priority: 100.4
+    input_streams: questions,category_names,answers,predicted_answers
+
+#: pipeline

@@ -1,0 +1,34 @@
+# Load config defining MNIST problems for training, validation and testing.
+default_configs: mnist/default_mnist.yml
+
+pipeline:
+  name: mnist_convnet_softmax_classifier
+
+  # Model consisting of two components.
+  image_encoder:
+    type: ConvNetEncoder
+    priority: 1
+
+  # Reshape inputs
+  reshaper:
+    type: ReshapeTensor
+    input_dims: [-1, 16, 1, 1]
+    output_dims: [-1, 16]
+    priority: 2
+    streams:
+      inputs: feature_maps
+      outputs: reshaped_maps
+    globals:
+      output_size: reshaped_maps_size
+
+  # Image classifier.
+  classifier:
+    type: SoftmaxClassifier 
+    priority: 3
+    streams:
+      inputs: reshaped_maps
+    globals:
+      input_size: reshaped_maps_size
+      prediction_size: num_classes
+
+#: pipeline

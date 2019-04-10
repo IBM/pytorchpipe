@@ -1,0 +1,60 @@
+# Copyright (C) tkornuta, IBM Corporation 2019
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+language: python
+python: 3.6
+
+# Safelist: focus Travis' attention on the master and develop branches only.
+branches:
+  only:
+    - master
+    - develop
+
+#install:
+#  - pip3 install -r requirements.txt
+
+before_install:
+  - sudo apt-get update
+  # Install conda.
+  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  # Set conda to always "--yes" mode.
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  # Create env and install pytorch
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pytorch scipy -c pytorch
+  - source activate test-environment
+  # Coveralls
+  - pip install coveralls
+
+install:
+  - python setup.py install
+
+script:
+  # Test plake8 compatibility.
+  #- python3 -m flake8 --version  # flake8 3.6.0 on CPython 3.6.5 on Linux
+  # stop the build if there are Python syntax errors or undefined names
+  #- python3 -m flake8 . --count --select=E901,E999,F821,F822,F823 --show-source --statistics
+  # exit-zero treats all errors as warnings.  The GitHub editor is 127 chars wide
+  #- python3 -m flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+  # Run unittests in ptp/test.
+  #- python -m unittest ptp
+  - coverage run -m unittest #discover -s ptp
+  # Build documentation.
+  # TODO.
+
+after_success:
+  # Coverals.
+  - coveralls

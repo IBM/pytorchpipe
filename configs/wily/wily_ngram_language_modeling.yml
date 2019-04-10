@@ -1,0 +1,147 @@
+  # Training parameters:
+training:
+  problem:
+    type: &p_type WiLYNGramLanguageModeling
+    data_folder: &data_folder '~/data/language_identification/wily'
+    context: &context 2
+    batch_size:  64
+    use_train_data: True
+    streams: &p_streams
+      inputs: ngrams
+      #targets: targets
+
+  # Use sampler that operates on a subset.
+  #sampler:
+  #  name: SubsetRandomSampler
+  #  indices: [0, 117000]
+
+  # optimizer parameters:
+  optimizer:
+    name: Adam
+    lr: 0.1
+
+  # settings parameters
+  terminal_conditions:
+    loss_stop: 1.0e-2
+    episode_limit: 10000
+    epoch_limit: 100
+
+# Validation parameters:
+validation:
+  partial_validation_interval: 10
+  problem:
+    type: *p_type
+    data_folder: *data_folder
+    context: *context
+    batch_size:  64
+    use_train_data: True
+    streams: *p_streams
+
+  # Use sampler that operates on a subset.
+  #sampler:
+  #  name: SubsetRandomSampler
+  #  indices: [117000, 117500]
+
+# Testing parameters:
+testing:
+  problem:
+    type: *p_type 
+    data_folder: *data_folder
+    context: *context
+    batch_size: 64
+    use_train_data: False
+    streams: *p_streams
+
+pipeline:
+  name: ngram_language_modeling
+  #load: /users/tomaszkornuta/experiments/dummylanguageidentification/language_classifier/20190301_145416/checkpoints/language_classifier_best.pt
+  #freeze: True
+  #disable: prediction_decoder,accuracy
+
+  # Source encoding.
+  sentence_tokenizer:
+    type: SentenceTokenizer
+    priority: 1.1
+    streams: 
+      inputs: ngrams
+      outputs: tokenized_ngrams
+
+  source_sentence_embedding:
+    type: SentenceEmbeddings
+    priority: 1.2
+    embeddings_size: 50
+    data_folder: *data_folder
+    source_vocabulary_files: x_training.txt,x_test.txt
+    word_mappings_file: word_encodings.csv
+    additional_tokens: <eos>
+    # Export word mappings 
+    export_word_mappings_to_globals: True
+    streams:
+      inputs: tokenized_ngrams
+      outputs: embedded_ngrams
+    globals:
+        vocabulary_size: sentence_vocab_size 
+        
+
+  # Targets encoding.
+  target_indexer:
+    type: LabelIndexer
+    priority: 2
+    data_folder: *data_folder
+    # Use mappings created for source sentence embeddings.
+    import_word_mappings_from_globals: True
+    streams:
+      inputs: targets
+      outputs: indexed_targets
+  
+  # Reshapes tensors.
+  reshaper:
+    type: ReshapeTensor
+    input_dims: [-1, -1, 50]
+    output_dims: [-1, 100]
+    priority: 5
+    streams:
+      inputs: embedded_ngrams
+      outputs: reshaped_ngrams
+    globals:
+      output_size: reshaped_ngrams_size
+
+  # Model 2: classifier.
+  classifier:
+    type: FeedForwardNetwork 
+    priority: 6
+    hidden_sizes: [100]
+    streams:
+      inputs: reshaped_ngrams
+    globals:
+      input_size: reshaped_ngrams_size
+      prediction_size: sentence_vocab_size
+
+  # Loss.
+  nllloss:
+    type: NLLLoss
+    priority: 7
+    streams:
+      targets: indexed_targets
+      predictions: predictions
+      loss: loss
+
+  # Predictions decoder.
+  prediction_decoder:
+    type: WordDecoder
+    priority: 8
+    data_folder: *data_folder
+    # Use mappings from source embeddings.
+    import_word_mappings_from_globals: True
+    streams:
+      inputs: predictions
+      outputs: predicted_labels
+
+  # Statistics.
+  accuracy:
+    type: AccuracyStatistics
+    priority: 10
+    streams:
+      targets: indexed_targets
+
+  #: pipeline

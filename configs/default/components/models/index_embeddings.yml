@@ -1,0 +1,42 @@
+# This file defines the default values for the Index Embeddings.
+
+####################################################################
+# 1. CONFIGURATION PARAMETERS that will be LOADED by the component.
+####################################################################
+
+# Size of the embeddings (LOADED)
+# Need to be set by  the user.
+# embeddings_size: 100
+
+streams: 
+  ####################################################################
+  # 2. Keymappings associated with INPUT and OUTPUT streams.
+  ####################################################################
+
+  # Stream containing batch of inputs (INPUT)
+  inputs: inputs
+
+  # Stream containing predictions (OUTPUT)
+  predictions: predictions
+
+globals:
+  ####################################################################
+  # 3. Keymappings of variables that will be RETRIEVED from GLOBALS.
+  ####################################################################
+
+  # Size of the vocabulary (RETRIEVED)
+  vocab_size: vocab_size
+
+  ####################################################################
+  # 4. Keymappings associated with GLOBAL variables that will be SET.
+  ####################################################################
+
+  # Size of the embeddings (SET)
+  # It is exported to globals, so other components can use it during
+  # their initialization.
+  embeddings_size: embeddings_size
+
+  ####################################################################
+  # 5. Keymappings associated with statistics that will be ADDED.
+  ####################################################################
+

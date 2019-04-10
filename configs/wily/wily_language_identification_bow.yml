@@ -1,0 +1,141 @@
+  # Training parameters:
+training:
+  problem:
+    type: &p_type WiLYLanguageIdentification
+    data_folder: &data_folder '~/data/language_identification/wily'
+    batch_size:  64
+    streams: &p_streams
+      inputs: sentences
+      targets: languages
+
+  # Use sampler that operates on a subset.
+  sampler:
+    name: SubsetRandomSampler
+    indices: [0, 117000]
+
+  # optimizer parameters:
+  optimizer:
+    name: Adam
+    lr: 0.1
+
+  # settings parameters
+  terminal_conditions:
+    loss_stop: 1.0e-2
+    episode_limit: 10000
+    epoch_limit: 100
+
+# Validation parameters:
+validation:
+  partial_validation_interval: 10
+  problem:
+    type: *p_type
+    data_folder: *data_folder
+    batch_size:  64
+    streams: *p_streams
+
+  # Use sampler that operates on a subset.
+  sampler:
+    name: SubsetRandomSampler
+    indices: [117000, 117500]
+
+# Testing parameters:
+testing:
+  problem:
+    type: *p_type 
+    data_folder: *data_folder
+    batch_size: 64
+    use_train_data: False
+    streams: *p_streams
+
+pipeline:
+  name: language_classifier
+  #load: /users/tomaszkornuta/experiments/dummylanguageidentification/language_classifier/20190301_145416/checkpoints/language_classifier_best.pt
+  #freeze: True
+  #disable: prediction_decoder,accuracy
+  # Sentences encoding.
+  sentence_tokenizer:
+    type: SentenceTokenizer
+    priority: 1
+    streams: 
+      inputs: sentences
+      outputs: tokenized_sentences
+
+  sentence_encoder:
+    type: SentenceOneHotEncoder
+    priority: 2
+    data_folder: ~/data/language_identification/wily
+    source_vocabulary_files: x_train.txt,x_test.txt
+    word_mappings_file: word_encodings.csv
+    streams:
+      inputs: tokenized_sentences
+      outputs: encoded_sentences
+    globals:
+        vocabulary_size: sentence_vocab_size 
+        word_mappings: sentence_word_mappings
+      
+  bow_encoder:
+    type: BOWEncoder
+    priority: 3
+    streams:
+      inputs: encoded_sentences
+      outputs: bow_sencentes
+    globals:
+      bow_size: sentence_vocab_size # Set by sentence_encoder.
+  
+  # Targets encoding.
+  label_indexer:
+    type: LabelIndexer
+    priority: 4
+    data_folder: ~/data/language_identification/wily
+    source_vocabulary_files: y_train.txt,y_test.txt
+    word_mappings_file: language_name_encodings.csv
+    streams:
+      inputs: languages
+      outputs: indexed_languages
+    globals:
+      vocabulary_size: label_vocab_size 
+      word_mappings: label_word_mappings
+
+  # Model
+  classifier:
+    type: FeedForwardNetwork 
+    #freeze: True
+    priority: 5
+    streams:
+      inputs: bow_sencentes
+    globals:
+      input_size: sentence_vocab_size # Set by sentence_encoder.
+      prediction_size: label_vocab_size # Set by target_encoder.
+  
+  # Loss
+  nllloss:
+    type: NLLLoss
+    priority: 6
+    streams:
+      targets: indexed_languages
+      #predictions: encoded_predictions
+      loss: loss
+  # Predictions decoder.
+  prediction_decoder:
+    type: WordDecoder
+    priority: 8
+    data_folder: ~/data/language_identification/wily
+    word_mappings_file: language_name_encodings.csv
+    streams:
+      inputs: predictions
+      outputs: predicted_labels
+    globals:
+      vocabulary_size: label_vocab_size 
+      word_mappings: label_word_mappings
+
+  # Statistics.
+  batch_size:
+    type: BatchSizeStatistics
+    priority: 9
+  accuracy:
+    type: AccuracyStatistics
+    priority: 10
+    streams:
+      targets: indexed_languages
+
+  #: pipeline

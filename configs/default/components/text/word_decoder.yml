@@ -1,0 +1,59 @@
+# This file defines the default values for Word Decoder.
+
+####################################################################
+# 1. CONFIGURATION PARAMETERS that will be LOADED by the component.
+####################################################################
+
+# Folder where problem will store data (LOADED)
+data_folder: '~/data/'
+
+# Source files that will be used to create the vocabulary  (LOADED)
+source_vocabulary_files: ''
+
+# Additional tokens that will be added to vocabulary (LOADED)
+additional_tokens: ''
+
+# File containing word (LOADED)
+word_mappings_file: 'word_mappings.csv'
+
+# If set, component will always (re)generate the vocabulary (LOADED)
+regenerate: False 
+
+# Flag informing whether word mappings will be imported from globals (LOADED)
+import_word_mappings_from_globals: False
+
+# Flag informing whether word mappings will be exported to globals (LOADED)
+export_word_mappings_to_globals: False
+
+streams: 
+  ####################################################################
+  # 2. Keymappings associated with INPUT and OUTPUT streams.
+  ####################################################################
+
+  # Stream containing input tensor (INPUT)
+  inputs: inputs
+
+  # Stream containing output tensor (OUTPUT)
+  outputs: outputs
+
+globals: 
+  ####################################################################
+  # 3. Keymappings of variables that will be RETRIEVED from GLOBALS.
+  ####################################################################
+
+  ####################################################################
+  # 4. Keymappings associated with GLOBAL variables that will be SET.
+  ####################################################################
+
+  # The loaded/exported word mappings (RETRIEVED/SET)
+  # This depends on the import/export configuration flags above.
+  word_mappings: word_mappings
+
+  # Size of the vocabulary (RETRIEVED/SET)
+  # This depends on the import/export configuration flags above.
+  vocabulary_size: vocabulary_size
+
+  ####################################################################
+  # 5. Keymappings associated with statistics that will be ADDED.
+  ####################################################################
+

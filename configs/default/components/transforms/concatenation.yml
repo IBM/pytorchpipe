@@ -1,0 +1,47 @@
+# This file defines the default values for the Tensor Reshaper.
+
+####################################################################
+# 1. CONFIGURATION PARAMETERS that will be LOADED by the component.
+####################################################################
+
+# List of names of streams that will be concatenated (LOADED)
+# Can be string a single name or or comma separated string with list
+input_streams: ''
+
+# Dimensions of the input tensors (LOADED)
+# Specific to a task/model, must be set by user (no DEFAULT)
+# List of lists.
+# input_dims: [[BATCH x ...], ...]
+
+# Dimensions of the input tensor (LOADED)
+# Specific to a task/model, must be set by user (no DEFAULT)
+# output_dims: [BATCH x ...]
+
+# Dimension along which tensors will be concatenated (LOADED)
+dim: 1
+
+streams: 
+  ####################################################################
+  # 2. Keymappings associated with INPUT and OUTPUT streams.
+  ####################################################################
+
+  # Stream containing output tensor (OUTPUT)
+  outputs: outputs
+
+globals:
+  ####################################################################
+  # 3. Keymappings of variables that will be RETRIEVED from GLOBALS.
+  ####################################################################
+
+  ####################################################################
+  # 4. Keymappings associated with GLOBAL variables that will be SET.
+  ####################################################################
+
+  # Size of the output tensor (SET)
+  # (all dimensions except batch_size)
+  output_size: output_size
+
+  ####################################################################
+  # 5. Keymappings associated with statistics that will be ADDED.
+  ####################################################################
+

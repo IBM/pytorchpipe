@@ -1,0 +1,30 @@
+# Load config defining MNIST problems for training, validation and testing.
+default_configs: mnist/default_mnist.yml
+
+# Training parameters - overwrite defaults:
+training:
+  problem: 
+    resize_image: [32, 32]
+
+# Validation parameters - overwrite defaults:
+validation:
+  problem:
+    resize_image: [32, 32]
+
+# Testing parameters - overwrite defaults:
+testing:
+  problem:
+    resize_image: [32, 32]
+
+# Definition of the pipeline.
+pipeline:
+  name: mnist_lenet5_classifier
+
+  # Image classifier.
+  image_classifier:
+    type: LeNet5
+    priority: 1
+    globals:
+      prediction_size: num_classes
+
+#: pipeline
