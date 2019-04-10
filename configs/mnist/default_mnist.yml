@@ -45,12 +45,12 @@ pipeline:
   # Loss
   nllloss:
     type: NLLLoss
-    priority: 10
+    priority: 10.0
 
   # Statistics.
   batch_size:
     type: BatchSizeStatistics
-    priority: 100.1
+    priority: 100.0
 
   accuracy:
     type: AccuracyStatistics

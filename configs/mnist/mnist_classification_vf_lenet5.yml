@@ -23,13 +23,15 @@ testing:
 # Definition of the pipeline.
 pipeline:
   name: mnist_variational_flow_lenet5
+  # Disable components for "default" flow.
+  disable: nllloss, accuracy, precision_recall
 
   # Add global variables.
   global_publisher:
     type: GlobalVariablePublisher
-    priority: 0
+    priority: 0.1
     keys: [num_classes1, num_classes2, word_to_ix1, word_to_ix2]
-    values: [9, 1, {"Zero": 0, "One": 1, "Two": 2, "Three": 3, "Four": 4, "Five": 5, "Six": 6, "Seven": 7, "Eight": 8}, {"Nine": 9}]
+    values: [3, 7, {"Zero": 0, "One": 1, "Two": 2, "Three": 3}, {"Four": 4, "Five": 5, "Six": 6, "Seven": 7, "Eight": 8, "Nine": 9}]
 
   # Image classifier.
   image_classifier:
@@ -42,25 +44,23 @@ pipeline:
         flow2_word_mappings: word_to_ix2
 
   # Masked loss.
-  nllloss:
+  nllloss_flow1:
     type: NLLLoss
+    priority: 10.1
     use_masking: True
     streams:
       predictions: flow1_predictions
       masks: flow1_masks
 
   # Statistics.
-  batch_size:
-    type: BatchSizeStatistics
-    streams:
-      predictions: flow1_predictions
 
-  accuracy:
+  accuracy_flow1:
     type: AccuracyStatistics
+    priority: 100.2
     streams:
       predictions: flow1_predictions
 
-  precision_recall:
+  precision_recall_flow1:
     type: PrecisionRecallStatistics
     priority: 100.3
     use_word_mappings: True

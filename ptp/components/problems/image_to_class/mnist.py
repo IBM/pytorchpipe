@@ -57,6 +57,9 @@ class MNIST(ImageToClassProblem):
         # Call base class constructors.
         super(MNIST, self).__init__(name, MNIST, config)
 
+        # Channel returning targets as words.
+        self.key_labels = self.stream_keys["labels"]
+
         # Get absolute path.
         data_folder = os.path.expanduser(self.config['data_folder'])
 
@@ -100,6 +103,8 @@ class MNIST(ImageToClassProblem):
         # Class names.
         labels = 'Zero One Two Three Four Five Six Seven Eight Nine'.split(' ')
         word_to_ix = {labels[i]: i for i in range(10)}
+        # Reverse mapping - for labels.
+        self.ix_to_word = {value: key for (key, value) in word_to_ix.items()}
         # Export to globals.
         self.globals["label_word_mappings"] = word_to_ix
 
@@ -120,7 +125,8 @@ class MNIST(ImageToClassProblem):
         return {
             self.key_indices: DataDefinition([-1, 1], [list, int], "Batch of sample indices [BATCH_SIZE] x [1]"),
             self.key_inputs: DataDefinition([-1, 1, self.height, self.width], [torch.Tensor], "Batch of images [BATCH_SIZE x IMAGE_DEPTH x IMAGE_HEIGHT x IMAGE_WIDTH]"),
-            self.key_targets: DataDefinition([-1], [torch.Tensor], "Batch of targets, each being a single index [BATCH_SIZE]")
+            self.key_targets: DataDefinition([-1], [torch.Tensor], "Batch of targets, each being a single index [BATCH_SIZE]"),
+            self.key_labels: DataDefinition([-1, 1], [list, str], "Batch of targets, each being a single word [BATCH_SIZE] x [STRING]")
             }
 
 
@@ -143,4 +149,5 @@ class MNIST(ImageToClassProblem):
         data_dict = self.create_data_dict(index)
         data_dict[self.key_inputs] = img
         data_dict[self.key_targets] = target
+        data_dict[self.key_labels] = self.ix_to_word[target.item()]
         return data_dict

@@ -53,8 +53,6 @@ class PrecisionRecallStatistics(Component):
         self.key_recall = self.statistics_keys["recall"]
         self.key_f1score = self.statistics_keys["f1score"]
 
-        # Get the number of possible outputs.
-        self.num_classes = self.globals["num_classes"]
         
         # Get (or create) vocabulary.
         if self.config["use_word_mappings"]:
@@ -63,8 +61,13 @@ class PrecisionRecallStatistics(Component):
             # Assume they are ordered, starting from 0.
             for key in self.globals["word_mappings"].keys():
                 self.labels.append(key)
+            # Set number of classes by looking at labels.
+            self.num_classes = len(self.labels)
         else:
+            # Get the number of possible outputs.
+            self.num_classes = self.globals["num_classes"]
             self.labels = list(range(self.num_classes))
+
 
         # Check display options.
         self.show_confusion_matrix = self.config["show_confusion_matrix"]
