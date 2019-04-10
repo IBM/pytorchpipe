@@ -146,8 +146,21 @@ class VariationalFlowLeNet5(Model):
         :return: Predictions [batch_size, num_classes]
 
         """
-        # Produce masks.
-        # TODO.
+        targets = data_dict[self.key_targets]
+        #print("targets = \n", targets)
+
+        # Produce masks - for flow 1.
+        flow1_masks = torch.zeros(targets.size(0), requires_grad=False).type(self.app_state.ByteTensor)
+        for _, val in self.flow1_word_mappings.items():
+            flow1_masks = flow1_masks + (targets == val)
+        #print("flow1_masks = \n", flow1_masks)
+        
+        # Produce masks - for flow 2.
+        flow2_masks = torch.zeros(targets.size(0), requires_grad=False).type(self.app_state.ByteTensor)
+        for _, val in self.flow2_word_mappings.items():
+            flow2_masks = flow2_masks + (targets == val)
+        #print("flow2_masks = \n", flow2_masks)
+        #exit(1)
 
         # Get images.
         img = data_dict[self.key_inputs]
@@ -167,4 +180,6 @@ class VariationalFlowLeNet5(Model):
         data_dict.extend({
             self.key_flow1_predictions: x1,
             self.key_flow2_predictions: x2,
+            self.key_flow1_masks: flow1_masks,
+            self.key_flow2_masks: flow2_masks,
             })
