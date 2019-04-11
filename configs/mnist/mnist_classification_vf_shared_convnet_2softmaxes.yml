@@ -6,15 +6,15 @@ training:
   problem: 
     #resize_image: [32, 32]
     batch_size: 64
-  optimizer:
-    #name: Adam
-    lr: 0.001
-  terminal_conditions:
-    loss_stop: 0.08
+  #optimizer:
+  #  #name: Adam
+  #  lr: 0.001
+  #terminal_conditions:
+  #  loss_stop: 0.08
 
 # Validation parameters - overwrite defaults:
-validation:
-  partial_validation_interval: 10
+#validation:
+#  partial_validation_interval: 10
 #  problem:
 #    resize_image: [32, 32]
 
@@ -27,7 +27,7 @@ validation:
 pipeline:
   name: mnist_variational_flow_shared_convnet_2softmaxes
   # Disable components for "default" flow.
-  disable: nllloss, accuracy, precision_recall
+  disable: nllloss, precision_recall
 
   ################# SHARED #################
 
@@ -77,6 +77,7 @@ pipeline:
       prediction_size: num_classes1
     streams:
       inputs: reshaped_maps
+      targets: flow1_targets
       predictions: flow1_predictions
       
   # Masked loss.
@@ -91,17 +92,6 @@ pipeline:
       loss: flow1_loss
 
   # Statistics.
-  flow1_accuracy:
-    type: AccuracyStatistics
-    priority: 1.32
-    use_masking: True
-    streams:
-      predictions: flow1_predictions
-      targets: flow1_targets
-      masks: flow1_masks
-    statistics:
-      accuracy: flow1_accuracy
-
   flow1_precision_recall:
     type: PrecisionRecallStatistics
     priority: 1.33
@@ -142,6 +132,7 @@ pipeline:
       prediction_size: num_classes2
     streams:
       inputs: reshaped_maps
+      targets: flow2_targets
       predictions: flow2_predictions
       
   # Masked loss.
@@ -156,17 +147,6 @@ pipeline:
       loss: flow2_loss
 
   # Statistics.
-  flow2_accuracy:
-    type: AccuracyStatistics
-    priority: 2.32
-    use_masking: True
-    streams:
-      targets: flow2_targets
-      predictions: flow2_predictions
-      masks: flow2_masks
-    statistics:
-      accuracy: flow2_accuracy
-
   flow2_precision_recall:
     type: PrecisionRecallStatistics
     priority: 2.33
@@ -201,17 +181,6 @@ pipeline:
       output_indices: merged_indices
 
   # Statistics.
-  joined_accuracy:
-    type: AccuracyStatistics
-    priority: 3.21
-    # Use prediction indices instead of distributions.
-    use_prediction_distributions: False
-    streams:
-      targets: targets
-      predictions: merged_indices
-    statistics:
-      accuracy: joined_accuracy
-
   joined_precision_recall:
     type: PrecisionRecallStatistics
     priority: 3.22

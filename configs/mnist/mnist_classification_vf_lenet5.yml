@@ -20,7 +20,7 @@ testing:
 pipeline:
   name: mnist_variational_flow_lenet5
   # Disable components for "default" flow.
-  disable: nllloss, accuracy, precision_recall
+  disable: nllloss, precision_recall
 
   ################# SHARED #################
   # Add global variables.
@@ -39,6 +39,20 @@ pipeline:
     streams:
       inputs: inputs
       predictions: predictions
+
+  all_precision_recall:
+    type: PrecisionRecallStatistics
+    priority: 100.1
+    use_word_mappings: True
+    show_class_scores: True
+    streams:
+      predictions: predictions
+    globals:
+      word_mappings: label_word_mappings
+    statistics:
+      precision: all_precision
+      recall: all_recall
+      f1score: all_f1score
 
   ################# Flow 1 #################
   flow1_string_to_mask:
@@ -79,7 +93,7 @@ pipeline:
       recall: flow1_recall
       f1score: flow1_f1score
 
-  ################# Flow 1 #################
+  ################# Flow 2 #################
   flow2_string_to_mask:
     type: StringToMask
     priority: 2.2

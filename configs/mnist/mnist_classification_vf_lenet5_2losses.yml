@@ -20,7 +20,7 @@ testing:
 pipeline:
   name: mnist_variational_flow_lenet5
   # Disable components for "default" flow.
-  disable: nllloss, accuracy, precision_recall
+  disable: nllloss, precision_recall
 
   ################# SHARED #################
 
