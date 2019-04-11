@@ -175,9 +175,21 @@ pipeline:
       output_strings: merged_predictions
       output_indices: merged_indices
 
+  # Statistics.
+  joined_accuracy:
+    type: AccuracyStatistics
+    priority: 3.21
+    # Use prediction indices instead of distributions.
+    use_prediction_distributions: False
+    streams:
+      targets: targets
+      predictions: merged_indices
+    statistics:
+      accuracy: joined_accuracy
+
   joined_precision_recall:
     type: PrecisionRecallStatistics
-    priority: 3.2
+    priority: 3.22
     # Use prediction indices instead of distributions.
     use_prediction_distributions: False
     use_word_mappings: True

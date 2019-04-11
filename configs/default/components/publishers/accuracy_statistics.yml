@@ -4,6 +4,11 @@
 # 1. CONFIGURATION PARAMETERS that will be LOADED by the component.
 ####################################################################
 
+# Flag indicating whether prediction are represented as distributions or indices (LOADED)
+# Options: True (expects distribution for each preditions)
+#          False (expects indices (max args))
+use_prediction_distributions: True
+
 # When set to True, performs masking of selected samples from batch (LOADED)
 use_masking: False
 
