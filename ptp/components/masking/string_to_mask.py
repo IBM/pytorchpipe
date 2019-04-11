@@ -110,7 +110,7 @@ class StringToMask(Component):
         #print("masks ", masks)
         #print("indices ", output_indices)
 
-        # Create the returned dict.
+        # Extend the dict by returned output streams.
         data_dict.extend({
             self.key_masks: masks,
             self.key_string_indices: output_indices

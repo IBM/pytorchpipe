@@ -32,7 +32,7 @@ class ListToTensor(Component):
         """
         Initializes object.
 
-        :param name: Loss name.
+        :param name: Name of the component loaded from the configuration file.
         :type name: str
 
         :param config: Dictionary of parameters (read from the configuration ``.yaml`` file).

@@ -31,9 +31,9 @@ pipeline:
     type: GlobalVariablePublisher
     priority: 0
     keys: [num_classes1, num_classes2, word_to_ix1, word_to_ix2]
-    values: [4, 6, {"Zero": 0, "One": 1, "Two": 2, "Three": 3}, {"Four": 0, "Five": 1, "Six": 2, "Seven": 3, "Eight": 4, "Nine": 5}]
+    values: [3, 7, {"Zero": 0, "One": 1, "Two": 2}, {"Three": 0, "Four": 1, "Five": 2, "Six": 3, "Seven": 4, "Eight": 5, "Nine": 6}]
 
-  ######### Flow 1 #################
+  ################# Flow 1 #################
   flow1_string_to_mask:
     type: StringToMask
     priority: 1.1
@@ -97,7 +97,7 @@ pipeline:
       recall: flow1_recall
       f1score: flow1_f1score
 
-  ######### Flow 2 #################
+  ################# Flow 2 #################
   flow2_string_to_mask:
     type: StringToMask
     priority: 2.1
@@ -160,5 +160,21 @@ pipeline:
       precision: flow2_precision
       recall: flow2_recall
       f1score: flow2_f1score
+
+  ################# JOIN #################
+  joined_predictions:
+    type: JoinMaskedPredictions
+    priority: 3.1
+    # Names of used input streams.
+    input_prediction_streams: [flow1_predictions, flow2_predictions]
+    input_mask_streams: [flow1_masks, flow2_masks]
+    input_word_mappings: [word_to_ix1, word_to_ix2]
+    globals:
+      output_word_mappings: label_word_mappings # from MNIST problem.
+    streams:
+      output_strings: merged_predictions
+      output_indices: merged_indices
+
+
 
 #: pipeline
