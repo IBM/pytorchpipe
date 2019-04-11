@@ -44,11 +44,15 @@ class PrecisionRecallStatistics(Component):
         # Call constructors of parent classes.
         Component.__init__(self, name, PrecisionRecallStatistics, config)
 
-        # Set key mappings.
+        # Get stream key mappings.
         self.key_targets = self.stream_keys["targets"]
         self.key_predictions = self.stream_keys["predictions"]
+        self.key_masks = self.stream_keys["masks"]
 
-        # Get statistic key mappings.
+        # Get masking flag.
+        self.use_masking = self.config["use_masking"]
+
+        # Get statistics key mappings.
         self.key_precision = self.statistics_keys["precision"]
         self.key_recall = self.statistics_keys["recall"]
         self.key_f1score = self.statistics_keys["f1score"]
@@ -79,10 +83,13 @@ class PrecisionRecallStatistics(Component):
 
         :return: dictionary containing input data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
         """
-        return {
+        input_defs = {
             self.key_targets: DataDefinition([-1], [torch.Tensor], "Batch of targets, each being a single index [BATCH_SIZE]"),
             self.key_predictions: DataDefinition([-1, -1], [torch.Tensor], "Batch of predictions, represented as tensor with probability distribution over classes [BATCH_SIZE x NUM_CLASSES]")
             }
+        if self.use_masking:
+            input_defs[self.key_masks] = DataDefinition([-1], [torch.Tensor], "Batch of masks [BATCH_SIZE]")
+        return input_defs
 
     def output_data_definitions(self):
         """ 
@@ -144,12 +151,19 @@ class PrecisionRecallStatistics(Component):
         preds = data_dict[self.key_predictions].max(1)[1].data.cpu().numpy()
         #print("Predictions :", preds)
 
+        if self.use_masking:
+            # Get masks from inputs.
+            masks = data_dict[self.key_masks].data.cpu().numpy()
+        else:
+            # Create vector full of ones.
+            masks = np.ones(targets.shape[0])
+
         # Create the confusion matrix, use SciKit learn order:
         # Column - predicted class
         # Row - target (actual) class
         confusion_matrix = np.zeros([self.num_classes, self.num_classes], dtype=int)
-        for (target, pred) in zip(targets, preds):
-            confusion_matrix[target][pred] += 1
+        for i, (target, pred) in enumerate(zip(targets, preds)):
+            confusion_matrix[target][pred] += 1 * masks[i]
 
         # Calculate true positive (TP), eqv. with hit.
         tp = np.zeros([self.num_classes], dtype=int)
@@ -213,9 +227,9 @@ class PrecisionRecallStatistics(Component):
 
         # Calculate weighted averages.
         support_sum = sum(support)
-        precision_avg = sum([pi*si / support_sum for (pi,si) in zip(precision,support)])
-        recall_avg = sum([ri*si / support_sum for (ri,si) in zip(recall,support)])
-        f1score_avg = sum([fi*si / support_sum for (fi,si) in zip(f1score,support)])
+        precision_avg = sum([pi*si / support_sum if si > 0 else 0.0 for (pi,si) in zip(precision,support)])
+        recall_avg = sum([ri*si / support_sum if si > 0 else 0.0 for (ri,si) in zip(recall,support)])
+        f1score_avg = sum([fi*si / support_sum if si > 0 else 0.0 for (fi,si) in zip(f1score,support)])
 
         # Export to statistics.
         stat_col[self.key_precision] = precision_avg

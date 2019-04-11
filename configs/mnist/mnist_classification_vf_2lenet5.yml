@@ -5,10 +5,10 @@ default_configs: mnist/default_mnist.yml
 training:
   problem: 
     resize_image: [32, 32]
-    #batch_size: 32
+    batch_size: 64
   optimizer:
     #name: Adam
-    lr: 0.001
+    lr: 0.01
 
 # Validation parameters - overwrite defaults:
 validation:
@@ -70,9 +70,11 @@ pipeline:
   flow1_accuracy:
     type: AccuracyStatistics
     priority: 1.32
+    use_masking: True
     streams:
       predictions: flow1_predictions
       targets: flow1_targets
+      masks: flow1_masks
     statistics:
       accuracy: flow1_accuracy
 
@@ -82,12 +84,14 @@ pipeline:
     use_word_mappings: True
     show_class_scores: True
     show_confusion_matrix: True
+    use_masking: True
     globals:
       word_mappings: word_to_ix1
       num_classes: num_classes1
     streams:
       targets: flow1_targets
       predictions: flow1_predictions
+      masks: flow1_masks
     statistics:
       precision: flow1_precision
       recall: flow1_recall
@@ -130,9 +134,11 @@ pipeline:
   flow2_accuracy:
     type: AccuracyStatistics
     priority: 2.32
+    use_masking: True
     streams:
       targets: flow2_targets
       predictions: flow2_predictions
+      masks: flow2_masks
     statistics:
       accuracy: flow2_accuracy
 
@@ -142,12 +148,14 @@ pipeline:
     use_word_mappings: True
     show_class_scores: True
     show_confusion_matrix: True
+    use_masking: True
     globals:
       word_mappings: word_to_ix2
       num_classes: num_classes2
     streams:
       targets: flow2_targets
       predictions: flow2_predictions
+      masks: flow2_masks
     statistics:
       precision: flow2_precision
       recall: flow2_recall

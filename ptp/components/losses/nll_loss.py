@@ -36,17 +36,17 @@ class NLLLoss(Loss):
         # Call constructors of parent classes.
         Loss.__init__(self, name, NLLLoss, config)
 
+        # Get stream key mappnigs.
         self.key_masks = self.stream_keys["masks"]
-
-        # Set loss.
-        self.loss_function = nn.NLLLoss()
-
-        # Get number of targets dimensions.
-        self.num_targets_dims = self.config["num_targets_dims"]
 
         # Get masking flag.
         self.use_masking = self.config["use_masking"]
 
+        # Get number of targets dimensions.
+        self.num_targets_dims = self.config["num_targets_dims"]
+
+        # Set loss.
+        self.loss_function = nn.NLLLoss()
 
 
     def input_data_definitions(self):

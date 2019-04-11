@@ -44,10 +44,15 @@ class AccuracyStatistics(Component):
         # Call constructors of parent classes.
         Component.__init__(self, name, AccuracyStatistics, config)
 
-        # Set key mappings.
+        # Get stream key mappings.
         self.key_targets = self.stream_keys["targets"]
         self.key_predictions = self.stream_keys["predictions"]
+        self.key_masks = self.stream_keys["masks"]
 
+        # Get masking flag.
+        self.use_masking = self.config["use_masking"]
+
+        # Get statistics key mappings.
         self.key_accuracy = self.statistics_keys["accuracy"]
 
 
@@ -57,10 +62,14 @@ class AccuracyStatistics(Component):
 
         :return: dictionary containing input data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
         """
-        return {
+        input_defs = {
             self.key_targets: DataDefinition([-1], [torch.Tensor], "Batch of targets, each being a single index [BATCH_SIZE]"),
             self.key_predictions: DataDefinition([-1, -1], [torch.Tensor], "Batch of predictions, represented as tensor with probability distribution over classes [BATCH_SIZE x NUM_CLASSES]")
             }
+        if self.use_masking:
+            input_defs[self.key_masks] = DataDefinition([-1], [torch.Tensor], "Batch of masks [BATCH_SIZE]")
+        return input_defs
+
 
     def output_data_definitions(self):
         """ 
@@ -88,24 +97,37 @@ class AccuracyStatistics(Component):
         :return: Accuracy.
 
         """
+        # Get targets.
+        targets = data_dict[self.key_targets].data.cpu().numpy()
+
         # Get indices of the max log-probability.
-        #pred = data_dict[self.key_predictions].max(1, keepdim=True)[1]
-        preds = data_dict[self.key_predictions].max(1)[1]
-        #print("Max: {} ".format(data_dict[self.key_predictions].max(1)[1]))
+        preds = data_dict[self.key_predictions].max(1)[1].data.cpu().numpy()
 
-        # Calculate the number of correct predictinos.
-        correct = preds.eq(data_dict[self.key_targets]).sum().item()
-        #print ("TARGETS = ",data_dict[self.key_targets])
-        #print ("PREDICTIONS = ",data_dict[self.key_predictions])
-        #print ("MAX PREDICTIONS = ", preds)
-        #print("CORRECTS = ", correct)
+        # Calculate the correct predictinos.
+        correct = np.equal(preds, targets)
 
-        #print(" Target: {}\n Prediction: {}\n Correct: {} ".format(data_dict[self.key_targets], preds, preds.eq(data_dict[self.key_targets])))
+        #print(" Target: {}\n Prediction: {}\n Correct: {}\n".format(targets, preds, correct))
 
-        # Normalize.
-        batch_size = data_dict[self.key_predictions].shape[0]       
-        accuracy = correct / batch_size
-        #print("ACCURACY = ", accuracy)
+        if self.use_masking:
+            # Get masks from inputs.
+            masks = data_dict[self.key_masks].data.cpu().numpy()
+            correct = correct * masks
+            batch_size = masks.sum()       
+        else:
+            batch_size = preds.shape[0]       
+        
+        #print(" Mask: {}\n Masked Correct: {}\n".format(masks, correct))
+
+        # Simply sum the correct values.
+        num_correct = correct.sum()
+
+        #print(" num_correct: {}\n batch_size: {}\n".format(num_correct, batch_size))
+
+        # Normalize by batch size.
+        if batch_size > 0:
+            accuracy = num_correct / batch_size
+        else:
+            accuracy = 0
 
         return accuracy
 
