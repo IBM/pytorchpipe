@@ -539,9 +539,20 @@ class PipelineManager(object):
         """
         if (len(self.losses) == 0):
             raise ConfigurationError("Cannot train using backpropagation as there are no 'Loss' components")
+        # Calculate total number of backward passes.
+        total_passes = sum([len(loss.loss_keys()) for loss in self.losses])
+
+        # All but the last call to backward should have the retain_graph=True option.
+        pass_counter = 0
         for loss in self.losses:
             for key in loss.loss_keys():
-                data_dict[key].backward()
+                pass_counter += 1
+                if pass_counter == total_passes:
+                    # Last pass.
+                    data_dict[key].backward()
+                else:
+                    # "Other pass."
+                    data_dict[key].backward(retain_graph=True)
 
 
     def get_loss(self, data_dict):
