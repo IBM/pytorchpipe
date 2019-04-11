@@ -175,6 +175,24 @@ pipeline:
       output_strings: merged_predictions
       output_indices: merged_indices
 
+  joined_precision_recall:
+    type: PrecisionRecallStatistics
+    priority: 3.2
+    # Use prediction indices instead of distributions.
+    use_prediction_distributions: False
+    use_word_mappings: True
+    show_class_scores: True
+    show_confusion_matrix: True
+    globals:
+      word_mappings: label_word_mappings # straight from MNIST
+      #num_classes: num_classes
+    streams:
+      targets: targets # straight from MNIST
+      predictions: merged_indices
+    statistics:
+      precision: joined_precision
+      recall: joined_recall
+      f1score: joined_f1score
 
 
 #: pipeline

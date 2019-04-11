@@ -49,6 +49,9 @@ class PrecisionRecallStatistics(Component):
         self.key_predictions = self.stream_keys["predictions"]
         self.key_masks = self.stream_keys["masks"]
 
+        # Get prediction distributions/indices flag.
+        self.use_prediction_distributions = self.config["use_prediction_distributions"]
+
         # Get masking flag.
         self.use_masking = self.config["use_masking"]
 
@@ -84,9 +87,14 @@ class PrecisionRecallStatistics(Component):
         :return: dictionary containing input data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
         """
         input_defs = {
-            self.key_targets: DataDefinition([-1], [torch.Tensor], "Batch of targets, each being a single index [BATCH_SIZE]"),
-            self.key_predictions: DataDefinition([-1, -1], [torch.Tensor], "Batch of predictions, represented as tensor with probability distribution over classes [BATCH_SIZE x NUM_CLASSES]")
+            self.key_targets: DataDefinition([-1], [torch.Tensor], "Batch of targets, each being a single index [BATCH_SIZE]")
             }
+
+        if self.use_prediction_distributions:
+            input_defs[self.key_predictions] = DataDefinition([-1, -1], [torch.Tensor], "Batch of predictions, represented as tensor with probability distribution over classes [BATCH_SIZE x NUM_CLASSES]")
+        else: 
+            input_defs[self.key_predictions] = DataDefinition([-1], [torch.Tensor], "Batch of predictions, represented as tensor with indices of predicted answers [BATCH_SIZE]")
+
         if self.use_masking:
             input_defs[self.key_masks] = DataDefinition([-1], [torch.Tensor], "Batch of masks [BATCH_SIZE]")
         return input_defs
@@ -147,8 +155,11 @@ class PrecisionRecallStatistics(Component):
         targets = data_dict[self.key_targets].data.cpu().numpy()
         #print("Targets :", targets)
 
-        # Get indices of the max log-probability.
-        preds = data_dict[self.key_predictions].max(1)[1].data.cpu().numpy()
+        if self.use_prediction_distributions:
+            # Get indices of the max log-probability.
+            preds = data_dict[self.key_predictions].max(1)[1].data.cpu().numpy()
+        else: 
+            preds = data_dict[self.key_predictions].data.cpu().numpy()
         #print("Predictions :", preds)
 
         if self.use_masking:

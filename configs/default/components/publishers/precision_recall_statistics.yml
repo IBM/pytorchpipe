@@ -4,6 +4,11 @@
 # 1. CONFIGURATION PARAMETERS that will be LOADED by the component.
 ####################################################################
 
+# Flag indicatingwhether inputs are prediction distributions or indices (LOADED)
+# Options: True (expects distribution for each preditions)
+#          False (expects indices)  
+use_prediction_distributions: True
+
 # Flag indicating whether confusion matrix will be shown (LOADED)
 show_confusion_matrix: False
 

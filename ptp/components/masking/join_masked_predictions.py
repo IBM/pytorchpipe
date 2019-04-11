@@ -136,44 +136,49 @@ class JoinMaskedPredictions(Component):
             self.logger.error("Masks received from the {} streams are not complementary!".format(self.input_mask_stream_keys))
             exit(-1)
 
-        # Create mapping indicating from which input take given sample.
+        # Create mapping indicating from which input prediction/mask/dictionary stream we will take data associated with given "sample".
         weights = np.array(range(len(masks)))
         masks = np.array(masks).transpose()
         mapping = np.dot(masks, weights)
         #print("Mapping = \n",mapping)
 
-        # Get indices of the max log-probabilities.
-        preds = []
-        for ipsk in self.input_prediction_stream_keys:
-            preds.append(data_dict[ipsk].max(1)[1].data.cpu().numpy())
-
         # "Translate". 
         output_answers = []
         output_indices = []
-        #output_predictions_lst = []
+        output_predictions_lst = []
         # Iterate through samples.
         for sample in range(batch_size):
             # Get the right dictionary.
             ix_to_word = self.input_ix_to_word[mapping[sample]]
             #print(ix_to_word)
-            # Get the right sample from the right prediction stream
-            #sample_prediction = data_dict[self.input_prediction_stream_keys[mapping[sample]]][sample]
-            # Get the index.
-            index = preds[mapping[sample]][sample]
+
+            # Get the right sample from the right prediction stream.
+            sample_prediction = data_dict[self.input_prediction_stream_keys[mapping[sample]]][sample]
+            #print(sample_prediction)
+            output_predictions_lst.append(sample_prediction)
+
+            # Get the index of max log-probabilities.
+            index = sample_prediction.max(0)[1].data.cpu().item()
+            #print(index)
+            
             # Get the right word.
             word = ix_to_word[index]
             output_answers.append(word)
+
             # Get original index using output dictionary.
             output_indices.append(self.output_word_to_ix[word])
 
-        #print(output_answers)
+        #print(output_predictions_lst)
         #targets = data_dict["targets"].data.cpu().numpy()
         #print("targets = \n",targets.tolist())
         #print("joined answers = \n",output_indices)
 
+        # Change to tensor.
+        output_indices_tensor = torch.tensor(output_indices)
+
         # Extend the dict by returned output streams.
         data_dict.extend({
-            self.key_output_indices: output_indices,
+            self.key_output_indices: output_indices_tensor,
             self.key_output_strings: output_answers
             })
         
