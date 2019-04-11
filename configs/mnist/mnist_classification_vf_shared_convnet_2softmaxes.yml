@@ -4,34 +4,57 @@ default_configs: mnist/default_mnist.yml
 # Training parameters - overwrite defaults:
 training:
   problem: 
-    resize_image: [32, 32]
+    #resize_image: [32, 32]
     batch_size: 64
   optimizer:
     #name: Adam
-    lr: 0.01
+    lr: 0.001
+  terminal_conditions:
+    loss_stop: 0.08
 
 # Validation parameters - overwrite defaults:
 validation:
-  problem:
-    resize_image: [32, 32]
+  partial_validation_interval: 10
+#  problem:
+#    resize_image: [32, 32]
 
 # Testing parameters - overwrite defaults:
-testing:
-  problem:
-    resize_image: [32, 32]
+#testing:
+#  problem:
+#    resize_image: [32, 32]
 
 # Definition of the pipeline.
 pipeline:
-  name: mnist_variational_flow_2lenet5
+  name: mnist_variational_flow_shared_convnet_2softmaxes
   # Disable components for "default" flow.
   disable: nllloss, accuracy, precision_recall
+
+  ################# SHARED #################
 
   # Add global variables.
   global_publisher:
     type: GlobalVariablePublisher
-    priority: 0
+    priority: 0.1
     keys: [num_classes1, num_classes2, word_to_ix1, word_to_ix2]
-    values: [3, 7, {"Zero": 0, "One": 1, "Two": 2}, {"Three": 0, "Four": 1, "Five": 2, "Six": 3, "Seven": 4, "Eight": 5, "Nine": 6}]
+    values: [3, 7, {"Three": 0, "One": 1, "Five": 2}, {"Four": 0, "Two": 1, "Zero": 2, "Six": 3, "Seven": 4, "Eight": 5, "Nine": 6}]
+    #values: [3, 7, {"Zero": 0, "One": 1, "Two": 2}, {"Three": 0, "Four": 1, "Five": 2, "Six": 3, "Seven": 4, "Eight": 5, "Nine": 6}]
+
+  # Shared model - encoder.
+  image_encoder:
+    type: ConvNetEncoder
+    priority: 0.2
+
+  # Reshape inputs
+  reshaper:
+    type: ReshapeTensor
+    input_dims: [-1, 16, 1, 1]
+    output_dims: [-1, 16]
+    priority: 0.3
+    streams:
+      inputs: feature_maps
+      outputs: reshaped_maps
+    globals:
+      output_size: reshaped_maps_size
 
   ################# Flow 1 #################
   flow1_string_to_mask:
@@ -44,14 +67,16 @@ pipeline:
       string_indices: flow1_targets
       masks: flow1_masks
 
-  # Image classifier.
-  flow1_image_classifier:
-    type: LeNet5
+  # Classifier.
+  flow1_classifier:
+    type: FeedForwardNetwork 
     priority: 1.2
+    streams:
     globals:
+      input_size: reshaped_maps_size
       prediction_size: num_classes1
     streams:
-      inputs: inputs
+      inputs: reshaped_maps
       predictions: flow1_predictions
       
   # Masked loss.
@@ -107,14 +132,16 @@ pipeline:
       string_indices: flow2_targets
       masks: flow2_masks
 
-  # Image classifier.
-  flow2_image_classifier:
-    type: LeNet5
+  # Classifier.
+  flow2_classifier:
+    type: FeedForwardNetwork 
     priority: 2.2
+    streams:
     globals:
+      input_size: reshaped_maps_size
       prediction_size: num_classes2
     streams:
-      inputs: inputs
+      inputs: reshaped_maps
       predictions: flow2_predictions
       
   # Masked loss.

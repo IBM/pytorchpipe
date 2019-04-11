@@ -566,9 +566,14 @@ class PipelineManager(object):
         if (len(self.losses) == 0):
             raise ConfigurationError("Cannot train using backpropagation as there are no 'Loss' components")
         loss_sum = 0
+        num_losses = 0
         for loss in self.losses:
             for key in loss.loss_keys():
                 loss_sum += data_dict[key].cpu().item()
+                num_losses +=1
+        # Display additional information for multi-loss pipelines.
+        if num_losses > 1:
+            self.logger.info("Total loss: {}".format(loss_sum))
         return loss_sum
 
 
