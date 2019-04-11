@@ -5,10 +5,6 @@ default_configs: mnist/default_mnist.yml
 training:
   problem: 
     resize_image: [32, 32]
-    batch_size: 64
-  optimizer:
-    #name: Adam
-    lr: 0.01
 
 # Validation parameters - overwrite defaults:
 validation:

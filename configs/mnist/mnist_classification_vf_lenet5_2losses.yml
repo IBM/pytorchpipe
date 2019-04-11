@@ -23,6 +23,7 @@ pipeline:
   disable: nllloss, accuracy, precision_recall
 
   ################# SHARED #################
+
   # Add global variables.
   global_publisher:
     type: GlobalVariablePublisher
@@ -40,6 +41,20 @@ pipeline:
       inputs: inputs
       predictions: predictions
 
+  all_precision_recall:
+    type: PrecisionRecallStatistics
+    priority: 100.1
+    use_word_mappings: True
+    show_class_scores: True
+    streams:
+      predictions: predictions
+    globals:
+      word_mappings: label_word_mappings
+    statistics:
+      precision: all_precision
+      recall: all_recall
+      f1score: all_f1score
+
   ################# Flow 1 #################
   flow1_string_to_mask:
     type: StringToMask
@@ -52,14 +67,14 @@ pipeline:
       masks: flow1_masks
 
   # Masked loss.
-  nllloss_flow1:
+  flow1_nllloss:
     type: NLLLoss
     priority: 10.1
     use_masking: True
     streams:
       predictions: predictions
-      targets: flow1_targets
       masks: flow1_masks
+      loss: flow1_loss
 
   # Statistics.
   flow1_precision_recall:
@@ -70,7 +85,6 @@ pipeline:
     show_class_scores: True
     streams:
       predictions: predictions
-      targets: flow1_targets
       masks: flow1_masks
     globals:
       word_mappings: word_to_ix1
@@ -79,7 +93,7 @@ pipeline:
       recall: flow1_recall
       f1score: flow1_f1score
 
-  ################# Flow 1 #################
+  ################# Flow 2 #################
   flow2_string_to_mask:
     type: StringToMask
     priority: 2.2
@@ -90,6 +104,16 @@ pipeline:
       string_indices: flow2_targets
       masks: flow2_masks
 
+  # Masked loss.
+  flow2_nllloss:
+    type: NLLLoss
+    priority: 10.2
+    use_masking: True
+    streams:
+      predictions: predictions
+      masks: flow2_masks
+      loss: flow2_loss
+
   flow2_precision_recall:
     type: PrecisionRecallStatistics
     priority: 100.5
@@ -98,7 +122,6 @@ pipeline:
     show_class_scores: True
     streams:
       predictions: predictions
-      targets: flow2_targets
       masks: flow2_masks
     globals:
       word_mappings: word_to_ix2
@@ -106,6 +129,5 @@ pipeline:
       precision: flow2_precision
       recall: flow2_recall
       f1score: flow2_f1score
-
 
 #: pipeline

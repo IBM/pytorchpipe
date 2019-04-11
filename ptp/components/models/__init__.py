@@ -6,7 +6,6 @@ from .lenet5 import LeNet5
 from .model import Model
 from .recurrent_neural_network import RecurrentNeuralNetwork
 from .sentence_embeddings import SentenceEmbeddings
-from .variational_flow_lenet5 import VariationalFlowLeNet5
 
 __all__ = [
     'ConvNetEncoder',
@@ -17,5 +16,4 @@ __all__ = [
     'Model',
     'RecurrentNeuralNetwork',
     'SentenceEmbeddings',
-    'VariationalFlowLeNet5',
     ]
