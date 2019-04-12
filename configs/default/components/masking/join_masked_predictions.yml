@@ -1,46 +1,44 @@
-# This file defines the default values for the Accuracy statistics.
+# This file defines the default values for the Join Masked Predictions component.
 
 ####################################################################
 # 1. CONFIGURATION PARAMETERS that will be LOADED by the component.
 ####################################################################
 
-# Flag indicating whether prediction are represented as distributions or indices (LOADED)
-# Options: True (expects distribution for each preditions)
-#          False (expects indices (max args))
-use_prediction_distributions: True
+# List of input stream names, each containing batch of predictions (LOADED)
+input_prediction_streams: ''
 
-# When set to True, performs masking of selected samples from batch (LOADED)
-use_masking: False
+# List of input stream names, each containing batch of masks (LOADED)
+input_mask_streams: ''
+
+# List of word mapping names - those will be loaded from globals (LOADED)
+input_word_mappings: ''
 
 streams: 
   ####################################################################
   # 2. Keymappings associated with INPUT and OUTPUT streams.
   ####################################################################
 
-  # Stream containing targets (label ids) (INPUT)
-  targets: targets
+  # Stream containing batch of output strings (OUTPUT)
+  output_strings: output_strings
 
-  # Stream containing batch of predictions (INPUT)
-  predictions: predictions
-
-  # Stream containing masks used for masking of selected samples from batch (INPUT)
-  masks: masks
+  # Stream containing batch of output indices (OUTPUT)
+  # WARNING: As performed operations are not differentiable,
+  # those indices cannot be used for e.g. calculation of loss!!
+  output_indices: output_indices
 
 globals:
   ####################################################################
   # 3. Keymappings of variables that will be RETRIEVED from GLOBALS.
   ####################################################################
 
+  # Vocabulary used to produce output strings (RETRIEVED)
+  output_word_mappings: output_word_mappings
+
   ####################################################################
   # 4. Keymappings associated with GLOBAL variables that will be SET.
   ####################################################################
 
-statistics:
   ####################################################################
   # 5. Keymappings associated with statistics that will be ADDED.
   ####################################################################
-
-  # Name used for collected statistics (ADDED).
-  accuracy: accuracy
-
 

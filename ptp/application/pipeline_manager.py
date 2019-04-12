@@ -81,7 +81,7 @@ class PipelineManager(object):
         disabled_components = ''
         # Add components to disable by the ones from configuration file.
         if "disable" in self.config:
-            disabled_components = [*disabled_components, *self.config["disable"].split(",")]
+            disabled_components = [*disabled_components, *self.config["disable"].replace(" ","").split(",")]
         # Add components to disable by the ones from command line arguments.
         if (self.app_state.args is not None) and (self.app_state.args.disable != ''):
             disabled_components = [*disabled_components, *self.app_state.args.disable.split(",")]
@@ -539,9 +539,20 @@ class PipelineManager(object):
         """
         if (len(self.losses) == 0):
             raise ConfigurationError("Cannot train using backpropagation as there are no 'Loss' components")
+        # Calculate total number of backward passes.
+        total_passes = sum([len(loss.loss_keys()) for loss in self.losses])
+
+        # All but the last call to backward should have the retain_graph=True option.
+        pass_counter = 0
         for loss in self.losses:
             for key in loss.loss_keys():
-                data_dict[key].backward()
+                pass_counter += 1
+                if pass_counter == total_passes:
+                    # Last pass.
+                    data_dict[key].backward()
+                else:
+                    # "Other pass."
+                    data_dict[key].backward(retain_graph=True)
 
 
     def get_loss(self, data_dict):
@@ -555,9 +566,14 @@ class PipelineManager(object):
         if (len(self.losses) == 0):
             raise ConfigurationError("Cannot train using backpropagation as there are no 'Loss' components")
         loss_sum = 0
+        num_losses = 0
         for loss in self.losses:
             for key in loss.loss_keys():
                 loss_sum += data_dict[key].cpu().item()
+                num_losses +=1
+        # Display additional information for multi-loss pipelines.
+        if num_losses > 1:
+            self.logger.info("Total loss: {}".format(loss_sum))
         return loss_sum
 
 

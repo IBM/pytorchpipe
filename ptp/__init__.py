@@ -7,6 +7,8 @@ from .components.component import Component
 
 from .components.losses import *
 
+from .components.masking import *
+
 from .components.models import *
 
 from .components.problems.problem import Problem

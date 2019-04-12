@@ -12,6 +12,9 @@ num_targets_dims: 1
 # Options: NLLLoss | CrossEntropyLoss (NOT OPERATIONAL YET!)
 # loss_function: NLLLoss
 
+# When set to True, performs masking of selected samples from batch (LOADED)
+use_masking: False
+
 streams: 
   ####################################################################
   # 2. Keymappings associated with INPUT and OUTPUT streams.
@@ -22,6 +25,9 @@ streams:
 
   # Stream containing batch of predictions (INPUT)
   predictions: predictions
+
+  # Stream containing masks used for masking of selected samples from batch (INPUT)
+  masks: masks
 
   # Stream containing loss (OUTPUT)
   loss: loss

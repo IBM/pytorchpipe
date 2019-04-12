@@ -23,7 +23,7 @@ pipeline:
 
   # Image classifier.
   classifier:
-    type: SoftmaxClassifier 
+    type: FeedForwardNetwork 
     priority: 3
     streams:
       inputs: reshaped_maps

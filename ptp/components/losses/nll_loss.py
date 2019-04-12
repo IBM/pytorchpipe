@@ -36,11 +36,17 @@ class NLLLoss(Loss):
         # Call constructors of parent classes.
         Loss.__init__(self, name, NLLLoss, config)
 
-        # Set loss.
-        self.loss_function = nn.NLLLoss()
+        # Get stream key mappnigs.
+        self.key_masks = self.stream_keys["masks"]
+
+        # Get masking flag.
+        self.use_masking = self.config["use_masking"]
 
         # Get number of targets dimensions.
         self.num_targets_dims = self.config["num_targets_dims"]
+
+        # Set loss.
+        self.loss_function = nn.NLLLoss()
 
 
     def input_data_definitions(self):
@@ -49,10 +55,13 @@ class NLLLoss(Loss):
 
         :return: dictionary containing input data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
         """
-        return {
+        input_defs = {
             self.key_targets: DataDefinition([-1]*self.num_targets_dims, [torch.Tensor], "Batch of targets (indices) [DIM 1 x DIM 2 x ... ]"),
             self.key_predictions: DataDefinition([-1]*(self.num_targets_dims+1), [torch.Tensor], "Batch of predictions, represented as tensor with probability distribution over classes [DIM 1 x DIM x ... x NUM_CLASSES]")
             }
+        if self.use_masking:
+            input_defs[self.key_masks] = DataDefinition([-1], [torch.Tensor], "Batch of masks [BATCH_SIZE]")
+        return input_defs
 
     def output_data_definitions(self):
         """ 
@@ -81,10 +90,24 @@ class NLLLoss(Loss):
         targets = data_dict[self.key_targets]
         predictions = data_dict[self.key_predictions]
 
-        if isinstance(targets, (list,)):
-            # Change to long tensor, as expected by nllloss.
-            targets = torch.LongTensor(targets)
+        #print("targets = ",targets)
+        #print("predictions = ",predictions)
 
+        #if isinstance(targets, (list,)):
+        #    # Change to long tensor, as expected by nllloss.
+        #    targets = torch.LongTensor(targets)
+
+        # Mask predictions if option set.
+
+        if self.use_masking:
+            masks = data_dict[self.key_masks]
+            targets = targets * masks.type(self.app_state.LongTensor)
+            #print("unsqueezed masks = ", masks.unsqueeze(1))
+            predictions = predictions * masks.unsqueeze(1).type(self.app_state.FloatTensor)
+
+        #print("masked targets = ",targets)
+        #print("masked predictions = ",predictions)
+        
         # reshape.
         last_dim = predictions.size(-1)
 
