@@ -30,17 +30,23 @@ PTP is not (yet) available as a [pip](https://pip.pypa.io/en/stable/quickstart/)
 However, we provide the `setup.py` script and recommend to use it for installation.
 First please clone the project repository::
 
-  git clone git@github.com:IBM/pytorchpipe.git
-  cd pytorchpipe/
+```console
+git clone git@github.com:IBM/pytorchpipe.git
+cd pytorchpipe/
+```
 
 Then, install the dependencies by running::
 
-  python setup.py install
+```console
+python setup.py install
+```
 
 This command will install all dependencies via pip_.
 If you plan to develop and introduce changes, please call the following command instead::
 
+```console
   python setup.py develop
+```
 
 This will enable you to change the code of the existing components/workers and still be able to run them by calling the associated ``ptp-*`` commands.
 More in that subject can be found in the following blog post on [dev_mode](https://setuptools.readthedocs.io/en/latest/setuptools.html#development-mode).
