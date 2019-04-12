@@ -21,6 +21,36 @@ Each such a stream can consist of several components, including one problem inst
 
 As a result, the training & testing mechanisms are no longer pinned to a specific model or problem, and built-in mechanisms for compatibility checking (handshaking), configuration management & statistics collection facilitate running diverse experiments.
 
+## Description
+
+PTP relies on PyTorch_, so you need to install it first. Refer to the official installation guide_ of PyTorch for its installation.
+It is easily installable via conda_, or you can compile it from source to optimize it for your machine.
+
+PTP is not (yet) available as a pip_ package, or on conda_.
+However, we provide the `setup.py` script and recommend to use it for installation.
+First please clone the project repository::
+
+  git clone git@github.com:IBM/pytorchpipe.git
+  cd pytorchpipe/
+
+Then, install the dependencies by running::
+
+  python setup.py install
+
+This command will install all dependencies via pip_.
+If you plan to develop and introduce changes, please call the following command instead::
+
+  python setup.py develop
+
+This will enable you to change the code of the existing components/workers and still be able to run them by calling the associated ``ptp-*`` commands.
+More in that subject can be found in the following blog post on dev_mode_.
+
+.. _guide: https://github.com/pytorch/pytorch#installation
+.. _PyTorch: https://github.com/pytorch/pytorch
+.. _conda: https://anaconda.org/pytorch/pytorch
+.. _pip: https://pip.pypa.io/en/stable/quickstart/
+.. _dev_mode: https://setuptools.readthedocs.io/en/latest/setuptools.html#development-mode
+
 ## Mainainers
 
 A project of the Machine Intelligence team, IBM Research, Almaden.
