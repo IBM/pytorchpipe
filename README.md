@@ -42,6 +42,8 @@ python setup.py install
 ```
 
 This command will install all dependencies via pip_.
+
+<aside class="notice">
 If you plan to develop and introduce changes, please call the following command instead::
 
 ```console
@@ -50,8 +52,9 @@ If you plan to develop and introduce changes, please call the following command 
 
 This will enable you to change the code of the existing components/workers and still be able to run them by calling the associated ``ptp-*`` commands.
 More in that subject can be found in the following blog post on [dev_mode](https://setuptools.readthedocs.io/en/latest/setuptools.html#development-mode).
+</aside>
 
-## Mainainers
+## Maintainers
 
 A project of the Machine Intelligence team, IBM Research, Almaden.
 
