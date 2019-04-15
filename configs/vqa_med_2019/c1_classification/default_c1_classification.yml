@@ -15,7 +15,6 @@ training:
 validation:
   problem:
     categories: C1
-    batch_size: 500
   dataloader:
     num_workers: 4
 
@@ -25,7 +24,7 @@ pipeline:
   # Answer encoding.
   answer_indexer:
     type: LabelIndexer
-    priority: 2
+    priority: 0.1
     data_folder: ~/data/vqa-med
     word_mappings_file: answers.c1.word.mappings.csv
     # Export mappings and size to globals.
