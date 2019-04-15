@@ -2,14 +2,14 @@
 default_configs: vqa_med_2019/c3_classification/default_c3_classification.yml
 
 pipeline:
-  name: vqa_med_c3_classification_all_bow_vgg_concat
+  name: vqa_med_c3_classification_all_rnn_vgg_concat
 
   global_publisher:
     type: GlobalVariablePublisher
     priority: 0
     # Add input_size to globals.
-    keys: [image_size_encoder_input_size, image_size_encoder_output_size, image_encoder_output_size]
-    values: [2, 10, 100]
+    keys: [question_embeddings_output_size, image_size_encoder_input_size, image_size_encoder_output_size, image_encoder_output_size]
+    values: [100, 2, 10, 100]
 
   # First subpipeline: question.
   # Questions encoding.
@@ -20,27 +20,34 @@ pipeline:
       inputs: questions
       outputs: tokenized_questions
 
-  question_onehot_encoder:
-    type: SentenceOneHotEncoder
+  # Model 1: Embeddings
+  question_embeddings:
+    type: SentenceEmbeddings
     priority: 1.2
+    embeddings_size: 50
+    pretrained_embeddings_file: glove.6B.50d.txt
     data_folder: ~/data/vqa-med
     word_mappings_file: questions.all.word.mappings.csv
-    export_word_mappings_to_globals: True
     streams:
       inputs: tokenized_questions
-      outputs: encoded_questions
-    globals:
-      vocabulary_size: question_vocabulary_size
-
-  question_bow_encoder:
-    type: BOWEncoder
+      outputs: embedded_questions      
+  
+  # Model 2: RNN
+  question_lstm:
+    type: RecurrentNeuralNetwork
+    cell_type: LSTM
+    prediction_mode: Last
     priority: 1.3
+    use_logsoftmax: False
+    initial_state_trainable: False
+    #num_layers: 5
+    hidden_size: 50
     streams:
-      inputs: encoded_questions
-      outputs: question_activations
+      inputs: embedded_questions
+      predictions: question_activations
     globals:
-        bow_size: question_vocabulary_size
-
+      input_size: embeddings_size
+      prediction_size: question_embeddings_output_size
 
   # 2nd subpipeline: image size.
   # Model - image size classifier.
@@ -72,8 +79,8 @@ pipeline:
     input_streams: [question_activations,image_size_activations,image_activations]
     # Concatenation 
     dim: 1 # default
-    input_dims: [[-1,99],[-1,10],[-1,100]]
-    output_dims: [-1,209]
+    input_dims: [[-1,100],[-1,10],[-1,100]]
+    output_dims: [-1,210]
     streams:
       outputs: concatenated_activations
     globals:
