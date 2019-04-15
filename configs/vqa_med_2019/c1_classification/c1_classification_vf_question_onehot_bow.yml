@@ -2,7 +2,9 @@
 default_configs: vqa_med_2019/c1_classification/default_c1_classification.yml
 
 pipeline:
-  name: vqa_med_c1_classification_question_onehot_bow
+  name: vqa_med_c1_classification_vf_question_onehot_bow
+
+  ################# SHARED #################
 
   # Questions encoding.
   question_tokenizer:
@@ -32,6 +34,8 @@ pipeline:
       outputs: bow_questions
     globals:
         bow_size: question_vocabulary_size
+
+
 
   # Model
   classifier:
