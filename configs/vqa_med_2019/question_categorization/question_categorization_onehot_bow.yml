@@ -12,7 +12,7 @@ pipeline:
       inputs: questions
       outputs: tokenized_questions
 
-  sentence_encoder:
+  question_encoder:
     type: SentenceOneHotEncoder
     priority: 1.2
     data_folder: ~/data/vqa-med
@@ -22,7 +22,7 @@ pipeline:
       inputs: tokenized_questions
       outputs: encoded_questions
     globals:
-      vocabulary_size: sentence_vocabulary_size
+      vocabulary_size: question_vocabulary_size
 
   bow_encoder:
     type: BOWEncoder
@@ -31,17 +31,17 @@ pipeline:
       inputs: encoded_questions
       outputs: bow_questions
     globals:
-        bow_size: sentence_vocabulary_size # Set by sentence_encoder.
+        bow_size: question_vocabulary_size # Set by question_encoder.
 
   # Model
   classifier:
-    type: SoftmaxClassifier
+    type: FeedForwardNetwork
     #freeze: True
     priority: 3
     streams:
       inputs: bow_questions
     globals:
-      input_size: sentence_vocabulary_size # Set by sentence_encoder.
+      input_size: question_vocabulary_size # Set by question_encoder.
       prediction_size: num_categories # C1,C2,C3,C4
 
   # Predictions decoder.
