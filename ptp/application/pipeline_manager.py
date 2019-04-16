@@ -257,6 +257,7 @@ class PipelineManager(object):
 
         """
         # Load checkpoint
+        checkpoint_file = os.path.expanduser(checkpoint_file.replace(" ",""))
         # This is to be able to load a CUDA-trained model on CPU
         chkpt = torch.load(checkpoint_file, map_location=lambda storage, loc: storage)
 
@@ -301,8 +302,11 @@ class PipelineManager(object):
                 try:
                     # Check if file exists. 
                     checkpoint_filename = model.config["load"]
+                    # TODO: if checkpoint_file is a list!!
+                    checkpoint_filename = os.path.expanduser(checkpoint_filename.replace(" ",""))
+                    # Check if file exists.
                     if not os.path.isfile(checkpoint_filename):
-                        log_str += "Coud not import parameters of model '{}' from checkpoint {} as file does not exist\n".format(
+                        log_str += "Could not import parameters of model '{}' from checkpoint {} as file does not exist\n".format(
                             model.name,
                             checkpoint_filename
                             )

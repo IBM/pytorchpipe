@@ -96,9 +96,9 @@ class VQAMED2019(Problem):
         self.scale_image_width = self.config['scale_image_size'][1]
 
         # Set parameters and globals related to categories.
-        self.globals["num_categories"] = 4
-        self.globals["category_word_mappings"] = {'C1': 0, 'C2': 1, 'C3': 2, 'C4': 3, '<UNK>': 4}
-        self.category_idx_to_word = {0: 'C1', 1: 'C2', 2: 'C3', 3: 'C4', 4: '<UNK>'}
+        self.globals["num_categories"] = 6
+        self.globals["category_word_mappings"] = {'C1': 0, 'C2': 1, 'C3': 2, 'C4': 3, 'BINARY': 4, '<UNK>': 5}
+        self.category_idx_to_word = {0: 'C1', 1: 'C2', 2: 'C3', 3: 'C4', 4: 'BINARY', 5: '<UNK>'}
 
         # Check if we want to remove punctuation from questions/answer
         self.remove_punctuation = self.config["remove_punctuation"]
@@ -304,12 +304,27 @@ class VQAMED2019(Problem):
         data_dict[self.key_answers] = item[self.key_answers]
 
         # Question category related variables.
-        data_dict[self.key_category_ids] = item[self.key_category_ids]
-        data_dict[self.key_category_names] = self.category_idx_to_word[item[self.key_category_ids]]
+        # Check if this is binary question.
+        if self.predict_yes_no(item[self.key_questions]):
+            data_dict[self.key_category_ids] = 4 # Binary.
+            data_dict[self.key_category_names] = self.category_idx_to_word[4]
+        else:
+            data_dict[self.key_category_ids] = item[self.key_category_ids]
+            data_dict[self.key_category_names] = self.category_idx_to_word[item[self.key_category_ids]]
 
         # Return sample.
         return data_dict
 
+    def predict_yes_no(self, qtext):
+        """
+        Determines whether this is binary (yes/no) type of question.
+        """
+        yes_no_starters = ['is','was','are','does']
+        tokens = qtext.split(' ')
+        first_token = tokens[0]
+        if first_token in yes_no_starters and ('or' not in tokens):
+            return True
+        return False
 
     def collate_fn(self, batch):
         """
