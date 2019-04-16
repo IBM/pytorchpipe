@@ -35,6 +35,6 @@ pipeline:
       inputs: embedded_questions
     globals:
       input_size: embeddings_size
-      prediction_size: num_categories # C1,C2,C3,C4
+      prediction_size: num_categories # C1,C2,C3,C4,BIN,UNK
 
 #: pipeline
