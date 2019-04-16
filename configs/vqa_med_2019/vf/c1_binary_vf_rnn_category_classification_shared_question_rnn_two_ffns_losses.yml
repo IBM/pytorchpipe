@@ -20,7 +20,7 @@ validation:
 
 
 pipeline:
-  name: c2_binary_vf_rnn_category_classification_shared_question_rnn_two_ffns_losses.yml
+  name: c1_binary_vf_rnn_category_classification_shared_question_rnn_two_ffns_losses
   
   ################# FLOW 0: SHARED #################
 
