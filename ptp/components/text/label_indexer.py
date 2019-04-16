@@ -42,6 +42,9 @@ class LabelIndexer(WordMappings):
         self.key_inputs = self.stream_keys["inputs"]
         self.key_outputs = self.stream_keys["outputs"]
 
+        # Get value from configuration.
+        self.out_of_vocabulary_value = self.config["out_of_vocabulary_value"]
+
 
     def input_data_definitions(self):
         """ 
@@ -81,7 +84,11 @@ class LabelIndexer(WordMappings):
         for sample in inputs:
             assert not isinstance(sample, (list,)), 'This encoder requires input sample to contain a single word'
             # Process single token.
-            output_sample = self.word_to_ix[sample]
+            if sample in self.word_to_ix.keys():
+                output_sample = self.word_to_ix[sample]
+            else:
+                # Word out of vocabulary.
+                output_sample = self.out_of_vocabulary_value
             outputs_list.append(output_sample)
         # Transform to tensor.
         output_tensor = torch.tensor(outputs_list)
