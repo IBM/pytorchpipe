@@ -73,13 +73,17 @@ class Model(Module, Component):
         chkpt[self.name] = self.state_dict()
 
 
-    def load_from_checkpoint(self, chkpt):
+    def load_from_checkpoint(self, chkpt, section=None):
         """
         Loads state dictionary from checkpoint.
 
-        :param: Checkpoint (dictionary) loaded from file.
+        :param chkpt: Checkpoint (dictionary) loaded from file.
+        
+        :param section: Name of the section containing params (DEFAULT: None, means that model name from current configuration will be used)\
         """
-        self.load_state_dict(chkpt[self.name])
+        if section is None:
+            section = self.name
+        self.load_state_dict(chkpt[section])
 
     def freeze(self):
         """

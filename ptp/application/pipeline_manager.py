@@ -300,13 +300,28 @@ class PipelineManager(object):
         for model in self.models:
             if "load" in model.config.keys():
                 try:
+                    # Determine whether checkpoint is a string (filename) or list.
+                    checkpoint = model.config["load"]
+                    print(checkpoint.to_dict())
+                    if type(checkpoint) == str:
+                        checkpoint_filename = checkpoint
+                        checkpoint_model = None
+                    else: # Assume dictionary.
+                        if 'file' not in checkpoint.keys() or 'model' not in checkpoint.keys():
+                            log_str += "The 'load' section of model '{}' from checkpoint '{}' is incorrect: it must contain a single string (with checkpoint filename) or dictionary (with two sections: checkpoint 'file' and 'model' to load)".format(
+                                model.name,
+                                checkpoint_filename
+                                )
+                            error = True
+                            continue
+                        # Ok!
+                        checkpoint_filename = checkpoint["file"]
+                        checkpoint_model = checkpoint["model"]
+
                     # Check if file exists. 
-                    checkpoint_filename = model.config["load"]
-                    # TODO: if checkpoint_file is a list!!
                     checkpoint_filename = os.path.expanduser(checkpoint_filename.replace(" ",""))
-                    # Check if file exists.
                     if not os.path.isfile(checkpoint_filename):
-                        log_str += "Could not import parameters of model '{}' from checkpoint {} as file does not exist\n".format(
+                        log_str += "Could not import parameters of model '{}' from checkpoint '{}' as file does not exist\n".format(
                             model.name,
                             checkpoint_filename
                             )
@@ -326,7 +341,8 @@ class PipelineManager(object):
                             chkpt['status']
                             )
                     # Load model.
-                    model.load_from_checkpoint(chkpt)
+                    model.load_from_checkpoint(chkpt, checkpoint_model)
+
                     log_str += "  + Model '{}' [{}] params loaded\n".format(model.name, type(model).__name__)
                 except KeyError:
                     log_str += "  + Model '{}' [{}] params not found in checkpoint!\n".format(model.name, type(model).__name__)
