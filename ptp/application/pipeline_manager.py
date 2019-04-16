@@ -295,22 +295,20 @@ class PipelineManager(object):
             The 'load' variable should contain path with filename of the checkpoint from which we want to load particular model.
         """
         error = False
-        log_str = ''
+        log_str = 'Trying to load the pre-trained models:\n'
         # Iterate over models.
         for model in self.models:
             if "load" in model.config.keys():
                 try:
                     # Determine whether checkpoint is a string (filename) or list.
                     checkpoint = model.config["load"]
-                    print(checkpoint.to_dict())
                     if type(checkpoint) == str:
                         checkpoint_filename = checkpoint
                         checkpoint_model = None
                     else: # Assume dictionary.
                         if 'file' not in checkpoint.keys() or 'model' not in checkpoint.keys():
-                            log_str += "The 'load' section of model '{}' from checkpoint '{}' is incorrect: it must contain a single string (with checkpoint filename) or dictionary (with two sections: checkpoint 'file' and 'model' to load)".format(
-                                model.name,
-                                checkpoint_filename
+                            log_str += "  + The 'load' section of model '{}' is incorrect: it must contain a single string (with checkpoint filename) or a dictionary (with two sections: checkpoint 'file' and 'model' to load)\n".format(
+                                model.name
                                 )
                             error = True
                             continue
@@ -321,7 +319,7 @@ class PipelineManager(object):
                     # Check if file exists. 
                     checkpoint_filename = os.path.expanduser(checkpoint_filename.replace(" ",""))
                     if not os.path.isfile(checkpoint_filename):
-                        log_str += "Could not import parameters of model '{}' from checkpoint '{}' as file does not exist\n".format(
+                        log_str += "  + Could not import parameters of model '{}' from checkpoint '{}' as file does not exist\n".format(
                             model.name,
                             checkpoint_filename
                             )
@@ -332,7 +330,7 @@ class PipelineManager(object):
                     # This is to be able to load a CUDA-trained model on CPU
                     chkpt = torch.load(checkpoint_filename, map_location=lambda storage, loc: storage)
 
-                    log_str += "Importing model '{}' from pipeline '{}' parameters from checkpoint from {} (episode: {}, loss: {}, status: {}):\n".format(
+                    log_str += "  + Importing model '{}' from pipeline '{}' parameters from checkpoint from {} (episode: {}, loss: {}, status: {})\n".format(
                             model.name,
                             chkpt['name'],
                             chkpt['timestamp'],
