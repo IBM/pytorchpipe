@@ -182,6 +182,8 @@ pipeline:
     streams:
       targets: category_ids
       predictions: flow1_predicted_question_categories_preds
+    statistics:
+      accuracy: categorization_accuracy
 
   ################# FLOW 2: C1 question #################
 
@@ -324,7 +326,8 @@ pipeline:
 
   ################# FLOW 4: MERGE ANSWERS #################
 
-    merged_predictions:
+  # Merge predictions
+  merged_predictions:
     type: JoinMaskedPredictions
     priority: 4.1
     # Names of used input streams.
