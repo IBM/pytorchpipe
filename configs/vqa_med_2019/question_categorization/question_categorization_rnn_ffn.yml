@@ -2,7 +2,16 @@
 default_configs: vqa_med_2019/question_categorization/default_question_categorization.yml
 
 pipeline:
-  name: vqa_med_question_categorization_rnn
+  name: vqa_med_question_categorization_rnn_ffn
+
+  # Add global variables.
+  global_publisher:
+    type: GlobalVariablePublisher
+    priority: 0
+    # Add input_size to globals.
+    keys: [question_lstm_output_size, image_size_encoder_input_size, image_size_encoder_output_size, image_encoder_output_size]
+    values: [100, 2, 10, 100]
+
 
   # Questions encoding.
   question_tokenizer:
@@ -29,12 +38,28 @@ pipeline:
     type: RecurrentNeuralNetwork
     cell_type: LSTM
     prediction_mode: Last
-    priority: 3
-    initial_state_trainable: False
+    priority: 1.3
+    initial_state_trainable: True
+    use_logsoftmax: False
+    dropout_rate: 0.5
     streams:
       inputs: embedded_questions
+      predictions: lstm_activations_questions
     globals:
       input_size: embeddings_size
-      prediction_size: num_categories # C1,C2,C3,C4
+      prediction_size: question_lstm_output_size
+
+  # Model
+  classifier:
+    type: FeedForwardNetwork
+    hidden: [50]
+    priority: 1.4
+    dropout_rate: 0.5
+    streams:
+      inputs: lstm_activations_questions
+    globals:
+      input_size: question_lstm_output_size # Set by global publisher
+      prediction_size: num_categories # C1,C2,C3,C4, BINARY, UNK
+
 
 #: pipeline
