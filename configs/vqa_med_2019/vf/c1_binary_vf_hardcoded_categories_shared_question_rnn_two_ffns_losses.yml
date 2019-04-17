@@ -37,9 +37,6 @@ pipeline:
     type: BatchSizeStatistics
     priority: 0.1
 
-
-
-
   ################# FLOW 0: SHARED QUESTION #################
 
     # Questions encoding.
@@ -91,38 +88,6 @@ pipeline:
       prediction_size: question_lstm_output_size
 
   ################# FLOW 1: CATEGORY #################
-
-  # Model 3: FFN question category
-  flow1_classifier:
-    priority: 1.1
-    type: FeedForwardNetwork
-    # LOAD AND FREEZE #
-    #load: 
-    #  file: ~/image-clef-2019/experiments/q_categorization/20190416_120801/checkpoints/vqa_med_question_categorization_rnn_ffn_best.pt
-    #  model: classifier
-    #freeze: True
-    ###################
-    hidden: [50]
-    dropout_rate: 0.5
-    streams:
-      inputs: lstm_activations_questions
-      predictions: predicted_question_categories_preds
-    globals:
-      input_size: question_lstm_output_size # Set by global publisher
-      prediction_size: num_categories # C1,C2,C3,C4, BINARY, UNK
-
-
-  flow1_category_decoder:
-    priority: 1.2
-    type: WordDecoder
-    # Use the same word mappings as label indexer.
-    import_word_mappings_from_globals: True
-    streams:
-      inputs: predicted_question_categories_preds
-      outputs: predicted_question_categories_names
-    globals:
-      vocabulary_size: num_categories
-      word_mappings: category_word_mappings
 
   ################# FLOW 2: C1 question #################
 
