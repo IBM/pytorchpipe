@@ -241,6 +241,7 @@ pipeline:
     type: PrecisionRecallStatistics
     priority: 2.4
     use_word_mappings: True
+    use_masking: True
     #show_class_scores: True
     #show_confusion_matrix: True
     streams:
@@ -310,6 +311,7 @@ pipeline:
     type: PrecisionRecallStatistics
     priority: 3.4
     use_word_mappings: True
+    use_masking: True
     #show_class_scores: True
     #show_confusion_matrix: True
     streams:
