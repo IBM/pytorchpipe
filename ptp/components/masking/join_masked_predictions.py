@@ -123,10 +123,12 @@ class JoinMaskedPredictions(Component):
 
             - "outputs": added output field containing tensor [BATCH_SIZE x ...] 
         """
-        # Get inputs masks
+        # Get inputs masks.
         masks = []
         for imsk in self.input_mask_stream_keys:
-            masks.append(data_dict[imsk].data.cpu().numpy())
+            # Get mask from stream.
+            mask = data_dict[imsk]
+            masks.append(mask.data.cpu().numpy())
         
         # Sum all masks and make sure that they are complementary.
         masks_sum = np.sum(masks, axis=0)
