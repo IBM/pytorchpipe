@@ -20,9 +20,9 @@ validation:
 
 
 pipeline:
-  name: c1_binary_vf_rnn_category_classification_shared_question_rnn_two_ffns_losses
+  name: c1_binary_vf_cat_rnn_shared_question_rnn_two_ffns_losses
   
-  ################# FLOW 0: SHARED #################
+  ################# PIPE 0: SHARED #################
 
   # Add global variables.
   global_publisher:
@@ -30,17 +30,17 @@ pipeline:
     priority: 0
     # Add input_size to globals.
     keys: [question_lstm_output_size, image_size_encoder_input_size, image_size_encoder_output_size, image_encoder_output_size, category_c1_word_to_ix, category_binary_word_to_ix]
-    values: [100, 2, 10, 100,{"C1": 0}, {"BINARY": 0}]
+    values: [100, 2, 10, 100, {"C1": 0}, {"BINARY": 0}]
 
   # Statistics.
   batch_size:
     type: BatchSizeStatistics
     priority: 0.1
 
-  ################# FLOW 0: SHARED QUESTION #################
+  ################# PIPE 0: SHARED QUESTION #################
 
-    # Questions encoding.
-  flow0_question_tokenizer:
+  # Questions encoding.
+  pipe0_question_tokenizer:
     priority: 0.2
     type: SentenceTokenizer
     streams: 
@@ -48,7 +48,7 @@ pipeline:
       outputs: tokenized_questions
 
   # Model 1: question embeddings
-  flow0_question_embeddings:
+  pipe0_question_embeddings:
     type: SentenceEmbeddings
     priority: 0.3
     # LOAD AND FREEZE #
@@ -66,7 +66,7 @@ pipeline:
       outputs: embedded_questions      
   
   # Model 2: question RNN
-  flow0_lstm:
+  pipe0_lstm:
     priority: 0.4
     type: RecurrentNeuralNetwork
     cell_type: LSTM
@@ -88,7 +88,7 @@ pipeline:
       prediction_size: question_lstm_output_size
 
   # Answer encoding
-  flow0_all_answer_indexer:
+  pipe0_all_answer_indexer:
     type: LabelIndexer
     priority: 0.6
     data_folder: ~/data/vqa-med
@@ -103,10 +103,10 @@ pipeline:
       word_mappings: word_mappings_all_c1_binary
 
 
-  ################# FLOW 1: CATEGORY #################
+  ################# PIPE 1: CATEGORY #################
 
   # Model 1: question embeddings
-  flow1_question_embeddings:
+  pipe1_question_embeddings:
     type: SentenceEmbeddings
     priority: 1.1
     # LOAD AND FREEZE #
@@ -121,10 +121,10 @@ pipeline:
     word_mappings_file: questions.all.word.mappings.csv
     streams:
       inputs: tokenized_questions
-      outputs: flow1_embedded_questions      
+      outputs: pipe1_embedded_questions      
   
   # Model 2: question RNN
-  flow1_lstm:
+  pipe1_lstm:
     priority: 1.2
     type: RecurrentNeuralNetwork
     cell_type: LSTM
@@ -139,14 +139,14 @@ pipeline:
     use_logsoftmax: False
     dropout_rate: 0.5
     streams:
-      inputs: flow1_embedded_questions
-      predictions: flow1_lstm_activations_questions
+      inputs: pipe1_embedded_questions
+      predictions: pipe1_lstm_activations_questions
     globals:
       input_size: embeddings_size
       prediction_size: question_lstm_output_size
 
   # Model 3: FFN question category
-  flow1_classifier:
+  pipe1_classifier:
     priority: 1.3
     type: FeedForwardNetwork
     # LOAD AND FREEZE #
@@ -158,37 +158,37 @@ pipeline:
     hidden: [50]
     dropout_rate: 0.5
     streams:
-      inputs: flow1_lstm_activations_questions
-      predictions: flow1_predicted_question_categories_preds
+      inputs: pipe1_lstm_activations_questions
+      predictions: pipe1_predicted_question_categories_preds
     globals:
       input_size: question_lstm_output_size # Set by global publisher
       prediction_size: num_categories # C1,C2,C3,C4, BINARY, UNK
 
-  flow1_category_decoder:
+  pipe1_category_decoder:
     priority: 1.4
     type: WordDecoder
     # Use the same word mappings as label indexer.
     import_word_mappings_from_globals: True
     streams:
-      inputs: flow1_predicted_question_categories_preds
-      outputs: flow1_predicted_question_categories_names
+      inputs: pipe1_predicted_question_categories_preds
+      outputs: pipe1_predicted_question_categories_names
     globals:
       vocabulary_size: num_categories
       word_mappings: category_word_mappings
 
-  flow1_category_accuracy:
+  pipe1_category_accuracy:
     type: AccuracyStatistics
     priority: 1.5
     streams:
       targets: category_ids
-      predictions: flow1_predicted_question_categories_preds
+      predictions: pipe1_predicted_question_categories_preds
     statistics:
       accuracy: categorization_accuracy
 
-  ################# FLOW 2: C1 question #################
+  ################# PIPE 2: C1 question #################
 
-  # Answer encoding for flow 2.
-  flow2_c1_answer_indexer:
+  # Answer encoding for PIPE 2.
+  pipe2_c1_answer_indexer:
     type: LabelIndexer
     priority: 2.0
     data_folder: ~/data/vqa-med
@@ -197,47 +197,47 @@ pipeline:
     export_word_mappings_to_globals: True
     streams:
       inputs: answers
-      outputs: flow2_c1_answers_without_yn_ids
+      outputs: pipe2_c1_answers_without_yn_ids
     globals:
       vocabulary_size: vocabulary_size_c1_without_yn
       word_mappings: word_mappings_c1_without_yn
 
   # Sample masking based on categories.
-  flow2_c1_string_to_mask:
+  pipe2_c1_string_to_mask:
     priority: 2.1
     type: StringToMask
     globals:
       word_mappings: category_c1_word_to_ix
     streams:
-      strings: flow1_predicted_question_categories_names
+      strings: pipe1_predicted_question_categories_names
       string_indices: predicted_c1_question_categories_indices # NOT USED
-      masks: flow2_c1_masks
+      masks: pipe2_c1_masks
 
   # Model 4: FFN C1 answering
-  flow2_c1_lstm:
+  pipe2_c1_lstm:
     priority: 2.2
     type: FeedForwardNetwork
     hidden: [50]
     dropout_rate: 0.5
     streams:
       inputs: lstm_activations_questions
-      predictions: flow2_c1_predictions
+      predictions: pipe2_c1_predictions
     globals:
       input_size: question_lstm_output_size # Set by global publisher
       prediction_size: vocabulary_size_c1_without_yn
 
-  flow2_c1_nllloss:
+  pipe2_c1_nllloss:
     type: NLLLoss
     priority: 2.3
     targets_dim: 1
     use_masking: True
     streams:
-      predictions: flow2_c1_predictions
-      masks: flow2_c1_masks
-      targets: flow2_c1_answers_without_yn_ids
-      loss: flow2_c1_loss
+      predictions: pipe2_c1_predictions
+      masks: pipe2_c1_masks
+      targets: pipe2_c1_answers_without_yn_ids
+      loss: pipe2_c1_loss
 
-  flow2_c1_precision_recall:
+  pipe2_c1_precision_recall:
     type: PrecisionRecallStatistics
     priority: 2.4
     use_word_mappings: True
@@ -245,21 +245,21 @@ pipeline:
     #show_class_scores: True
     #show_confusion_matrix: True
     streams:
-      masks: flow2_c1_masks
-      predictions: flow2_c1_predictions
-      targets: flow2_c1_answers_without_yn_ids
+      masks: pipe2_c1_masks
+      predictions: pipe2_c1_predictions
+      targets: pipe2_c1_answers_without_yn_ids
     globals:
       word_mappings: word_mappings_c1_without_yn
       num_classes: vocabulary_size_c1_without_yn
     statistics:
-      precision: flow2_c1_precision
-      recall: flow2_c1_recall
-      f1score: flow2_c1_f1score
+      precision: pipe2_c1_precision
+      recall: pipe2_c1_recall
+      f1score: pipe2_c1_f1score
 
-  ################# FLOW 3: BINARY question #################
+  ################# PIPE 3: BINARY question #################
 
-  # Answer encoding for flow 3.
-  flow3_binary_answer_indexer:
+  # Answer encoding for PIPE 3.
+  pipe3_binary_answer_indexer:
     type: LabelIndexer
     priority: 3.0
     data_folder: ~/data/vqa-med
@@ -268,46 +268,46 @@ pipeline:
     export_word_mappings_to_globals: True
     streams:
       inputs: answers
-      outputs: flow3_binary_answers_ids
+      outputs: pipe3_binary_answers_ids
     globals:
       vocabulary_size: vocabulary_size_binary_yn
       word_mappings: word_mappings_binary_yn
 
-  flow3_binary_string_to_mask:
+  pipe3_binary_string_to_mask:
     priority: 3.1
     type: StringToMask
     globals:
       word_mappings: category_binary_word_to_ix
     streams:
-      strings: flow1_predicted_question_categories_names
+      strings: pipe1_predicted_question_categories_names
       string_indices: predicted_binary_question_categories_indices # NOT USED
-      masks: flow3_binary_masks
+      masks: pipe3_binary_masks
 
   # Model 4: FFN C1 answering
-  flow3_binary_lstm:
+  pipe3_binary_lstm:
     priority: 3.2
     type: FeedForwardNetwork
     hidden: [50]
     dropout_rate: 0.5
     streams:
       inputs: lstm_activations_questions
-      predictions: flow3_binary_predictions
+      predictions: pipe3_binary_predictions
     globals:
       input_size: question_lstm_output_size # Set by global publisher
       prediction_size: vocabulary_size_binary_yn
 
-  flow3_binary_nllloss:
+  pipe3_binary_nllloss:
     type: NLLLoss
     priority: 3.3
     targets_dim: 1
     use_masking: True
     streams:
-      predictions: flow3_binary_predictions
-      masks: flow3_binary_masks
-      targets: flow3_binary_answers_ids
-      loss: flow3_binary_loss
+      predictions: pipe3_binary_predictions
+      masks: pipe3_binary_masks
+      targets: pipe3_binary_answers_ids
+      loss: pipe3_binary_loss
 
-  flow3_binary_precision_recall:
+  pipe3_binary_precision_recall:
     type: PrecisionRecallStatistics
     priority: 3.4
     use_word_mappings: True
@@ -315,26 +315,26 @@ pipeline:
     #show_class_scores: True
     #show_confusion_matrix: True
     streams:
-      masks: flow3_binary_masks
-      predictions: flow3_binary_predictions
-      targets: flow3_binary_answers_ids
+      masks: pipe3_binary_masks
+      predictions: pipe3_binary_predictions
+      targets: pipe3_binary_answers_ids
     globals:
       word_mappings: word_mappings_binary_yn
       num_classes: vocabulary_size_binary_yn
     statistics:
-      precision: flow3_binary_precision
-      recall: flow3_binary_recall
-      f1score: flow3_binary_f1score
+      precision: pipe3_binary_precision
+      recall: pipe3_binary_recall
+      f1score: pipe3_binary_f1score
 
-  ################# FLOW 4: MERGE ANSWERS #################
+  ################# PIPE 4: MERGE ANSWERS #################
 
   # Merge predictions
   merged_predictions:
     type: JoinMaskedPredictions
     priority: 4.1
     # Names of used input streams.
-    input_prediction_streams: [flow2_c1_predictions, flow3_binary_predictions]
-    input_mask_streams: [flow2_c1_masks, flow3_binary_masks]
+    input_prediction_streams: [pipe2_c1_predictions, pipe3_binary_predictions]
+    input_mask_streams: [pipe2_c1_masks, pipe3_binary_masks]
     input_word_mappings: [word_mappings_c1_without_yn, word_mappings_binary_yn]
     globals:
       output_word_mappings: word_mappings_all_c1_binary
@@ -365,7 +365,7 @@ pipeline:
   viewer:
     type: StreamViewer
     priority: 4.3
-    input_streams: questions,answers, category_names,predicted_question_categories_names, flow2_c1_masks,flow2_c1_answers_without_yn_ids,flow2_c1_predictions, flow3_binary_masks,flow3_binary_answers_ids,flow3_binary_predictions, merged_predictions
+    input_streams: questions,answers, category_names,predicted_question_categories_names, pipe2_c1_masks,pipe2_c1_answers_without_yn_ids,pipe2_c1_predictions, pipe3_binary_masks,pipe3_binary_answers_ids,pipe3_binary_predictions, merged_predictions
 
 
 #: pipeline
