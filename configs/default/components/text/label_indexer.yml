@@ -25,6 +25,10 @@ import_word_mappings_from_globals: False
 # Flag informing whether word mappings will be exported to globals (LOADED)
 export_word_mappings_to_globals: False
 
+# Value that will be used when word is out of vocavbulary (LOADED)
+# (Mask for that element will be 0 as well)
+out_of_vocabulary_value: -1
+
 streams: 
   ####################################################################
   # 2. Keymappings associated with INPUT and OUTPUT streams.

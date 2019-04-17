@@ -1,6 +1,11 @@
 # Load config defining problems for training, validation and testing.
 default_configs: vqa_med_2019/default_vqa_med_2019.yml
 
+training:
+  # settings parameters
+  terminal_conditions:
+    loss_stop: 1.0e-3
+
 pipeline:
 
   # Predictions decoder.
@@ -26,15 +31,15 @@ pipeline:
       loss: loss
 
   # Statistics.
-  accuracy:
-    type: AccuracyStatistics
-    priority: 100.1
-    streams:
-      targets: category_ids
-
   batch_size:
     type: BatchSizeStatistics
-    priority: 100.2
+    priority: 100.1
+
+  #accuracy:
+  #  type: AccuracyStatistics
+  #  priority: 100.2
+  #  streams:
+  #    targets: category_ids
 
   precision_recall:
     type: PrecisionRecallStatistics

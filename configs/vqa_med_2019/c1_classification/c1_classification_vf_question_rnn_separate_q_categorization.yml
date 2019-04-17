@@ -1,0 +1,107 @@
+# Load config defining problems for training, validation and testing.
+default_configs: vqa_med_2019/c1_classification/default_c1_classification.yml
+
+pipeline:
+  name: vqa_med_c1_classification_vf_question_rnn_separate_q_categorization
+
+  
+  ################# SHARED #################
+
+   # Questions encoding.
+  question_tokenizer:
+    type: SentenceTokenizer
+    priority: 0.2
+    streams: 
+      inputs: questions
+      outputs: tokenized_questions
+
+  ################# FLOW 0: CATEGORY #################
+
+  # Model 2: Embeddings
+  question_embeddings:
+    type: SentenceEmbeddings
+    priority: 0.3
+    # LOAD AND FREEZE
+    load:  ~/Documents/image-clef-2019/experiments/q_categorization/20190416_103111/checkpoints/vqa_med_question_categorization_rnn_best.pt
+    freeze: True
+    embeddings_size: 50
+    pretrained_embeddings_file: glove.6B.50d.txt
+    data_folder: ~/data/vqa-med
+    word_mappings_file: questions.all.word.mappings.csv
+    streams:
+      inputs: tokenized_questions
+      outputs: embedded_questions      
+  
+  # Model 2: RNN
+  lstm:
+    type: RecurrentNeuralNetwork
+    cell_type: LSTM
+    # LOAD AND FREEZE
+    load:  ~/Documents/image-clef-2019/experiments/q_categorization/20190416_103111/checkpoints/vqa_med_question_categorization_rnn_best.pt
+    freeze: True
+    prediction_mode: Last
+    priority: 0.4
+    initial_state_trainable: False
+    streams:
+      inputs: embedded_questions
+      predictions: predicted_question_categories
+    globals:
+      input_size: embeddings_size
+      prediction_size: num_categories # C1,C2,C3,C4,BIN,UNK
+
+
+  category_decoder:
+    type: WordDecoder
+    priority: 0.5
+    # Use the same word mappings as label indexer.
+    import_word_mappings_from_globals: True
+    streams:
+      inputs: predicted_question_categories
+      outputs: predicted_question_categories_ids
+    globals:
+      vocabulary_size: num_categories
+      word_mappings: category_word_mappings
+
+  ################# FLOW C1: question #################
+
+  flow_c1_string_to_mask:
+    type: StringToMask
+    priority: 1.1
+    globals:
+      word_mappings: category_word_mappings
+    streams:
+      strings: predicted_question_categories_ids
+      string_indices: flow_c1_targets
+      masks: flow_c1_masks
+
+  # Model 1: Embeddings
+  flow_c1_question_embeddings:
+    type: SentenceEmbeddings
+    priority: 1.2
+    embeddings_size: 50
+    pretrained_embeddings_file: glove.6B.50d.txt
+    data_folder: ~/data/vqa-med
+    word_mappings_file: questions.all.word.mappings.csv
+    streams:
+      inputs: tokenized_questions
+      outputs: flow_c1_embedded_questions
+    globals:
+      embeddings_size: flow_c1_embeddings_size  
+  
+  # Model 2: RNN
+  flow_c1_lstm:
+    type: RecurrentNeuralNetwork
+    cell_type: LSTM
+    prediction_mode: Last
+    priority: 1.3
+    initial_state_trainable: False
+    #num_layers: 5
+    hidden_size: 50
+    streams:
+      inputs: flow_c1_embedded_questions
+    globals:
+      input_size: flow_c1_embeddings_size
+      prediction_size: vocabulary_size_c1
+
+
+#: pipeline

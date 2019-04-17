@@ -60,15 +60,15 @@ pipeline:
       loss: loss
 
   # Statistics.
-  accuracy:
-    type: AccuracyStatistics
-    priority: 100.1
-    streams:
-      targets: answers_ids
-
   batch_size:
     type: BatchSizeStatistics
-    priority: 100.2
+    priority: 100.1
+
+  #accuracy:
+  #  type: AccuracyStatistics
+  #  priority: 100.2
+  #  streams:
+  #    targets: answers_ids
 
   precision_recall:
     type: PrecisionRecallStatistics
