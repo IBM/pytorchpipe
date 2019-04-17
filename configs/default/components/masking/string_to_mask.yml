@@ -4,9 +4,12 @@
 # 1. CONFIGURATION PARAMETERS that will be LOADED by the component.
 ####################################################################
 
-# Value that will be used when word is out of vocavbulary (LOADED)
+# Value that will be used when word is out of vocabulary (LOADED)
 # (Mask for that element will be 0 as well)
-out_of_vocabulary_value: -1
+# -100 is the default value used by PyTroch loss functions to specify
+# target values that will ignored and does not contribute to the input gradient.
+# (ignore_index=-100)
+out_of_vocabulary_value: -100
 
 streams: 
   ####################################################################
