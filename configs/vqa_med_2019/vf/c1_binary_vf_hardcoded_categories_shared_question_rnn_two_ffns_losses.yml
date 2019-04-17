@@ -144,6 +144,7 @@ pipeline:
   flow2_c1_precision_recall:
     type: PrecisionRecallStatistics
     priority: 2.4
+    use_masking: True
     use_word_mappings: True
     #show_class_scores: True
     #show_confusion_matrix: True
@@ -213,6 +214,7 @@ pipeline:
   flow3_binary_precision_recall:
     type: PrecisionRecallStatistics
     priority: 3.4
+    use_masking: True
     use_word_mappings: True
     #show_class_scores: True
     #show_confusion_matrix: True
