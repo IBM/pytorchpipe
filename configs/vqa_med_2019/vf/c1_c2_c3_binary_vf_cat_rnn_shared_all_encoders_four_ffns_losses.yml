@@ -536,7 +536,7 @@ pipeline:
   viewer:
     type: StreamViewer
     priority: 9.3
-    input_streams: questions,answers, category_names,predicted_question_categories_names, pipe5_c1_masks,pipe5_c1_answers_without_yn_ids,pipe5_c1_predictions, pipe7_c3_masks,pipe7_c3_answers_ids,pipe7_c3_predictions, pipe8_binary_masks,pipe8_binary_answers_ids,pipe8_binary_predictions, pipe9_merged_predictions
+    input_streams: questions,answers, category_names,predicted_question_categories_names, pipe5_c1_masks,pipe5_c1_answers_without_yn_ids,pipe5_c1_predictions, pipe6_c2_masks,pipe6_c2_answers_ids,pipe6_c2_predictions, pipe7_c3_masks,pipe7_c3_answers_ids,pipe7_c3_predictions, pipe8_binary_masks,pipe8_binary_answers_ids,pipe8_binary_predictions, pipe9_merged_predictions
 
 
 #: pipeline
