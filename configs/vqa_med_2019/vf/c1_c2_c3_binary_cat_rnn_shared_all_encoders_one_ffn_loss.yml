@@ -20,7 +20,7 @@ validation:
 
 
 pipeline:
-  name: c1_c2_c3_binary_vf_cat_rnn_shared_all_encoders_one_ffn_loss
+  name: c1_c2_c3_binary_cat_rnn_shared_all_encoders_one_ffn_loss
   
   ################# PIPE 0: SHARED #################
 
