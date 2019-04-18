@@ -1,0 +1,298 @@
+# Load config defining problems for training, validation and testing.
+default_configs: vqa_med_2019/default_vqa_med_2019.yml
+
+# Training parameters:
+training:
+  problem:
+    categories: C1,C2,C3
+  sampler:
+    name: WeightedRandomSampler
+    weights: ~/data/vqa-med/answers.c1_c2_c3_binary_yn.weights.csv
+  dataloader:
+    num_workers: 4
+
+# Validation parameters:
+validation:
+  problem:
+    categories: C1,C2,C3
+  dataloader:
+    num_workers: 4
+
+
+pipeline:
+  name: c1_c2_c3_binary_vf_cat_rnn_shared_all_encoders_one_ffn_loss
+  
+  ################# PIPE 0: SHARED #################
+
+  # Add global variables.
+  global_publisher:
+    type: GlobalVariablePublisher
+    priority: 0
+    # Add input_size to globals.
+    keys: [question_lstm_output_size, image_size_encoder_input_size, image_size_encoder_output_size, image_encoder_output_size, category_c1_c2_c3_binary_yn_word_to_ix]
+    values: [100, 2, 10, 100, {"C1": 0, "C2": 1, "C3": 2, "BINARY": 3}]
+
+  # Statistics.
+  batch_size:
+    type: BatchSizeStatistics
+    priority: 0.1
+
+  # Questions encoding.
+  pipe1_question_tokenizer:
+    priority: 0.2
+    type: SentenceTokenizer
+    streams: 
+      inputs: questions
+      outputs: tokenized_questions
+
+  ################# PIPE 0: CATEGORY #################
+
+  # Model 1: question embeddings
+  pipe0_question_embeddings:
+    type: SentenceEmbeddings
+    priority: 0.3
+    # LOAD AND FREEZE #
+    load: 
+      file: ~/image-clef-2019/experiments/q_categorization/20190416_120801/checkpoints/vqa_med_question_categorization_rnn_ffn_best.pt
+      model: question_embeddings
+    freeze: True
+    ###################
+    embeddings_size: 50
+    pretrained_embeddings_file: glove.6B.50d.txt
+    data_folder: ~/data/vqa-med
+    word_mappings_file: questions.all.word.mappings.csv
+    streams:
+      inputs: tokenized_questions
+      outputs: pipe0_embedded_questions      
+  
+  # Model 2: question RNN
+  pipe0_lstm:
+    priority: 0.4
+    type: RecurrentNeuralNetwork
+    cell_type: LSTM
+    # LOAD AND FREEZE #
+    load: 
+      file: ~/image-clef-2019/experiments/q_categorization/20190416_120801/checkpoints/vqa_med_question_categorization_rnn_ffn_best.pt
+      model: lstm
+    freeze: True
+    ###################
+    prediction_mode: Last
+    initial_state_trainable: True
+    use_logsoftmax: False
+    dropout_rate: 0.5
+    streams:
+      inputs: pipe0_embedded_questions
+      predictions: pipe0_questions_activations
+    globals:
+      input_size: embeddings_size
+      prediction_size: question_lstm_output_size
+
+  # Model 3: FFN question category
+  pipe0_classifier:
+    priority: 0.5
+    type: FeedForwardNetwork
+    # LOAD AND FREEZE #
+    load: 
+      file: ~/image-clef-2019/experiments/q_categorization/20190416_120801/checkpoints/vqa_med_question_categorization_rnn_ffn_best.pt
+      model: classifier
+    freeze: True
+    ###################
+    hidden: [50]
+    dropout_rate: 0.5
+    streams:
+      inputs: pipe0_questions_activations
+      predictions: pipe0_predicted_question_categories_preds
+    globals:
+      input_size: question_lstm_output_size # Set by global publisher
+      prediction_size: num_categories # C1,C2,C3,C4, BINARY, UNK
+
+  pipe0_category_decoder:
+    priority: 0.6
+    type: WordDecoder
+    # Use the same word mappings as label indexer.
+    import_word_mappings_from_globals: True
+    streams:
+      inputs: pipe0_predicted_question_categories_preds
+      outputs: pipe0_predicted_question_categories_names
+    globals:
+      vocabulary_size: num_categories
+      word_mappings: category_word_mappings
+
+  pipe0_category_accuracy:
+    type: AccuracyStatistics
+    priority: 0.7
+    streams:
+      targets: category_ids
+      predictions: pipe0_predicted_question_categories_preds
+    statistics:
+      accuracy: categorization_accuracy
+  
+
+
+  ################# PIPE 1: SHARED QUESTION ENCODER #################
+
+  # Model 1: question embeddings
+  pipe1_question_embeddings:
+    type: SentenceEmbeddings
+    priority: 1.1
+    embeddings_size: 50
+    pretrained_embeddings_file: glove.6B.50d.txt
+    data_folder: ~/data/vqa-med
+    word_mappings_file: questions.all.word.mappings.csv
+    streams:
+      inputs: tokenized_questions
+      outputs: embedded_questions      
+  
+  # Model 2: question RNN
+  pipe1_lstm:
+    priority: 1.2
+    type: RecurrentNeuralNetwork
+    cell_type: LSTM
+    prediction_mode: Last
+    initial_state_trainable: True
+    use_logsoftmax: False
+    dropout_rate: 0.5
+    streams:
+      inputs: embedded_questions
+      predictions: questions_activations
+    globals:
+      input_size: embeddings_size
+      prediction_size: question_lstm_output_size
+
+  # Answer encoding
+  pipe1_all_answer_indexer:
+    type: LabelIndexer
+    priority: 1.3
+    data_folder: ~/data/vqa-med
+    word_mappings_file: answers.c1_c2_c3_binary_yn.word.mappings.csv
+    # Export mappings and size to globals.
+    export_word_mappings_to_globals: True
+    streams:
+      inputs: answers
+      outputs: all_answers_ids
+    globals:
+      vocabulary_size: vocabulary_size_all_c1_c2_c3_binary
+      word_mappings: word_mappings_all_c1_c2_c3_binary
+
+  ################# PIPE 2: SHARED IMAGE ENCODER #################
+
+  # Image encoder.
+  image_encoder:
+    type: TorchVisionWrapper
+    priority: 2.1
+    streams:
+      inputs: images
+      predictions: image_activations
+    globals:
+      prediction_size: image_encoder_output_size
+
+  ################# PIPE 3: SHARED IMAGE SIZE ENCODER #################
+
+  # Model - image size classifier.
+  image_size_encoder:
+    type: FeedForwardNetwork 
+    priority: 3.1
+    streams:
+      inputs: image_sizes
+      predictions: image_size_activations
+    globals:
+      input_size: image_size_encoder_input_size
+      prediction_size: image_size_encoder_output_size
+
+  ################# PIPE 4: SHARED CONCAT #################
+
+  concat:
+    type: Concatenation
+    priority: 4.1
+    input_streams: [questions_activations,image_activations,image_size_activations]
+    # Concatenation 
+    dim: 1 # default
+    input_dims: [[-1,100],[-1,100],[-1,10]]
+    output_dims: [-1,210]
+    streams:
+      outputs: concatenated_activations
+    globals:
+      output_size: concatenated_activations_size
+
+
+  ################# PIPE 5: C1 + C2 + C2 + Binary Y/N question #################
+
+  # Answer encoding for PIPE 5.
+  pipe5_all_answer_indexer:
+    type: LabelIndexer
+    priority: 5.1
+    data_folder: ~/data/vqa-med
+    word_mappings_file: answers.c1_c2_c3_binary_yn.word.mappings.csv
+    # Export mappings and size to globals.
+    export_word_mappings_to_globals: True
+    streams:
+      inputs: answers
+      outputs: pipe5_all_answers_ids
+    globals:
+      vocabulary_size: vocabulary_size_c1_c2_c3_binary
+      word_mappings: word_mappings_all_c1_c2_c3_binary
+
+  # Sample masking based on categories.
+  pipe5_all_string_to_mask:
+    priority: 5.2
+    type: StringToMask
+    globals:
+      word_mappings: category_c1_c2_c3_binary_yn_word_to_ix
+    streams:
+      strings: pipe0_predicted_question_categories_names
+      string_indices: predicted_c1_c2_c3_binary_by_question_categories_indices # NOT USED
+      masks: pipe5_all_masks
+
+  # Model 4: FFN C1 answering
+  pipe5_all_ffn:
+    priority: 5.3
+    type: FeedForwardNetwork
+    hidden: [50]
+    dropout_rate: 0.5
+    streams:
+      inputs: concatenated_activations
+      predictions: pipe5_all_predictions
+    globals:
+      input_size: concatenated_activations_size
+      prediction_size: vocabulary_size_c1_c2_c3_binary
+
+  pipe5_all_nllloss:
+    type: NLLLoss
+    priority: 5.4
+    targets_dim: 1
+    use_masking: True
+    streams:
+      predictions: pipe5_all_predictions
+      masks: pipe5_all_masks
+      targets: pipe5_all_answers_ids
+      loss: pipe5_all_loss
+
+  pipe5_all_precision_recall:
+    type: PrecisionRecallStatistics
+    priority: 5.5
+    use_word_mappings: True
+    use_masking: True
+    #show_class_scores: True
+    #show_confusion_matrix: True
+    streams:
+      masks: pipe5_all_masks
+      predictions: pipe5_all_predictions
+      targets: pipe5_all_answers_ids
+    globals:
+      word_mappings: word_mappings_all_c1_c2_c3_binary
+    statistics:
+      precision: pipe5_all_precision
+      recall: pipe5_all_recall
+      f1score: pipe5_all_f1score
+
+
+  ################# PIPE 9: MERGE ANSWERS #################
+
+  # Viewers.
+  viewer:
+    type: StreamViewer
+    priority: 9.3
+    input_streams: questions,answers, category_names,predicted_question_categories_names, pipe5_all_masks,pipe5_all_answers_without_yn_ids,pipe5_all_predictions
+
+
+#: pipeline
