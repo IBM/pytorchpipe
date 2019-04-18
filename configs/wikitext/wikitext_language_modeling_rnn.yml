@@ -72,7 +72,7 @@ pipeline:
   lstm:
     type: RecurrentNeuralNetwork
     priority: 3
-    #initial_state_trainable: False
+    initial_state_trainable: False
     streams:
       inputs: embedded_sources
     globals:
@@ -87,5 +87,11 @@ pipeline:
     streams:
       targets: indexed_targets
       loss: loss
+
+  # Viewers.
+  viewer:
+    type: StreamViewer
+    priority: 100.1
+    input_streams: sources,indexed_targets,targets,predictions
 
 #: pipeline
