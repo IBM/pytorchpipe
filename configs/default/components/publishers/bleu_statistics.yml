@@ -13,6 +13,9 @@ use_prediction_distributions: True
 # TODO!
 #use_masking: False
 
+# Weights of n-grams used when calculating the score.
+weights: [0.25, 0.25, 0.25, 0.25]
+
 streams: 
   ####################################################################
   # 2. Keymappings associated with INPUT and OUTPUT streams.

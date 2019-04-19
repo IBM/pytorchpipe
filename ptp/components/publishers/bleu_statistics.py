@@ -63,6 +63,9 @@ class BLEUStatistics(Component):
         # Construct reverse mapping for faster processing.
         self.ix_to_word = dict((v,k) for k,v in word_to_ix.items())
 
+        # Get masking flag.
+        self.weights = self.config["weights"]
+
 
         # Get statistics key mappings.
         self.key_bleu = self.statistics_keys["bleu"]
@@ -120,7 +123,7 @@ class BLEUStatistics(Component):
 
         if self.use_prediction_distributions:
             # Get indices of the max log-probability.
-            preds = data_dict[self.key_predictions].max(1)[1].data.cpu().numpy().tolist()
+            preds = data_dict[self.key_predictions].max(-1)[1].data.cpu().numpy().tolist()
         else: 
             preds = data_dict[self.key_predictions].data.cpu().numpy().tolist()
 
@@ -132,6 +135,9 @@ class BLEUStatistics(Component):
         
         # Calculate the correct predictinos.
         scores = []
+
+        #print("targets ({}): {}\n".format(len(targets), targets[0]))
+        #print("preds ({}): {}\n".format(len(preds), preds[0]))
 
         for target_indices, pred_indices in zip(targets, preds):
             # Change target indices to words.
@@ -145,11 +151,12 @@ class BLEUStatistics(Component):
                 if p_ind in self.ix_to_word.keys():
                     pred_words.append(self.ix_to_word[p_ind])
             # Calculate BLEU.
-            scores.append(sentence_bleu(target_words, pred_words))
-            print("TARGET: {}\n".format(target_words))
-            print("PREDICTION: {}\n".format(pred_words))
-            print("BLEU: {}\n".format(scores[-1]))
+            scores.append(sentence_bleu([target_words], pred_words, self.weights))
+            #print("TARGET: {}\n".format(target_words))
+            #print("PREDICTION: {}\n".format(pred_words))
+            #print("BLEU: {}\n".format(scores[-1]))
 
+            
         # Get batch size.
         batch_size = len(targets)
 
