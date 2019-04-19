@@ -61,7 +61,7 @@ class SentenceIndexer(WordMappings):
         :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
         """
         return {
-            self.key_outputs: DataDefinition([-1, -1], [torch.Tensor], "Batch of sentences represented as a single tensor of indices [BATCH_SIZE x SEQ_LENGTH]"),
+            self.key_outputs: DataDefinition([-1, -1], [torch.Tensor], "Batch of sentences represented as a single tensor of indices of particular words  [BATCH_SIZE x SEQ_LENGTH]"),
             }
 
     def __call__(self, data_dict):

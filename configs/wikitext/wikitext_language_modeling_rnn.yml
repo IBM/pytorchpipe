@@ -86,12 +86,29 @@ pipeline:
     num_targets_dims: 2
     streams:
       targets: indexed_targets
-      loss: loss
 
+  # Statistics.
+  batch_size:
+    type: BatchSizeStatistics
+    priority: 100.0
+
+  #accuracy:
+  #  type: AccuracyStatistics
+  #  priority: 100.1
+  #  streams:
+  #    targets: indexed_targets
+
+  bleu:
+    type: BLEUStatistics
+    priority: 100.2
+    streams:
+      targets: indexed_targets
+
+      
   # Viewers.
   viewer:
     type: StreamViewer
-    priority: 100.1
-    input_streams: sources,indexed_targets,targets,predictions
+    priority: 100.3
+    input_streams: sources,targets,indexed_targets,predictions
 
 #: pipeline
