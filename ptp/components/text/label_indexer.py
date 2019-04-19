@@ -16,11 +16,12 @@ __author__ = "Tomasz Kornuta"
 
 import torch
 
+from ptp.components.component import Component
 from ptp.components.mixins.word_mappings import WordMappings
 from ptp.data_types.data_definition import DataDefinition
 
 
-class LabelIndexer(WordMappings):
+class LabelIndexer(Component, WordMappings):
     """
     Class responsible for changing of samples consisting of single words/labels into indices (that e.g. can be latter used for loss calculation, PyTorch-style).
     """
@@ -35,8 +36,9 @@ class LabelIndexer(WordMappings):
         :type config: :py:class:`ptp.configuration.ConfigInterface`
 
         """
-        # Call constructor(s) of parent class(es).
-        WordMappings.__init__(self, name, LabelIndexer, config)
+        # Call constructor(s) of parent class(es) - in the right order!
+        Component.__init__(self, name, LabelIndexer, config)
+        WordMappings.__init__(self)
 
         # Set key mappings.
         self.key_inputs = self.stream_keys["inputs"]

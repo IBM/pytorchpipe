@@ -17,31 +17,26 @@ __author__ = "Tomasz Kornuta"
 import os
 
 import ptp.components.utils.word_mappings as wm
-from ptp.components.component import Component
 
 
-class WordMappings(Component):
+class WordMappings(object):
     """
     Mixin class that handles the initialization of (word:index) mappings.
+    Assumes that it is mixed-in into class that is derived from the component.
+    .. warning::
+        Constructor (__init__) of the Component class has to be called before component of the mixin WordMapping class.
+
     """
-    def __init__(self, name, class_type, config):
+    def __init__(self): #, name, class_type, config):
         """
         Initializes the (word:index) mappings.
 
-        Loads parameters from configuration, 
-
-        :param name: Component name (read from configuration file).
-        :type name: str
-
-        :param class_type: Class type of the component (derrived from this class).
-
-        :param config: Dictionary of parameters (read from the configuration ``.yaml`` file).
-        :type config: :py:class:`ptp.configuration.ConfigInterface`
+        Assumes that Component was initialized in advance, which means that the self object possesses the following objects:
+            - self.config
+            - self.globals
+            - self.logger
 
         """
-        # Call constructors of parent classes.
-        Component.__init__(self, name, class_type, config)
-
         # Read the actual configuration.
         self.data_folder = os.path.expanduser(self.config['data_folder'])
 

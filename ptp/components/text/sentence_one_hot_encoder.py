@@ -16,11 +16,12 @@ __author__ = "Tomasz Kornuta"
 
 import torch
 
+from ptp.components.component import Component
 from ptp.components.mixins.word_mappings import WordMappings
 from ptp.data_types.data_definition import DataDefinition
 
 
-class SentenceOneHotEncoder(WordMappings):
+class SentenceOneHotEncoder(Component, WordMappings):
     """
     Class responsible for encoding of samples being sequences of words using 1-hot encoding.
     """
@@ -35,8 +36,9 @@ class SentenceOneHotEncoder(WordMappings):
         :type config: :py:class:`ptp.configuration.ConfigInterface`
 
         """
-        # Call constructor(s) of parent class(es).
-        WordMappings.__init__(self, name, SentenceOneHotEncoder, config)
+        # Call constructor(s) of parent class(es) - in the right order!
+        Component.__init__(self, name, SentenceOneHotEncoder, config)
+        WordMappings.__init__(self)
 
         # Set key mappings.
         self.key_inputs = self.stream_keys["inputs"]

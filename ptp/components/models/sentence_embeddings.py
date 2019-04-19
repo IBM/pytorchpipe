@@ -50,7 +50,7 @@ class SentenceEmbeddings(Model, WordMappings):
         """
         # Call base class constructors.
         Model.__init__(self, name, SentenceEmbeddings, config)
-        WordMappings.__init__(self, name, SentenceEmbeddings, config)
+        WordMappings.__init__(self)
 
         # Set key mappings.
         self.key_inputs = self.stream_keys["inputs"]
