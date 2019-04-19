@@ -46,7 +46,7 @@ pipeline:
   # Source encoding - model 1.
   source_sentence_embedding:
     type: SentenceEmbeddings
-    priority: 1.1
+    priority: 1
     embeddings_size: 50
     pretrained_embeddings: glove.6B.50d.txt
     data_folder: *data_folder
@@ -61,7 +61,7 @@ pipeline:
   # Target encoding.
   target_indexer:
     type: SentenceIndexer
-    priority: 2.1
+    priority: 2
     data_folder: *data_folder
     import_word_mappings_from_globals: True
     streams:
@@ -87,6 +87,21 @@ pipeline:
     streams:
       targets: indexed_targets
 
+  # Prediction decoding.
+  prediction_decoder:
+    type: SentenceIndexer
+    priority: 10
+    # Reverse mode.
+    reverse: True
+    # Use distributions as inputs.
+    use_input_distributions: True
+    data_folder: *data_folder
+    import_word_mappings_from_globals: True
+    streams:
+      inputs: predictions
+      outputs: prediction_sentences
+
+
   # Statistics.
   batch_size:
     type: BatchSizeStatistics
@@ -109,6 +124,6 @@ pipeline:
   viewer:
     type: StreamViewer
     priority: 100.3
-    input_streams: sources,targets,indexed_targets,predictions
+    input_streams: sources,targets,indexed_targets,prediction_sentences
 
 #: pipeline
