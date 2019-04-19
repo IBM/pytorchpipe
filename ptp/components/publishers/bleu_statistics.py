@@ -146,6 +146,9 @@ class BLEUStatistics(Component):
                     pred_words.append(self.ix_to_word[p_ind])
             # Calculate BLEU.
             scores.append(sentence_bleu(target_words, pred_words))
+            print("TARGET: {}\n".format(target_words))
+            print("PREDICTION: {}\n".format(pred_words))
+            print("BLEU: {}\n".format(scores[-1]))
 
         # Get batch size.
         batch_size = len(targets)
