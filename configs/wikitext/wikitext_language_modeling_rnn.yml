@@ -5,7 +5,7 @@ training:
     data_folder: &data_folder ~/data/language_modeling/wikitext-2
     dataset: &dataset wikitext-2
     subset: train
-    sentence_length: 50
+    sentence_length: 10
     batch_size:  64
 
   # optimizer parameters:
@@ -27,7 +27,7 @@ validation:
     data_folder: *data_folder
     dataset: *dataset
     subset: valid
-    sentence_length: 50
+    sentence_length: 20
     batch_size:  64
 
 # Testing parameters:
