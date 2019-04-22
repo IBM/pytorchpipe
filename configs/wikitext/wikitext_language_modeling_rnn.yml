@@ -5,7 +5,7 @@ training:
     data_folder: &data_folder ~/data/language_modeling/wikitext-2
     dataset: &dataset wikitext-2
     subset: train
-    sentence_length: 50
+    sentence_length: 10
     batch_size:  64
 
   # optimizer parameters:
@@ -27,7 +27,7 @@ validation:
     data_folder: *data_folder
     dataset: *dataset
     subset: valid
-    sentence_length: 50
+    sentence_length: 20
     batch_size:  64
 
 # Testing parameters:
@@ -46,7 +46,7 @@ pipeline:
   # Source encoding - model 1.
   source_sentence_embedding:
     type: SentenceEmbeddings
-    priority: 1.1
+    priority: 1
     embeddings_size: 50
     pretrained_embeddings: glove.6B.50d.txt
     data_folder: *data_folder
@@ -61,7 +61,7 @@ pipeline:
   # Target encoding.
   target_indexer:
     type: SentenceIndexer
-    priority: 2.1
+    priority: 2
     data_folder: *data_folder
     import_word_mappings_from_globals: True
     streams:
@@ -86,12 +86,44 @@ pipeline:
     num_targets_dims: 2
     streams:
       targets: indexed_targets
-      loss: loss
 
+  # Prediction decoding.
+  prediction_decoder:
+    type: SentenceIndexer
+    priority: 10
+    # Reverse mode.
+    reverse: True
+    # Use distributions as inputs.
+    use_input_distributions: True
+    data_folder: *data_folder
+    import_word_mappings_from_globals: True
+    streams:
+      inputs: predictions
+      outputs: prediction_sentences
+
+
+  # Statistics.
+  batch_size:
+    type: BatchSizeStatistics
+    priority: 100.0
+
+  #accuracy:
+  #  type: AccuracyStatistics
+  #  priority: 100.1
+  #  streams:
+  #    targets: indexed_targets
+
+  bleu:
+    type: BLEUStatistics
+    priority: 100.2
+    streams:
+      targets: indexed_targets
+
+      
   # Viewers.
   viewer:
     type: StreamViewer
-    priority: 100.1
-    input_streams: sources,indexed_targets,targets,predictions
+    priority: 100.3
+    input_streams: sources,targets,indexed_targets,prediction_sentences
 
 #: pipeline

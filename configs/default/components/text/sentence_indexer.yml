@@ -25,6 +25,14 @@ import_word_mappings_from_globals: False
 # Flag informing whether word mappings will be exported to globals (LOADED)
 export_word_mappings_to_globals: False
 
+# Operation mode. If 'reverse' is True, then it will change indices into words (LOADED)
+reverse: False
+
+# Flag indicating whether inputs are represented as distributions or indices (LOADED)
+# Options: True (expects distribution for each input item in sequence)
+#          False (expects indices (max args))
+use_input_distributions: False
+
 streams: 
   ####################################################################
   # 2. Keymappings associated with INPUT and OUTPUT streams.

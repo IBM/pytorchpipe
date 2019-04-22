@@ -16,14 +16,17 @@ __author__ = "Tomasz Kornuta"
 
 import torch
 
+from ptp.components.component import Component
 from ptp.components.mixins.word_mappings import WordMappings
 from ptp.data_types.data_definition import DataDefinition
 
 
-class SentenceIndexer(WordMappings):
+class SentenceIndexer(Component, WordMappings):
     """
     Class responsible for encoding of sequences of words into list of indices.
     Those can be letter embedded, encoded with 1-hot encoding or else.
+
+    Additianally, when 'reverse' mode is on, it works in the oposite direction, i.e. changing tensor witl indices into list of words.
     """
     def __init__(self, name, config):
         """
@@ -36,13 +39,25 @@ class SentenceIndexer(WordMappings):
         :type config: :py:class:`ptp.configuration.ConfigInterface`
 
         """
-        # Call constructor(s) of parent class(es).
-        WordMappings.__init__(self, name, SentenceIndexer, config)
+        # Call constructor(s) of parent class(es) - in the right order!
+        Component.__init__(self, name, SentenceIndexer, config)
+        WordMappings.__init__(self)
 
         # Set key mappings.
         self.key_inputs = self.stream_keys["inputs"]
         self.key_outputs = self.stream_keys["outputs"]
-        
+
+        # Read mode from the configuration.
+        self.mode_reverse = self.config['reverse']
+
+        if self.mode_reverse:
+            # We will need reverse (index:word) mapping.
+            self.ix_to_word = dict((v,k) for k,v in self.word_to_ix.items())
+
+        # Get inputs distributions/indices flag.
+        self.use_input_distributions = self.config["use_input_distributions"]
+
+
 
     def input_data_definitions(self):
         """ 
@@ -50,9 +65,19 @@ class SentenceIndexer(WordMappings):
 
         :return: dictionary containing input data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
         """
-        return {
-            self.key_inputs: DataDefinition([-1, -1, 1], [list, list, str], "Batch of sentences, each represented as a list of words [BATCH_SIZE] x [SEQ_LENGTH] x [string]"),
-            }
+        if self.mode_reverse:
+            if self.use_input_distributions:
+                return {
+                    self.key_inputs: DataDefinition([-1, -1, -1], [torch.Tensor], "Batch of sentences represented as a single tensor with batch of probability distributions [BATCH_SIZE x SEQ_LENGTH x ITEM_SIZE]"),
+                    }
+            else: 
+                return {
+                    self.key_inputs: DataDefinition([-1, -1], [torch.Tensor], "Batch of sentences represented as a single tensor of indices of particular words [BATCH_SIZE x SEQ_LENGTH]"),
+                    }
+        else: 
+            return {
+                self.key_inputs: DataDefinition([-1, -1, 1], [list, list, str], "Batch of sentences, each represented as a list of words [BATCH_SIZE] x [SEQ_LENGTH] x [string]"),
+                }
 
     def output_data_definitions(self):
         """ 
@@ -60,25 +85,50 @@ class SentenceIndexer(WordMappings):
 
         :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
         """
-        return {
-            self.key_outputs: DataDefinition([-1, -1], [torch.Tensor], "Batch of sentences represented as a single tensor of indices [BATCH_SIZE x SEQ_LENGTH]"),
-            }
+        if self.mode_reverse:
+            return {
+                self.key_outputs: DataDefinition([-1, -1, 1], [list, list, str], "Batch of sentences, each represented as a list of words [BATCH_SIZE] x [SEQ_LENGTH] x [string]"),
+                }
+        else: 
+            return {
+                self.key_outputs: DataDefinition([-1, -1], [torch.Tensor], "Batch of sentences represented as a single tensor of indices of particular words  [BATCH_SIZE x SEQ_LENGTH]"),
+                }
+
 
     def __call__(self, data_dict):
         """
-        Encodes "inputs" in the format of list of tokens (for a single sample)
-        Stores result in "encoded_inputs" field of in data_dict.
+        Encodes inputs into outputs.
+        Depending on the mode (set by 'reverse' config param) calls sentences_to_tensor() (when False) or tensor_to_sentences() (when set to True).
 
-        :param data_dict: :py:class:`ptp.utils.DataDict` object containing (among others):
+        :param data_dict: :py:class:`ptp.datatypes.DataDict` object.
+        """
+        if self.mode_reverse:
+            if self.use_input_distributions:
+                # Produce list of words.
+                self.tensor_distributions_to_sentences(data_dict)
+            else:
+                # Produce list of words.
+                self.tensor_indices_to_sentences(data_dict)
+        else:
+            # Produce indices.
+            self.sentences_to_tensor(data_dict)
 
-            - "inputs": expected input field containing list of words [BATCH_SIZE] x [SEQ_SIZE] x [string]
 
-            - "encoded_targets": added output field containing list of indices [BATCH_SIZE x SEQ_SIZE] 
+    def sentences_to_tensor(self, data_dict):
+        """
+        Encodes "inputs" in the format of batch of list of words into a single tensor with corresponding indices.
+
+        :param data_dict: :py:class:`ptp.datatypes.DataDict` object containing (among others):
+
+            - "inputs": expected input field containing list of lists of words [BATCH_SIZE] x [SEQ_SIZE] x [string]
+
+            - "outputs": added output field containing tensor with indices [BATCH_SIZE x SEQ_SIZE] 
         """
         # Get inputs to be encoded.
         inputs = data_dict[self.key_inputs]
+
         outputs_list = []
-        # Process samples 1 by one.
+        # Process sentences 1 by 1.
         for sample in inputs:
             assert isinstance(sample, (list,)), 'This encoder requires input sample to contain a list of words'
             # Process list.
@@ -96,3 +146,66 @@ class SentenceIndexer(WordMappings):
         output = self.app_state.LongTensor(outputs_list)
         # Create the returned dict.
         data_dict.extend({self.key_outputs: output})
+
+    def tensor_indices_to_sentences(self, data_dict):
+        """
+        Encodes "inputs" in the format of tensor with indices into a batch of list of words.
+
+        :param data_dict: :py:class:`ptp.datatypes.DataDict` object containing (among others):
+
+            - "inputs": added output field containing tensor with indices [BATCH_SIZE x SEQ_SIZE] 
+
+            - "outputs": expected input field containing list of lists of words [BATCH_SIZE] x [SEQ_SIZE] x [string]
+
+        """
+        # Get inputs to be changed to words.
+        inputs = data_dict[self.key_inputs].data.cpu().numpy().tolist()
+
+        outputs_list = []
+        # Process samples 1 by 1.
+        for sample in inputs:
+            # Process list.
+            output_sample = []
+            # "Decode" sample (list of indices).
+            for token in sample:
+                # Get word.
+                output_word = self.ix_to_word[token]
+                # Add index to outputs.
+                output_sample.append( output_word )
+            # Add sentence to batch.
+            outputs_list.append(output_sample)
+
+        # Create the returned dict.
+        data_dict.extend({self.key_outputs: outputs_list})
+
+    def tensor_distributions_to_sentences(self, data_dict):
+        """
+        Encodes "inputs" in the format of tensor with probability distributions into a batch of list of words.
+
+        :param data_dict: :py:class:`ptp.datatypes.DataDict` object containing (among others):
+
+            - "inputs": added output field containing tensor with indices [BATCH_SIZE x SEQ_SIZE x ITEM_SIZE] 
+
+            - "outputs": expected input field containing list of lists of words [BATCH_SIZE] x [SEQ_SIZE] x [string]
+
+        """
+        # Get inputs to be changed to words.
+        inputs = data_dict[self.key_inputs].max(2)[1].data.cpu().numpy().tolist()
+
+        outputs_list = []
+        # Process samples 1 by 1.
+        for sample in inputs:
+            # Process list.
+            output_sample = []
+            # "Decode" sample (list of indices).
+            for token in sample:
+
+                # Get word.
+                output_word = self.ix_to_word[token]
+                # Add index to outputs.
+                output_sample.append( output_word )
+            # Add sentence to batch.
+            outputs_list.append(output_sample)
+
+        # Create the returned dict.
+        data_dict.extend({self.key_outputs: outputs_list})
