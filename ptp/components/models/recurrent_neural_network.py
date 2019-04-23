@@ -101,6 +101,8 @@ class RecurrentNeuralNetwork(Model):
         h0 = torch.zeros(self.num_layers, 1, self.hidden_size)
         c0 = torch.zeros(self.num_layers, 1, self.hidden_size)
 
+        self.init_hidden = None
+
         if self.initial_state == "Trainable":
             self.logger.info("Using trainable initial (h0/c0) state")
             # Initialize a single vector used as hidden state.
@@ -112,7 +114,7 @@ class RecurrentNeuralNetwork(Model):
             if self.cell_type == 'LSTM':
                 torch.nn.init.xavier_uniform(c0)
                 self.init_memory = torch.nn.Parameter(c0, requires_grad=True)
-        elif self.initial_state == "Zero":
+        elif self.initial_state in ["Zero", "Input"]:
             self.logger.info("Using zero initial (h0/c0) state")
             # We will still embedd it into parameter to enable storing/loading of both types of models by each other.
             self.init_hidden = torch.nn.Parameter(h0, requires_grad=False)
@@ -167,10 +169,11 @@ class RecurrentNeuralNetwork(Model):
         if self.input_mode == "Dense":
             d[self.key_inputs] = DataDefinition([-1, -1, self.input_size], [torch.Tensor], "Batch of inputs, each represented as index [BATCH_SIZE x SEQ_LEN x INPUT_SIZE]")
         elif self.input_mode == "Autoregression_First":
-            d[self.key_inputs] = DataDefinition([-1, 1, self.input_size], [torch.Tensor], "Batch of inputs, each represented as index [BATCH_SIZE x SEQ_LEN x INPUT_SIZE]")
+            d[self.key_inputs] = DataDefinition([-1, self.input_size], [torch.Tensor], "Batch of inputs, each represented as index [BATCH_SIZE x SEQ_LEN x INPUT_SIZE]")
 
-        if "Autoregression" in self.input_mode:
-            d[self.key_input_state] = DataDefinition([-1, 2 if self.cell_type == 'LSTM' else 1, self.input_size, 1, self.hidden_size])
+        # Input hidden state
+        if self.initial_state == "Input":
+            d[self.key_input_state] = DataDefinition([-1, 2 if self.cell_type == 'LSTM' else 1, self.input_size, 1, self.hidden_size], [torch.tensor], "Batch of RNN last states")
 
         return d
 
@@ -188,8 +191,9 @@ class RecurrentNeuralNetwork(Model):
             # Only last prediction.
             d[self.key_predictions] = DataDefinition([-1, self.prediction_size], [torch.Tensor], "Batch of predictions, each represented as probability distribution over classes [BATCH_SIZE x SEQ_LEN x PREDICTION_SIZE]")
 
+        # Output hidden state stream
         if self.output_last_state:
-            d[self.key_output_state] = DataDefinition([-1, 2 if self.cell_type == 'LSTM' else 1, self.input_size, 1, self.hidden_size])
+            d[self.key_output_state] = DataDefinition([-1, 2 if self.cell_type == 'LSTM' else 1, self.input_size, 1, self.hidden_size], [torch.tensor], "Batch of RNN last states")
         
         return d
 
@@ -203,31 +207,47 @@ class RecurrentNeuralNetwork(Model):
             - predictions: returned output with predictions (log_probs) [BATCH_SIZE x SEQ_LEN x PREDICTION_SIZE]
         """
         
+        inputs = None
+        batch_size = None
+
         # Get inputs [BATCH_SIZE x SEQ_LEN x INPUT_SIZE]
         if "None" in self.input_mode:
-            batch_size = data_dict[self.key_input_state].shape[0]
-            inputs = torch.zeros(1, self.input_size, self.hidden_size)
-        else:
-            batch_size = inputs.shape[0]
-            inputs = data_dict[self.key_inputs]
+            batch_size = data_dict[self.key_input_state][0].shape[1]
+            inputs = torch.zeros(batch_size, 1, self.hidden_size)
+            if next(self.parameters()).is_cuda:
+                inputs = inputs.cuda() 
 
+        else:
+            inputs = data_dict[self.key_inputs]
+            if inputs.dim() == 2:
+                inputs = inputs.unsqueeze(1)
+            batch_size = inputs.shape[0]
 
 
         # Initialize hidden state.
-        hidden = self.initialize_hiddens_state(batch_size)
+        if self.initial_state == "Input":
+            hidden = data_dict[self.key_input_state]
+        else:
+            hidden = self.initialize_hiddens_state(batch_size)
 
-        # Propagate inputs through rnn cell.
+        activations = []
+
+        # Autoregressive mode - feed back outputs in the input
         if "Autoregression" in self.input_mode:
             activations_partial, hidden = self.rnn_cell(inputs, hidden)
             activations += [activations_partial]
+            # Feed back the outputs iteratively
             for i in range(self.autoregression_length - 1):
                 activations_partial, hidden = self.rnn_cell(activations_partial, hidden)
+                # Add the single step output into list
                 if self.prediction_mode == "Dense":
                     activations += [activations_partial]
+            # Reassemble all the outputs from list into an output sequence
             if self.prediction_mode == "Dense":
                 activations = torch.stack(activations, 1)
             else:
                 activations = activations_partial
+        # Normal mode - feed the entire input sequence at once
         else:
             activations, hidden = self.rnn_cell(inputs, hidden)
 

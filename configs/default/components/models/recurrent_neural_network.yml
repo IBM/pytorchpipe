@@ -57,8 +57,16 @@ streams:
   # Stream containing batch of images (INPUT)
   inputs: inputs
 
+  # Stream containing the inital state of the RNN (INPUT)
+  # The stream will be actually created only if `inital_state: Input`
+  input_state: input_state
+
   # Stream containing predictions (OUTPUT)
   predictions: predictions
+
+  # Stream containing the final output state of the RNN (output)
+  # The stream will be actually created only if `output_last_state: True`
+  output_state: output_state
 
 globals:
   ####################################################################
