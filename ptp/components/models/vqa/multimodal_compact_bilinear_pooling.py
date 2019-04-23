@@ -140,8 +140,8 @@ class MultimodalCompactBilinearPooling(Model):
         sketch_q = enc_q.mm(self.question_sketch_projection_matrix)
 
         # Add imaginary parts (with zeros).
-        sketch_img_reim = torch.stack([sketch_img, torch.zeros(sketch_img.shape)], dim=2)
-        sketch_q_reim = torch.stack([sketch_q, torch.zeros(sketch_q.shape)], dim=2)
+        sketch_img_reim = torch.stack([sketch_img, torch.zeros(sketch_img.shape).type(self.app_state.FloatTensor)], dim=2)
+        sketch_q_reim = torch.stack([sketch_q, torch.zeros(sketch_q.shape).type(self.app_state.FloatTensor)], dim=2)
         #print("\n sketch_img_reim=",sketch_img_reim)
         #print("\n sketch_img_reim.shape=",sketch_img_reim.shape)
 
