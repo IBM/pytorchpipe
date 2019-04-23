@@ -93,7 +93,7 @@ class MultimodalCompactBilinearPooling(Model):
         sparse_sketch_matrix = torch.sparse.FloatTensor(indices.t(), s, torch.Size([input_size, output_size]))
         #print("\n sparse_sketch_matrix=",sparse_sketch_matrix)
         # Return dense matrix.
-        dense_ssm = sparse_sketch_matrix.to_dense().type(torch.FloatTensor)
+        dense_ssm = sparse_sketch_matrix.to_dense().type(self.app_state.FloatTensor)
         #print("\n dense_ssm=",dense_ssm)
         return dense_ssm
 
