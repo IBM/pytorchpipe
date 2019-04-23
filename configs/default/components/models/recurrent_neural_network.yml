@@ -9,15 +9,7 @@ hidden_size: 100
 
 # Flag informing the model to learn the intial state (h0/c0) (LOADED)
 # When false, (c0/c0) will be initialized as zeros.
-
-# Initial state type:
-#   * Zero (null vector)
-#   * Trainable (xavier initialization, trainable)
-#   * Input (the initial hidden state comes from an input stream)
-initial_state: Trainable
-
-# Wether to include the last hidden state in the outputs
-output_last_state: False
+initial_state_trainable: True
 
 # Type of recurrent cell (LOADED)
 # Options: LSTM | GRU | RNN_TANH | RNN_RELU
@@ -33,18 +25,8 @@ dropout_rate: 0
 # Prediction mode (LOADED)
 # Options: 
 #   * Dense (passes every activation through output layer) |
-#   * Last (passes only the last activation though output layer) |
-#   * None (all outputs are discarded)
+#   * Last (passes only the last activation though output layer)
 prediction_mode: Dense
-
-# Input mode
-# Options:
-#   * Dense (every iteration expects an input)
-#   * Autoregression_First (Autoregression, expects an input for the first iteration)
-#   * Autoregression_None (Autoregression, first input will be a null vector)
-input_mode: Dense
-
-autoregression_length: 42
 
 # If true, output of the last layer will be additionally processed with Log Softmax (LOADED)
 use_logsoftmax: True
@@ -57,16 +39,8 @@ streams:
   # Stream containing batch of images (INPUT)
   inputs: inputs
 
-  # Stream containing the inital state of the RNN (INPUT)
-  # The stream will be actually created only if `inital_state: Input`
-  input_state: input_state
-
   # Stream containing predictions (OUTPUT)
   predictions: predictions
-
-  # Stream containing the final output state of the RNN (output)
-  # The stream will be actually created only if `output_last_state: True`
-  output_state: output_state
 
 globals:
   ####################################################################
