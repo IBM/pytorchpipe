@@ -2,22 +2,22 @@
 default_configs: vqa_med_2019/c2_classification/default_c2_classification.yml
 
 # Training parameters:
-#training:
-#  problem:
-#    batch_size: 5
-#validation:
-#  problem:
-#    batch_size: 5
+training:
+  problem:
+    batch_size: 5
+validation:
+  problem:
+    batch_size: 5
 
 pipeline:
-  name: c2_classification_all_rnn_vgg16_mcb
+  name: c2_classification_all_rnn_vgg16_relational_net
 
   global_publisher:
     priority: 0
     type: GlobalVariablePublisher
     # Add input_size to globals.
-    keys: [question_encoder_output_size, image_encoder_output_size, fused_image_question_activation_size]
-    values: [200, 1000, 100]
+    keys: [question_encoder_output_size]
+    values: [100]
 
   ################# PIPE 0: question #################
   # Questions encoding.
@@ -48,7 +48,7 @@ pipeline:
     prediction_mode: Last
     use_logsoftmax: False
     initial_state_trainable: False
-    hidden_size: 50
+    hidden_size: 128
     streams:
       inputs: embedded_questions
       predictions: question_activations
@@ -61,30 +61,29 @@ pipeline:
   image_encoder:
     priority: 3.1
     type: TorchVisionWrapper
+    return_feature_maps: True
     streams:
       inputs: images
-      outputs: image_activations
-    globals:
-      output_size: image_encoder_output_size
+      outputs: feature_maps
 
   ################# PIPE 3: fusion + classification #################
   # Element wise multiplication + FF.
   question_image_fusion:
     priority: 4.1
-    type: MultimodalCompactBilinearPooling
+    type: RelationalNetwork
+    dropout_rate: 0.5
+    output_size: [256]
     streams:
-      image_encodings: image_activations
       question_encodings: question_activations
       outputs: fused_image_question_activations
     globals:
-      image_encoding_size: image_encoder_output_size
       question_encoding_size: question_encoder_output_size
       output_size: fused_image_question_activation_size
 
   classifier:
     priority: 4.2
     type: FeedForwardNetwork 
-    hidden_sizes: [100]
+    hidden_sizes: [512,256]
     dropout_rate: 0.5
     streams:
       inputs: fused_image_question_activations

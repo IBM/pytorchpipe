@@ -9,6 +9,7 @@ from .sentence_embeddings import SentenceEmbeddings
 
 from .vqa.element_wise_multiplication import ElementWiseMultiplication
 from .vqa.multimodal_compact_bilinear_pooling import MultimodalCompactBilinearPooling
+from .vqa.relational_network import RelationalNetwork
 
 __all__ = [
     'ConvNetEncoder',
@@ -21,4 +22,5 @@ __all__ = [
     'SentenceEmbeddings',
     'ElementWiseMultiplication',
     'MultimodalCompactBilinearPooling',
+    'RelationalNetwork',
     ]
