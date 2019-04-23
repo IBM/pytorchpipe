@@ -8,6 +8,9 @@ from .recurrent_neural_network import RecurrentNeuralNetwork
 from .sentence_embeddings import SentenceEmbeddings
 from .seq2seq_rnn import Seq2Seq_RNN
 
+from .vqa.element_wise_multiplication import ElementWiseMultiplication
+from .vqa.multimodal_compact_bilinear_pooling import MultimodalCompactBilinearPooling
+
 __all__ = [
     'ConvNetEncoder',
     'FeedForwardNetwork',
@@ -18,4 +21,6 @@ __all__ = [
     'RecurrentNeuralNetwork',
     'SentenceEmbeddings',
     'Seq2Seq_RNN'
+    'ElementWiseMultiplication',
+    'MultimodalCompactBilinearPooling',
     ]

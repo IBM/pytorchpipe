@@ -182,9 +182,9 @@ pipeline:
     priority: 2.1
     streams:
       inputs: images
-      predictions: image_activations
+      outputs: image_activations
     globals:
-      prediction_size: image_encoder_output_size
+      output_size: image_encoder_output_size
 
   ################# PIPE 3: SHARED IMAGE SIZE ENCODER #################
 

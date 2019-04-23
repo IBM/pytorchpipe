@@ -61,9 +61,9 @@ pipeline:
     priority: 3.1
     streams:
       inputs: images
-      predictions: image_activations
+      outputs: image_activations
     globals:
-      prediction_size: image_encoder_output_size
+      output_size: image_encoder_output_size
   
   # 4th subpipeline: concatenation + FF.
   concat:

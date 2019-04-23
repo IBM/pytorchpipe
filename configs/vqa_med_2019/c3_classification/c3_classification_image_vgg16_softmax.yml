@@ -10,9 +10,9 @@ pipeline:
     priority: 1.1
     streams:
       inputs: images
-      predictions: vgg_images
+      outputs: vgg_images
     globals:
-      prediction_size: vocabulary_size_c3
+      output_size: vocabulary_size_c3
 
   # Model - softmax classifier.
   classifier:
