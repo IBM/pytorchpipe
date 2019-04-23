@@ -72,7 +72,7 @@ pipeline:
     priority: 4.1
     type: RelationalNetwork
     dropout_rate: 0.5
-    output_size: [256]
+    output_size: 256
     streams:
       question_encodings: question_activations
       outputs: fused_image_question_activations
@@ -83,7 +83,7 @@ pipeline:
   classifier:
     priority: 4.2
     type: FeedForwardNetwork 
-    hidden_sizes: [512,256]
+    hidden_sizes: [256,256]
     dropout_rate: 0.5
     streams:
       inputs: fused_image_question_activations
