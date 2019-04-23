@@ -1,0 +1,81 @@
+# This file defines the default values for the RNN model.
+
+####################################################################
+# 1. CONFIGURATION PARAMETERS that will be LOADED by the component.
+####################################################################
+
+# Size of the hidden state (LOADED)
+hidden_size: 100
+
+# Flag informing the model to learn the intial state (h0/c0) (LOADED)
+# When false, (c0/c0) will be initialized as zeros.
+
+# Initial state type:
+#   * Zero (null vector)
+#   * Trainable (xavier initialization, trainable)
+#   * Input (the initial hidden state comes from an input stream)
+initial_state: Trainable
+
+# Wether to include the last hidden state in the outputs
+output_last_state: False
+
+# Type of recurrent cell (LOADED)
+# Options: LSTM | GRU | RNN_TANH | RNN_RELU
+cell_type: LSTM
+
+# Number of "stacked" layers (LOADED)
+num_layers: 1
+
+# Dropout rate (LOADED)
+# Default: 0 (means that it is turned off)
+dropout_rate: 0
+
+# Prediction mode (LOADED)
+# Options: 
+#   * Dense (passes every activation through output layer) |
+#   * Last (passes only the last activation though output layer) |
+#   * None (all outputs are discarded)
+prediction_mode: Dense
+
+# Input mode
+# Options:
+#   * Dense (every iteration expects an input)
+#   * Autoregression_First (Autoregression, expects an input for the first iteration)
+#   * Autoregression_None (Autoregression, first input will be a null vector)
+input_mode: Dense
+
+autoregression_length: 50
+
+# If true, output of the last layer will be additionally processed with Log Softmax (LOADED)
+use_logsoftmax: True
+
+streams: 
+  ####################################################################
+  # 2. Keymappings associated with INPUT and OUTPUT streams.
+  ####################################################################
+
+  # Stream containing batch of images (INPUT)
+  inputs: inputs
+
+  # Stream containing predictions (OUTPUT)
+  predictions: predictions
+
+globals:
+  ####################################################################
+  # 3. Keymappings of variables that will be RETRIEVED from GLOBALS.
+  ####################################################################
+
+  # Size of the input (RETRIEVED)
+  input_size: input_size
+
+  # Size of the prediction (RETRIEVED)
+  prediction_size: prediction_size
+
+  ####################################################################
+  # 4. Keymappings associated with GLOBAL variables that will be SET.
+  ####################################################################
+
+  ####################################################################
+  # 5. Keymappings associated with statistics that will be ADDED.
+  ####################################################################
+
