@@ -34,6 +34,9 @@ class MultimodalCompactBilinearPooling(Model):
     Fukui, A., Park, D. H., Yang, D., Rohrbach, A., Darrell, T., & Rohrbach, M. (2016). Multimodal compact bilinear pooling for visual question answering and visual grounding. arXiv preprint arXiv:1606.01847.
 
     Gao, Y., Beijbom, O., Zhang, N., & Darrell, T. (2016). Compact bilinear pooling. In Proceedings of the IEEE conference on computer vision and pattern recognition (pp. 317-326).
+
+    Inspired by implementation from:
+    https://github.com/DeepInsight-PCALab/CompactBilinearPooling-Pytorch/blob/master/CompactBilinearPooling.py
     """ 
     def __init__(self, name, config):
         """
@@ -57,15 +60,9 @@ class MultimodalCompactBilinearPooling(Model):
         self.question_encoding_size = self.globals["question_encoding_size"]
         self.output_size = self.globals["output_size"]
 
-        # Create the model.
-        #self.image_encodings_ff = torch.nn.Linear(self.image_encoding_size, self.output_size)
-        #self.question_encodings_ff = torch.nn.Linear(self.question_encoding_size, self.output_size)
-
         # Initialize sketch projection matrices.
         self.image_sketch_projection_matrix = self.generate_count_sketch_projection_matrix(self.image_encoding_size, self.output_size)
         self.question_sketch_projection_matrix = self.generate_count_sketch_projection_matrix(self.question_encoding_size, self.output_size)
-
-
 
 
     def generate_count_sketch_projection_matrix(self, input_size, output_size):
