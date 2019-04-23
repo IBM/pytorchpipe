@@ -13,8 +13,8 @@ pipeline:
   name: vqa_med_c2_classification_all_rnn_vgg_concat
 
   global_publisher:
-    type: GlobalVariablePublisher
     priority: 0
+    type: GlobalVariablePublisher
     # Add input_size to globals.
     keys: [question_embeddings_output_size, image_size_encoder_input_size, image_size_encoder_output_size, image_encoder_output_size]
     values: [100, 2, 10, 100]
@@ -30,8 +30,8 @@ pipeline:
 
   # Model 1: Embeddings
   question_embeddings:
-    type: SentenceEmbeddings
     priority: 1.2
+    type: SentenceEmbeddings
     embeddings_size: 50
     pretrained_embeddings_file: glove.6B.50d.txt
     data_folder: ~/data/vqa-med
@@ -42,10 +42,10 @@ pipeline:
   
   # Model 2: RNN
   question_lstm:
+    priority: 1.3
     type: RecurrentNeuralNetwork
     cell_type: LSTM
     prediction_mode: Last
-    priority: 1.3
     use_logsoftmax: False
     initial_state_trainable: False
     #num_layers: 5
@@ -72,8 +72,8 @@ pipeline:
   # 3rd subpipeline: image.
   # Image encoder.
   image_encoder:
-    type: TorchVisionWrapper
     priority: 3.1
+    type: TorchVisionWrapper
     streams:
       inputs: images
       outputs: image_activations
@@ -82,8 +82,8 @@ pipeline:
   
   # 4th subpipeline: concatenation + FF.
   concat:
-    type: Concatenation
     priority: 4.1
+    type: Concatenation
     input_streams: [question_activations,image_size_activations,image_activations]
     # Concatenation 
     dim: 1 # default
@@ -96,9 +96,10 @@ pipeline:
 
 
   classifier:
+    priority: 4.2
     type: FeedForwardNetwork 
     hidden_sizes: [100]
-    priority: 4.2
+    dropout_rate: 0.5
     streams:
       inputs: concatenated_activations
     globals:

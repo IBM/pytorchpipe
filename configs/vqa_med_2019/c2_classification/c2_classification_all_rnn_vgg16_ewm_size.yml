@@ -64,7 +64,7 @@ pipeline:
   question_image_fusion:
     priority: 4.1
     type: ElementWiseMultiplication
-    dropout: 0.5
+    dropout_rate: 0.5
     streams:
       image_encodings: image_activations
       question_encodings: question_activations
@@ -78,7 +78,7 @@ pipeline:
     priority: 4.2
     type: FeedForwardNetwork 
     hidden_sizes: [100]
-    dropout: 0.5
+    dropout_rate: 0.5
     streams:
       inputs: element_wise_activations
       predictions: question_image_activations
@@ -118,7 +118,7 @@ pipeline:
     priority: 5.3
     type: FeedForwardNetwork 
     hidden_sizes: [110]
-    dropout: 0.5
+    dropout_rate: 0.5
     streams:
       inputs: concatenated_activations
     globals:
