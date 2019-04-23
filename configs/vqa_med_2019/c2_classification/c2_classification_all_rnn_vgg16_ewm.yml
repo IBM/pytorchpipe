@@ -2,20 +2,20 @@
 default_configs: vqa_med_2019/c2_classification/default_c2_classification.yml
 
 pipeline:
-  name: vqa_med_c2_classification_all_rnn_vgg_concat
+  name: c2_classification_all_rnn_vgg16_ewm
 
   global_publisher:
     priority: 0
     type: GlobalVariablePublisher
     # Add input_size to globals.
-    keys: [question_embeddings_output_size, image_size_encoder_input_size, image_size_encoder_output_size, image_encoder_output_size]
-    values: [100, 2, 10, 100]
+    keys: [question_encoder_output_size, image_encoder_output_size, element_wise_activation_size]
+    values: [100, 100, 100]
 
-  # First subpipeline: question.
+  ################# PIPE 0: question #################
   # Questions encoding.
   question_tokenizer:
-    type: SentenceTokenizer
     priority: 1.1
+    type: SentenceTokenizer
     streams: 
       inputs: questions
       outputs: tokenized_questions
@@ -40,28 +40,15 @@ pipeline:
     prediction_mode: Last
     use_logsoftmax: False
     initial_state_trainable: False
-    #num_layers: 5
     hidden_size: 50
     streams:
       inputs: embedded_questions
       predictions: question_activations
     globals:
       input_size: embeddings_size
-      prediction_size: question_embeddings_output_size
+      prediction_size: question_encoder_output_size
 
-  # 2nd subpipeline: image size.
-  # Model - image size classifier.
-  image_size_encoder:
-    type: FeedForwardNetwork 
-    priority: 2.1
-    streams:
-      inputs: image_sizes
-      predictions: image_size_activations
-    globals:
-      input_size: image_size_encoder_input_size
-      prediction_size: image_size_encoder_output_size
-
-  # 3rd subpipeline: image.
+  ################# PIPE 2: image #################
   # Image encoder.
   image_encoder:
     priority: 3.1
@@ -71,21 +58,21 @@ pipeline:
       outputs: image_activations
     globals:
       output_size: image_encoder_output_size
-  
-  # 4th subpipeline: concatenation + FF.
-  concat:
-    priority: 4.1
-    type: Concatenation
-    input_streams: [question_activations,image_size_activations,image_activations]
-    # Concatenation 
-    dim: 1 # default
-    input_dims: [[-1,100],[-1,10],[-1,100]]
-    output_dims: [-1,210]
-    streams:
-      outputs: concatenated_activations
-    globals:
-      output_size: output_size
 
+  ################# PIPE 3: fusion + classification #################
+  # Element wise multiplication + FF.
+  question_image_fusion:
+    priority: 4.1
+    type: ElementWiseMultiplication
+    dropout_rate: 0.5
+    streams:
+      image_encodings: image_activations
+      question_encodings: question_activations
+      outputs: element_wise_activations
+    globals:
+      image_encoding_size: image_encoder_output_size
+      question_encoding_size: question_encoder_output_size
+      output_size: element_wise_activation_size
 
   classifier:
     priority: 4.2
@@ -93,10 +80,9 @@ pipeline:
     hidden_sizes: [100]
     dropout_rate: 0.5
     streams:
-      inputs: concatenated_activations
+      inputs: element_wise_activations
     globals:
-      input_size: output_size
+      input_size: element_wise_activation_size
       prediction_size: vocabulary_size_c2
-
 
   #: pipeline

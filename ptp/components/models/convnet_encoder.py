@@ -224,7 +224,7 @@ class ConvNetEncoder(Model):
         :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
         """
         return {
-            self.key_feature_maps: DataDefinition([-1, self.out_channels_conv3, self.height_features_maxpool3, self.width_features_maxpool3], [torch.Tensor], "Batch of filter maps [BATCH_SIZE x DEPTH x HEIGHT x WIDTH]")
+            self.key_feature_maps: DataDefinition([-1, self.out_channels_conv3, self.height_features_maxpool3, self.width_features_maxpool3], [torch.Tensor], "Batch of filter maps [BATCH_SIZE x FEAT_DEPTH x FEAT_HEIGHT x FEAT_WIDTH]")
             }
 
     def forward(self, data_dict):
