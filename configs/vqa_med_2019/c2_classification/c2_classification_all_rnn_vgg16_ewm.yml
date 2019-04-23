@@ -63,9 +63,9 @@ pipeline:
     type: TorchVisionWrapper
     streams:
       inputs: images
-      predictions: image_activations
+      outputs: image_activations
     globals:
-      prediction_size: image_encoder_output_size
+      output_size: image_encoder_output_size
 
   ################# PIPE 3: fusion + classification #################
   # Element wise multiplication + FF.
