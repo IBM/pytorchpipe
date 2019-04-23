@@ -334,6 +334,7 @@ class OnlineTrainer(Trainer):
             # Finalize statistics collection.
             self.finalize_statistics_collection()
             self.finalize_tensorboard()
+            self.logger.info("Experiment logged to: {}".format(self.log_dir))
 
 
 def main():
