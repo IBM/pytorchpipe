@@ -20,7 +20,7 @@ __all__ = [
     'Model',
     'RecurrentNeuralNetwork',
     'SentenceEmbeddings',
-    'Seq2Seq_RNN'
+    'Seq2Seq_RNN',
     'ElementWiseMultiplication',
     'MultimodalCompactBilinearPooling',
     ]
