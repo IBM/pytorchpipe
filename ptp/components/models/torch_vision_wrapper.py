@@ -28,7 +28,7 @@ from ptp.data_types.data_definition import DataDefinition
 class TorchVisionWrapper(Model):
     """
     Class
-    """ 
+    """
     def __init__(self, name, config):
         """
         Initializes the ``LeNet5`` model, creates the required layers.
@@ -48,14 +48,26 @@ class TorchVisionWrapper(Model):
         # Retrieve prediction size from globals.
         self.prediction_size = self.globals["prediction_size"]
 
-        # Get VGG16
-        self.model = models.vgg16(pretrained=True)
-        # "Replace" last layer.
-        self.model.classifier._modules['6'] = torch.nn.Linear(4096, self.prediction_size)
+        # Get model type from configuration.
+        self.model_type = self.config["model_type"]
+
+        if(self.model_type == 'VGG16'):
+            # Get VGG16
+            self.model = models.vgg16(pretrained=True)
+            # "Replace" last layer.
+            self.model.classifier._modules['6'] = torch.nn.Linear(4096, self.prediction_size)
+        elif(self.model_type == 'densenet121'):
+            # Get densenet121
+            self.model = models.densenet121(pretrained=True)
+            self.model.classifier = nn.Linear(1024, self.prediction_size)
+        elif(self.model_type == 'resnet152'):
+            # Get resnet152
+            self.model = models.resnet152(pretrained=True)
+            self.model.fc = nn.Linear(2048, self.prediction_size)
 
 
     def input_data_definitions(self):
-        """ 
+        """
         Function returns a dictionary with definitions of input data that are required by the component.
 
         :return: dictionary containing input data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
@@ -66,7 +78,7 @@ class TorchVisionWrapper(Model):
 
 
     def output_data_definitions(self):
-        """ 
+        """
         Function returns a dictionary with definitions of output data produced the component.
 
         :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
