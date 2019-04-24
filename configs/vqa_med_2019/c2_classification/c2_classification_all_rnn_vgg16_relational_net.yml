@@ -32,8 +32,8 @@ pipeline:
   question_embeddings:
     priority: 1.2
     type: SentenceEmbeddings
-    embeddings_size: 50
-    pretrained_embeddings_file: glove.6B.50d.txt
+    embeddings_size: 200
+    pretrained_embeddings_file: glove.6B.200d.txt
     data_folder: ~/data/vqa-med
     word_mappings_file: questions.all.word.mappings.csv
     streams:
@@ -47,8 +47,9 @@ pipeline:
     cell_type: LSTM
     prediction_mode: Last
     use_logsoftmax: False
-    initial_state_trainable: False
-    hidden_size: 128
+    initial_state_trainable: True
+    dropout_rate: 0.5
+    hidden_size: 50
     streams:
       inputs: embedded_questions
       predictions: question_activations
@@ -62,6 +63,8 @@ pipeline:
     priority: 3.1
     type: TorchVisionWrapper
     return_feature_maps: True
+    frozen: True
+    freeze: True
     streams:
       inputs: images
       outputs: feature_maps
@@ -72,7 +75,7 @@ pipeline:
     priority: 4.1
     type: RelationalNetwork
     dropout_rate: 0.5
-    output_size: 256
+    output_size: 100
     streams:
       question_encodings: question_activations
       outputs: fused_image_question_activations
@@ -83,7 +86,7 @@ pipeline:
   classifier:
     priority: 4.2
     type: FeedForwardNetwork 
-    hidden_sizes: [256,256]
+    hidden_sizes: [100,100]
     dropout_rate: 0.5
     streams:
       inputs: fused_image_question_activations

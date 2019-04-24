@@ -30,6 +30,8 @@ class RelationalNetwork(Model):
     Model expects image (CNN) features and encoded question.
 
     
+    Santoro, A., Raposo, D., Barrett, D. G., Malinowski, M., Pascanu, R., Battaglia, P., & Lillicrap, T. (2017). A simple neural network module for relational reasoning. In Advances in neural information processing systems (pp. 4967-4976).
+    Reference paper: https://arxiv.org/abs/1706.01427.
     """ 
     def __init__(self, name, config):
         """
