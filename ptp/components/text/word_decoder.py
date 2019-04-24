@@ -16,11 +16,12 @@ __author__ = "Tomasz Kornuta"
 
 import torch
 
+from ptp.components.component import Component
 from ptp.components.mixins.word_mappings import WordMappings
 from ptp.data_types.data_definition import DataDefinition
 
 
-class WordDecoder(WordMappings):
+class WordDecoder(Component, WordMappings):
     """
     Class responsible for decoding of samples encoded in the form of vectors ("probability distributions").
     """
@@ -35,8 +36,9 @@ class WordDecoder(WordMappings):
         :type config: :py:class:`ptp.configuration.ConfigInterface`
 
         """
-        # Call constructor(s) of parent class(es).
-        WordMappings.__init__(self, name, WordDecoder, config)
+        # Call constructor(s) of parent class(es) - in the right order!
+        Component.__init__(self, name, WordDecoder, config)
+        WordMappings.__init__(self)
 
         # Construct reverse mapping for faster processing.
         self.ix_to_word = dict((v,k) for k,v in self.word_to_ix.items())

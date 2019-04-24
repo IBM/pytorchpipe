@@ -30,7 +30,7 @@ scale_image_size: [2414, 2323]
 
 # Set augmentation parameter
 # Use random affine transformations (rotate, scale and translate)
-use_augmentation: True
+use_augmentation: False
 
 streams:
   ####################################################################

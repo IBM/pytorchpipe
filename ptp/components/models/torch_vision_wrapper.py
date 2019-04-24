@@ -43,10 +43,7 @@ class TorchVisionWrapper(Model):
 
         # Get key mappings.
         self.key_inputs = self.stream_keys["inputs"]
-        self.key_predictions = self.stream_keys["predictions"]
-
-        # Retrieve prediction size from globals.
-        self.prediction_size = self.globals["prediction_size"]
+        self.key_outputs = self.stream_keys["outputs"]
 
         # Get model type from configuration.
         self.model_type = self.config["model_type"]
@@ -54,15 +51,44 @@ class TorchVisionWrapper(Model):
         if(self.model_type == 'VGG16'):
             # Get VGG16
             self.model = models.vgg16(pretrained=True)
-            # "Replace" last layer.
-            self.model.classifier._modules['6'] = torch.nn.Linear(4096, self.prediction_size)
+
+            # Check operation mode.
+            self.return_feature_maps = self.config["return_feature_maps"]
+
+            if self.return_feature_maps:
+                # Use only the "feature encoder".
+                self.model = self.model.features
+
+                # Height of the returned features tensor (SET)
+                self.feature_maps_height = 7
+                self.globals["feature_maps_height"] = self.feature_maps_height
+                # Width of the returned features tensor (SET)
+                self.feature_maps_width = 7
+                self.globals["feature_maps_width"] = self.feature_maps_width
+                # Depth of the returned features tensor (SET)
+                self.feature_maps_depth = 512
+                self.globals["feature_maps_depth"] = self.feature_maps_depth
+
+            else:
+                # Use the whole model, but cut/reshape only the last layer.
+                # Retrieve prediction size from globals.
+                self.output_size = self.globals["output_size"]
+                # "Replace" last layer.
+                self.model.classifier._modules['6'] = torch.nn.Linear(4096, self.output_size)
+
         elif(self.model_type == 'densenet121'):
             # Get densenet121
             self.model = models.densenet121(pretrained=True)
             self.model.classifier = nn.Linear(1024, self.prediction_size)
+
         elif(self.model_type == 'resnet152'):
             # Get resnet152
             self.model = models.resnet152(pretrained=True)
+            self.model.fc = nn.Linear(2048, self.prediction_size)
+
+        elif(self.model_type == 'resnet50'):
+            # Get resnet50
+            self.model = models.resnet50(pretrained=True)
             self.model.fc = nn.Linear(2048, self.prediction_size)
 
 
@@ -83,9 +109,14 @@ class TorchVisionWrapper(Model):
 
         :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
         """
-        return {
-            self.key_predictions: DataDefinition([-1, self.prediction_size], [torch.Tensor], "Batch of predictions, each represented as probability distribution over classes [BATCH_SIZE x PREDICTION_SIZE]")
-            }
+        if self.return_feature_maps:
+            return {
+                self.key_outputs: DataDefinition([-1, self.feature_maps_depth, self.feature_maps_height, self.feature_maps_width], [torch.Tensor], "Batch of feature maps [BATCH_SIZE x FEAT_DEPTH x FEAT_HEIGHT x FEAT_WIDTH]")
+                }
+        else:
+            return {
+                self.key_outputs: DataDefinition([-1, self.output_size], [torch.Tensor], "Batch of outputs, each represented as probability distribution over classes [BATCH_SIZE x PREDICTION_SIZE]")
+                }
 
     def forward(self, data_dict):
         """
@@ -94,7 +125,7 @@ class TorchVisionWrapper(Model):
         :param data_dict: DataDict({'inputs', ....}), where:
 
             - inputs: expected stream containing images [BATCH_SIZE x IMAGE_DEPTH x IMAGE_HEIGHT x IMAGE WIDTH]
-            - outpus: added stream containing predictions [BATCH_SIZE x PREDICTION_SIZE]
+            - outpus: added stream containing outputs [BATCH_SIZE x PREDICTION_SIZE]
 
         :type data_dict: ``ptp.data_types.DataDict``
 
@@ -103,7 +134,7 @@ class TorchVisionWrapper(Model):
         # Unpack DataDict.
         img = data_dict[self.key_inputs]
 
-        predictions = self.model(img)
+        outputs = self.model(img)
 
-        # Add predictions to datadict.
-        data_dict.extend({self.key_predictions: predictions})
+        # Add outputs to datadict.
+        data_dict.extend({self.key_outputs: outputs})

@@ -4,23 +4,23 @@ default_configs: vqa_med_2019/default_vqa_med_2019.yml
 # Training parameters:
 training:
   problem:
-    categories: C1
+    categories: C1,C2,C3
   sampler:
     name: WeightedRandomSampler
-    weights: ~/data/vqa-med/answers.c1.weights.csv
+    weights: ~/data/vqa-med/answers.c1_c2_c3_binary_yn.weights.csv
   dataloader:
     num_workers: 4
 
 # Validation parameters:
 validation:
   problem:
-    categories: C1
+    categories: C1,C2,C3
   dataloader:
     num_workers: 4
 
 
 pipeline:
-  name: c1_binary_vf_cat_rnn_shared_all_encoders_two_ffns_losses
+  name: c1_c2_c3_binary_cat_rnn_shared_all_encoders_one_ffn_loss
   
   ################# PIPE 0: SHARED #################
 
@@ -29,8 +29,8 @@ pipeline:
     type: GlobalVariablePublisher
     priority: 0
     # Add input_size to globals.
-    keys: [question_lstm_output_size, image_size_encoder_input_size, image_size_encoder_output_size, image_encoder_output_size, category_c1_word_to_ix, category_binary_word_to_ix]
-    values: [100, 2, 10, 100,{"C1": 0}, {"BINARY": 0}]
+    keys: [question_lstm_output_size, image_size_encoder_input_size, image_size_encoder_output_size, image_encoder_output_size, category_c1_c2_c3_binary_yn_word_to_ix]
+    values: [100, 2, 10, 100, {"C1": 0, "C2": 1, "C3": 2, "BINARY": 3}]
 
   # Statistics.
   batch_size:
@@ -164,15 +164,15 @@ pipeline:
     type: LabelIndexer
     priority: 1.3
     data_folder: ~/data/vqa-med
-    word_mappings_file: answers.c1.word.mappings.csv
+    word_mappings_file: answers.c1_c2_c3_binary_yn.word.mappings.csv
     # Export mappings and size to globals.
     export_word_mappings_to_globals: True
     streams:
       inputs: answers
       outputs: all_answers_ids
     globals:
-      vocabulary_size: vocabulary_size_all_c1_binasry
-      word_mappings: word_mappings_all_c1_binary
+      vocabulary_size: vocabulary_size_all_c1_c2_c3_binary
+      word_mappings: word_mappings_all_c1_c2_c3_binary
 
   ################# PIPE 2: SHARED IMAGE ENCODER #################
 
@@ -215,59 +215,59 @@ pipeline:
       output_size: concatenated_activations_size
 
 
-  ################# PIPE 5: C1 question #################
+  ################# PIPE 5: C1 + C2 + C2 + Binary Y/N question #################
 
   # Answer encoding for PIPE 5.
-  pipe5_c1_answer_indexer:
+  pipe5_all_answer_indexer:
     type: LabelIndexer
     priority: 5.1
     data_folder: ~/data/vqa-med
-    word_mappings_file: answers.c1_without_yn.word.mappings.csv
+    word_mappings_file: answers.c1_c2_c3_binary_yn.word.mappings.csv
     # Export mappings and size to globals.
     export_word_mappings_to_globals: True
     streams:
       inputs: answers
-      outputs: pipe5_c1_answers_without_yn_ids
+      outputs: pipe5_all_answers_ids
     globals:
-      vocabulary_size: vocabulary_size_c1_without_yn
-      word_mappings: word_mappings_c1_without_yn
+      vocabulary_size: vocabulary_size_c1_c2_c3_binary
+      word_mappings: word_mappings_all_c1_c2_c3_binary
 
   # Sample masking based on categories.
-  pipe5_c1_string_to_mask:
+  pipe5_all_string_to_mask:
     priority: 5.2
     type: StringToMask
     globals:
-      word_mappings: category_c1_word_to_ix
+      word_mappings: category_c1_c2_c3_binary_yn_word_to_ix
     streams:
       strings: pipe0_predicted_question_categories_names
-      string_indices: predicted_c1_question_categories_indices # NOT USED
-      masks: pipe5_c1_masks
+      string_indices: predicted_c1_c2_c3_binary_by_question_categories_indices # NOT USED
+      masks: pipe5_all_masks
 
   # Model 4: FFN C1 answering
-  pipe5_c1_ffn:
+  pipe5_all_ffn:
     priority: 5.3
     type: FeedForwardNetwork
     hidden: [50]
     dropout_rate: 0.5
     streams:
       inputs: concatenated_activations
-      predictions: pipe5_c1_predictions
+      predictions: pipe5_all_predictions
     globals:
       input_size: concatenated_activations_size
-      prediction_size: vocabulary_size_c1_without_yn
+      prediction_size: vocabulary_size_c1_c2_c3_binary
 
-  pipe5_c1_nllloss:
+  pipe5_all_nllloss:
     type: NLLLoss
     priority: 5.4
     targets_dim: 1
     use_masking: True
     streams:
-      predictions: pipe5_c1_predictions
-      masks: pipe5_c1_masks
-      targets: pipe5_c1_answers_without_yn_ids
-      loss: pipe5_c1_loss
+      predictions: pipe5_all_predictions
+      masks: pipe5_all_masks
+      targets: pipe5_all_answers_ids
+      loss: pipe5_all_loss
 
-  pipe5_c1_precision_recall:
+  pipe5_all_precision_recall:
     type: PrecisionRecallStatistics
     priority: 5.5
     use_word_mappings: True
@@ -275,127 +275,24 @@ pipeline:
     #show_class_scores: True
     #show_confusion_matrix: True
     streams:
-      masks: pipe5_c1_masks
-      predictions: pipe5_c1_predictions
-      targets: pipe5_c1_answers_without_yn_ids
+      masks: pipe5_all_masks
+      predictions: pipe5_all_predictions
+      targets: pipe5_all_answers_ids
     globals:
-      word_mappings: word_mappings_c1_without_yn
-      num_classes: vocabulary_size_c1_without_yn
+      word_mappings: word_mappings_all_c1_c2_c3_binary
     statistics:
-      precision: pipe5_c1_precision
-      recall: pipe5_c1_recall
-      f1score: pipe5_c1_f1score
+      precision: pipe5_all_precision
+      recall: pipe5_all_recall
+      f1score: pipe5_all_f1score
 
-  ################# PIPE 6: BINARY question #################
 
-  # Answer encoding for pipe 6.
-  pipe6_binary_answer_indexer:
-    type: LabelIndexer
-    priority: 6.1
-    data_folder: ~/data/vqa-med
-    word_mappings_file: answers.binary_yn.word.mappings.csv
-    # Export mappings and size to globals.
-    export_word_mappings_to_globals: True
-    streams:
-      inputs: answers
-      outputs: pipe6_binary_answers_ids
-    globals:
-      vocabulary_size: vocabulary_size_binary_yn
-      word_mappings: word_mappings_binary_yn
-
-  pipe6_binary_string_to_mask:
-    priority: 6.2
-    type: StringToMask
-    globals:
-      word_mappings: category_binary_word_to_ix
-    streams:
-      strings: pipe0_predicted_question_categories_names
-      string_indices: predicted_binary_question_categories_indices # NOT USED
-      masks: pipe6_binary_masks
-
-  # Model 4: FFN C1 answering
-  pipe6_binary_ffn:
-    priority: 6.3
-    type: FeedForwardNetwork
-    hidden: [50]
-    dropout_rate: 0.5
-    streams:
-      inputs: concatenated_activations
-      predictions: pipe6_binary_predictions
-    globals:
-      input_size: concatenated_activations_size
-      prediction_size: vocabulary_size_binary_yn
-
-  pipe6_binary_nllloss:
-    type: NLLLoss
-    priority: 6.4
-    targets_dim: 1
-    use_masking: True
-    streams:
-      predictions: pipe6_binary_predictions
-      masks: pipe6_binary_masks
-      targets: pipe6_binary_answers_ids
-      loss: pipe6_binary_loss
-
-  pipe6_binary_precision_recall:
-    type: PrecisionRecallStatistics
-    priority: 6.5
-    use_word_mappings: True
-    use_masking: True
-    #show_class_scores: True
-    #show_confusion_matrix: True
-    streams:
-      masks: pipe6_binary_masks
-      predictions: pipe6_binary_predictions
-      targets: pipe6_binary_answers_ids
-    globals:
-      word_mappings: word_mappings_binary_yn
-      num_classes: vocabulary_size_binary_yn
-    statistics:
-      precision: pipe6_binary_precision
-      recall: pipe6_binary_recall
-      f1score: pipe6_binary_f1score
-
-  ################# PIPE 7: MERGE ANSWERS #################
-
-  # Merge predictions
-  pipe7_merged_predictions:
-    type: JoinMaskedPredictions
-    priority: 7.1
-    # Names of used input streams.
-    input_prediction_streams: [pipe5_c1_predictions, pipe6_binary_predictions]
-    input_mask_streams: [pipe5_c1_masks, pipe6_binary_masks]
-    input_word_mappings: [word_mappings_c1_without_yn, word_mappings_binary_yn]
-    globals:
-      output_word_mappings: word_mappings_all_c1_binary
-    streams:
-      output_strings: pipe7_merged_predictions
-      output_indices: pipe7_merged_pred_indices
-
-  # Statistics.
-  pipe7_merged_precision_recall:
-    type: PrecisionRecallStatistics
-    priority: 7.2
-    # Use prediction indices instead of distributions.
-    use_prediction_distributions: False
-    use_word_mappings: True
-    show_class_scores: True
-    show_confusion_matrix: True
-    globals:
-      word_mappings: word_mappings_all_c1_binary
-    streams:
-      targets: all_answers_ids
-      predictions: pipe7_merged_pred_indices
-    statistics:
-      precision: pipe7_merged_precision
-      recall: pipe7_merged_recall
-      f1score: pipe7_merged_f1score
+  ################# PIPE 9: MERGE ANSWERS #################
 
   # Viewers.
   viewer:
     type: StreamViewer
-    priority: 7.3
-    input_streams: questions,answers, category_names,predicted_question_categories_names, pipe5_c1_masks,pipe5_c1_answers_without_yn_ids,pipe5_c1_predictions, pipe6_binary_masks,pipe6_binary_answers_ids,pipe6_binary_predictions, pipe7_merged_predictions
+    priority: 9.3
+    input_streams: questions,answers, category_names,predicted_question_categories_names, pipe5_all_masks,pipe5_all_answers_without_yn_ids,pipe5_all_predictions
 
 
 #: pipeline

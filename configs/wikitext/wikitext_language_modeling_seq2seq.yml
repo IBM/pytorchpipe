@@ -1,3 +1,9 @@
+# This pipeline applies seq2seq on wikitext-2 to make word-level prediction.
+# It's been made for test purposes only, as it is doing:
+# [word 0 , ... , word 49] -> [word 1 , ... , word 50] (basically copying most of the input)
+#
+# The seq2seq here is implemented throught the use of 2 `RecurrentNeuralNetwork`
+
 # Training parameters:
 training:
   problem:
@@ -5,29 +11,29 @@ training:
     data_folder: &data_folder ~/data/language_modeling/wikitext-2
     dataset: &dataset wikitext-2
     subset: train
-    sentence_length: 10
+    sentence_length: 50
     batch_size:  64
 
   # optimizer parameters:
   optimizer:
     name: Adam
-    lr: 0.1
+    lr: 1.0e-3
 
   # settings parameters
   terminal_conditions:
     loss_stop: 1.0e-2
-    episode_limit: 10000
+    episode_limit: 1000000
     epoch_limit: 100
 
 # Validation parameters:
 validation:
-  partial_validation_interval: 10
+  partial_validation_interval: 100
   problem:
     type: *p_type
     data_folder: *data_folder
     dataset: *dataset
     subset: valid
-    sentence_length: 20
+    sentence_length: 50
     batch_size:  64
 
 # Testing parameters:
@@ -41,12 +47,12 @@ testing:
     batch_size: 64
 
 pipeline:
-  name: wikitext_language_modeling_rnn
+  name: wikitext_language_modeling_seq2seq
 
   # Source encoding - model 1.
   source_sentence_embedding:
     type: SentenceEmbeddings
-    priority: 1
+    priority: 1.1
     embeddings_size: 50
     pretrained_embeddings: glove.6B.50d.txt
     data_folder: *data_folder
@@ -61,23 +67,83 @@ pipeline:
   # Target encoding.
   target_indexer:
     type: SentenceIndexer
-    priority: 2
+    priority: 2.1
     data_folder: *data_folder
     import_word_mappings_from_globals: True
     streams:
       inputs: targets
       outputs: indexed_targets
-  
-  # Model 2: RNN
-  lstm:
-    type: RecurrentNeuralNetwork
-    priority: 3
-    initial_state_trainable: False
+
+  # Publish the hidden size of the seq2seq
+  global_publisher:
+    type: GlobalVariablePublisher
+    priority: 1
+    # Add input_size to globals, so classifier will use it.
+    keys: s2s_hidden_size
+    values: 300
+
+  # FF, to resize the embeddings to whatever the hidden size of te seq2seq is.
+  ff_resize_s2s_input:
+    type: FeedForwardNetwork 
+    priority: 2.5
+    s2s_hidden_size: 300
+    use_logsoftmax: False
+    dimensions: 3
     streams:
       inputs: embedded_sources
+      predictions: embedded_sources_resized
     globals:
       input_size: embeddings_size
-      prediction_size: vocabulary_size 
+      prediction_size: s2s_hidden_size
+  
+  # LSTM Encoder
+  lstm_encoder:
+    type: RecurrentNeuralNetwork
+    priority: 3
+    initial_state: Trainable
+    hidden_size: 300
+    num_layers: 3
+    use_logsoftmax: False
+    output_last_state: True
+    prediction_mode: Last
+    streams:
+      inputs: embedded_sources_resized
+      predictions: s2s_encoder_output
+      output_state: s2s_state_output
+    globals:
+      input_size: s2s_hidden_size
+      prediction_size: s2s_hidden_size 
+
+  # LSTM Decoder
+  lstm_decoder:
+    type: RecurrentNeuralNetwork
+    priority: 4
+    initial_state: Input
+    hidden_size: 300
+    num_layers: 3
+    use_logsoftmax: False
+    input_mode: Autoregression_First
+    autoregression_length: 50
+    prediction_mode: Dense
+    streams:
+      inputs: s2s_encoder_output
+      predictions: s2s_decoder_output
+      input_state: s2s_state_output
+    globals:
+      input_size: s2s_hidden_size
+      prediction_size: s2s_hidden_size 
+
+  # FF, to resize the from the hidden size of the seq2seq to the size of the target vector
+  ff_resize_s2s_output:
+    type: FeedForwardNetwork 
+    use_logsoftmax: True
+    dimensions: 3
+    priority: 5
+    streams:
+      inputs: s2s_decoder_output
+    globals:
+      input_size: s2s_hidden_size
+      prediction_size: vocabulary_size
 
   # Loss
   nllloss:
@@ -86,6 +152,7 @@ pipeline:
     num_targets_dims: 2
     streams:
       targets: indexed_targets
+      loss: loss
 
   # Prediction decoding.
   prediction_decoder:
