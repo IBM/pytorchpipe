@@ -68,6 +68,9 @@ class RecurrentNeuralNetwork(Model):
                 self.prediction_size = self.prediction_size[0]
             else:
                 raise ConfigurationError("RNN prediction size '{}' must be a single dimension (current {})".format(self.key_prediction_size, self.prediction_size))
+
+        if "Autoregression" in self.input_mode:
+            assert self.input_size == self.prediction_size, "In autoregression mode, needs input_size == prediction_size."
         
         # Retrieve hidden size from configuration.
         self.hidden_size = self.config["hidden_size"]
@@ -213,10 +216,9 @@ class RecurrentNeuralNetwork(Model):
         # Get inputs [BATCH_SIZE x SEQ_LEN x INPUT_SIZE]
         if "None" in self.input_mode:
             batch_size = data_dict[self.key_input_state][0].shape[1]
-            inputs = torch.zeros(batch_size, 1, self.hidden_size)
+            inputs = torch.zeros(batch_size, self.hidden_size)
             if next(self.parameters()).is_cuda:
                 inputs = inputs.cuda() 
-
         else:
             inputs = data_dict[self.key_inputs]
             if inputs.dim() == 2:
@@ -235,56 +237,71 @@ class RecurrentNeuralNetwork(Model):
         # Autoregressive mode - feed back outputs in the input
         if "Autoregression" in self.input_mode:
             activations_partial, hidden = self.rnn_cell(inputs, hidden)
+            activations_partial = activations_partial.squeeze(1)
+            activations_partial = self.dropout(activations_partial)
+            activations_partial = self.activation2output(activations_partial)
             activations += [activations_partial]
+
             # Feed back the outputs iteratively
             for i in range(self.autoregression_length - 1):
-                activations_partial, hidden = self.rnn_cell(activations_partial, hidden)
+                activations_partial, hidden = self.rnn_cell(activations_partial.unsqueeze(1), hidden)
+                activations_partial = activations_partial.squeeze(1)
+                activations_partial = self.dropout(activations_partial)
+                activations_partial = self.activation2output(activations_partial)
                 # Add the single step output into list
                 if self.prediction_mode == "Dense":
                     activations += [activations_partial]
             # Reassemble all the outputs from list into an output sequence
             if self.prediction_mode == "Dense":
-                activations = torch.stack(activations, 1)
-            else:
-                activations = activations_partial
+                outputs = torch.stack(activations, 1)
+                # Log softmax - along PREDICTION dim.
+                if self.use_logsoftmax:
+                    outputs = self.log_softmax(outputs)
+                # Add predictions to datadict.
+                data_dict.extend({self.key_predictions: outputs})
+            elif self.prediction_mode == "Last":
+                if self.use_logsoftmax:
+                    outputs = self.log_softmax(activations_partial)
+                # Add predictions to datadict.
+                data_dict.extend({self.key_predictions: outputs})
+
         # Normal mode - feed the entire input sequence at once
         else:
             activations, hidden = self.rnn_cell(inputs, hidden)
 
-        
-        # Propagate activations through dropout layer.
-        activations = self.dropout(activations)
+            # Propagate activations through dropout layer.
+            activations = self.dropout(activations)
 
-        if self.prediction_mode == "Dense":
-            # Pass every activation through the output layer.
-            # Reshape to 2D tensor [BATCH_SIZE * SEQ_LEN x HIDDEN_SIZE]
-            outputs = activations.contiguous().view(-1, self.hidden_size)
+            if self.prediction_mode == "Dense":
+                # Pass every activation through the output layer.
+                # Reshape to 2D tensor [BATCH_SIZE * SEQ_LEN x HIDDEN_SIZE]
+                outputs = activations.contiguous().view(-1, self.hidden_size)
 
-            # Propagate data through the output layer [BATCH_SIZE * SEQ_LEN x PREDICTION_SIZE]
-            outputs = self.activation2output(outputs)
+                # Propagate data through the output layer [BATCH_SIZE * SEQ_LEN x PREDICTION_SIZE]
+                outputs = self.activation2output(outputs)
 
-            # Reshape back to 3D tensor [BATCH_SIZE x SEQ_LEN x PREDICTION_SIZE]
-            outputs = outputs.view(activations.size(0), activations.size(1), outputs.size(1))
+                # Reshape back to 3D tensor [BATCH_SIZE x SEQ_LEN x PREDICTION_SIZE]
+                outputs = outputs.view(activations.size(0), activations.size(1), outputs.size(1))
 
-            # Log softmax - along PREDICTION dim.
-            if self.use_logsoftmax:
-                outputs = self.log_softmax(outputs)
+                # Log softmax - along PREDICTION dim.
+                if self.use_logsoftmax:
+                    outputs = self.log_softmax(outputs)
 
-            # Add predictions to datadict.
-            data_dict.extend({self.key_predictions: outputs})
-        elif self.prediction_mode == "Last":
-            # Pass only the last activation through the output layer.
-            outputs = activations.contiguous()[:, -1, :].squeeze()
-            # Propagate data through the output layer [BATCH_SIZE x PREDICTION_SIZE]
-            outputs = self.activation2output(outputs)
-            # Log softmax - along PREDICTION dim.
-            if self.use_logsoftmax:
-                outputs = self.log_softmax(outputs)
-            # Add predictions to datadict.
-            data_dict.extend({self.key_predictions: outputs})
-        elif self.prediction_mode == "None":
-            # Nothing, since we don't want to keep the RNN's outputs
-            pass
+                # Add predictions to datadict.
+                data_dict.extend({self.key_predictions: outputs})
+            elif self.prediction_mode == "Last":
+                # Pass only the last activation through the output layer.
+                outputs = activations.contiguous()[:, -1, :].squeeze()
+                # Propagate data through the output layer [BATCH_SIZE x PREDICTION_SIZE]
+                outputs = self.activation2output(outputs)
+                # Log softmax - along PREDICTION dim.
+                if self.use_logsoftmax:
+                    outputs = self.log_softmax(outputs)
+                # Add predictions to datadict.
+                data_dict.extend({self.key_predictions: outputs})
+            elif self.prediction_mode == "None":
+                # Nothing, since we don't want to keep the RNN's outputs
+                pass
 
         if self.output_last_state:
             data_dict.extend({self.key_output_state: hidden})
