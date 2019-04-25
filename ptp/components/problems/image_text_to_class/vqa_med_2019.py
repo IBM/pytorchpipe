@@ -40,13 +40,13 @@ class VQAMED2019(Problem):
         - a training set of 3,200 medical images with 12,792 Question-Answer (QA) pairs,
         - a validation set of 500 medical images with 2,000 QA pairs, and
         - a test set of 500 medical images with 500 questions.
-    
+
     Aside of that, there are 4 categories of questions based on:
         - Modality (C1),
         - Plane (C2),
         - Organ System (C3), and
         - Abnormality (C4).
-    
+
     Please see the readme file of the crowdAI dataset section for more detailed information.
     For more details please refer to the associated _website or _crowdai websites for more details.
 
@@ -65,7 +65,7 @@ class VQAMED2019(Problem):
         :param config: Dictionary of parameters (read from configuration ``.yaml`` file).
         """
         # Call constructors of parent classes.
-        Problem.__init__(self, name, VQAMED2019, config) 
+        Problem.__init__(self, name, VQAMED2019, config)
 
         # Get key mappings of all output streams.
         self.key_images = self.stream_keys["images"]
@@ -149,7 +149,7 @@ class VQAMED2019(Problem):
             self.dataset[0][self.key_image_ids],
             self.dataset[0][self.key_questions],
             self.dataset[0][self.key_answers],
-            self.dataset[0][self.key_category_ids]            
+            self.dataset[0][self.key_category_ids]
             ))
 
     def filter_sources(self, source_files, source_categories):
@@ -242,7 +242,7 @@ class VQAMED2019(Problem):
 
 
     def output_data_definitions(self):
-        """ 
+        """
         Function returns a dictionary with definitions of output data produced the component.
 
         :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
@@ -279,14 +279,21 @@ class VQAMED2019(Problem):
         # Get its width and height.
         width, height = img.size
 
+        if(self.config['use_augmentation'] == 'True'):
+            rotate = (-45, 135)
+            translate = (0.05, 0.25)
+            scale = (0.5, 2)
+            transforms_list = [transforms.RandomAffine(rotate, translate, scale), transforms.RandomHorizontalFlip()]
+        else:
+            transforms_list = []
         # Resize the image and transform to Torch Tensor.
-        transfroms_com = transforms.Compose([
+        transforms_com = transforms.Compose(transforms_list + [
                 transforms.Resize([self.height,self.width]),
                 transforms.ToTensor(),
                 # Use normalization that the pretrained models from TorchVision require.
                 transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
                 ])
-        img = transfroms_com(img) #.type(torch.FloatTensor).squeeze()
+        img = transforms_com(img) #.type(torch.FloatTensor).squeeze()
 
         #print("img: min_val = {} max_val = {}".format(torch.min(img),torch.max(img)) )
 
@@ -354,4 +361,3 @@ class VQAMED2019(Problem):
 
         # Return collated dict.
         return data_dict
-        
