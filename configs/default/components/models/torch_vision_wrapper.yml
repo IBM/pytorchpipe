@@ -5,14 +5,14 @@
 ####################################################################
 
 # Model type (LOADED)
-#model_type: VGG16
-# HARDCODED FOR NOW!
+# Options: VGG16 | densenet121 | resnet152
+model_type: VGG16
 
-# Parameter denoting whether the component will return (flat) prediction 
+# Parameter denoting whether the component will return (flat) prediction
 # or output of last feature layer (LOADED)
 return_feature_maps: False
 
-streams: 
+streams:
   ####################################################################
   # 2. Keymappings associated with INPUT and OUTPUT streams.
   ####################################################################
@@ -51,4 +51,3 @@ globals:
   ####################################################################
   # 5. Keymappings associated with statistics that will be ADDED.
   ####################################################################
-
