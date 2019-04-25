@@ -32,8 +32,8 @@ pipeline:
   question_embeddings:
     priority: 1.2
     type: SentenceEmbeddings
-    embeddings_size: 200
-    pretrained_embeddings_file: glove.6B.200d.txt
+    embeddings_size: 100
+    pretrained_embeddings_file: glove.6B.100d.txt
     data_folder: ~/data/vqa-med
     word_mappings_file: questions.all.word.mappings.csv
     streams:
@@ -48,7 +48,7 @@ pipeline:
     prediction_mode: Last
     use_logsoftmax: False
     initial_state_trainable: True
-    dropout_rate: 0.5
+    #dropout_rate: 0.5
     hidden_size: 50
     streams:
       inputs: embedded_questions
