@@ -185,25 +185,19 @@ class Seq2Seq_RNN(Model):
 
         # Encoder
         activations, hidden = self.rnn_cell_enc(inputs, hidden)
+        activations_partial = self.activation2output(activations[:, -1, :])
 
         # Propagate inputs through rnn cell.
-        activations_partial, hidden = self.rnn_cell_dec(activations[:, -1, :].unsqueeze(1), hidden)
-        activations = []
-        activations += [activations_partial]
+        activations_partial, hidden = self.rnn_cell_dec(activations_partial.unsqueeze(1), hidden)
+        activations_partial = activations_partial.squeeze(1)
+        activations_partial = self.activation2output(activations_partial)
+        activations = [activations_partial]
         for i in range(self.autoregression_length - 1):
-            activations_partial, hidden = self.rnn_cell_dec(activations_partial, hidden)
+            activations_partial, hidden = self.rnn_cell_dec(activations_partial.unsqueeze(1), hidden)
+            activations_partial = activations_partial.squeeze(1)
+            activations_partial = self.activation2output(activations_partial)
             activations += [activations_partial]
-        activations = torch.stack(activations, 1)
-
-        # Pass every activation through the output layer.
-        # Reshape to 2D tensor [BATCH_SIZE * SEQ_LEN x HIDDEN_SIZE]
-        outputs = activations.contiguous().view(-1, self.hidden_size)
-
-        # Propagate data through the output layer [BATCH_SIZE * SEQ_LEN x PREDICTION_SIZE]
-        outputs = self.activation2output(outputs)
-
-        # Reshape back to 3D tensor [BATCH_SIZE x SEQ_LEN x PREDICTION_SIZE]
-        outputs = outputs.view(activations.size(0), activations.size(1), outputs.size(1))
+        outputs = torch.stack(activations, 1)
 
         # Log softmax - along PREDICTION dim.
         if self.use_logsoftmax:

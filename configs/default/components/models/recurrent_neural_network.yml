@@ -37,6 +37,10 @@ dropout_rate: 0
 #   * None (all outputs are discarded)
 prediction_mode: Dense
 
+# Enable FFN layer at the output of the RNN (before eventual feed back in the case of autoregression).
+# Useful if the raw outputs of the RNN are needed, for attention encoder-decoder for example.
+ffn_output: True
+
 # Input mode
 # Options:
 #   * Dense (every iteration expects an input)
