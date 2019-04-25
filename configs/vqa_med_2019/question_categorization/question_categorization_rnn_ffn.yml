@@ -39,7 +39,7 @@ pipeline:
     cell_type: LSTM
     prediction_mode: Last
     priority: 1.3
-    initial_state_trainable: True
+    initial_state: Zero
     use_logsoftmax: False
     dropout_rate: 0.5
     streams:

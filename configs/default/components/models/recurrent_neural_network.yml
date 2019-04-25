@@ -11,7 +11,7 @@ hidden_size: 100
 # When false, (c0/c0) will be initialized as zeros.
 
 # Initial state type:
-#   * Zero (null vector)
+#   * Zero (Vector of zeros, not trainable)
 #   * Trainable (xavier initialization, trainable)
 #   * Input (the initial hidden state comes from an input stream)
 initial_state: Trainable
@@ -48,7 +48,9 @@ ffn_output: True
 #   * Autoregression_None (Autoregression, first input will be a null vector)
 input_mode: Dense
 
-autoregression_length: 42
+# Maximal length of generated output sequence when working in auto-regression mode.
+# User must set it per task, as it is task specific.
+# max_autoregression_length: x
 
 # If true, output of the last layer will be additionally processed with Log Softmax (LOADED)
 use_logsoftmax: True
