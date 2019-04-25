@@ -199,9 +199,9 @@ class RecurrentNeuralNetwork(Model):
         # Input hidden state
         if self.initial_state == "Input":
             if self.cell_type == "LSTM":
-                d[self.key_input_state] = DataDefinition([2, self.num_layers, -1, self.hidden_size], [torch.tensor], "Batch of RNN last states")
+                d[self.key_input_state] = DataDefinition([2, self.num_layers, -1, self.hidden_size], [torch.Tensor], "Batch of RNN last states")
             else:
-                d[self.key_input_state] = DataDefinition([self.num_layers, -1, self.hidden_size], [torch.tensor], "Batch of RNN last states")
+                d[self.key_input_state] = DataDefinition([self.num_layers, -1, self.hidden_size], [torch.Tensor], "Batch of RNN last states")
 
         return d
 
@@ -222,9 +222,9 @@ class RecurrentNeuralNetwork(Model):
         # Output hidden state stream
         if self.output_last_state:
             if self.cell_type == "LSTM":
-                d[self.key_output_state] = DataDefinition([2, self.num_layers, -1, self.hidden_size], [torch.tensor], "Batch of RNN last states")
+                d[self.key_output_state] = DataDefinition([2, self.num_layers, -1, self.hidden_size], [torch.Tensor], "Batch of RNN last states")
             else:
-                d[self.key_output_state] = DataDefinition([self.num_layers, -1, self.hidden_size], [torch.tensor], "Batch of RNN last states")
+                d[self.key_output_state] = DataDefinition([self.num_layers, -1, self.hidden_size], [torch.Tensor], "Batch of RNN last states")
 
         return d
 
