@@ -10,14 +10,29 @@ hidden_size: 100
 # Flag informing the model to learn the intial state (h0/c0) (LOADED)
 # When false, (c0/c0) will be initialized as zeros.
 
-# Initial state type:
+# Input mode (LOADED)
+# Options:
+#   * Dense (every iteration expects an input)
+#   * Autoregression_First (Autoregression, expects an input for the first iteration)
+#   * Autoregression_None (Autoregression, first input will be a null vector)
+input_mode: Dense
+
+# Prediction mode (LOADED)
+# Options: 
+#   * Dense (passes every activation through output layer) |
+#   * Last (passes only the last activation though output layer) |
+#   * None (all outputs are discarded)
+prediction_mode: Dense
+
+# Maximal length of generated output sequence when working in auto-regression mode (LOADED)
+# User must set it per task, as it is task specific.
+# max_autoregression_length: x
+
+# Initial state type (LOADED)
 #   * Zero (Vector of zeros, not trainable)
 #   * Trainable (xavier initialization, trainable)
 #   * Input (the initial hidden state comes from an input stream)
 initial_state: Trainable
-
-# Wether to include the last hidden state in the outputs
-output_last_state: False
 
 # Type of recurrent cell (LOADED)
 # Options: LSTM | GRU | RNN_TANH | RNN_RELU
@@ -30,27 +45,12 @@ num_layers: 1
 # Default: 0 (means that it is turned off)
 dropout_rate: 0
 
-# Prediction mode (LOADED)
-# Options: 
-#   * Dense (passes every activation through output layer) |
-#   * Last (passes only the last activation though output layer) |
-#   * None (all outputs are discarded)
-prediction_mode: Dense
-
-# Enable FFN layer at the output of the RNN (before eventual feed back in the case of autoregression).
+# Enable FFN layer at the output of the RNN (LOADED)
 # Useful if the raw outputs of the RNN are needed, for attention encoder-decoder for example.
-ffn_output: True
+use_output_layer: True
 
-# Input mode
-# Options:
-#   * Dense (every iteration expects an input)
-#   * Autoregression_First (Autoregression, expects an input for the first iteration)
-#   * Autoregression_None (Autoregression, first input will be a null vector)
-input_mode: Dense
-
-# Maximal length of generated output sequence when working in auto-regression mode.
-# User must set it per task, as it is task specific.
-# max_autoregression_length: x
+# Wether to include the last hidden state in the outputs
+output_last_state: False
 
 # If true, output of the last layer will be additionally processed with Log Softmax (LOADED)
 use_logsoftmax: True
