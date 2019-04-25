@@ -39,7 +39,7 @@ pipeline:
     type: RecurrentNeuralNetwork
     prediction_mode: Last
     priority: 3
-    initial_state_trainable: False
+    initial_state: Zero
     hidden_size: 50
     streams:
       inputs: tensor_questions
