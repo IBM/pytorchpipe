@@ -73,28 +73,6 @@ pipeline:
     streams:
       inputs: targets
       outputs: indexed_targets
-
-  # Publish the hidden size of the seq2seq
-  global_publisher:
-    type: GlobalVariablePublisher
-    priority: 1
-    # Add input_size to globals, so classifier will use it.
-    keys: s2s_hidden_size
-    values: 300
-
-  # FF, to resize the embeddings to whatever the hidden size of te seq2seq is.
-  ff_resize_s2s_input:
-    type: FeedForwardNetwork 
-    priority: 2.5
-    s2s_hidden_size: 300
-    use_logsoftmax: False
-    dimensions: 3
-    streams:
-      inputs: embedded_sources
-      predictions: embedded_sources_resized
-    globals:
-      input_size: embeddings_size
-      prediction_size: s2s_hidden_size
   
   # LSTM Encoder
   lstm_encoder:
@@ -107,12 +85,12 @@ pipeline:
     output_last_state: True
     prediction_mode: Last
     streams:
-      inputs: embedded_sources_resized
+      inputs: embedded_sources
       predictions: s2s_encoder_output
       output_state: s2s_state_output
     globals:
-      input_size: s2s_hidden_size
-      prediction_size: s2s_hidden_size 
+      input_size: embeddings_size
+      prediction_size: embeddings_size 
 
   # LSTM Decoder
   lstm_decoder:
@@ -130,10 +108,10 @@ pipeline:
       predictions: s2s_decoder_output
       input_state: s2s_state_output
     globals:
-      input_size: s2s_hidden_size
-      prediction_size: s2s_hidden_size 
+      input_size: embeddings_size
+      prediction_size: embeddings_size 
 
-  # FF, to resize the from the hidden size of the seq2seq to the size of the target vector
+  # FF, to resize the from the output size of the seq2seq to the size of the target vector
   ff_resize_s2s_output:
     type: FeedForwardNetwork 
     use_logsoftmax: True
@@ -142,7 +120,7 @@ pipeline:
     streams:
       inputs: s2s_decoder_output
     globals:
-      input_size: s2s_hidden_size
+      input_size: embeddings_size
       prediction_size: vocabulary_size
 
   # Loss
