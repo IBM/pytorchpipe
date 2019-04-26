@@ -173,7 +173,8 @@ setup(
         #'torchtext',
         'torchvision',
         'torch',
-        'PyYAML'
+        'PyYAML',
+        'requests'
         ],
 
     # List additional groups of dependencies here (e.g. development
