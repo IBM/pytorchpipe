@@ -8,14 +8,15 @@
 data_folder: ~/data/language_modeling/translation_pairs
 
 # Defines the dataset that will be used used (LOADED)
-# Options: eng-fra
+# Options: eng-fra, eng-pol
 dataset: eng-fra
 
 # Defines the used subset (LOADED)
 # Options: train | valid | test
 subset: train
 
-# Length of sentence (i.e. number of tokens in input and target sentences)
+# Length limit of source and target sentence
+# if < 0, no limit
 sentence_length: 10
 
 streams: 

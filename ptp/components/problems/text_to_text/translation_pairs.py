@@ -30,14 +30,16 @@ from ptp.data_types.data_definition import DataDefinition
 
 class TranslationPairs(Problem):
     """
-    
+    Bilingual sentence pairs from http://www.manythings.org/anki/.
+    Only some pairs are included here, but many more are available on the website.
+    Will download the requested language pair if necessary, normalize and tokenize the sentences, and will cut the data into train, valid, test sets.
+
+    Resulting tokens that are shorter than the specified length are then passed to samples (source/target) as list of tokens (set by the user in configuration file).
     """
     def __init__(self, name, config):
         """
         The init method downloads the required files, loads the file associated with a given subset (train/valid/test), 
         concatenates all sencentes and tokenizes them using NLTK's WhitespaceTokenizer.
-
-        It also stores the intermediate results, so for example, it file with tokenized set is found, it simply loads it.
 
         :param name: Name of the component.
 
@@ -65,10 +67,7 @@ class TranslationPairs(Problem):
             raise ConfigurationError("Problem supports one 'subset' options: 'train', 'valid', 'test' ")
         subset = self.config['subset']
 
-        # Check if file with tokenized words exists.
-        filename_tokenized_words = "translate_"+dataset+"."+self.config['subset']+".tokenized_words"
-
-
+        # Extract source and target language name
         self.lang_source = self.config['dataset'].split('-')[0]
         self.lang_target = self.config['dataset'].split('-')[1]
 
@@ -105,25 +104,25 @@ class TranslationPairs(Problem):
                 lines_target = [self.normalizeString(l.split('\t')[1]) for l in lines]
 
                 # Cut dataset into train (90%), valid (5%), test (5%) files
-                test_mark = len(lines) // 20
-                valid_mark = test_mark + (len(lines) // 20)
+                test_index = len(lines) // 20
+                valid_index = test_index + (len(lines) // 20)
 
                 os.makedirs(os.path.join(self.data_folder, dataset), exist_ok=True)
                 
                 with open(os.path.join(os.path.join(self.data_folder, dataset), self.lang_source + ".test.txt"), mode='w+') as f:
-                    f.write('\n'.join(lines_source[0:test_mark]))
+                    f.write('\n'.join(lines_source[0:test_index]))
                 with open(os.path.join(os.path.join(self.data_folder, dataset), self.lang_target + ".test.txt"), mode='w+') as f:
-                    f.write('\n'.join(lines_target[0:test_mark]))
+                    f.write('\n'.join(lines_target[0:test_index]))
 
                 with open(os.path.join(os.path.join(self.data_folder, dataset), self.lang_source + ".valid.txt"), mode='w+') as f:
-                    f.write('\n'.join(lines_source[test_mark:valid_mark]))
+                    f.write('\n'.join(lines_source[test_index:valid_index]))
                 with open(os.path.join(os.path.join(self.data_folder, dataset), self.lang_target + ".valid.txt"), mode='w+') as f:
-                    f.write('\n'.join(lines_target[test_mark:valid_mark]))
+                    f.write('\n'.join(lines_target[test_index:valid_index]))
 
                 with open(os.path.join(os.path.join(self.data_folder, dataset), self.lang_source + ".train.txt"), mode='w+') as f:
-                    f.write('\n'.join(lines_source[valid_mark:]))
+                    f.write('\n'.join(lines_source[valid_index:]))
                 with open(os.path.join(os.path.join(self.data_folder, dataset), self.lang_target + ".train.txt"), mode='w+') as f:
-                    f.write('\n'.join(lines_target[valid_mark:]))
+                    f.write('\n'.join(lines_target[valid_index:]))
 
         else:
             self.logger.info("Files {} found in folder '{}'".format(filenames, self.data_folder))
@@ -144,7 +143,9 @@ class TranslationPairs(Problem):
             src = tokenizer.tokenize(s_src)
             tgt = tokenizer.tokenize(s_tgt)
             # Keep only the pairs that are shorter or equal to the requested length
-            if len(src) <= self.sentence_length and len(tgt) <= self.sentence_length:
+            # If self.sentence_length < 0, then give all the pairs regardless of length
+            if (len(src) <= self.sentence_length and len(tgt) <= self.sentence_length) \
+                or self.sentence_length < 0:
                 self.sentences_source += [src]
                 self.sentences_target += [tgt]
 

@@ -16,8 +16,8 @@ training:
 
   # optimizer parameters:
   optimizer:
-    name: Adam
-    lr: 1.0e-3
+    name: SGD
+    lr: 1.0e-2
 
   # settings parameters
   terminal_conditions:

@@ -1,8 +1,6 @@
-# This pipeline applies seq2seq on wikitext-2 to make word-level prediction.
-# It's been made for test purposes only, as it is doing:
-# [word 0 , ... , word 49] -> [word 1 , ... , word 50] (basically copying most of the input)
-#
-# The seq2seq here is implemented throught the use of 2 `RecurrentNeuralNetwork`
+# This pipeline applied an encoder-decoder GRU with attention on the open Tatoeba translation sentence pairs. 
+# Inspired by https://pytorch.org/tutorials/intermediate/seq2seq_translation_tutorial.html .
+# Note that training will be slower than in the tutorial, as teacher forcing is not implemented here.
 
 # Training parameters:
 training:
@@ -81,7 +79,7 @@ pipeline:
       inputs: targets
       outputs: indexed_targets
   
-  # LSTM Encoder
+  # Single layer GRU Encoder
   encoder:
     type: RecurrentNeuralNetwork
     cell_type: GRU
@@ -101,12 +99,11 @@ pipeline:
       input_size: embeddings_size
       prediction_size: embeddings_size 
 
-  # LSTM Decoder
+  # Single layer GRU Decoder with attention
   decoder:
     type: Attn_Decoder_RNN
     priority: 4
     hidden_size: 50
-    num_layers: 1
     use_logsoftmax: False
     autoregression_length: 10
     prediction_mode: Dense
@@ -158,12 +155,6 @@ pipeline:
   batch_size:
     type: BatchSizeStatistics
     priority: 100.0
-
-  #accuracy:
-  #  type: AccuracyStatistics
-  #  priority: 100.1
-  #  streams:
-  #    targets: indexed_targets
 
   bleu:
     type: BLEUStatistics

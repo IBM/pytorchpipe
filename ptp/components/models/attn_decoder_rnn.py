@@ -23,7 +23,12 @@ from ptp.data_types.data_definition import DataDefinition
 
 class Attn_Decoder_RNN(Model): 
     """
-    Simple Classifier consisting of fully connected layer with log softmax non-linearity.
+    Single layer GRU decoder with attention:
+    Bahdanau, D., Cho, K., & Bengio, Y. (2014). Neural machine translation by jointly learning to align and translate. arXiv preprint arXiv:1409.0473.
+    
+    Needs the full sequence of hidden states from the encoder as input, as well as the last hidden state from the encoder as input state.
+
+    Code is based on https://pytorch.org/tutorials/intermediate/seq2seq_translation_tutorial.html.
     """
     def __init__(self, name, config):
         """
@@ -45,9 +50,6 @@ class Attn_Decoder_RNN(Model):
             raise ConfigurationError("Invalid 'prediction_mode' (current {}, available {})".format(self.prediction_mode, ['Dense','Last', 'None']))
 
         self.autoregression_length = self.config["autoregression_length"]
-
-        # Get number of layers from config.
-        self.num_layers = self.config["num_layers"]
 
         # Retrieve input size from global variables.
         self.key_input_size = self.global_keys["input_size"]
@@ -81,7 +83,7 @@ class Attn_Decoder_RNN(Model):
         self.dropout = torch.nn.Dropout(dropout_rate)
 
         # Create rnn cell.
-        self.rnn_cell = getattr(torch.nn, "GRU")(self.input_size, self.hidden_size, self.num_layers, dropout=dropout_rate, batch_first=True)
+        self.rnn_cell = getattr(torch.nn, "GRU")(self.input_size, self.hidden_size, 1, dropout=dropout_rate, batch_first=True)
 
         # Create layers for the attention
         self.attn = torch.nn.Linear(self.hidden_size * 2, self.autoregression_length)
@@ -102,9 +104,9 @@ class Attn_Decoder_RNN(Model):
         self.logger.info("Initializing RNN with input size = {}, hidden size = {} and prediction size = {}".format(self.input_size, self.hidden_size, self.prediction_size))
 
         # Create the output layer.
-        self.activation2output_lin = None
+        self.activation2output_layer = None
         if(self.ffn_output):
-            self.activation2output_lin = torch.nn.Linear(self.hidden_size, self.prediction_size)
+            self.activation2output_layer = torch.nn.Linear(self.hidden_size, self.prediction_size)
         
         # Create the final non-linearity.
         self.use_logsoftmax = self.config["use_logsoftmax"]
@@ -127,7 +129,7 @@ class Attn_Decoder_RNN(Model):
             output = output.contiguous().view(-1, shape[2])
 
             # Propagate data through the output layer [BATCH_SIZE * SEQ_LEN x PREDICTION_SIZE]
-            output = self.activation2output_lin(output)
+            output = self.activation2output_layer(output)
             #output = output.unsqueeze(1)
 
             # Reshape back to 3D tensor [BATCH_SIZE x SEQ_LEN x PREDICTION_SIZE]
@@ -147,7 +149,7 @@ class Attn_Decoder_RNN(Model):
         d[self.key_inputs] = DataDefinition([-1, -1, self.hidden_size], [torch.Tensor], "Batch of encoder outputs [BATCH_SIZE x SEQ_LEN x INPUT_SIZE]")
 
         # Input hidden state
-        d[self.key_input_state] = DataDefinition([self.num_layers, -1, self.hidden_size], [torch.Tensor], "Batch of RNN last states")
+        d[self.key_input_state] = DataDefinition([1, -1, self.hidden_size], [torch.Tensor], "Batch of RNN last states")
 
         return d
 
@@ -167,7 +169,7 @@ class Attn_Decoder_RNN(Model):
 
         # Output hidden state stream
         if self.output_last_state:
-            d[self.key_output_state] = DataDefinition([self.num_layers, -1, self.hidden_size], [torch.Tensor], "Batch of RNN last states")
+            d[self.key_output_state] = DataDefinition([1, -1, self.hidden_size], [torch.Tensor], "Batch of RNN last states")
         
         return d
 
@@ -187,37 +189,34 @@ class Attn_Decoder_RNN(Model):
         # Initialize hidden state.
         hidden = data_dict[self.key_input_state]
 
-
+        # List that will contain the output sequence
         activations = []
 
-        # Autoregressive mode - feed back outputs in the input
-        activations_partial, hidden = self.rnn_cell(self.sos_token.expand(batch_size, -1).unsqueeze(1), hidden)
-        activations_partial = self.activation2output(activations_partial)
-        activations += [activations_partial]
+        # First input to the decoder - trainable "start of sequence" token
+        activations_partial = self.sos_token.expand(batch_size, -1).unsqueeze(1)
 
         # Feed back the outputs iteratively
-        for i in range(self.autoregression_length - 1):
+        for i in range(self.autoregression_length):
+
             # Do the attention thing
             attn_weights = torch.nn.functional.softmax(
                 self.attn(torch.cat((activations_partial.transpose(0, 1), hidden), 2)),
                 dim=2
             )
-
             attn_applied = torch.bmm(attn_weights.transpose(0, 1), inputs)
-
             activations_partial = torch.cat((activations_partial, attn_applied), 2)
             activations_partial = self.attn_combine(activations_partial)
             activations_partial = torch.nn.functional.relu(activations_partial)
 
-            # Fedd through the RNN
+            # Feed through the RNN
             activations_partial, hidden = self.rnn_cell(activations_partial, hidden)
-
             activations_partial = self.activation2output(activations_partial)
 
             # Add the single step output into list
             if self.prediction_mode == "Dense":
                 activations += [activations_partial]
-        # Reassemble all the outputs from list into an output sequence
+
+        # Reassemble all the outputs from list into an output tensor
         if self.prediction_mode == "Dense":
             outputs = torch.cat(activations, 1)
             # Log softmax - along PREDICTION dim.
@@ -231,6 +230,6 @@ class Attn_Decoder_RNN(Model):
             # Add predictions to datadict.
             data_dict.extend({self.key_predictions: outputs})
 
-
+        # Output last hidden state, if requested
         if self.output_last_state:
             data_dict.extend({self.key_output_state: hidden})
