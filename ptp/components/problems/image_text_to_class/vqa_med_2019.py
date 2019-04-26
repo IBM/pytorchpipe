@@ -20,9 +20,10 @@ __author__ = "Chaitanya Shivade, Tomasz Kornuta"
 import os
 import string
 import tqdm
+
 import pandas as pd
 from PIL import Image
-
+import numpy as np
 import nltk
 
 import torch
@@ -307,6 +308,62 @@ class VQAMED2019(Problem):
         # Return cleaned text.
         return cleansed_words
 
+    def random_remove_stop_words(self, words):
+        """
+        Function removes random stop words, each with 0.5 probability.
+        
+        :param words: tokenized text
+        :return: resulting tokenized text.
+        """
+
+        # Find stop words.
+        stops = set(nltk.corpus.stopwords.words("english"))
+        stop_words = [False]*len(words)
+        for i, word in enumerate(words):
+            if word in stops:
+                stop_words[i] = True
+        #print(stop_words)
+        if sum(stop_words) > 0:
+            remove_probs = np.random.binomial(1, 0.5, len(words))
+            #print(remove_probs)
+            result = []
+            for word,is_stop,rem_prob in zip(words,stop_words,remove_probs):
+                if is_stop and rem_prob:
+                    # Remove word.
+                    continue
+                # Else: add word.
+                result.append(word)
+
+        return result
+
+
+    def random_shuffle_words(self, words):
+        """
+        Function randomly shuffles, with probability of 0.5, two consecutive words in text.
+        
+        :param words: tokenized text
+        :return: resulting tokenized text.
+        """
+        # Do not shuffle if there are less than 2 words.
+        if len(words) < 2:
+            return words
+        # Shuffle with probability of 0.5.
+        if np.random.binomial(1, 0.5, 1):
+            return words
+        
+        # Find words to shuffle - random without replacement.
+        shuffled_i = np.random.choice(len(words)-1, )
+        indices = [i for i in range(len(words))]
+        indices[shuffled_i] = shuffled_i+1
+        indices[shuffled_i+1] = shuffled_i
+        #print(indices)
+        
+        # Create resulting table.
+        result = [words[indices[i]] for i in range(len(words))]
+
+        return result
+
+
     def load_dataset(self, source_files, source_categories):
         """
         Loads the dataset from one or more files.
@@ -368,7 +425,6 @@ class VQAMED2019(Problem):
         return dataset
 
 
-
     def __getitem__(self, index):
         """
         Getter method to access the dataset and return a single sample.
@@ -392,7 +448,7 @@ class VQAMED2019(Problem):
         image_transformations_list = []
         # Optional.
         if 'random_affine' in self.image_preprocessing:
-            rotate = (-45, 135)
+            rotate = (-45, 80)
             translate = (0.05, 0.25)
             scale = (0.5, 2)
             image_transformations_list.append(transforms.RandomAffine(rotate, translate, scale))
@@ -424,7 +480,14 @@ class VQAMED2019(Problem):
 
         # Apply question transformations.
         preprocessed_question = item[self.key_questions]
-        # TODO: apply additional random transformations e.g. "shuffle_words"
+        if 'tokenize' in self.question_preprocessing:
+            # Apply them only if text is tokenized.
+            if 'random_remove_stop_words' in self.question_preprocessing:
+                preprocessed_question = self.random_remove_stop_words(preprocessed_question)
+
+            if 'random_shuffle_words' in self.question_preprocessing:
+                preprocessed_question = self.random_shuffle_words(preprocessed_question)
+        # Return question.
         data_dict[self.key_questions] = preprocessed_question
 
         # Return answer. 
@@ -448,9 +511,10 @@ class VQAMED2019(Problem):
         Determines whether this is binary (yes/no) type of question.
         """
         yes_no_starters = ['is','was','are','does']
-        tokens = qtext.split(' ')
-        first_token = tokens[0]
-        if first_token in yes_no_starters and ('or' not in tokens):
+        if 'tokenize' not in self.question_preprocessing:
+            qtext = qtext.split(' ')
+        first_token = qtext[0]
+        if first_token in yes_no_starters and ('or' not in qtext):
             return True
         return False
 
