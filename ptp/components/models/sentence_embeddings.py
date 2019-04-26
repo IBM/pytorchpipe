@@ -25,6 +25,7 @@ from ptp.components.mixins.word_mappings import WordMappings
 from ptp.data_types.data_definition import DataDefinition
 
 import ptp.components.utils.embeddings as emb
+from ptp.components.utils.word_mappings import pad_list
 
 
 class SentenceEmbeddings(Model, WordMappings):
@@ -55,6 +56,9 @@ class SentenceEmbeddings(Model, WordMappings):
         # Set key mappings.
         self.key_inputs = self.stream_keys["inputs"]
         self.key_outputs = self.stream_keys["outputs"]
+
+        # Force padding to a fixed length
+        self.fixed_padding = self.config['fixed_padding']
 
         # Retrieve embeddings size from configuration and export it to globals.
         self.embeddings_size = self.config['embeddings_size']
@@ -119,6 +123,11 @@ class SentenceEmbeddings(Model, WordMappings):
                 output_index = self.word_to_ix[token]
                 # Add index to outputs.
                 output_sample.append( output_index )
+
+            # Apply fixed padding to all sequences if requested
+            # Otherwise let torch.nn.utils.rnn.pad_sequence handle it and choose a dynamic padding
+            if self.fixed_padding > 0:
+                pad_list(output_sample, self.fixed_padding)
 
             #indices_list.append(self.app_state.FloatTensor(output_sample))
             indices_list.append(self.app_state.LongTensor(output_sample))
