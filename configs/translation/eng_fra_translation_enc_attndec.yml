@@ -62,6 +62,7 @@ pipeline:
     additional_tokens: <eos>
     import_word_mappings_from_globals: False
     export_word_mappings_to_globals: False
+    fixed_padding: 10
     streams:
       inputs: sources
       outputs: embedded_sources
@@ -74,6 +75,7 @@ pipeline:
     source_vocabulary_files: eng-fra/fra.train.txt,eng-fra/fra.valid.txt,eng-fra/fra.test.txt
     import_word_mappings_from_globals: False
     export_word_mappings_to_globals: True
+    fixed_padding: 10
     regenerate: True
     streams:
       inputs: targets
