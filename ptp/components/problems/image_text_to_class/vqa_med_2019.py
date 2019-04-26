@@ -512,9 +512,9 @@ class VQAMED2019(Problem):
         """
         yes_no_starters = ['is','was','are','does']
         if 'tokenize' not in self.question_preprocessing:
-            tokens = qtext.split(' ')
-        first_token = tokens[0]
-        if first_token in yes_no_starters and ('or' not in tokens):
+            qtext = qtext.split(' ')
+        first_token = qtext[0]
+        if first_token in yes_no_starters and ('or' not in qtext):
             return True
         return False
 
