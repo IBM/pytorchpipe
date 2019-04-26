@@ -20,7 +20,7 @@ import numpy as np
 import shutil
 import zipfile
 import time
-import urllib
+import requests
 from pathlib import Path
 
 
@@ -181,7 +181,20 @@ def download(folder, filename, url):
 
     # Download.
     file_result = os.path.join(os.path.expanduser(folder), filename)
-    urllib.request.urlretrieve(url, os.path.expanduser(file_result), reporthook)
+
+    with open(os.path.expanduser(file_result), "wb") as f:
+        global start_time
+        start_time = time.time()
+        r = requests.get(url)
+        content_length = int(r.headers.get('content-length', None))
+        count = 0
+
+        for chunk in r.iter_content(chunk_size=1024):
+            if chunk:
+                f.write(chunk)
+                count += 1
+                reporthook(count, 1024, content_length)
+
     #self.logger.info('Downloading {}'.format(url))
 
 def reporthook(count, block_size, total_size):
