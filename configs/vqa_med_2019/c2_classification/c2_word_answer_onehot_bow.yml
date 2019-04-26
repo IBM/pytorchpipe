@@ -5,6 +5,8 @@ default_configs: vqa_med_2019/c2_classification/default_c2_classification.yml
 training:
   problem:
     batch_size: 128
+  terminal_conditions:
+    episode_limit: 1000
 
 # Validation parameters:
 validation:
@@ -49,7 +51,7 @@ pipeline:
   # Model.
   classifier:
     type: FeedForwardNetwork 
-    hidden_sizes: [500, 500]
+    hidden_sizes: [50]
     dropout_rate: 0.5
     priority: 3
     streams:
