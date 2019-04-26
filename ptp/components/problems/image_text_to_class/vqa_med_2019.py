@@ -179,6 +179,45 @@ class VQAMED2019(Problem):
         return source_files, source_categories
 
 
+    def preprocess_text(self, text, remove_stop_words = False):
+        """
+        Function that preprocesses questions/answers as suggested by ImageCLEF VQA challenge organizers:
+            * lowercases all words
+            * removes punctuation
+            * removes stop words (optional)
+
+        :param text: text to be processed.
+        :param remove_stop_words: removes stop words (DEFAULT: False)
+
+        :return: Preprocessed and tokenized text (list of strings)
+        """
+        # Lowercase.
+        text = text.lower()
+
+        # Remove punctuation.
+        translator = str.maketrans('', '', string.punctuation)
+        text = text.translate(translator)
+
+        # Remove '“' and '”' !!!
+        text = text.replace('“','').replace('”','')
+
+        # Tokenize.
+        text_words = nltk.tokenize.word_tokenize(text)
+
+        # If we do not want to remove stop words - return text.
+        if not remove_stop_words:
+            return text_words
+
+        # Perform "cleansing".
+        stops = set(stopwords.words("english"))
+        cleansed_words = [word for word in text_words if word not in stops]
+        # Return the original text if there are no words left :]
+        if len(cleansed_words) == 0:
+            return text_words
+
+        # Return cleaned text.
+        return cleansed_words
+
     def load_dataset(self, source_files, source_categories):
         """
         Loads the dataset from one or more files.
