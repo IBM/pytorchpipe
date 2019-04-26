@@ -39,7 +39,10 @@ pipeline:
     cell_type: LSTM
     prediction_mode: Last
     use_logsoftmax: False
+<<<<<<< Updated upstream
     initial_state_trainable: False
+=======
+>>>>>>> Stashed changes
     hidden_size: 50
     streams:
       inputs: embedded_questions

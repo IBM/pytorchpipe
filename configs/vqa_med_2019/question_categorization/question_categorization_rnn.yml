@@ -30,7 +30,7 @@ pipeline:
     cell_type: LSTM
     prediction_mode: Last
     priority: 3
-    initial_state_trainable: False
+    initial_state: Zero
     streams:
       inputs: embedded_questions
     globals:

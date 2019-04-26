@@ -39,7 +39,7 @@ pipeline:
     prediction_mode: Last
     priority: 1.3
     use_logsoftmax: False
-    initial_state_trainable: False
+    initial_state: Zero
     #num_layers: 5
     hidden_size: 50
     streams:
