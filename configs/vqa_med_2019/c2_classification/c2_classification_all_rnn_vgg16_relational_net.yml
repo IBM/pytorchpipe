@@ -47,7 +47,7 @@ pipeline:
     cell_type: LSTM
     prediction_mode: Last
     use_logsoftmax: False
-    initial_state: Trainable
+    initial_state: Zero
     #dropout_rate: 0.5
     hidden_size: 50
     streams:

@@ -17,19 +17,21 @@
 
 __author__ = "Chaitanya Shivade, Tomasz Kornuta"
 
+import os
 import string
 import tqdm
 import pandas as pd
 from PIL import Image
-from torchvision import transforms
 
-import os
+import nltk
+
 import torch
 from torchvision import transforms
 
 from ptp.components.problems.problem import Problem
 from ptp.data_types.data_definition import DataDefinition
 
+from ptp.configuration.config_parsing import get_value_list_from_dictionary
 
 class VQAMED2019(Problem):
     """
@@ -67,6 +69,10 @@ class VQAMED2019(Problem):
         # Call constructors of parent classes.
         Problem.__init__(self, name, VQAMED2019, config)
 
+        # (Eventually) download required packages.
+        nltk.download('punkt')
+        nltk.download('stopwords')
+
         # Get key mappings of all output streams.
         self.key_images = self.stream_keys["images"]
         self.key_image_ids = self.stream_keys["image_ids"]
@@ -99,9 +105,6 @@ class VQAMED2019(Problem):
         self.globals["num_categories"] = 6
         self.globals["category_word_mappings"] = {'C1': 0, 'C2': 1, 'C3': 2, 'C4': 3, 'BINARY': 4, '<UNK>': 5}
         self.category_idx_to_word = {0: 'C1', 1: 'C2', 2: 'C3', 3: 'C4', 4: 'BINARY', 5: '<UNK>'}
-
-        # Check if we want to remove punctuation from questions/answer
-        self.remove_punctuation = self.config["remove_punctuation"]
 
         # Get the absolute path.
         self.data_folder = os.path.expanduser(self.config['data_folder'])
@@ -138,6 +141,42 @@ class VQAMED2019(Problem):
 
             # Filter lists taking into account configuration.
             source_files, source_categories = self.filter_sources(source_files, source_categories)
+        # else: # TODO
+
+        # Get image preprocessing.
+        self.image_preprocessing = get_value_list_from_dictionary(
+            "image_preprocessing", self.config,
+            'none | random_affine | random_horizontal_flip | normalize | all'.split(" | ")
+            )
+        if 'none' in self.image_preprocessing:
+            self.image_preprocessing = []
+        if 'all' in self.image_preprocessing:
+            self.image_preprocessing = 'random_affine | random_horizontal_flip | normalize'.split(" | ")
+        self.logger.info("Applied image preprocessing: {}".format(self.image_preprocessing))
+
+
+        # Get question preprocessing.
+        self.question_preprocessing = get_value_list_from_dictionary(
+            "question_preprocessing", self.config,
+            'none | lowercase | remove_punctuation | tokenize | random_remove_stop_words | random_shuffle_words | all'.split(" | ")
+            )
+        if 'none' in self.question_preprocessing:
+            self.question_preprocessing = []
+        if 'all' in self.question_preprocessing:
+            self.question_preprocessing = 'lowercase | remove_punctuation | tokenize | remove_stop_words | shuffle_words'.split(" | ")
+        self.logger.info("Applied question preprocessing: {}".format(self.question_preprocessing))
+
+        # Get answer preprocessing.
+        self.answer_preprocessing = get_value_list_from_dictionary(
+            "answer_preprocessing", self.config,
+            'none | lowercase | remove_punctuation | tokenize | all'.split(" | ")
+            )
+        if 'none' in self.answer_preprocessing:
+            self.answer_preprocessing = []
+        if 'all' in self.answer_preprocessing:
+            self.answer_preprocessing = 'lowercase | remove_punctuation | tokenize '.split(" | ")
+        self.logger.info("Applied answer preprocessing: {}".format(self.answer_preprocessing))
+
 
         # Load dataset.
         self.logger.info("Loading dataset from files:\n {}".format(source_files))
@@ -146,11 +185,12 @@ class VQAMED2019(Problem):
 
         # Display exemplary sample.
         self.logger.info("Exemplary sample:\n [ category: {}\t image_ids: {}\t question: {}\t answer: {} ]".format(
+            self.dataset[0][self.key_category_ids],
             self.dataset[0][self.key_image_ids],
             self.dataset[0][self.key_questions],
-            self.dataset[0][self.key_answers],
-            self.dataset[0][self.key_category_ids]
+            self.dataset[0][self.key_answers]
             ))
+
 
     def filter_sources(self, source_files, source_categories):
         """
@@ -165,19 +205,107 @@ class VQAMED2019(Problem):
         # Check categories that user want to use.
         use_files = [False] * 4
         categs = {'C1': 0, 'C2': 1, 'C3': 2, 'C4': 3}
-        for cat in self.config["categories"].replace(" ","").split(","):
+        # Parse categories from configuration list.
+        loaded_categs = get_value_list_from_dictionary("categories", self.config, ['C1', 'C2', 'C3', 'C4', 'all'])
+        for cat in loaded_categs:
             # "Special" case.
             if cat == "all":
                 use_files = [True] * 4
                 # Make no sense to continue.
                 break
             else:
-                if cat in categs.keys():
-                    use_files[categs[cat]] = True
+                use_files[categs[cat]] = True
         # Filter.
         _, source_files, source_categories = zip(*(filter(lambda x: x[0], zip(use_files, source_files,source_categories))))
         return source_files, source_categories
 
+
+    def __len__(self):
+        """
+        Returns the "size" of the "problem" (total number of samples).
+
+        :return: The size of the problem.
+        """
+        return len(self.dataset)
+
+
+    def output_data_definitions(self):
+        """
+        Function returns a dictionary with definitions of output data produced the component.
+
+        :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
+        """
+        # Add all "standard" streams.
+        d = {
+            self.key_indices: DataDefinition([-1, 1], [list, int], "Batch of sample indices [BATCH_SIZE] x [1]"),
+            self.key_images: DataDefinition([-1, self.depth, self.height, self.width], [torch.Tensor], "Batch of images [BATCH_SIZE x IMAGE_DEPTH x IMAGE_HEIGHT x IMAGE_WIDTH]"),
+            self.key_image_ids: DataDefinition([-1, 1], [list, str], "Batch of image names, each being a single word [BATCH_SIZE] x [STRING]"),
+            self.key_image_sizes: DataDefinition([-1, 2], [torch.Tensor], "Batch of original sizes (height, width) of images [BATCH_SIZE x 2]"),
+            self.key_category_ids: DataDefinition([-1], [torch.Tensor], "Batch of target category indices, each being a single index [BATCH_SIZE]"),
+            self.key_category_names: DataDefinition([-1, 1], [list, str], "Batch of category target names, each being a single word [BATCH_SIZE] x [STRING]"),
+            }
+
+        # Add stream with questions.
+        if 'tokenize' in self.question_preprocessing:
+            d[self.key_questions] = DataDefinition([-1, -1, 1], [list, list, str], "Batch of questions, each being a list of words [BATCH_SIZE] x [SEQ_LEN] x [STRING]")
+        else:
+            d[self.key_questions] = DataDefinition([-1, 1], [list, str], "Batch of questions, each being a string consisting of many words [BATCH_SIZE] x [STRING]")
+
+        # Add stream with answers.
+        if 'tokenize' in self.answer_preprocessing:
+            d[self.key_answers] = DataDefinition([-1, -1, 1], [list, list, str], "Batch of target answers, each being a list of words [BATCH_SIZE] x [SEQ_LEN] x [STRING]")
+        else:
+            d[self.key_answers]= DataDefinition([-1, 1], [list, str], "Batch of target answers, each being a string consisting of many words [BATCH_SIZE] x [STRING]")
+        return d
+
+
+    def preprocess_text(self, text, lowercase = False, remove_punctuation = False, tokenize = False, remove_stop_words = False):
+        """
+        Function that preprocesses questions/answers as suggested by ImageCLEF VQA challenge organizers:
+            * lowercases all words (optional)
+            * removes punctuation (optional)
+            * removes stop words (optional)
+
+        :param text: text to be processed.
+        :param lowercase: lowercases text (DEFAULT: False)
+        :param remove_punctuation: removes punctuation (DEFAULT: False)
+        :param tokenize: tokenizes the text (DEFAULT: False)
+        :param remove_stop_words: removes stop words (DEFAULT: False)
+
+        :return: Preprocessed and tokenized text (list of strings)
+        """
+        # Lowercase.
+        if lowercase:
+            text = text.lower()
+
+        # Remove punctuation.
+        if remove_punctuation:
+            # Remove '“' and '”' and '’'!!!
+            for char in ['“', '”', '’']:
+                text = text.replace(char,' ')
+            translator = str.maketrans('', '', string.punctuation)
+            text = text.translate(translator)
+
+        # If not tokenize - return text.
+        if not tokenize:
+            return text
+        
+        # Tokenize.
+        text_words = nltk.tokenize.word_tokenize(text)
+
+        # If we do not want to remove stop words - return text.
+        if not remove_stop_words:
+            return text_words
+
+        # Perform "cleansing".
+        stops = set(nltk.corpus.stopwords.words("english"))
+        cleansed_words = [word for word in text_words if word not in stops]
+        # Return the original text if there are no words left :]
+        if len(cleansed_words) == 0:
+            return text_words
+
+        # Return cleaned text.
+        return cleansed_words
 
     def load_dataset(self, source_files, source_categories):
         """
@@ -189,9 +317,6 @@ class VQAMED2019(Problem):
         """
         # Set containing list of tuples.
         dataset = []
-
-        # Create table used for removing punctuations.
-        table = str.maketrans({key: None for key in string.punctuation})
 
         # Process files with categories.
         for data_file, category in zip(source_files, source_categories):
@@ -210,18 +335,28 @@ class VQAMED2019(Problem):
                 answer = row[self.key_answers]
 
                 # Process question - if required.
-                if self.remove_punctuation in ["questions","all"]:
-                    question = question.translate(table)
+                preprocessed_question = self.preprocess_text(
+                    question,
+                    'lowercase' in self.question_preprocessing,
+                    'remove_punctuation' in self.question_preprocessing,
+                    'tokenize' in self.question_preprocessing,
+                    'remove_stop_words' in self.question_preprocessing
+                    )
 
                 # Process answer - if required.
-                if self.remove_punctuation in ["answers","all"]:
-                    answer = answer.translate(table)
+                preprocessed_answer = self.preprocess_text(
+                    answer,
+                    'lowercase' in self.answer_preprocessing,
+                    'remove_punctuation' in self.answer_preprocessing,
+                    'tokenize' in self.answer_preprocessing,
+                    False
+                    )
 
                 # Add record to dataset.
                 dataset.append({
                     self.key_image_ids: row[self.key_image_ids],
-                    self.key_questions: question,
-                    self.key_answers: answer,
+                    self.key_questions: preprocessed_question,
+                    self.key_answers: preprocessed_answer,
                     # Add category.
                     self.key_category_ids: category
                     })
@@ -232,31 +367,6 @@ class VQAMED2019(Problem):
         # Return the created list.
         return dataset
 
-    def __len__(self):
-        """
-        Returns the "size" of the "problem" (total number of samples).
-
-        :return: The size of the problem.
-        """
-        return len(self.dataset)
-
-
-    def output_data_definitions(self):
-        """
-        Function returns a dictionary with definitions of output data produced the component.
-
-        :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
-        """
-        return {
-            self.key_indices: DataDefinition([-1, 1], [list, int], "Batch of sample indices [BATCH_SIZE] x [1]"),
-            self.key_images: DataDefinition([-1, self.depth, self.height, self.width], [torch.Tensor], "Batch of images [BATCH_SIZE x IMAGE_DEPTH x IMAGE_HEIGHT x IMAGE_WIDTH]"),
-            self.key_image_ids: DataDefinition([-1, 1], [list, str], "Batch of image names, each being a single word [BATCH_SIZE] x [STRING]"),
-            self.key_image_sizes: DataDefinition([-1, 2], [torch.Tensor], "Batch of original sizes (height, width) of images [BATCH_SIZE x 2]"),
-            self.key_questions: DataDefinition([-1, 1], [list, str], "Batch of questions, each being a string consisting of many words [BATCH_SIZE] x [STRING]"),
-            self.key_answers: DataDefinition([-1, 1], [list, str], "Batch of target answers, each being a string consisting of many words [BATCH_SIZE] x [STRING]"),
-            self.key_category_ids: DataDefinition([-1], [torch.Tensor], "Batch of target category indices, each being a single index [BATCH_SIZE]"),
-            self.key_category_names: DataDefinition([-1, 1], [list, str], "Batch of category target names, each being a single word [BATCH_SIZE] x [STRING]"),
-            }
 
 
     def __getitem__(self, index):
@@ -279,23 +389,29 @@ class VQAMED2019(Problem):
         # Get its width and height.
         width, height = img.size
 
-        if(self.config['use_augmentation'] == 'True'):
+        image_transformations_list = []
+        # Optional.
+        if 'random_affine' in self.image_preprocessing:
             rotate = (-45, 135)
             translate = (0.05, 0.25)
             scale = (0.5, 2)
-            transforms_list = [transforms.RandomAffine(rotate, translate, scale), transforms.RandomHorizontalFlip()]
-        else:
-            transforms_list = []
-        # Resize the image and transform to Torch Tensor.
-        transforms_com = transforms.Compose(transforms_list + [
-                transforms.Resize([self.height,self.width]),
-                transforms.ToTensor(),
-                # Use normalization that the pretrained models from TorchVision require.
-                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-                ])
-        img = transforms_com(img) #.type(torch.FloatTensor).squeeze()
+            image_transformations_list.append(transforms.RandomAffine(rotate, translate, scale))
+        if 'random_horizontal_flip' in self.image_preprocessing:
+            image_transformations_list.append(transforms.RandomHorizontalFlip())
+            
+        # Add two obligatory transformations.
+        image_transformations_list.append(transforms.Resize([self.height,self.width]))
+        image_transformations_list.append(transforms.ToTensor())
 
-        #print("img: min_val = {} max_val = {}".format(torch.min(img),torch.max(img)) )
+        # Optional normalizastion.
+        if 'normalize' in self.image_preprocessing:
+            # Use normalization that the pretrained models from TorchVision require.
+            image_transformations_list.append(transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]))
+
+        # Resize the image and transform to Torch Tensor.
+        transforms_com = transforms.Compose(image_transformations_list)
+        # Apply transformations.
+        img = transforms_com(img)
 
         # Create the resulting sample (data dict).
         data_dict = self.create_data_dict(index)
@@ -306,13 +422,18 @@ class VQAMED2019(Problem):
         # Scale width and height to range (0,1).
         data_dict[self.key_image_sizes] = torch.FloatTensor([float(height/self.scale_image_height), float(width/self.scale_image_width)])
 
-        # Question.
-        data_dict[self.key_questions] = item[self.key_questions]
-        data_dict[self.key_answers] = item[self.key_answers]
+        # Apply question transformations.
+        preprocessed_question = item[self.key_questions]
+        # TODO: apply additional random transformations e.g. "shuffle_words"
+        data_dict[self.key_questions] = preprocessed_question
+
+        # Return answer. 
+        preprocessed_answer = item[self.key_answers]
+        data_dict[self.key_answers] = preprocessed_answer
 
         # Question category related variables.
         # Check if this is binary question.
-        if self.predict_yes_no(item[self.key_questions]):
+        if self.predict_yes_no(item[self.key_answers]):
             data_dict[self.key_category_ids] = 4 # Binary.
             data_dict[self.key_category_names] = self.category_idx_to_word[4]
         else:
@@ -351,7 +472,7 @@ class VQAMED2019(Problem):
         data_dict[self.key_image_ids] = [item[self.key_image_ids] for item in batch]
         data_dict[self.key_image_sizes] = torch.stack([item[self.key_image_sizes] for item in batch]).type(torch.FloatTensor)
 
-        # Collate lists.
+        # Collate lists/lists of lists.
         data_dict[self.key_questions] = [item[self.key_questions] for item in batch]
         data_dict[self.key_answers] = [item[self.key_answers] for item in batch]
 

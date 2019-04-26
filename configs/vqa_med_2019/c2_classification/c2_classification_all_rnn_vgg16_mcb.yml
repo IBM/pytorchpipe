@@ -72,7 +72,6 @@ pipeline:
   question_image_fusion:
     priority: 4.1
     type: MultimodalCompactBilinearPooling
-    dropout_rate: 0.5
     streams:
       image_encodings: image_activations
       question_encodings: question_activations
