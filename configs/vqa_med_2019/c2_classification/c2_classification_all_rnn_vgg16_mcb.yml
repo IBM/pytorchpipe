@@ -47,7 +47,7 @@ pipeline:
     cell_type: LSTM
     prediction_mode: Last
     use_logsoftmax: False
-    initial_state_trainable: False
+    initial_state: Zero
     hidden_size: 50
     streams:
       inputs: embedded_questions
@@ -72,7 +72,6 @@ pipeline:
   question_image_fusion:
     priority: 4.1
     type: MultimodalCompactBilinearPooling
-    dropout_rate: 0.5
     streams:
       image_encodings: image_activations
       question_encodings: question_activations

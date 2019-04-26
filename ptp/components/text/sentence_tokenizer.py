@@ -14,10 +14,14 @@
 
 __author__ = "Tomasz Kornuta"
 
-from nltk.tokenize import WhitespaceTokenizer
+import nltk
+#from nltk.tokenize import WhitespaceTokenizer
+import string
 
 from ptp.components.component import Component
 from ptp.data_types.data_definition import DataDefinition
+
+from ptp.configuration.config_parsing import get_value_list_from_dictionary
 
 
 class SentenceTokenizer(Component):
@@ -41,8 +45,26 @@ class SentenceTokenizer(Component):
         # Read the actual configuration.
         self.mode_detokenize = config['detokenize']
 
+        # Get preprocessing.
+        self.preprocessing = get_value_list_from_dictionary(
+            "preprocessing", self.config,
+            'none | lowercase | remove_punctuation | all'.split(" | ")
+            )
+        if 'none' in self.preprocessing:
+            self.preprocessing = []
+        if 'all' in self.preprocessing:
+            self.preprocessing = 'lowercase | remove_punctuation'.split(" | ")
+        self.logger.info("Applied preprocessing: {}".format(self.preprocessing))
+
+        self.remove_characters = get_value_list_from_dictionary("remove_characters", self.config)
+        self.logger.info("Additional characters that will be removed during preprocessing: {}".format(self.remove_characters))
+
+
+        if 'remove_punctuation' in self.preprocessing:
+            self.translator = str.maketrans('', '', string.punctuation)
+
         # Tokenizer.
-        self.tokenizer = WhitespaceTokenizer()
+        self.tokenizer = nltk.tokenize.WhitespaceTokenizer()
 
         # Set key mappings.
         self.key_inputs = self.stream_keys["inputs"]
@@ -81,15 +103,30 @@ class SentenceTokenizer(Component):
             return { self.key_outputs: DataDefinition([-1, 1], [list, str], "Batch of sentences, each represented as a single string [BATCH_SIZE] x [string]") }
 
 
-    def tokenize_sample(self, sample):
+    def tokenize_sample(self, text):
         """
-        Changes sample (sentence) into list of tokens (words).
+        Changes text (sentence) into list of tokens (words).
 
-        :param sample: sentence (string).
+        :param text: sentence (string).
 
         :return: list of words (strings).
         """
-        return self.tokenizer.tokenize(sample) # sample.split()
+        # Lowercase.
+        if 'lowercase' in self.preprocessing:
+            text = text.lower()
+
+        # Remove characters.
+        for char in self.remove_characters:
+            text = text.replace(char, ' ')
+
+        # Remove punctuation.
+        if 'remove_punctuation' in self.preprocessing:
+            text = text.translate(self.translator)
+
+        # Tokenize.
+        text_words = self.tokenizer.tokenize(text)
+
+        return text_words
 
     def detokenize_sample(self, sample):
         """

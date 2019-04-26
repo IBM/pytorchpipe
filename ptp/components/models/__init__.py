@@ -11,6 +11,7 @@ from .attn_decoder_rnn import Attn_Decoder_RNN
 
 from .vqa.element_wise_multiplication import ElementWiseMultiplication
 from .vqa.multimodal_compact_bilinear_pooling import MultimodalCompactBilinearPooling
+from .vqa.relational_network import RelationalNetwork
 
 __all__ = [
     'ConvNetEncoder',
@@ -24,5 +25,6 @@ __all__ = [
     'Seq2Seq_RNN',
     'ElementWiseMultiplication',
     'MultimodalCompactBilinearPooling',
+    'RelationalNetwork',
     'Attn_Decoder_RNN'
     ]
