@@ -25,6 +25,12 @@ import_word_mappings_from_globals: False
 # Flag informing whether word mappings will be exported to globals (LOADED)
 export_word_mappings_to_globals: False
 
+# Fixed padding length
+# -1  -> For each batch, automatically pad to the length of the longest sequence of the batch
+#        (variable from batch to batch)
+# > 0 -> Pad each pad to the chosen length (fixed for all batches)
+fixed_padding: -1
+
 # Operation mode. If 'reverse' is True, then it will change indices into words (LOADED)
 reverse: False
 
