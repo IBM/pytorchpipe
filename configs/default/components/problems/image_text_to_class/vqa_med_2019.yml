@@ -15,10 +15,6 @@ split: training
 # Options: all | c1 | c2 | c3 | c4 (or any combination of the latter 4)
 categories: all
 
-# Removes punctuation (LOADED)
-# Options: none | questions | answers | all
-remove_punctuation: questions
-
 # Resize parameter (LOADED)
 # When present, resizes the images from original size to [height, width]
 # Depth remains set to 3.
@@ -28,9 +24,23 @@ remove_punctuation: questions
 # Problem will use those values to rescale the image_sizes to range (0, 1).
 scale_image_size: [2414, 2323]
 
-# Set augmentation parameter
-# Use random affine transformations (rotate, scale and translate)
-use_augmentation: False
+# Select applied image preprocessing/augmentations (LOADED)
+# Use one (or more) of the affine transformations:
+# none | random_affine | random_horizontal_flip | normalize | all
+# Accepted formats: a,b,c or [a,b,c]
+image_preprocessing: normalize
+
+# Select applied question preprocessing/augmentations (LOADED)
+# Use one (or more) of the transformations:
+# none | lowercase | remove_punctuation | tokenize | random_remove_stop_words | random_shuffle_words | all
+# Accepted formats: a,b,c or [a,b,c]
+question_preprocessing: lowercase, remove_punctuation
+
+# Select applied question preprocessing (LOADED)
+# Options: none | lowercase | remove_punctuation | tokenize | all
+# Accepted formats: a,b,c or [a,b,c]
+answer_preprocessing: none
+
 
 streams:
   ####################################################################
