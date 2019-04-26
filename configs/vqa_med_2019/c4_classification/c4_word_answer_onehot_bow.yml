@@ -51,7 +51,8 @@ pipeline:
   # Model.
   classifier:
     type: FeedForwardNetwork 
-    hidden_sizes: [100, 100]
+    hidden_sizes: [500]
+    dropout_rate: 0.5
     priority: 3
     streams:
       inputs: bow_answer_words
