@@ -28,6 +28,10 @@ remove_punctuation: questions
 # Problem will use those values to rescale the image_sizes to range (0, 1).
 scale_image_size: [2414, 2323]
 
+# Set augmentation parameter
+# Use random affine transformations (rotate, scale and translate)
+use_augmentation: False
+
 streams:
   ####################################################################
   # 2. Keymappings associated with INPUT and OUTPUT streams.
@@ -75,8 +79,7 @@ globals:
   input_depth: image_depth
   # Category (word-idx) mappings (SET)
   category_word_mappings: category_word_mappings
-  
+
   ####################################################################
   # 5. Keymappings associated with statistics that will be ADDED.
   ####################################################################
-

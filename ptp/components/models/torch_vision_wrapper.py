@@ -28,7 +28,7 @@ from ptp.data_types.data_definition import DataDefinition
 class TorchVisionWrapper(Model):
     """
     Class
-    """ 
+    """
     def __init__(self, name, config):
         """
         Initializes the ``LeNet5`` model, creates the required layers.
@@ -45,36 +45,55 @@ class TorchVisionWrapper(Model):
         self.key_inputs = self.stream_keys["inputs"]
         self.key_outputs = self.stream_keys["outputs"]
 
-        # Get VGG16
-        self.model = models.vgg16(pretrained=True)
+        # Get model type from configuration.
+        self.model_type = self.config["model_type"]
 
-        # Check operation mode.
-        self.return_feature_maps = self.config["return_feature_maps"]
+        if(self.model_type == 'VGG16'):
+            # Get VGG16
+            self.model = models.vgg16(pretrained=True)
 
-        if self.return_feature_maps:
-            # Use only the "feature encoder".
-            self.model = self.model.features
+            # Check operation mode.
+            self.return_feature_maps = self.config["return_feature_maps"]
 
-            # Height of the returned features tensor (SET)
-            self.feature_maps_height = 7
-            self.globals["feature_maps_height"] = self.feature_maps_height
-            # Width of the returned features tensor (SET)
-            self.feature_maps_width = 7
-            self.globals["feature_maps_width"] = self.feature_maps_width
-            # Depth of the returned features tensor (SET)
-            self.feature_maps_depth = 512
-            self.globals["feature_maps_depth"] = self.feature_maps_depth
+            if self.return_feature_maps:
+                # Use only the "feature encoder".
+                self.model = self.model.features
 
-        else:
-            # Use the whole model, but cut/reshape only the last layer.
-            # Retrieve prediction size from globals.
-            self.output_size = self.globals["output_size"]
-            # "Replace" last layer.
-            self.model.classifier._modules['6'] = torch.nn.Linear(4096, self.output_size)
+                # Height of the returned features tensor (SET)
+                self.feature_maps_height = 7
+                self.globals["feature_maps_height"] = self.feature_maps_height
+                # Width of the returned features tensor (SET)
+                self.feature_maps_width = 7
+                self.globals["feature_maps_width"] = self.feature_maps_width
+                # Depth of the returned features tensor (SET)
+                self.feature_maps_depth = 512
+                self.globals["feature_maps_depth"] = self.feature_maps_depth
+
+            else:
+                # Use the whole model, but cut/reshape only the last layer.
+                # Retrieve prediction size from globals.
+                self.output_size = self.globals["output_size"]
+                # "Replace" last layer.
+                self.model.classifier._modules['6'] = torch.nn.Linear(4096, self.output_size)
+
+        elif(self.model_type == 'densenet121'):
+            # Get densenet121
+            self.model = models.densenet121(pretrained=True)
+            self.model.classifier = nn.Linear(1024, self.prediction_size)
+
+        elif(self.model_type == 'resnet152'):
+            # Get resnet152
+            self.model = models.resnet152(pretrained=True)
+            self.model.fc = nn.Linear(2048, self.prediction_size)
+
+        elif(self.model_type == 'resnet50'):
+            # Get resnet50
+            self.model = models.resnet50(pretrained=True)
+            self.model.fc = nn.Linear(2048, self.prediction_size)
 
 
     def input_data_definitions(self):
-        """ 
+        """
         Function returns a dictionary with definitions of input data that are required by the component.
 
         :return: dictionary containing input data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
@@ -85,7 +104,7 @@ class TorchVisionWrapper(Model):
 
 
     def output_data_definitions(self):
-        """ 
+        """
         Function returns a dictionary with definitions of output data produced the component.
 
         :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
@@ -94,7 +113,7 @@ class TorchVisionWrapper(Model):
             return {
                 self.key_outputs: DataDefinition([-1, self.feature_maps_depth, self.feature_maps_height, self.feature_maps_width], [torch.Tensor], "Batch of feature maps [BATCH_SIZE x FEAT_DEPTH x FEAT_HEIGHT x FEAT_WIDTH]")
                 }
-        else: 
+        else:
             return {
                 self.key_outputs: DataDefinition([-1, self.output_size], [torch.Tensor], "Batch of outputs, each represented as probability distribution over classes [BATCH_SIZE x PREDICTION_SIZE]")
                 }
