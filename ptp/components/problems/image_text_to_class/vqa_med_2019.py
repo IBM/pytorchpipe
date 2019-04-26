@@ -24,7 +24,6 @@ import pandas as pd
 from PIL import Image
 
 import nltk
-from nltk.corpus import stopwords
 
 import torch
 from torchvision import transforms
@@ -32,36 +31,7 @@ from torchvision import transforms
 from ptp.components.problems.problem import Problem
 from ptp.data_types.data_definition import DataDefinition
 
-from ptp.configuration.configuration_error import ConfigurationError
-
-def get_value_list_from_dictionary(key, parameter_dict, accepted_values = []):
-    """
-    Parses parameter values retrieved from a given parameter dictionary using key.
-    Optionally, checks is all values are accepted.
-
-    :param key: Key of the parameter.
-    :param parameter_dict: Dictionary containing given key (e.g. config or globals)
-    :param accepted_values: List of accepted values (DEFAULT: [])
-
-    :return: List of parsed values
-    """
-    parameter = parameter_dict[key]
-    # Preprocess parameter value.
-    if (type(parameter) == str):
-        values = parameter.replace(" ","").split(",")
-    else:
-        values = parameter # list
-    assert type(values) == list, "Parameter value must be a list"
-
-    # Test values one by one.
-    if len(accepted_values) > 0:
-        for value in values:
-            if value not in accepted_values:
-                raise ConfigurationError("One of the values in '{}' is invalid (current: '{}', accepted: {})".format(key, value, accepted_values))
-
-    # Return list.
-    return values
-
+from ptp.configuration.config_parsing import get_value_list_from_dictionary
 
 class VQAMED2019(Problem):
     """
@@ -173,7 +143,7 @@ class VQAMED2019(Problem):
             source_files, source_categories = self.filter_sources(source_files, source_categories)
         # else: # TODO
 
-        # Get image augmentations.
+        # Get image preprocessing.
         self.image_preprocessing = get_value_list_from_dictionary(
             "image_preprocessing", self.config,
             'none | random_affine | random_horizontal_flip | normalize | all'.split(" | ")
@@ -182,10 +152,10 @@ class VQAMED2019(Problem):
             self.image_preprocessing = []
         if 'all' in self.image_preprocessing:
             self.image_preprocessing = 'random_affine | random_horizontal_flip | normalize'.split(" | ")
-        self.logger.info("Applied image augmentations: {}".format(self.image_preprocessing))
+        self.logger.info("Applied image preprocessing: {}".format(self.image_preprocessing))
 
 
-        # Get question augmentations.
+        # Get question preprocessing.
         self.question_preprocessing = get_value_list_from_dictionary(
             "question_preprocessing", self.config,
             'none | lowercase | remove_punctuation | tokenize | random_remove_stop_words | random_shuffle_words | all'.split(" | ")
@@ -194,7 +164,7 @@ class VQAMED2019(Problem):
             self.question_preprocessing = []
         if 'all' in self.question_preprocessing:
             self.question_preprocessing = 'lowercase | remove_punctuation | tokenize | remove_stop_words | shuffle_words'.split(" | ")
-        self.logger.info("Applied question augmentations: {}".format(self.question_preprocessing))
+        self.logger.info("Applied question preprocessing: {}".format(self.question_preprocessing))
 
         # Get answer preprocessing.
         self.answer_preprocessing = get_value_list_from_dictionary(
@@ -310,10 +280,11 @@ class VQAMED2019(Problem):
 
         # Remove punctuation.
         if remove_punctuation:
+            # Remove '“' and '”' and '’'!!!
+            for char in ['“', '”', '’']:
+                text = text.replace(char,' ')
             translator = str.maketrans('', '', string.punctuation)
             text = text.translate(translator)
-            # Remove '“' and '”' !!!
-            text = text.replace('“','').replace('”','')
 
         # If not tokenize - return text.
         if not tokenize:
@@ -327,7 +298,7 @@ class VQAMED2019(Problem):
             return text_words
 
         # Perform "cleansing".
-        stops = set(stopwords.words("english"))
+        stops = set(nltk.corpus.stopwords.words("english"))
         cleansed_words = [word for word in text_words if word not in stops]
         # Return the original text if there are no words left :]
         if len(cleansed_words) == 0:

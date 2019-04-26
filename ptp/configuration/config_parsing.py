@@ -210,3 +210,32 @@ def reverse_order_config_load(config_interface_obj, configs_to_load, abs_config_
         # Load config from YAML file.
         config_interface_obj.add_config_params_from_yaml(abs_config_path + config)
         print('Info: Loaded configuration from file {}'.format(abs_config_path + config))
+
+
+def get_value_list_from_dictionary(key, parameter_dict, accepted_values = []):
+    """
+    Parses parameter values retrieved from a given parameter dictionary using key.
+    Optionally, checks is all values are accepted.
+
+    :param key: Key of the parameter.
+    :param parameter_dict: Dictionary containing given key (e.g. config or globals)
+    :param accepted_values: List of accepted values (DEFAULT: [])
+
+    :return: List of parsed values
+    """
+    parameter = parameter_dict[key]
+    # Preprocess parameter value.
+    if (type(parameter) == str):
+        values = parameter.replace(" ","").split(",")
+    else:
+        values = parameter # list
+    assert type(values) == list, "Parameter value must be a list"
+
+    # Test values one by one.
+    if len(accepted_values) > 0:
+        for value in values:
+            if value not in accepted_values:
+                raise ConfigurationError("One of the values in '{}' is invalid (current: '{}', accepted: {})".format(key, value, accepted_values))
+
+    # Return list.
+    return values

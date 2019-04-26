@@ -8,6 +8,15 @@
 # False: sentence -> list of strings, True: list of strings -> sentence.
 detokenize: False 
 
+# Select applied preprocessing/augmentations (LOADED)
+# Use one (or more) of the transformations:
+# none | lowercase | remove_punctuation | all
+# Accepted formats: a,b,c or [a,b,c]
+preprocessing: none
+
+# List of characters to be removed 
+remove_characters: ''
+
 streams: 
   ####################################################################
   # 2. Keymappings associated with INPUT and OUTPUT streams.
