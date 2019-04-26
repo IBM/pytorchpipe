@@ -5,13 +5,11 @@ default_configs: vqa_med_2019/c4_classification/default_c4_classification.yml
 training:
   problem:
     batch_size: 128
-    remove_punctuation: all
 
 # Validation parameters:
 validation:
   problem:
     batch_size: 128
-    remove_punctuation: all
 
 pipeline:
   name: c4_word_answer_onehot_bow
@@ -51,7 +49,7 @@ pipeline:
   # Model.
   classifier:
     type: FeedForwardNetwork 
-    hidden_sizes: [500]
+    hidden_sizes: [500, 500]
     dropout_rate: 0.5
     priority: 3
     streams:
@@ -59,5 +57,11 @@ pipeline:
     globals:
       input_size: answer_words_vocabulary_size
       prediction_size: vocabulary_size_c4
-  
+
+   # Viewers.
+  viewer:
+    type: StreamViewer
+    priority: 100.4
+    input_streams: answers, tokenized_answer_words, predicted_answers
+ 
 #: pipeline
