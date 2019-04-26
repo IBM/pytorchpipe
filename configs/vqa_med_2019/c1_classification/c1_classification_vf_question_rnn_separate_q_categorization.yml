@@ -41,7 +41,7 @@ pipeline:
     freeze: True
     prediction_mode: Last
     priority: 0.4
-    initial_state_trainable: False
+    initial_state: Zero
     streams:
       inputs: embedded_questions
       predictions: predicted_question_categories
@@ -94,7 +94,7 @@ pipeline:
     cell_type: LSTM
     prediction_mode: Last
     priority: 1.3
-    initial_state_trainable: False
+    initial_state: Zero
     #num_layers: 5
     hidden_size: 50
     streams:

@@ -72,7 +72,7 @@ pipeline:
   lstm:
     type: RecurrentNeuralNetwork
     priority: 3
-    initial_state_trainable: False
+    initial_state: Zero
     streams:
       inputs: embedded_sources
     globals:

@@ -101,7 +101,7 @@ pipeline:
     num_layers: 3
     use_logsoftmax: False
     input_mode: Autoregression_First
-    autoregression_length: 50
+    max_autoregression_length: 50
     prediction_mode: Dense
     streams:
       inputs: s2s_encoder_output

@@ -1,15 +1,23 @@
 # Load config defining problems for training, validation and testing.
 default_configs: vqa_med_2019/c2_classification/default_c2_classification.yml
 
+# Training parameters:
+training:
+  problem:
+    batch_size: 64
+validation:
+  problem:
+    batch_size: 64
+
 pipeline:
-  name: c2_classification_all_rnn_vgg16_ewm
+  name: c2_classification_all_rnn_vgg16_relational_net
 
   global_publisher:
     priority: 0
     type: GlobalVariablePublisher
     # Add input_size to globals.
-    keys: [question_encoder_output_size, image_encoder_output_size, element_wise_activation_size]
-    values: [100, 100, 100]
+    keys: [question_encoder_output_size]
+    values: [100]
 
   ################# PIPE 0: question #################
   # Questions encoding.
@@ -24,8 +32,8 @@ pipeline:
   question_embeddings:
     priority: 1.2
     type: SentenceEmbeddings
-    embeddings_size: 50
-    pretrained_embeddings_file: glove.6B.50d.txt
+    embeddings_size: 100
+    pretrained_embeddings_file: glove.6B.100d.txt
     data_folder: ~/data/vqa-med
     word_mappings_file: questions.all.word.mappings.csv
     streams:
@@ -40,6 +48,7 @@ pipeline:
     prediction_mode: Last
     use_logsoftmax: False
     initial_state: Zero
+    #dropout_rate: 0.5
     hidden_size: 50
     streams:
       inputs: embedded_questions
@@ -53,36 +62,36 @@ pipeline:
   image_encoder:
     priority: 3.1
     type: TorchVisionWrapper
+    return_feature_maps: True
+    frozen: True
+    freeze: True
     streams:
       inputs: images
-      outputs: image_activations
-    globals:
-      output_size: image_encoder_output_size
+      outputs: feature_maps
 
   ################# PIPE 3: fusion + classification #################
   # Element wise multiplication + FF.
   question_image_fusion:
     priority: 4.1
-    type: ElementWiseMultiplication
+    type: RelationalNetwork
     dropout_rate: 0.5
+    output_size: 100
     streams:
-      image_encodings: image_activations
       question_encodings: question_activations
-      outputs: element_wise_activations
+      outputs: fused_image_question_activations
     globals:
-      image_encoding_size: image_encoder_output_size
       question_encoding_size: question_encoder_output_size
-      output_size: element_wise_activation_size
+      output_size: fused_image_question_activation_size
 
   classifier:
     priority: 4.2
     type: FeedForwardNetwork 
-    hidden_sizes: [100]
+    hidden_sizes: [100,100]
     dropout_rate: 0.5
     streams:
-      inputs: element_wise_activations
+      inputs: fused_image_question_activations
     globals:
-      input_size: element_wise_activation_size
+      input_size: fused_image_question_activation_size
       prediction_size: vocabulary_size_c2
 
   #: pipeline
