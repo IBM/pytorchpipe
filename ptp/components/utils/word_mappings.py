@@ -135,3 +135,21 @@ def save_word_mappings_to_csv_file(logger, folder, filename, word_to_ix, fieldna
             writer.writerow({fieldnames[0]:k, fieldnames[1]: v})
 
     logger.info("Saved mappings of size {} to file '{}'".format(len(word_to_ix), file_path))
+
+def pad_trunc_list(l: list, length: int, value = 0):
+    """
+    Will apply padding / clipping to list to meet requested length.
+    Works on the list in-place.
+
+    :param l: List to manipulate
+
+    :param length: Target length
+
+    :param value: Value to fill when padding. Default is int(0).
+
+    :return: None
+    """
+    if len(l) < length:
+        l.extend([value]*(length-len(l)))
+    elif len(l) > length:
+        del l[length:]
