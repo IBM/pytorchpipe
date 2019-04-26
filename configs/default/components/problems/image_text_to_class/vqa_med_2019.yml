@@ -37,7 +37,8 @@ image_preprocessing: normalize
 question_preprocessing: lowercase, remove_punctuation
 
 # Select applied question preprocessing (LOADED)
-# Options: none | lowercase | remove_punctuation | tokenize | all
+# Use one (or more) of the transformations:
+# none | lowercase | remove_punctuation | tokenize | all
 # Accepted formats: a,b,c or [a,b,c]
 answer_preprocessing: none
 
