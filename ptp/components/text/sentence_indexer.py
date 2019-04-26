@@ -19,7 +19,7 @@ import torch
 from ptp.components.component import Component
 from ptp.components.mixins.word_mappings import WordMappings
 from ptp.data_types.data_definition import DataDefinition
-from ptp.components.utils.word_mappings import pad_list
+from ptp.components.utils.word_mappings import pad_trunc_list
 
 
 class SentenceIndexer(Component, WordMappings):
@@ -147,7 +147,7 @@ class SentenceIndexer(Component, WordMappings):
             # Apply fixed padding to all sequences if requested
             # Otherwise let torch.nn.utils.rnn.pad_sequence handle it and choose a dynamic padding
             if self.fixed_padding > 0:
-                pad_list(output_sample, self.fixed_padding)
+                pad_trunc_list(output_sample, self.fixed_padding)
 
             outputs_list.append(self.app_state.LongTensor(output_sample))
 
@@ -186,7 +186,7 @@ class SentenceIndexer(Component, WordMappings):
             # Apply fixed padding to all sequences if requested
             # Otherwise let torch.nn.utils.rnn.pad_sequence handle it and choose a dynamic padding
             if self.fixed_padding > 0:
-                pad_list(output_sample, self.fixed_padding)
+                pad_trunc_list(output_sample, self.fixed_padding)
 
             # Add sentence to batch.
             outputs_list.append(output_sample)
@@ -224,7 +224,7 @@ class SentenceIndexer(Component, WordMappings):
             # Apply fixed padding to all sequences if requested
             # Otherwise let torch.nn.utils.rnn.pad_sequence handle it and choose a dynamic padding
             if self.fixed_padding > 0:
-                pad_list(output_sample, self.fixed_padding)
+                pad_trunc_list(output_sample, self.fixed_padding)
 
             # Add sentence to batch.
             outputs_list.append(output_sample)
