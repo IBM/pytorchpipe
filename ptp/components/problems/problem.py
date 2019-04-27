@@ -162,13 +162,10 @@ class Problem(Component, Dataset):
 
         .. note::
 
-
             Empty - To be redefined in inheriting classes.
 
-        :param epoch: current epoch index
+        :param epoch: current epoch
         :type epoch: int
-
-
         """
         pass
 
@@ -178,13 +175,10 @@ class Problem(Component, Dataset):
 
         .. note::
 
-
             Empty - To be redefined in inheriting classes.
 
-
-        :param epoch: current epoch index
+        :param epoch: current epoch
         :type epoch: int
-
         """
         pass
 
@@ -207,7 +201,7 @@ class Problem(Component, Dataset):
         self.curriculum_config = curriculum_config
 
 
-    def curriculum_learning_update_params(self, epoch, episode):
+    def curriculum_learning_update_params(self, episode, epoch):
         """
         Updates problem parameters according to curriculum learning.
 
@@ -215,11 +209,11 @@ class Problem(Component, Dataset):
 
             This method can be overwritten in the derived classes.
 
-        :param epoch: Number of the current epoch.
-        :type epoch: int
-
         :param episode: Number of the current episode.
         :type episode: int
+
+        :param epoch: Number of the current epoch.
+        :type epoch: int
 
         :return: True informing that Curriculum Learning wasn't active at all (i.e. is finished).
 

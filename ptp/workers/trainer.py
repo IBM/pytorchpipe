@@ -244,10 +244,6 @@ class Trainer(Worker):
         self.validation = ProblemManager('validation', self.config['validation'])
         errors += self.validation.build()
 
-        # Generate a single batch used for partial validation.
-        if errors == 0:
-            self.validation_dict = next(iter(self.validation.dataloader))
-
         ###################### PIPELINE ######################
         
         # Build the pipeline using the loaded configuration.

@@ -24,6 +24,7 @@ from torch.utils.data import DataLoader
 
 import ptp
 
+from ptp.utils.app_state import AppState
 from ptp.configuration.configuration_error import ConfigurationError
 from ptp.application.component_factory import ComponentFactory
 from ptp.application.sampler_factory import SamplerFactory
@@ -47,8 +48,14 @@ class ProblemManager(object):
         self.name = name
         self.config = config
 
+        # Get access to AppState: for command line args, globals etc.
+        self.app_state = AppState()
+
         # Initialize the logger.
         self.logger = logging.getLogger(name)
+
+        # Single batch that will be used for validation (for validation problem manager).
+        self.batch = None
 
         # Set a default configuration section for data loader.
         dataloader_config = {
@@ -67,6 +74,30 @@ class ProblemManager(object):
             }
 
         self.config.add_default_params(dataloader_config)
+
+
+    def worker_init_fn(self, worker_id):
+        """
+        Function to be called by :py:class:`torch.utils.data.DataLoader` on each worker subprocess, \
+        after seeding and before data loading. (default: ``None``).
+
+        .. note::
+
+            Set the ``NumPy`` random seed of the worker equal to the previous NumPy seed + its ``worker_id``\
+             to avoid having all workers returning the same random numbers.
+
+
+        :param worker_id: the worker id (in [0, :py:class:`torch.utils.data.DataLoader`.num_workers - 1])
+        :type worker_id: int
+
+        :return: ``None`` by default
+        """
+        # Set random seed of a worker.
+        np.random.seed(seed=np.random.get_state()[1][0] + worker_id)
+
+        # Ignores SIGINT signal - what enables "nice" termination of dataloader worker threads.
+        # https://discuss.pytorch.org/t/dataloader-multiple-workers-and-keyboardinterrupt/9740/2
+        signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 
     def build(self, log=True):
@@ -97,16 +128,16 @@ class ProblemManager(object):
 
             # build the DataLoader on top of the validation problem
             self.dataloader = DataLoader(dataset=self.problem,
-                                batch_size=self.config['problem']['batch_size'],
-                                shuffle=self.config['dataloader']['shuffle'],
-                                sampler=self.sampler,
-                                batch_sampler=self.config['dataloader']['batch_sampler'],
-                                num_workers=self.config['dataloader']['num_workers'],
-                                collate_fn=self.problem.collate_fn,
-                                pin_memory=self.config['dataloader']['pin_memory'],
-                                drop_last=self.config['dataloader']['drop_last'],
-                                timeout=self.config['dataloader']['timeout'],
-                                worker_init_fn=self.worker_init_fn)
+                    batch_size=self.config['problem']['batch_size'],
+                    shuffle=self.config['dataloader']['shuffle'],
+                    sampler=self.sampler,
+                    batch_sampler=self.config['dataloader']['batch_sampler'],
+                    num_workers=self.config['dataloader']['num_workers'],
+                    collate_fn=self.problem.collate_fn,
+                    pin_memory=self.config['dataloader']['pin_memory'],
+                    drop_last=self.config['dataloader']['drop_last'],
+                    timeout=self.config['dataloader']['timeout'],
+                    worker_init_fn=self.worker_init_fn)
 
             # Display sizes.
             if log:
@@ -129,29 +160,19 @@ class ProblemManager(object):
             return 1
 
 
-
-    def worker_init_fn(self, worker_id):
+    def __len__(self):
         """
-        Function to be called by :py:class:`torch.utils.data.DataLoader` on each worker subprocess, \
-        after seeding and before data loading. (default: ``None``).
-
-        .. note::
-
-            Set the ``NumPy`` random seed of the worker equal to the previous NumPy seed + its ``worker_id``\
-             to avoid having all workers returning the same random numbers.
-
-
-        :param worker_id: the worker id (in [0, :py:class:`torch.utils.data.DataLoader`.num_workers - 1])
-        :type worker_id: int
-
-        :return: ``None`` by default
+        Returns total number of samples, calculated depending on the settings (batch size, dataloader, drop last etc.).
         """
-        # Set random seed of a worker.
-        np.random.seed(seed=np.random.get_state()[1][0] + worker_id)
+        if self.dataloader.drop_last:
+            # if we are supposed to drop the last (incomplete) batch.
+            total_num_samples = len(self.dataloader) * self.dataloader.batch_size
+        elif self.sampler is not None:
+            total_num_samples = len(self.sampler)
+        else:
+            total_num_samples = len(self.problem)
 
-        # Ignores SIGINT signal - what enables "nice" termination of dataloader worker threads.
-        # https://discuss.pytorch.org/t/dataloader-multiple-workers-and-keyboardinterrupt/9740/2
-        signal.signal(signal.SIGINT, signal.SIG_IGN)
+        return total_num_samples
 
 
     def get_epoch_size(self):
@@ -184,17 +205,32 @@ class ProblemManager(object):
         else:
             return (problem_size // self.dataloader.batch_size) + 1
 
+    def initialize_epoch(self):
+        """
+        Function called to initialize a new epoch.
+        """
+        epoch = self.app_state.epoch
+        # Update problem settings depending on the epoch.
+        self.problem.initialize_epoch(epoch)
 
-    def __len__(self):
-        """
-        Returns total number of samples, calculated depending on the settings (batch size, dataloader, drop last etc.).
-        """
-        if self.dataloader.drop_last:
-            # if we are supposed to drop the last (incomplete) batch.
-            total_num_samples = len(self.dataloader) * self.dataloader.batch_size
-        elif self.sampler is not None:
-            total_num_samples = len(self.sampler)
+        # Generate a single batch used for partial validation.
+        if self.name == 'validation' and self.batch == None:
+            self.batch = next(iter(self.dataloader))
+
+
+        # Get single batch that ...
+        if self.name == 'training':
+            pass
+        elif self.name == 'validation':
+            pass
         else:
-            total_num_samples = len(self.problem)
+            # We do not need cross-validation for test/challenge/other sets.
+            pass
 
-        return total_num_samples
+
+    def finalize_epoch(self):
+        """
+        Function called at the end of an epoch to finalize it.
+        """
+        epoch = self.app_state.epoch
+        self.problem.initialize_epoch(epoch)

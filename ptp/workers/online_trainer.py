@@ -165,13 +165,15 @@ class OnlineTrainer(Trainer):
                 self.app_state.epoch += 1
                 self.logger.info('Starting next epoch: {}\n{}'.format(self.app_state.epoch, '='*80))
 
-                # Inform the training problem class that epoch has started.
-                self.training.problem.initialize_epoch(self.app_state.epoch)
+                # Inform the problem managers that epoch has started.
+                self.training.initialize_epoch()
+                self.validation.initialize_epoch()
 
                 # Apply curriculum learning - change Problem parameters.
                 self.curric_done = self.training.problem.curriculum_learning_update_params(
-                    self.app_state.epoch,
-                    0 if self.app_state.episode < 0 else self.app_state.episode)
+                    0 if self.app_state.episode < 0 else self.app_state.episode,
+                    self.app_state.epoch)
+                    
 
                 # Empty the statistics collector.
                 self.training_stat_col.empty()
@@ -179,7 +181,7 @@ class OnlineTrainer(Trainer):
                 ############################################################################################
                 # Beginning of internal "episodic loop".
                 ############################################################################################
-                for training_dict in self.training.dataloader:
+                for training_batch in self.training.dataloader:
                     # Next episode.
                     self.app_state.episode += 1
 
@@ -190,13 +192,13 @@ class OnlineTrainer(Trainer):
                     self.pipeline.train()
 
                     # 1. Perform forward step.
-                    self.pipeline.forward(training_dict)
+                    self.pipeline.forward(training_batch)
 
                     # 2. Calculate statistics.
-                    self.collect_all_statistics(self.training, self.pipeline, training_dict, self.training_stat_col)
+                    self.collect_all_statistics(self.training, self.pipeline, training_batch, self.training_stat_col)
 
                     # 3. Backward gradient flow.
-                    self.pipeline.backward(training_dict)
+                    self.pipeline.backward(training_batch)
 
                     # Check the presence of the 'gradient_clipping'  parameter.
                     try:
@@ -247,11 +249,11 @@ class OnlineTrainer(Trainer):
                     if (self.app_state.episode % self.partial_validation_interval) == 0:
 
                         # Clear the validation batch from all items aside of the ones originally returned by the problem.
-                        self.validation_dict.reinitialize(self.validation.problem.output_data_definitions())
+                        self.validation.batch.reinitialize(self.validation.problem.output_data_definitions())
                         # Perform validation.
-                        self.validate_on_batch(self.validation_dict)
+                        self.validate_on_batch(self.validation.batch)
                         # Get loss.
-                        validation_loss = self.pipeline.get_loss(self.validation_dict)
+                        validation_loss = self.pipeline.get_loss(self.validation.batch)
 
                         # Save the pipeline using the latest validation statistics.
                         self.pipeline.save(self.checkpoint_dir, training_status, validation_loss)
@@ -289,8 +291,10 @@ class OnlineTrainer(Trainer):
 
                 # Epoch just ended!
                 self.logger.info('End of epoch: {}\n{}'.format(self.app_state.epoch, '='*80))
-                # Inform the problem class that the epoch has ended.
-                self.training.problem.finalize_epoch(self.app_state.epoch)
+                
+                # Inform the problem managers that the epoch has ended.
+                self.training.finalize_epoch()
+                self.validation.finalize_epoch()
 
                 # Aggregate training statistics for the epoch.
                 self.aggregate_all_statistics(self.training, self.pipeline, self.training_stat_col, self.training_stat_agg)
@@ -313,9 +317,9 @@ class OnlineTrainer(Trainer):
                 # We still must validate and try to save the model as it may perform better during this episode.
 
                 # Clear the validation batch from all items aside of the ones originally returned by the problem.
-                self.validation_dict.reinitialize(self.validation.problem.output_data_definitions())
+                self.validation.batch.reinitialize(self.validation.problem.output_data_definitions())
                 # Perform validation.
-                self.validate_on_batch(self.validation_dict)
+                self.validate_on_batch(self.validation.batch)
 
                 # Try to save the model using the latest validation statistics.
                 self.pipeline.save(self.checkpoint_dir, training_status, validation_loss)
