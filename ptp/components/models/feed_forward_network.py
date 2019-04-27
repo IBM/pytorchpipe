@@ -48,7 +48,7 @@ class FeedForwardNetwork(Model):
             if len(self.input_size) == 1:
                 self.input_size = self.input_size[0]
             else:
-                raise ConfigurationError("SoftmaxClassifier input size '{}' must be a single dimension (current {})".format(self.global_keys["input_size"], self.input_size))
+                raise ConfigurationError("Input size '{}' must be a single dimension (current {})".format(self.global_keys["input_size"], self.input_size))
 
         # Retrieve output (prediction) size from global params.
         self.prediction_size = self.globals["prediction_size"]
@@ -56,11 +56,11 @@ class FeedForwardNetwork(Model):
             if len(self.prediction_size) == 1:
                 self.prediction_size = self.prediction_size[0]
             else:
-                raise ConfigurationError("SoftmaxClassifier prediction size '{}' must be a single dimension (current {})".format(self.global_keys["prediction_size"], self.prediction_size))
+                raise ConfigurationError("Prediction size '{}' must be a single dimension (current {})".format(self.global_keys["prediction_size"], self.prediction_size))
         
-        self.logger.info("Initializing softmax classifier with input size = {} and prediction size = {}".format(self.input_size, self.prediction_size))
+        self.logger.info("Initializing network with input size = {} and prediction size = {}".format(self.input_size, self.prediction_size))
 
-        # Create the model.
+        # Create the module list.
         modules = []
         # Retrieve dropout rate value - if set, will put dropout between every layer.
         dropout_rate = self.config["dropout_rate"]
@@ -84,10 +84,10 @@ class FeedForwardNetwork(Model):
                 # Add output layer.
                 modules.append( torch.nn.Linear(input_dim, self.prediction_size) )
 
-                self.logger.info("Created {} hidden layers".format(len(modules)-1))
+                self.logger.info("Created {} hidden layers".format(len(hidden_sizes)))
 
             else:
-                raise ConfigurationError("SoftmaxClassifier 'hidden_sizes' must contain a list with numbers of neurons in hidden layers (currently {})".format(self.hidden_sizes))
+                raise ConfigurationError("'hidden_sizes' must contain a list with numbers of neurons in hidden layers (currently {})".format(self.hidden_sizes))
 
         except KeyError:
             # Not present, in that case create a simple classifier with 1 linear layer.

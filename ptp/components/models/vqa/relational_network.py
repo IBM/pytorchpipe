@@ -20,6 +20,7 @@ __author__ = "Tomasz Kornuta"
 
 import torch
 
+from ptp.configuration.configuration_error import ConfigurationError
 from ptp.components.models.model import Model
 from ptp.data_types.data_definition import DataDefinition
 
@@ -56,40 +57,51 @@ class RelationalNetwork(Model):
         self.feature_maps_depth = self.globals["feature_maps_depth"]
         self.question_encoding_size = self.globals["question_encoding_size"]
         
-
         # Create "object" coordinates.
         self.obj_coords = []
         for h in range(self.feature_maps_height):
             for w in range(self.feature_maps_width):
                 self.obj_coords.append((h,w))
 
-        # Get output_size from config and send it to globals.
-        self.output_size = self.config["output_size"]
-        self.globals["output_size"] = self.output_size
-
         # Calculate input size to the g_theta: two "objects" + question (+ optionally: image size)
         input_size = 2 * self.feature_maps_depth + self.question_encoding_size
+
+        # Create the module list.
+        modules = []
 
         # Retrieve dropout rate value - if set, will put dropout between every layer.
         dropout_rate = self.config["dropout_rate"]
 
-        # Create the model, i.e. the "relational" g_theta MLP.
-        self.g_theta = torch.nn.Sequential(
-            torch.nn.Linear(input_size, self.output_size),
-            # Create activation layer.
-            torch.nn.ReLU(),
-            # Create dropout layer.
-            torch.nn.Dropout(dropout_rate),
-            torch.nn.Linear(self.output_size, self.output_size),
-            torch.nn.ReLU(),
-            torch.nn.Dropout(dropout_rate),
-            torch.nn.Linear(self.output_size, self.output_size),
-            torch.nn.ReLU(),
-            torch.nn.Dropout(dropout_rate),
-            torch.nn.Linear(self.output_size, self.output_size)
-            )
+        # Create the model, i.e. the "relational" g_theta network.
+        g_theta_sizes = self.config["g_theta_sizes"]
+        if type(g_theta_sizes) == list and len(g_theta_sizes) > 1:
+            # First input dim.
+            input_dim = input_size
+            for hidden_dim in g_theta_sizes:
+                # Add linear layer.
+                modules.append( torch.nn.Linear(input_dim, hidden_dim) )
+                # Add activation and dropout.
+                modules.append( torch.nn.ReLU() )
+                if (dropout_rate > 0):
+                    modules.append( torch.nn.Dropout(dropout_rate) )
+                # Remember input dim of next layer.
+                input_dim = hidden_dim
 
-        
+            # Add output layer.
+            modules.append( torch.nn.Linear(input_dim, hidden_dim) )
+
+            self.logger.info("Created g_theta network with {} layers".format(len(g_theta_sizes)+1))
+
+        else:
+            raise ConfigurationError("'g_theta_sizes' must contain a list with numbers of neurons in g_theta layers (currently {})".format(self.hidden_sizes))
+
+        # Export output_size  to globals.
+        self.output_size = g_theta_sizes[-1]
+        self.globals["output_size"] = self.output_size
+
+        # Finally create the sequential model out of those modules.
+        self.g_theta = torch.nn.Sequential(*modules)
+
 
     def input_data_definitions(self):
         """ 
@@ -120,30 +132,41 @@ class RelationalNetwork(Model):
         :param data_dict: DataDict({'images',**})
         :type data_dict: ``ptp.dadatypes.DataDict``
         """
-
         # Unpack DataDict.
         feat_m = data_dict[self.key_feature_maps]
         enc_q = data_dict[self.key_question_encodings]
 
-        summed_relations = None
+        # List [FEAT_WIDTH x FEAT_HEIGHT] of tensors [BATCH SIZE x (2 * FEAT_DEPTH + QUESTION_SIZE)]
+        relational_inputs = []
         # Iterate through all pairs of "objects".
         for (h1,w1) in self.obj_coords:
             for (h2,w2) in self.obj_coords:
                 # Get feature maps.
                 fm1 = feat_m[:, :, h1,w1].view(-1, self.feature_maps_depth)
                 fm2 = feat_m[:, :, h2,w2].view(-1, self.feature_maps_depth)
-                # Concatenate with question.
+                # Concatenate with question [BATCH SIZE x (2 * FEAT_DEPTH + QUESTION_SIZE)]
                 concat = torch.cat([fm1, fm2, enc_q], dim=1)
-                
-                # Pass it through g_theta.
-                rel = self.g_theta(concat)
+                relational_inputs.append(concat)
 
-                # Add to relations.
-                if summed_relations is None:
-                    summed_relations = rel
-                else:
-                    # Element wise sum.
-                    summed_relations += rel
+        # Stack tensors along with the batch dimension
+        # [BATCH SIZE x (FEAT_WIDTH x FEAT_HEIGHT)^2  x (2 * FEAT_DEPTH + QUESTION_SIZE)]
+        # i.e. [BATCH SIZE x NUM_RELATIONS  x (2 * FEAT_DEPTH + QESTION_SIZE)]
+        stacked_inputs = torch.stack(relational_inputs, dim=1)
+
+        # Get shape [BATCH SIZE x (2 * FEAT_DEPTH + QESTION_SIZE)]
+        shape = stacked_inputs.shape
+
+        # Reshape such that we do a broadcast over the last dimension.
+        stacked_inputs = stacked_inputs.contiguous().view(-1, shape[-1])
+
+        # Pass it through g_theta.
+        stacked_relations = self.g_theta(stacked_inputs)
+
+        # Reshape to [BATCH_SIZE x NUM_RELATIONS x OUTPUT_SIZE]
+        stacked_relations = stacked_relations.view(*shape[0:-1], self.output_size)
+
+        # Element wise sum along relations [BATCH_SIZE x OUTPUT_SIZE]
+        summed_relations = torch.sum(stacked_relations, dim=1)
 
         # Add outputs to datadict.
         data_dict.extend({self.key_outputs: summed_relations})

@@ -4,10 +4,10 @@ default_configs: vqa_med_2019/c2_classification/default_c2_classification.yml
 # Training parameters:
 training:
   problem:
-    batch_size: 64
+    batch_size: 16
 validation:
   problem:
-    batch_size: 64
+    batch_size: 16
 
 pipeline:
   name: c2_classification_all_rnn_vgg16_relational_net
@@ -75,7 +75,7 @@ pipeline:
     priority: 4.1
     type: RelationalNetwork
     dropout_rate: 0.5
-    output_size: 100
+    g_theta_sizes: [100, 100]
     streams:
       question_encodings: question_activations
       outputs: fused_image_question_activations
