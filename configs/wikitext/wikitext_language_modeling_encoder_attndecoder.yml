@@ -1,0 +1,174 @@
+# This pipeline applies seq2seq on wikitext-2 to make word-level prediction.
+# It's been made for test purposes only, as it is doing:
+# [word 0 , ... , word 49] -> [word 1 , ... , word 50] (basically copying most of the input)
+#
+# The seq2seq here is implemented throught the use of 2 `RecurrentNeuralNetwork`
+
+# Training parameters:
+training:
+  problem:
+    type: &p_type WikiTextLanguageModeling
+    data_folder: &data_folder ~/data/language_modeling/wikitext-2
+    dataset: &dataset wikitext-2
+    subset: train
+    sentence_length: 42
+    batch_size:  64
+
+  # optimizer parameters:
+  optimizer:
+    name: SGD
+    lr: 1.0e-2
+
+  # settings parameters
+  terminal_conditions:
+    loss_stop: 1.0e-2
+    episode_limit: 1000000
+    epoch_limit: 100
+
+# Validation parameters:
+validation:
+  partial_validation_interval: 100
+  problem:
+    type: *p_type
+    data_folder: *data_folder
+    dataset: *dataset
+    subset: valid
+    sentence_length: 42
+    batch_size:  64
+
+# Testing parameters:
+testing:
+  problem:
+    type: *p_type 
+    data_folder: *data_folder
+    dataset: *dataset
+    subset: test
+    sentence_length: 42
+    batch_size: 64
+
+pipeline:
+  name: wikitext_language_modeling_seq2seq
+
+  # Source encoding - model 1.
+  source_sentence_embedding:
+    type: SentenceEmbeddings
+    priority: 1.1
+    embeddings_size: 50
+    pretrained_embeddings: glove.6B.50d.txt
+    data_folder: *data_folder
+    source_vocabulary_files: wiki.train.tokens,wiki.valid.tokens,wiki.test.tokens
+    vocabulary_mappings_file: wiki.all.tokenized_words
+    additional_tokens: <eos>
+    export_word_mappings_to_globals: True
+    streams:
+      inputs: sources
+      outputs: embedded_sources
+        
+  # Target encoding.
+  target_indexer:
+    type: SentenceIndexer
+    priority: 2.1
+    data_folder: *data_folder
+    import_word_mappings_from_globals: True
+    streams:
+      inputs: targets
+      outputs: indexed_targets
+  
+  # LSTM Encoder
+  encoder:
+    type: RecurrentNeuralNetwork
+    cell_type: GRU
+    priority: 3
+    initial_state: Trainable
+    hidden_size: 50
+    num_layers: 1
+    use_logsoftmax: False
+    output_last_state: True
+    prediction_mode: Dense
+    ffn_output: False
+    streams:
+      inputs: embedded_sources
+      predictions: s2s_encoder_output
+      output_state: s2s_state_output
+    globals:
+      input_size: embeddings_size
+      prediction_size: embeddings_size 
+
+  # LSTM Decoder
+  decoder:
+    type: Attn_Decoder_RNN
+    priority: 4
+    hidden_size: 50
+    num_layers: 1
+    use_logsoftmax: False
+    autoregression_length: 42
+    prediction_mode: Dense
+    streams:
+      inputs: s2s_encoder_output
+      predictions: s2s_decoder_output
+      input_state: s2s_state_output
+    globals:
+      input_size: embeddings_size
+      prediction_size: embeddings_size 
+
+  # FF, to resize the from the output size of the seq2seq to the size of the target vector
+  ff_resize_s2s_output:
+    type: FeedForwardNetwork 
+    use_logsoftmax: True
+    dimensions: 3
+    priority: 5
+    streams:
+      inputs: s2s_decoder_output
+    globals:
+      input_size: embeddings_size
+      prediction_size: vocabulary_size
+
+  # Loss
+  nllloss:
+    type: NLLLoss
+    priority: 6
+    num_targets_dims: 2
+    streams:
+      targets: indexed_targets
+      loss: loss
+
+  # Prediction decoding.
+  prediction_decoder:
+    type: SentenceIndexer
+    priority: 10
+    # Reverse mode.
+    reverse: True
+    # Use distributions as inputs.
+    use_input_distributions: True
+    data_folder: *data_folder
+    import_word_mappings_from_globals: True
+    streams:
+      inputs: predictions
+      outputs: prediction_sentences
+
+
+  # Statistics.
+  batch_size:
+    type: BatchSizeStatistics
+    priority: 100.0
+
+  #accuracy:
+  #  type: AccuracyStatistics
+  #  priority: 100.1
+  #  streams:
+  #    targets: indexed_targets
+
+  bleu:
+    type: BLEUStatistics
+    priority: 100.2
+    streams:
+      targets: indexed_targets
+
+      
+  # Viewers.
+  viewer:
+    type: StreamViewer
+    priority: 100.3
+    input_streams: sources,targets,indexed_targets,prediction_sentences
+
+#: pipeline
