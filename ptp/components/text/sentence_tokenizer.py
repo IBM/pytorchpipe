@@ -59,7 +59,6 @@ class SentenceTokenizer(Component):
         self.remove_characters = get_value_list_from_dictionary("remove_characters", self.config)
         self.logger.info("Additional characters that will be removed during preprocessing: {}".format(self.remove_characters))
 
-
         if 'remove_punctuation' in self.preprocessing:
             self.translator = str.maketrans('', '', string.punctuation)
 

@@ -19,6 +19,7 @@ import os
 import yaml
 
 from ptp.utils.app_state import AppState
+from ptp.configuration.configuration_error import ConfigurationError
 
 
 def display_parsing_results(logger, parsed_args, unparsed_args):
@@ -226,7 +227,12 @@ def get_value_list_from_dictionary(key, parameter_dict, accepted_values = []):
     parameter = parameter_dict[key]
     # Preprocess parameter value.
     if (type(parameter) == str):
-        values = parameter.replace(" ","").split(",")
+        if parameter == '':
+            # Return empty list.
+            return []
+        else:
+            # Process and split.
+            values = parameter.replace(" ","").split(",")
     else:
         values = parameter # list
     assert type(values) == list, "Parameter value must be a list"
