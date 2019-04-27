@@ -1,0 +1,162 @@
+# Load config defining problems for training, validation and testing.
+default_configs: vqa_med_2019/default_vqa_med_2019.yml
+
+# Training parameters:
+training:
+  problem:
+    batch_size: 64
+    categories: C4
+    question_preprocessing: lowercase, remove_punctuation, tokenize
+    answer_preprocessing: lowercase, remove_punctuation, tokenize
+  sampler:
+    name: WeightedRandomSampler
+    weights: ~/data/vqa-med/answers.c4.weights.csv
+  dataloader:
+    num_workers: 8
+  # Termination.
+  terminal_conditions:
+    loss_stop: 1.0e-2
+    episode_limit: 1000000
+    epoch_limit: -1
+
+# Validation parameters:
+validation:
+  problem:
+    batch_size: 64
+    categories: C4
+    question_preprocessing: lowercase, remove_punctuation, tokenize
+    answer_preprocessing: lowercase, remove_punctuation, tokenize
+  dataloader:
+    num_workers: 8
+
+pipeline:
+  name: c4_dec_attndecoder
+
+  # Question embeddings
+  question_embeddings:
+    priority: 1.0
+    type: SentenceEmbeddings
+    embeddings_size: 100
+    pretrained_embeddings_file: glove.6B.100d.txt
+    data_folder: ~/data/vqa-med
+    word_mappings_file: questions.all.word.mappings.csv
+    fixed_padding: 10
+    additional_tokens: <EOS>
+    streams:
+      inputs: questions
+      outputs: embedded_questions
+
+  # Target encoding.
+  target_indexer:
+    type: SentenceIndexer
+    priority: 1.1
+    data_folder: ~/data/vqa-med
+    word_mappings_file: answer_words.c4.preprocessed.word.mappings.csv
+    import_word_mappings_from_globals: False
+    export_word_mappings_to_globals: True
+    fixed_padding: 10
+    streams:
+      inputs: answers
+      outputs: indexed_answers
+    globals:
+      vocabulary_size: ans_vocabulary_size
+      word_mappings: ans_word_mappings
+
+  # Single layer GRU Encoder
+  encoder:
+    type: RecurrentNeuralNetwork
+    cell_type: GRU
+    priority: 3
+    initial_state: Trainable
+    hidden_size: 100
+    num_layers: 1
+    use_logsoftmax: False
+    output_last_state: True
+    prediction_mode: Dense
+    ffn_output: False
+    dropout_rate: 0.1
+    streams:
+      inputs: embedded_questions
+      predictions: s2s_encoder_output
+      output_state: s2s_state_output
+    globals:
+      input_size: embeddings_size
+      prediction_size: embeddings_size 
+
+  # Single layer GRU Decoder with attention
+  decoder:
+    type: Attn_Decoder_RNN
+    priority: 4
+    hidden_size: 100
+    use_logsoftmax: False
+    autoregression_length: 10
+    prediction_mode: Dense
+    dropout_rate: 0.1
+    streams:
+      inputs: s2s_encoder_output
+      predictions: s2s_decoder_output
+      input_state: s2s_state_output
+    globals:
+      input_size: embeddings_size
+      prediction_size: embeddings_size 
+
+  # FF, to resize the from the output size of the seq2seq to the size of the target vector
+  ff_resize_s2s_output:
+    type: FeedForwardNetwork 
+    use_logsoftmax: True
+    dimensions: 3
+    priority: 5
+    dropout_rate: 0.1
+    streams:
+      inputs: s2s_decoder_output
+    globals:
+      input_size: embeddings_size
+      prediction_size: ans_vocabulary_size
+
+  # Loss
+  nllloss:
+    type: NLLLoss
+    priority: 6
+    num_targets_dims: 2
+    streams:
+      targets: indexed_answers
+      loss: loss
+
+  # Prediction decoding.
+  prediction_decoder:
+    type: SentenceIndexer
+    priority: 10
+    # Reverse mode.
+    reverse: True
+    # Use distributions as inputs.
+    use_input_distributions: True
+    data_folder: ~/data/vqa-med
+    import_word_mappings_from_globals: True
+    globals:
+      word_mappings: ans_word_mappings
+    streams:
+      inputs: predictions
+      outputs: prediction_sentences
+
+
+  # Statistics.
+  batch_size:
+    type: BatchSizeStatistics
+    priority: 100.0
+
+  bleu:
+    type: BLEUStatistics
+    priority: 100.2
+    globals:
+      word_mappings: ans_word_mappings
+    streams:
+      targets: indexed_answers
+
+      
+  # Viewers.
+  viewer:
+    type: StreamViewer
+    priority: 100.3
+    input_streams: questions,answers,indexed_answers,prediction_sentences
+  
+#: pipeline
