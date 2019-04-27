@@ -231,10 +231,3 @@ class SentenceIndexer(Component, WordMappings):
 
         # Create the returned dict.
         data_dict.extend({self.key_outputs: outputs_list})
-
-    @staticmethod
-    def pad_list(self, l: list, length: int, value = 0):
-        if len(l) < length:
-            l.extend([value]*(length-len(l)))
-        elif len(l) > length:
-            del l[length:]

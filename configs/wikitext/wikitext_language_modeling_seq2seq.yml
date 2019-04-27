@@ -11,7 +11,7 @@ training:
     data_folder: &data_folder ~/data/language_modeling/wikitext-2
     dataset: &dataset wikitext-2
     subset: train
-    sentence_length: 42
+    sentence_length: 50
     batch_size:  64
 
   # optimizer parameters:
@@ -33,7 +33,7 @@ validation:
     data_folder: *data_folder
     dataset: *dataset
     subset: valid
-    sentence_length: 42
+    sentence_length: 50
     batch_size:  64
 
 # Testing parameters:
@@ -43,7 +43,7 @@ testing:
     data_folder: *data_folder
     dataset: *dataset
     subset: test
-    sentence_length: 42
+    sentence_length: 50
     batch_size: 64
 
 pipeline:
@@ -77,15 +77,13 @@ pipeline:
   # LSTM Encoder
   lstm_encoder:
     type: RecurrentNeuralNetwork
-    cell_type: GRU
     priority: 3
     initial_state: Trainable
-    hidden_size: 50
-    num_layers: 1
+    hidden_size: 300
+    num_layers: 3
     use_logsoftmax: False
     output_last_state: True
-    prediction_mode: Dense
-    ffn_output: False
+    prediction_mode: Last
     streams:
       inputs: embedded_sources
       predictions: s2s_encoder_output
@@ -96,17 +94,14 @@ pipeline:
 
   # LSTM Decoder
   lstm_decoder:
-    type: Attn_Decoder_RNN
+    type: RecurrentNeuralNetwork
     priority: 4
-    hidden_size: 50
-    num_layers: 1
+    initial_state: Input
+    hidden_size: 300
+    num_layers: 3
     use_logsoftmax: False
-<<<<<<< Updated upstream
     input_mode: Autoregression_First
     max_autoregression_length: 50
-=======
-    autoregression_length: 42
->>>>>>> Stashed changes
     prediction_mode: Dense
     streams:
       inputs: s2s_encoder_output
