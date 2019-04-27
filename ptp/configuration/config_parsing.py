@@ -30,15 +30,14 @@ def display_globals(logger, globals_dict):
 
     :param globals_dict: Dictionary with globals
     """
-
-    # Log the resulting training configuration.
-    conf_str = 'Final global variables:\n'
-    conf_str += '='*80 + '\n'
+    # Create the string.
+    global_str = 'Final global variables:\n'
+    global_str += '='*80 + '\n'
     for key,value in globals_dict:
-        conf_str += "  {}: {}\n".format(key, value)
-    conf_str += '='*80 + '\n'
-    
-    logger.info(conf_str)
+        global_str += "  {}: {}\n".format(key, value)
+    global_str += '='*80 + '\n'
+    # Display.
+    logger.info(global_str)
 
 
 def display_parsing_results(logger, parsed_args, unparsed_args):
