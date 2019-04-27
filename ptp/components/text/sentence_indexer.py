@@ -131,6 +131,9 @@ class SentenceIndexer(Component, WordMappings):
         # Get inputs to be encoded.
         inputs = data_dict[self.key_inputs]
 
+        # Get index of padding.
+        pad_index = self.word_to_ix['<PAD>']
+
         outputs_list = []
         # Process sentences 1 by 1.
         for sample in inputs:
@@ -147,13 +150,13 @@ class SentenceIndexer(Component, WordMappings):
             # Apply fixed padding to all sequences if requested
             # Otherwise let torch.nn.utils.rnn.pad_sequence handle it and choose a dynamic padding
             if self.fixed_padding > 0:
-                pad_trunc_list(output_sample, self.fixed_padding)
+                pad_trunc_list(output_sample, self.fixed_padding, padding_value=pad_index)
 
             outputs_list.append(self.app_state.LongTensor(output_sample))
 
         # Transform the list of lists to tensor.
         # output = self.app_state.LongTensor(outputs_list)
-        output = torch.nn.utils.rnn.pad_sequence(outputs_list, batch_first=True)
+        output = torch.nn.utils.rnn.pad_sequence(outputs_list, batch_first=True, padding_value=pad_index)
         # Create the returned dict.
         data_dict.extend({self.key_outputs: output})
 

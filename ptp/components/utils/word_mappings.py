@@ -45,9 +45,6 @@ def generate_word_mappings_from_source_files(logger, folder, source_files):
 
     # Dictionary word_to_ix maps each word in the vocab to a unique integer.
     word_to_ix = {}
-    # Add special word <PAD> that we will use that during padding.
-    # As a result, the "real" enumeration will start from 1.
-    word_to_ix['<PAD>'] = 0
 
     for filename in source_files.split(','):
         # filename + path.
@@ -136,7 +133,7 @@ def save_word_mappings_to_csv_file(logger, folder, filename, word_to_ix, fieldna
 
     logger.info("Saved mappings of size {} to file '{}'".format(len(word_to_ix), file_path))
 
-def pad_trunc_list(l: list, length: int, value = 0):
+def pad_trunc_list(l: list, length: int, padding_value = 0):
     """
     Will apply padding / clipping to list to meet requested length.
     Works on the list in-place.
@@ -145,11 +142,11 @@ def pad_trunc_list(l: list, length: int, value = 0):
 
     :param length: Target length
 
-    :param value: Value to fill when padding. Default is int(0).
+    :param padding_value: Value to fill when padding. Default is int(0).
 
     :return: None
     """
     if len(l) < length:
-        l.extend([value]*(length-len(l)))
+        l.extend([padding_value]*(length-len(l)))
     elif len(l) > length:
         del l[length:]

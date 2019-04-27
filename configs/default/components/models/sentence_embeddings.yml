@@ -11,7 +11,8 @@ data_folder: '~/data/'
 source_vocabulary_files: ''
 
 # Additional tokens that will be added to vocabulary (LOADED)
-additional_tokens: ''
+# This list can be extended, but <PAD> is a special token used ALWAYS for padding shorter sequences.
+additional_tokens: '<PAD>'
 
 # File containing word (LOADED)
 word_mappings_file: 'word_mappings.csv'
