@@ -4,6 +4,7 @@ from .key_mappings_facade import KeyMappingsFacade
 from .singleton import SingletonMetaClass
 from .statistics_aggregator import StatisticsAggregator
 from .statistics_collector import StatisticsCollector
+from .termination_condition import TerminationCondition
 
 
 __all__ = [
@@ -13,4 +14,5 @@ __all__ = [
     'SingletonMetaClass',
     'StatisticsAggregator',
     'StatisticsCollector',    
+    'TerminationCondition',
     ]

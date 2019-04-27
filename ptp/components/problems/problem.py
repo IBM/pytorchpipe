@@ -207,13 +207,16 @@ class Problem(Component, Dataset):
         self.curriculum_config = curriculum_config
 
 
-    def curriculum_learning_update_params(self, episode):
+    def curriculum_learning_update_params(self, epoch, episode):
         """
         Updates problem parameters according to curriculum learning.
 
         .. note::
 
             This method can be overwritten in the derived classes.
+
+        :param epoch: Number of the current epoch.
+        :type epoch: int
 
         :param episode: Number of the current episode.
         :type episode: int

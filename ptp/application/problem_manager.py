@@ -154,21 +154,6 @@ class ProblemManager(object):
         signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 
-    def cycle(self, iterable):
-        """
-        Cycle an iterator to prevent its exhaustion.
-        This function is used in the (online) trainer to reuse the same ``DataLoader`` for a number of episodes\
-        > len(dataset)/batch_size.
-
-        :param iterable: iterable.
-        :type iterable: iter
-
-        """
-        while True:
-            for x in iterable:
-                yield x
-
-
     def get_epoch_size(self):
         """
         Compute the number of iterations ('episodes') to run given the size of the dataset and the batch size to cover
