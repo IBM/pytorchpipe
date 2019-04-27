@@ -4,8 +4,7 @@ default_configs: vqa_med_2019/c4_classification/default_c4_classification.yml
 # Training parameters:
 training:
   problem:
-    batch_size: 128
-
+    batch_size: 128    
 # Validation parameters:
 validation:
   problem:

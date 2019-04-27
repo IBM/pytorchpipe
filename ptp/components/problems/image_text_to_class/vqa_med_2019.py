@@ -448,7 +448,7 @@ class VQAMED2019(Problem):
         image_transformations_list = []
         # Optional.
         if 'random_affine' in self.image_preprocessing:
-            rotate = (-45, 135)
+            rotate = (-45, 80)
             translate = (0.05, 0.25)
             scale = (0.5, 2)
             image_transformations_list.append(transforms.RandomAffine(rotate, translate, scale))
@@ -511,9 +511,10 @@ class VQAMED2019(Problem):
         Determines whether this is binary (yes/no) type of question.
         """
         yes_no_starters = ['is','was','are','does']
-        tokens = qtext.split(' ')
-        first_token = tokens[0]
-        if first_token in yes_no_starters and ('or' not in tokens):
+        if 'tokenize' not in self.question_preprocessing:
+            qtext = qtext.split(' ')
+        first_token = qtext[0]
+        if first_token in yes_no_starters and ('or' not in qtext):
             return True
         return False
 
