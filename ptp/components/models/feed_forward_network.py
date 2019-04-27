@@ -61,7 +61,9 @@ class FeedForwardNetwork(Model):
         self.logger.info("Initializing softmax classifier with input size = {} and prediction size = {}".format(self.input_size, self.prediction_size))
 
         # Create the model.
-        self.layers = torch.nn.ModuleList()
+        modules = []
+        # Retrieve dropout rate value - if set, will put dropout between every layer.
+        dropout_rate = self.config["dropout_rate"]
 
         # Retrieve number of hidden layers, along with their sizes (numbers of hidden neurons from configuration).
         try:
@@ -71,34 +73,34 @@ class FeedForwardNetwork(Model):
                 input_dim = self.input_size
                 for hidden_dim in hidden_sizes:
                     # Add linear layer.
-                    self.layers.append( torch.nn.Linear(input_dim, hidden_dim) )
+                    modules.append( torch.nn.Linear(input_dim, hidden_dim) )
+                    # Add activation and dropout.
+                    modules.append( torch.nn.ReLU() )
+                    if (dropout_rate > 0):
+                        modules.append( torch.nn.Dropout(dropout_rate) )
+                    # Remember size.
                     input_dim = hidden_dim
 
-                # Create activation layer.
-                self.activation = torch.nn.ReLU()
-
-                # Retrieve dropout rate value - if set, will put dropout between every layer.
-                dropout_rate = self.config["dropout_rate"]
-
-                # Create dropout layer.
-                self.dropout = torch.nn.Dropout(dropout_rate)
-
                 # Add output layer.
-                self.layers.append( torch.nn.Linear(input_dim, self.prediction_size) )
+                modules.append( torch.nn.Linear(input_dim, self.prediction_size) )
 
-                self.logger.info("Created {} hidden layers".format(len(self.layers)-1))
+                self.logger.info("Created {} hidden layers".format(len(modules)-1))
 
             else:
                 raise ConfigurationError("SoftmaxClassifier 'hidden_sizes' must contain a list with numbers of neurons in hidden layers (currently {})".format(self.hidden_sizes))
 
         except KeyError:
             # Not present, in that case create a simple classifier with 1 linear layer.
-            self.layers.append( torch.nn.Linear(self.input_size, self.prediction_size) )
+            modules.append( torch.nn.Linear(self.input_size, self.prediction_size) )
         
         # Create the final non-linearity.
         self.use_logsoftmax = self.config["use_logsoftmax"]
         if self.use_logsoftmax:
-            self.log_softmax = torch.nn.LogSoftmax(dim=1)
+            modules.append( torch.nn.LogSoftmax(dim=1) )
+
+        # Finally create the sequential model out of those modules.
+        self.layers = torch.nn.Sequential(*modules)
+
 
 
     def input_data_definitions(self):
@@ -144,19 +146,8 @@ class FeedForwardNetwork(Model):
         origin_shape = x.shape
         x = x.contiguous().view(-1, origin_shape[-1])
 
-        # Propagate inputs through all but last layer.
-        for layer in self.layers[:-1]:
-            x = layer(x)
-            # Apply activation and dropout.
-            x = self.activation(x)
-            x = self.dropout(x)
-
-        # Propagate activations through the last (output) layer.
-        x = self.layers[-1](x)
-
-        # Log softmax.
-        if self.use_logsoftmax:
-            x = self.log_softmax(x)
+        # Propagate inputs through all layers and activations.
+        x = self.layers(x)
 
         # Restore the input dimensions but the last one (as it's been resized by the FFN)
         x = x.view(*origin_shape[0:self.dimensions-1], -1)

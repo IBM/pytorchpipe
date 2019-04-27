@@ -8,6 +8,9 @@
 # Default: 0 (means that it is turned off)
 dropout_rate: 0
 
+# Number of hidden layers, along with their sizes (numbers of neurons) (LOADED)
+hidden_sizes: [256, 256]
+
 # Size of the output of g_theta network/output after concatenation (LOADED)
 output_size: 256
 
