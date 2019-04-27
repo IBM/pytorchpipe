@@ -4,10 +4,10 @@ default_configs: vqa_med_2019/c2_classification/default_c2_classification.yml
 # Training parameters:
 training:
   problem:
-    batch_size: 16
+    batch_size: 64
 validation:
   problem:
-    batch_size: 16
+    batch_size: 64
 
 pipeline:
   name: c2_classification_all_rnn_vgg16_relational_net
