@@ -24,6 +24,7 @@ from torch.utils.data import DataLoader
 
 import ptp
 
+import ptp.utils.logger as logging
 from ptp.utils.app_state import AppState
 from ptp.configuration.configuration_error import ConfigurationError
 from ptp.application.component_factory import ComponentFactory
@@ -51,8 +52,8 @@ class ProblemManager(object):
         # Get access to AppState: for command line args, globals etc.
         self.app_state = AppState()
 
-        # Initialize the logger.
-        self.logger = logging.getLogger(name)
+        # Initialize logger.
+        self.logger = logging.initialize_logger(self.name)        
 
         # Single batch that will be used for validation (for validation problem manager).
         self.batch = None

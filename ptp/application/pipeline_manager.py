@@ -46,7 +46,8 @@ class PipelineManager(object):
         self.name = name
         self.config = config
         self.app_state = AppState()
-        self.logger = logging.initialize_logger(name)
+        # Initialize logger.
+        self.logger = logging.initialize_logger(self.name)        
 
         # Set initial values of all pipeline elements.
         # Empty list of all components, sorted by their priorities.

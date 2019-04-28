@@ -44,8 +44,6 @@ class Component(abc.ABC):
 
         - initializes the logger.
 
-            >>> self.logger = logging.getLogger(self.name)        
-
         - sets the access to ``AppState``: for dtype, visualization flag etc.
 
             >>> self.app_state = AppState()
