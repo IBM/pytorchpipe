@@ -42,6 +42,10 @@ question_preprocessing: lowercase, remove_punctuation
 # Accepted formats: a,b,c or [a,b,c]
 answer_preprocessing: none
 
+# When filename is not empty, problem will calculate weights associated with all samples
+# by looking at the distribution of all answers from all loaded samples (LOADED)
+# Those weights can be next used by weighted samplers (e.g. kFoldWeightedSampler)
+export_sample_weights: ''
 
 streams:
   ####################################################################

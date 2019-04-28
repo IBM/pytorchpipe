@@ -3,20 +3,28 @@ training:
   problem:
     type: &p_type VQAMED2019
     data_folder: &data_folder ~/data/vqa-med
-    split: training
+    split: training_validation
     resize_image: &resize_image [224, 224]
-    batch_size:  32
+    batch_size:  64
 
-  # optimizer parameters:
+  # Default sampler during training.
+  sampler:
+    name: kFoldWeightedRandomSampler
+    folds: 5
+  # Use four workers for loading images.
+  dataloader:
+    num_workers: 4
+
+  # Optimizer parameters:
   optimizer:
     name: Adam
     lr: 0.0001
 
-  # settings parameters
+  # Terminal conditions:
   terminal_conditions:
     loss_stop: 1.0e-2
     episode_limit: 10000
-    epoch_limit: 100
+    epoch_limit: -1
 
 # Validation parameters:
 validation:
@@ -24,9 +32,17 @@ validation:
   problem:
     type: *p_type
     data_folder: *data_folder
-    split: validation
+    split: training_validation
     resize_image: *resize_image     
-    batch_size:  32
+    batch_size:  64
+  # Default sampler during validation.
+  sampler:
+    name: kFoldRandomSampler
+    folds: 5
+  # Use four workers for loading images.
+  dataloader:
+    num_workers: 4
+
 
 # Testing parameters:
 testing:

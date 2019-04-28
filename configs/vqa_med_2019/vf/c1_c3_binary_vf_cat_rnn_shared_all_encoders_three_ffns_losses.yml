@@ -5,18 +5,14 @@ default_configs: vqa_med_2019/default_vqa_med_2019.yml
 training:
   problem:
     categories: C1,C3
+    export_sample_weights: ~/data/vqa_med/answers.c1_c3_binary_yn.weights.csv
   sampler:
-    name: WeightedRandomSampler
     weights: ~/data/vqa-med/answers.c1_c3_binary_yn.weights.csv
-  dataloader:
-    num_workers: 4
 
 # Validation parameters:
 validation:
   problem:
     categories: C1,C3
-  dataloader:
-    num_workers: 4
 
 
 pipeline:

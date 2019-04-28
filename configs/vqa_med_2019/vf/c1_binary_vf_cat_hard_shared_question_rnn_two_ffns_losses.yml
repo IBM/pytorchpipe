@@ -5,9 +5,11 @@ default_configs: vqa_med_2019/default_vqa_med_2019.yml
 training:
   problem:
     categories: C1
+    export_sample_weights: ~/data/vqa-med/answers.c1.weights.csv
   sampler:
-    name: WeightedRandomSampler
+    name: kFoldWeightedRandomSampler
     weights: ~/data/vqa-med/answers.c1.weights.csv
+    folds: 5
   dataloader:
     num_workers: 4
 
@@ -15,6 +17,9 @@ training:
 validation:
   problem:
     categories: C1
+  sampler:
+    name: kFoldRandomSampler
+    folds: 5
   dataloader:
     num_workers: 4
 

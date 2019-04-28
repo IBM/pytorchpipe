@@ -32,7 +32,9 @@ from torchvision import transforms
 from ptp.components.problems.problem import Problem
 from ptp.data_types.data_definition import DataDefinition
 
+from ptp.components.utils.io import save_nparray_to_csv_file
 from ptp.configuration.config_parsing import get_value_list_from_dictionary
+
 
 class VQAMED2019(Problem):
     """
@@ -246,6 +248,50 @@ class VQAMED2019(Problem):
             self.dataset[0][self.key_answers]
             ))
 
+        # Check if we want the problem to calculate and export the weights.
+        self.export_sample_weights = self.config["export_sample_weights"]
+        if self.export_sample_weights != '':
+            self.calculate_and_export_sample_weights(self.export_sample_weights)
+
+
+    def output_data_definitions(self):
+        """
+        Function returns a dictionary with definitions of output data produced the component.
+
+        :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
+        """
+        # Add all "standard" streams.
+        d = {
+            self.key_indices: DataDefinition([-1, 1], [list, int], "Batch of sample indices [BATCH_SIZE] x [1]"),
+            self.key_images: DataDefinition([-1, self.depth, self.height, self.width], [torch.Tensor], "Batch of images [BATCH_SIZE x IMAGE_DEPTH x IMAGE_HEIGHT x IMAGE_WIDTH]"),
+            self.key_image_ids: DataDefinition([-1, 1], [list, str], "Batch of image names, each being a single word [BATCH_SIZE] x [STRING]"),
+            self.key_image_sizes: DataDefinition([-1, 2], [torch.Tensor], "Batch of original sizes (height, width) of images [BATCH_SIZE x 2]"),
+            self.key_category_ids: DataDefinition([-1], [torch.Tensor], "Batch of target category indices, each being a single index [BATCH_SIZE]"),
+            self.key_category_names: DataDefinition([-1, 1], [list, str], "Batch of category target names, each being a single word [BATCH_SIZE] x [STRING]"),
+            }
+
+        # Add stream with questions.
+        if 'tokenize' in self.question_preprocessing:
+            d[self.key_questions] = DataDefinition([-1, -1, 1], [list, list, str], "Batch of questions, each being a list of words [BATCH_SIZE] x [SEQ_LEN] x [STRING]")
+        else:
+            d[self.key_questions] = DataDefinition([-1, 1], [list, str], "Batch of questions, each being a string consisting of many words [BATCH_SIZE] x [STRING]")
+
+        # Add stream with answers.
+        if 'tokenize' in self.answer_preprocessing:
+            d[self.key_answers] = DataDefinition([-1, -1, 1], [list, list, str], "Batch of target answers, each being a list of words [BATCH_SIZE] x [SEQ_LEN] x [STRING]")
+        else:
+            d[self.key_answers]= DataDefinition([-1, 1], [list, str], "Batch of target answers, each being a string consisting of many words [BATCH_SIZE] x [STRING]")
+        return d
+
+
+    def __len__(self):
+        """
+        Returns the "size" of the "problem" (total number of samples).
+
+        :return: The size of the problem.
+        """
+        return len(self.dataset)
+
 
     def filter_sources(self, source_files, source_image_folders, source_categories):
         """
@@ -277,43 +323,59 @@ class VQAMED2019(Problem):
         return source_files, source_image_folders, source_categories
 
 
-    def __len__(self):
+    def calculate_and_export_sample_weights(self, filename):
         """
-        Returns the "size" of the "problem" (total number of samples).
+        Method calculates and export weights associated with samples by looking at distribution of answers.
 
-        :return: The size of the problem.
+        :param filename: Name of the file (optionally with path) that the sample weights will be saved to.
         """
-        return len(self.dataset)
+        # 0. Create "answers dataset" object for faster computations.
+        answers_dataset = []
+        for sample in self.dataset:
+            if ('tokenize' in self.answer_preprocessing):
+                # Need to create one string.
+                answers_dataset.append(' '.join(sample[self.key_answers]))
+            else:
+                answers_dataset.append(sample[self.key_answers])
 
+        
+        # 1. Iterate over all samples in dataset and create "answer" vocabulary.
+        answer_to_ix = {}
+        for answer in answers_dataset:
+            # If new token.
+            if answer not in answer_to_ix:
+                answer_to_ix[answer] = len(answer_to_ix)
+                #print("Adding '{}': {}".format(answer, len(answer_to_ix)-1) )
 
-    def output_data_definitions(self):
-        """
-        Function returns a dictionary with definitions of output data produced the component.
+        # 2. Count the samples having the same answer.
+        class_sample_count = [0] * len(answer_to_ix)
+        for answer in answers_dataset:
+            # Increment the adequate class counter.
+            class_sample_count[answer_to_ix[answer]] += 1
 
-        :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
-        """
-        # Add all "standard" streams.
-        d = {
-            self.key_indices: DataDefinition([-1, 1], [list, int], "Batch of sample indices [BATCH_SIZE] x [1]"),
-            self.key_images: DataDefinition([-1, self.depth, self.height, self.width], [torch.Tensor], "Batch of images [BATCH_SIZE x IMAGE_DEPTH x IMAGE_HEIGHT x IMAGE_WIDTH]"),
-            self.key_image_ids: DataDefinition([-1, 1], [list, str], "Batch of image names, each being a single word [BATCH_SIZE] x [STRING]"),
-            self.key_image_sizes: DataDefinition([-1, 2], [torch.Tensor], "Batch of original sizes (height, width) of images [BATCH_SIZE x 2]"),
-            self.key_category_ids: DataDefinition([-1], [torch.Tensor], "Batch of target category indices, each being a single index [BATCH_SIZE]"),
-            self.key_category_names: DataDefinition([-1, 1], [list, str], "Batch of category target names, each being a single word [BATCH_SIZE] x [STRING]"),
-            }
+        # 3. Calculate the weights.
+        weights = np.asarray([1.0 / count if count > 0 else 0.0 for count in class_sample_count], dtype=np.float64)
+        # Normalize to 1.
+        sum_w = sum(weights)
+        weights = weights/sum_w
+        #print(weights)
 
-        # Add stream with questions.
-        if 'tokenize' in self.question_preprocessing:
-            d[self.key_questions] = DataDefinition([-1, -1, 1], [list, list, str], "Batch of questions, each being a list of words [BATCH_SIZE] x [SEQ_LEN] x [STRING]")
+        # 4. Assign weights to samples.
+        sample_weights = np.array([weights[answer_to_ix[answer]] for answer in answers_dataset])
+        #print(sample_weights)
+        #print(len(sample_weights))
+        
+        # Process filename.
+        (path, name) = os.path.split(filename)
+        if path == '':
+            # Use default problem folder as destination.
+            path = self.data_folder
         else:
-            d[self.key_questions] = DataDefinition([-1, 1], [list, str], "Batch of questions, each being a string consisting of many words [BATCH_SIZE] x [STRING]")
+            path = os.path.expanduser(path)
 
-        # Add stream with answers.
-        if 'tokenize' in self.answer_preprocessing:
-            d[self.key_answers] = DataDefinition([-1, -1, 1], [list, list, str], "Batch of target answers, each being a list of words [BATCH_SIZE] x [SEQ_LEN] x [STRING]")
-        else:
-            d[self.key_answers]= DataDefinition([-1, 1], [list, str], "Batch of target answers, each being a string consisting of many words [BATCH_SIZE] x [STRING]")
-        return d
+        # Export weights to file.
+        save_nparray_to_csv_file(path, name, sample_weights)
+        self.logger.info("Generated weights for {} samples and exported them to {}".format(len(sample_weights), os.path.join(path, name)))
 
 
     def preprocess_text(self, text, lowercase = False, remove_punctuation = False, tokenize = False, remove_stop_words = False):
