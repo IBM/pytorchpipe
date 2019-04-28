@@ -112,37 +112,91 @@ class VQAMED2019(Problem):
 
         # Set split-dependent data.
         if self.config['split'] == 'training':
-            self.split_folder = os.path.join(self.data_folder, "ImageClef-2019-VQA-Med-Training")
-            self.image_folder = os.path.join(self.split_folder, 'Train_images')
+            # Training split folder.
+            split_folder = os.path.join(self.data_folder, "ImageClef-2019-VQA-Med-Training")
             # Set source files.
             source_files = [
-                "QAPairsByCategory/C1_Modality_train.txt",
-                "QAPairsByCategory/C2_Plane_train.txt",
-                "QAPairsByCategory/C3_Organ_train.txt",
-                "QAPairsByCategory/C4_Abnormality_train.txt"
+                os.path.join(split_folder,"QAPairsByCategory/C1_Modality_train.txt"),
+                os.path.join(split_folder,"QAPairsByCategory/C2_Plane_train.txt"),
+                os.path.join(split_folder,"QAPairsByCategory/C3_Organ_train.txt"),
+                os.path.join(split_folder,"QAPairsByCategory/C4_Abnormality_train.txt")
                 ]
+            # Set image folders.
+            source_image_folders = [os.path.join(split_folder, 'Train_images')] * 4
+
             # Set the categories associated with each of those files.
             source_categories = [0, 1, 2, 3]
 
             # Filter lists taking into account configuration.
-            source_files, source_categories = self.filter_sources(source_files, source_categories)
+            source_files, source_image_folders, source_categories = self.filter_sources(source_files, source_image_folders, source_categories)
 
         elif self.config['split'] == 'validation':
-            self.split_folder = os.path.join(self.data_folder, "ImageClef-2019-VQA-Med-Validation")
-            self.image_folder = os.path.join(self.split_folder, 'Val_images')
+            # Validation split folder.
+            split_folder = os.path.join(self.data_folder, "ImageClef-2019-VQA-Med-Validation")
+
             # Set source files.
             source_files = [
-                "QAPairsByCategory/C1_Modality_val.txt",
-                "QAPairsByCategory/C2_Plane_val.txt",
-                "QAPairsByCategory/C3_Organ_val.txt",
-                "QAPairsByCategory/C4_Abnormality_val.txt"
+                os.path.join(split_folder,"QAPairsByCategory/C1_Modality_val.txt"),
+                os.path.join(split_folder,"QAPairsByCategory/C2_Plane_val.txt"),
+                os.path.join(split_folder,"QAPairsByCategory/C3_Organ_val.txt"),
+                os.path.join(split_folder,"QAPairsByCategory/C4_Abnormality_val.txt")
                 ]
+
+            # Set image folders.
+            source_image_folders = [os.path.join(split_folder, 'Val_images')] * 4
+
             # Set the categories associated with each of those files.
             source_categories = [0, 1, 2, 3]
 
             # Filter lists taking into account configuration.
-            source_files, source_categories = self.filter_sources(source_files, source_categories)
-        # else: # TODO
+            source_files, source_image_folders, source_categories = self.filter_sources(source_files, source_image_folders, source_categories)
+
+        elif self.config['split'] == 'training_validation':
+            # This split takes both training and validation and assumes utilization of kFoldWeightedRandomSampler.
+
+            # 1. Training split folder.
+            split_folder = os.path.join(self.data_folder, "ImageClef-2019-VQA-Med-Training")
+            # Set source files.
+            source_files = [
+                os.path.join(split_folder,"QAPairsByCategory/C1_Modality_train.txt"),
+                os.path.join(split_folder,"QAPairsByCategory/C2_Plane_train.txt"),
+                os.path.join(split_folder,"QAPairsByCategory/C3_Organ_train.txt"),
+                os.path.join(split_folder,"QAPairsByCategory/C4_Abnormality_train.txt")
+                ]
+            # Set image folders.
+            source_image_folders = [os.path.join(split_folder, 'Train_images')] * 4
+
+            # Set the categories associated with each of those files.
+            source_categories = [0, 1, 2, 3]
+
+            # Filter lists taking into account configuration.
+            training_source_files, training_source_image_folders, training_source_categories = self.filter_sources(source_files, source_image_folders, source_categories)
+
+            #2.  Validation split folder.
+            split_folder = os.path.join(self.data_folder, "ImageClef-2019-VQA-Med-Validation")
+
+            # Set source files.
+            source_files = [
+                os.path.join(split_folder,"QAPairsByCategory/C1_Modality_val.txt"),
+                os.path.join(split_folder,"QAPairsByCategory/C2_Plane_val.txt"),
+                os.path.join(split_folder,"QAPairsByCategory/C3_Organ_val.txt"),
+                os.path.join(split_folder,"QAPairsByCategory/C4_Abnormality_val.txt")
+                ]
+
+            # Set image folders.
+            source_image_folders = [os.path.join(split_folder, 'Val_images')] * 4
+
+            # Set the categories associated with each of those files.
+            source_categories = [0, 1, 2, 3]
+
+            # Filter lists taking into account configuration.
+            valid_source_files, valid_source_image_folders, valid_source_categories = self.filter_sources(source_files, source_image_folders, source_categories)
+
+            # 3. Merge lists.
+            source_files = [*training_source_files, *valid_source_files]
+            source_image_folders = [*training_source_image_folders, *valid_source_image_folders]
+            source_categories  = [*training_source_categories, *valid_source_categories]
+        # else: # Test set. # TODO
 
         # Get image preprocessing.
         self.image_preprocessing = get_value_list_from_dictionary(
@@ -181,7 +235,7 @@ class VQAMED2019(Problem):
 
         # Load dataset.
         self.logger.info("Loading dataset from files:\n {}".format(source_files))
-        self.dataset = self.load_dataset(source_files, source_categories)
+        self.dataset = self.load_dataset(source_files, source_image_folders, source_categories)
         self.logger.info("Loaded dataset consisting of {} samples".format(len(self.dataset)))
 
         # Display exemplary sample.
@@ -193,11 +247,13 @@ class VQAMED2019(Problem):
             ))
 
 
-    def filter_sources(self, source_files, source_categories):
+    def filter_sources(self, source_files, source_image_folders, source_categories):
         """
         Loads the dataset from one or more files.
 
         :param source_files: List of source files.
+
+        :param source_image_folders: List of folders containing image files.
 
         :param source_categories: List of categories associated with each of those files. (<UNK> unknown)
 
@@ -217,8 +273,8 @@ class VQAMED2019(Problem):
             else:
                 use_files[categs[cat]] = True
         # Filter.
-        _, source_files, source_categories = zip(*(filter(lambda x: x[0], zip(use_files, source_files,source_categories))))
-        return source_files, source_categories
+        _, source_files, source_image_folders, source_categories = zip(*(filter(lambda x: x[0], zip(use_files, source_files, source_image_folders, source_categories))))
+        return source_files, source_image_folders, source_categories
 
 
     def __len__(self):
@@ -364,11 +420,13 @@ class VQAMED2019(Problem):
         return result
 
 
-    def load_dataset(self, source_files, source_categories):
+    def load_dataset(self, source_files, source_image_folders, source_categories):
         """
         Loads the dataset from one or more files.
 
         :param source_files: List of source files.
+
+        :param source_image_folders: List of folders containing image files.
 
         :param source_categories: List of categories associated with each of those files. (<UNK> unknown)
         """
@@ -376,9 +434,8 @@ class VQAMED2019(Problem):
         dataset = []
 
         # Process files with categories.
-        for data_file, category in zip(source_files, source_categories):
+        for data_file, image_folder, category in zip(source_files, source_image_folders, source_categories):
             # Set absolute path to file.
-            data_file = os.path.join(self.split_folder, data_file)
             self.logger.info('Loading dataset from {} (category: {})...'.format(data_file, category))
             # Load file content using '|' separator.
             df = pd.read_csv(filepath_or_buffer=data_file, sep='|',header=None,
@@ -411,7 +468,9 @@ class VQAMED2019(Problem):
 
                 # Add record to dataset.
                 dataset.append({
+                    # Image name and path leading to it.
                     self.key_image_ids: row[self.key_image_ids],
+                    "image_folder": image_folder,
                     self.key_questions: preprocessed_question,
                     self.key_answers: preprocessed_answer,
                     # Add category.
@@ -439,9 +498,10 @@ class VQAMED2019(Problem):
 
         # Load the adequate image.
         img_id = item[self.key_image_ids]
+        img_folder = item["image_folder"]
         extension = '.jpg'
         # Load the image.
-        img = Image.open(os.path.join(self.image_folder, img_id + extension))
+        img = Image.open(os.path.join(img_folder, img_id + extension))
         # Get its width and height.
         width, height = img.size
 

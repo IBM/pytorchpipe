@@ -8,7 +8,7 @@
 data_folder: '~/data/vqa-med'
 
 # Defines the set (split) that will be used (LOADED)
-# Options: training | validation | test
+# Options: training | validation | training_validation | test
 split: training
 
 # Defines the categoriees that will be used (LOADED)
