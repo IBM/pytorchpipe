@@ -161,7 +161,7 @@ class RecurrentNeuralNetwork(Model):
             # Create dropout layer.
             self.dropout = torch.nn.Dropout(dropout_rate)
             # Create the layer.
-            self.activation2output_layer = torch.nn.Linear(self.hidden_size, self.prediction_size)
+            self.activation2output = torch.nn.Linear(self.hidden_size, self.prediction_size)
         
         # Setup for the final non-linearity.
         self.use_logsoftmax = self.config["use_logsoftmax"]
@@ -187,7 +187,7 @@ class RecurrentNeuralNetwork(Model):
             return self.init_hidden.expand(self.num_layers, batch_size, self.hidden_size).contiguous()
 
 
-    def activation2output(self, activations):
+    def activation_to_output_pass(self, activations):
         """
         Function propagates hidden state "activations" through output layer (that pass can be optionally turned off).
         """
@@ -202,7 +202,7 @@ class RecurrentNeuralNetwork(Model):
             output = output.contiguous().view(-1, shape[2])
 
             # Propagate data through the output layer [BATCH_SIZE * SEQ_LEN x PREDICTION_SIZE]
-            output = self.activation2output_layer(output)
+            output = self.activation2output(output)
             #output = output.unsqueeze(1)
 
             # Reshape back to 3D tensor [BATCH_SIZE x SEQ_LEN x PREDICTION_SIZE]
@@ -298,13 +298,13 @@ class RecurrentNeuralNetwork(Model):
         if "Autoregression" in self.input_mode: 
             # Autoregressive mode - feed back outputs in the input
             activations_partial, hidden = self.rnn_cell(inputs, hidden)
-            activations_partial = self.activation2output(activations_partial)
+            activations_partial = self.activation_to_output_pass(activations_partial)
             activations += [activations_partial]
 
             # Feed back the outputs iteratively
             for i in range(self.max_autoregression_length - 1):
                 activations_partial, hidden = self.rnn_cell(activations_partial, hidden)
-                activations_partial = self.activation2output(activations_partial)
+                activations_partial = self.activation_to_output_pass(activations_partial)
                 # Add the single step output into list
                 if self.prediction_mode == "Dense":
                     activations += [activations_partial]
@@ -330,7 +330,7 @@ class RecurrentNeuralNetwork(Model):
 
             if self.prediction_mode == "Dense":
                 # Pass every activation through the output layer.
-                outputs = self.activation2output(activations)
+                outputs = self.activation_to_output_pass(activations)
                 
                 # Log softmax - along PREDICTION dim.
                 if self.use_logsoftmax:
@@ -339,7 +339,7 @@ class RecurrentNeuralNetwork(Model):
                 # Add predictions to datadict.
                 data_dict.extend({self.key_predictions: outputs})
             elif self.prediction_mode == "Last":
-                outputs = self.activation2output(activations.contiguous()[:, -1, :].unsqueeze(1))
+                outputs = self.activation_to_output_pass(activations.contiguous()[:, -1, :].unsqueeze(1))
                 outputs = outputs.squeeze(1)
 
                 # Log softmax - along PREDICTION dim.
