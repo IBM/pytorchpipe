@@ -1,6 +1,7 @@
 from .app_state import AppState
 from .globals_facade import GlobalsFacade
 from .key_mappings_facade import KeyMappingsFacade
+from .samplers import kFoldRandomSampler
 from .singleton import SingletonMetaClass
 from .statistics_aggregator import StatisticsAggregator
 from .statistics_collector import StatisticsCollector
@@ -11,6 +12,7 @@ __all__ = [
     'AppState',
     'GlobalsFacade',
     'KeyMappingsFacade',
+    'kFoldRandomSampler',
     'SingletonMetaClass',
     'StatisticsAggregator',
     'StatisticsCollector',    
