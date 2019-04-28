@@ -86,10 +86,11 @@ class kFoldRandomSampler(Sampler):
             else:
                 # Concatenate two subsets of indices.
                 first_0 = 0
+                # All samples aside of those between last_0 and first_1.
                 last_0 = fold*fold_size
                 first_1 = (fold+1)*fold_size
-                # Assume that the last fold might be "smaller".
-                last_1 = min((fold+2)*fold_size,self.num_samples)
+                # Take the rest.
+                last_1 = self.num_samples
                 # Create indices set from two subsets.
                 return [*all_indices[first_0:last_0], *all_indices[first_1:last_1]]
         else:
@@ -163,6 +164,7 @@ class kFoldWeightedRandomSampler(kFoldRandomSampler):
 
         # Regenerate indices.
         self.indices = self.regenerate_indices()
+
 
         # Select the corresponging weights.
         weights = torch.take(self.weights, torch.tensor(self.indices))
