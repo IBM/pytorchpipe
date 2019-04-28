@@ -118,6 +118,14 @@ class AppState(metaclass=SingletonMetaClass):
             yield key
 
 
+    def globalitems(self):
+        """
+        Yields global keys.
+        """
+        for key,value in self.__globals.items():
+            yield key,value
+
+
     def __setitem__(self, key, value, override=False):
         """
         Adds global variable. 

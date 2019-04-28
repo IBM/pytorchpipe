@@ -1,0 +1,64 @@
+# Load config defining MNIST problems for training, validation and testing.
+default_configs: mnist/default_mnist.yml
+
+# Training parameters:
+training:
+  problem: 
+    type: MNIST
+    batch_size: &b 64
+    use_train_data: True
+    #resize: [32, 32]
+  # Use k-fold cross-validation random sampler.
+  sampler:
+    name: kFoldRandomSampler
+    folds: 7 # Each with size of 6000
+  # optimizer parameters:
+  optimizer:
+    name: Adam
+    lr: 0.0001
+  # settings parameters
+  terminal_conditions:
+    loss_stop: 0.5
+    episode_limit: 10000
+    epoch_limit: 5
+
+# Validation parameters:
+validation:
+  partial_validation_interval: 500
+  problem:
+    type: MNIST
+    batch_size: *b
+    use_train_data: True  # True because we are splitting the training set to: validation and training
+    #resize: [32, 32]
+  # Use k-fold cross-validation random sampler.
+  sampler:
+    name: kFoldRandomSampler
+    folds: 7 # Each with size of 6000
+
+pipeline:
+  name: mnist_softmax_classifier
+
+  # Reshapes tensors.
+  reshaper:
+    type: ReshapeTensor
+    input_dims: [-1, 1, 28, 28]
+    output_dims: [-1, 784]
+    priority: 1
+    streams:
+      outputs: reshaped_images
+    globals:
+      output_size: reshaped_image_size
+
+  # Classifier.
+  classifier:
+    type: FeedForwardNetwork 
+    priority: 2
+    dropout_rate: 0.1
+    hidden_sizes: [100, 100]
+    streams:
+      inputs: reshaped_images
+    globals:
+      input_size: reshaped_image_size
+      prediction_size: num_classes
+
+#: pipeline

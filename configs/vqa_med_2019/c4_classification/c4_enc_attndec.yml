@@ -8,8 +8,8 @@ training:
     categories: C4
     question_preprocessing: lowercase, remove_punctuation, tokenize
     answer_preprocessing: lowercase, remove_punctuation, tokenize
+    export_sample_weights: ~/data/vqa-med/answers.c4.weights.csv
   sampler:
-    name: WeightedRandomSampler
     weights: ~/data/vqa-med/answers.c4.weights.csv
   dataloader:
     num_workers: 8

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) IBM Corporation 2018
+# Copyright (C) tkornuta, IBM Corporation 2019
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,10 +20,12 @@ __author__ = "Tomasz Kornuta"
 import os
 import numpy as np
 
-import torch.utils.data.sampler
+import torch.utils.data.sampler as pt_samplers
+import ptp.utils.samplers as ptp_samplers 
 
 import ptp.utils.logger as logging
 from ptp.configuration.configuration_error import ConfigurationError
+
 
 class SamplerFactory(object):
     """
@@ -32,7 +34,7 @@ class SamplerFactory(object):
     """
 
     @staticmethod
-    def build(problem, config):
+    def build(problem, config, problem_subset_name):
         """
         Static method returning particular sampler, depending on the name \
         provided in the list of parameters & the specified problem class.
@@ -42,6 +44,8 @@ class SamplerFactory(object):
 
         :param config: Parameters used to instantiate the sampler.
         :type config: :py:class:`ptp.configuration.ConfigInterface`
+
+        :param problem_subset_name: Name of problem subset (and associated ProblemManager object)
 
         ..note::
 
@@ -93,25 +97,18 @@ class SamplerFactory(object):
 
             # Get the class name.
             name = config['name']
+            logger.info('Trying to instantiate the {} sampler object'.format(name))
 
-            # Verify that the specified class is in the samplers package.
-            if name not in dir(torch.utils.data.sampler):
-                raise ConfigurationError("Could not find the specified class '{}' in the samplers package".format(name))
-
-            # Get the actual class.
-            sampler_class = getattr(torch.utils.data.sampler, name)
-
-            # Ok, proceed.
-            logger.info('Loading the {} sampler from {}'.format(name, sampler_class.__module__))
-
-            # Handle "special" case.
-            if sampler_class.__name__ == 'SubsetRandomSampler':
+            ###########################################################################
+            # Handle first special case: SubsetRandomSampler.
+            if name == 'SubsetRandomSampler':
 
                 # Check presence of the name attribute.
                 if 'indices' not in config:
                     raise ConfigurationError("The sampler configuration section does not contain the key 'indices' "
-                                    "required by SubsetRandomSampler.")
+                                    "required by SubsetRandomSampler")
 
+                # Get and process the indices.
                 indices = config['indices']
 
                 # Analyze the type.
@@ -141,36 +138,85 @@ class SamplerFactory(object):
                 if len(digits) == 2:
                     # Create a range.
                     indices = range(int(digits[0]), int(digits[1]))
-                # Else: use them as they are
+                # Else: use them as they are, including single index.
 
                 # Check if indices are within range.
                 if max(indices) >= len(problem):
-                    logger.error("SubsetRandomSampler cannot work properly when indices are out of range ({}) "
-                                 "considering that there are {} samples in the problem!".format(max(indices),
-                                                                                                len(problem)))
-                    exit(-1)
+                    raise ConfigurationError("SubsetRandomSampler cannot work properly when indices are out of range ({}) "
+                        "considering that there are {} samples in the problem".format(
+                            max(indices), len(problem)))
 
                 # Create the sampler object.
-                sampler = sampler_class(indices)
+                sampler = pt_samplers.SubsetRandomSampler(indices)
 
-            elif sampler_class.__name__ == 'WeightedRandomSampler':
+            ###########################################################################
+            # Handle second special case: WeightedRandomSampler.
+            elif name == 'WeightedRandomSampler':
 
-                # Check presence of the name attribute.
+                # Check presence of the attribute.
                 if 'weights' not in config:
                     raise ConfigurationError("The sampler configuration section does not contain the key 'weights' "
-                                    "required by WeightedRandomSampler.")
+                                    "required by WeightedRandomSampler")
 
                 # Load weights from file.
                 weights = np.fromfile(os.path.expanduser(config['weights']), dtype=float, count=-1, sep=',')
-                # Create sampler class.
-                sampler = sampler_class(weights, len(problem), replacement=True)
 
-            elif sampler_class.__name__ in ['BatchSampler', 'DistributedSampler']:
+                # Create sampler class.
+                sampler = pt_samplers.WeightedRandomSampler(weights, len(problem), replacement=True)
+
+            ###########################################################################
+            # Handle third special case: kFoldRandomSampler.
+            elif name == 'kFoldRandomSampler':
+
+                # Check presence of the attribute.
+                if 'folds' not in config:
+                    raise ConfigurationError("The sampler configuration section does not contain the key 'folds' "
+                                    "required by kFoldRandomSampler")
+
+                # Create indices, depending on the fold.
+                folds = config["folds"]
+                if folds < 2:
+                    raise ConfigurationError("kFoldRandomSampler requires  at least two 'folds'")
+
+                # Create the sampler object.
+                sampler = ptp_samplers.kFoldRandomSampler(len(problem), folds, problem_subset_name == 'training')
+
+            ###########################################################################
+            # Handle fourd special case: kFoldWeightedRandomSampler.
+            elif name == 'kFoldWeightedRandomSampler':
+
+                # Check presence of the attribute.
+                if 'weights' not in config:
+                    raise ConfigurationError("The sampler configuration section does not contain the key 'weights' "
+                                    "required by kFoldWeightedRandomSampler")
+
+                # Load weights from file.
+                weights = np.fromfile(os.path.expanduser(config['weights']), dtype=float, count=-1, sep=',')
+
+                # Check presence of the attribute.
+                if 'folds' not in config:
+                    raise ConfigurationError("The sampler configuration section does not contain the key 'folds' "
+                                    "required by kFoldWeightedRandomSampler")
+
+                # Create indices, depending on the fold.
+                folds = config["folds"]
+                if folds < 2:
+                    raise ConfigurationError("kFoldRandomSampler requires  at least two 'folds'")
+
+                # Create the sampler object.
+                sampler = ptp_samplers.kFoldWeightedRandomSampler(weights, len(problem), folds, problem_subset_name == 'training')
+
+            elif name in ['BatchSampler', 'DistributedSampler']:
                 # Sorry, don't support those. Yet;)
-                logger.error("Sampler Factory currently does not support {} sampler. Please pick one of the others "
-                             "or use defaults random sampling.".format(sampler_class.__name__))
-                exit(-2)
+                raise ConfigurationError("Sampler Factory currently does not support the '{}' sampler. Please pick one of the others "
+                             "or use defaults random sampling".format(name))
             else:
+                # Verify that the specified class is in the samplers package.
+                if name not in dir(pt_samplers):
+                    raise ConfigurationError("Could not find the specified class '{}' in the samplers package".format(name))
+
+                # Get the sampler class.
+                sampler_class = getattr(pt_samplers, name)
                 # Create "regular" sampler.
                 sampler = sampler_class(problem)
 
@@ -179,5 +225,5 @@ class SamplerFactory(object):
 
         except ConfigurationError as e:
             logger.error(e)
-            logger.warning("Using default sampling without sampler.")
-            return None
+            # Do not continue with invalid sampler.
+            exit(-1)

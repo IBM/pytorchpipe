@@ -227,9 +227,6 @@ class Trainer(Worker):
             # Initialize curriculum learning - with values from loaded configuration.
             self.training.problem.curriculum_learning_initialize(self.config['training']['curriculum_learning'])
 
-            # Set initial values of curriculum learning.
-            self.curric_done = self.training.problem.curriculum_learning_update_params(0)
-
             # If the 'must_finish' key is not present in config then then it will be finished by default
             self.config['training']['curriculum_learning'].add_default_params({'must_finish': True})
 
@@ -246,10 +243,6 @@ class Trainer(Worker):
         # Build validation problem manager.
         self.validation = ProblemManager('validation', self.config['validation'])
         errors += self.validation.build()
-
-        # Generate a single batch used for partial validation.
-        if errors == 0:
-            self.validation_dict = next(iter(self.validation.dataloader))
 
         ###################### PIPELINE ######################
         

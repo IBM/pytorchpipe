@@ -24,6 +24,8 @@ from torch.utils.data import DataLoader
 
 import ptp
 
+import ptp.utils.logger as logging
+from ptp.utils.app_state import AppState
 from ptp.configuration.configuration_error import ConfigurationError
 from ptp.application.component_factory import ComponentFactory
 from ptp.application.sampler_factory import SamplerFactory
@@ -47,8 +49,14 @@ class ProblemManager(object):
         self.name = name
         self.config = config
 
-        # Initialize the logger.
-        self.logger = logging.getLogger(name)
+        # Get access to AppState: for command line args, globals etc.
+        self.app_state = AppState()
+
+        # Initialize logger.
+        self.logger = logging.initialize_logger(self.name)        
+
+        # Single batch that will be used for validation (for validation problem manager).
+        self.batch = None
 
         # Set a default configuration section for data loader.
         dataloader_config = {
@@ -67,67 +75,6 @@ class ProblemManager(object):
             }
 
         self.config.add_default_params(dataloader_config)
-
-
-    def build(self, log=True):
-        """
-        Method creates a problem on the basis of configuration section.
-
-        :param log: Logs information and the detected errors (DEFAULT: TRUE)
-
-        :return: number of detected errors
-        """
-        try: 
-            # Create component.
-            component, class_obj = ComponentFactory.build("problem", self.config["problem"])
-
-            # Check if class is derived (even indirectly) from Problem.
-            if not ComponentFactory.check_inheritance(class_obj, ptp.Problem.__name__):
-                raise ConfigurationError("Class '{}' is not derived from the Problem class!".format(class_obj.__name__))            
-
-            # Set problem.
-            self.problem = component
-
-            # Try to build the sampler.
-            self.sampler = SamplerFactory.build(self.problem, self.config["sampler"])
-
-            if self.sampler is not None:
-                # Set shuffle to False - REQUIRED as those two are exclusive.
-                self.config['dataloader'].add_config_params({'shuffle': False})
-
-            # build the DataLoader on top of the validation problem
-            self.dataloader = DataLoader(dataset=self.problem,
-                                batch_size=self.config['problem']['batch_size'],
-                                shuffle=self.config['dataloader']['shuffle'],
-                                sampler=self.sampler,
-                                batch_sampler=self.config['dataloader']['batch_sampler'],
-                                num_workers=self.config['dataloader']['num_workers'],
-                                collate_fn=self.problem.collate_fn,
-                                pin_memory=self.config['dataloader']['pin_memory'],
-                                drop_last=self.config['dataloader']['drop_last'],
-                                timeout=self.config['dataloader']['timeout'],
-                                worker_init_fn=self.worker_init_fn)
-
-            # Display sizes.
-            if log:
-                self.logger.info("Problem for '{}' loaded (size: {})".format(self.name, len(self.problem)))
-                if (self.sampler is not None):
-                    self.logger.info("Sampler for '{}' created (size: {})".format(self.name, len(self.sampler)))
-
-            # Ok, success.
-            return 0
-
-        except ConfigurationError as e:
-            if log:
-                self.logger.error("Detected configuration error while creating the problem instance:\n  {}".format(e))
-            # Return error.
-            return 1
-        except KeyError as e:
-            if log:
-                self.logger.error("Detected key error while creating the problem instance: required key {} is missing".format(e))
-            # Return error.
-            return 1
-
 
 
     def worker_init_fn(self, worker_id):
@@ -154,19 +101,79 @@ class ProblemManager(object):
         signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 
-    def cycle(self, iterable):
+    def build(self, log=True):
         """
-        Cycle an iterator to prevent its exhaustion.
-        This function is used in the (online) trainer to reuse the same ``DataLoader`` for a number of episodes\
-        > len(dataset)/batch_size.
+        Method creates a problem on the basis of configuration section.
 
-        :param iterable: iterable.
-        :type iterable: iter
+        :param log: Logs information and the detected errors (DEFAULT: TRUE)
 
+        :return: number of detected errors
         """
-        while True:
-            for x in iterable:
-                yield x
+        try: 
+            # Create component.
+            component, class_obj = ComponentFactory.build("problem", self.config["problem"])
+
+            # Check if class is derived (even indirectly) from Problem.
+            if not ComponentFactory.check_inheritance(class_obj, ptp.Problem.__name__):
+                raise ConfigurationError("Class '{}' is not derived from the Problem class!".format(class_obj.__name__))            
+
+            # Set problem.
+            self.problem = component
+
+            # Try to build the sampler.
+            self.sampler = SamplerFactory.build(self.problem, self.config["sampler"], self.name)
+
+            if self.sampler is not None:
+                # Set shuffle to False - REQUIRED as those two are exclusive.
+                self.config['dataloader'].add_config_params({'shuffle': False})
+
+            # build the DataLoader on top of the validation problem
+            self.dataloader = DataLoader(dataset=self.problem,
+                    batch_size=self.config['problem']['batch_size'],
+                    shuffle=self.config['dataloader']['shuffle'],
+                    sampler=self.sampler,
+                    batch_sampler=self.config['dataloader']['batch_sampler'],
+                    num_workers=self.config['dataloader']['num_workers'],
+                    collate_fn=self.problem.collate_fn,
+                    pin_memory=self.config['dataloader']['pin_memory'],
+                    drop_last=self.config['dataloader']['drop_last'],
+                    timeout=self.config['dataloader']['timeout'],
+                    worker_init_fn=self.worker_init_fn)
+
+            # Display sizes.
+            if log:
+                self.logger.info("Problem for '{}' loaded (size: {})".format(self.name, len(self.problem)))
+                if (self.sampler is not None):
+                    self.logger.info("Sampler for '{}' created (size: {})".format(self.name, len(self.sampler)))
+
+            # Ok, success.
+            return 0
+
+        except ConfigurationError as e:
+            if log:
+                self.logger.error("Detected configuration error while creating the problem instance:\n  {}".format(e))
+            # Return error.
+            return 1
+        except KeyError as e:
+            if log:
+                self.logger.error("Detected key error while creating the problem instance: required key {} is missing".format(e))
+            # Return error.
+            return 1
+
+
+    def __len__(self):
+        """
+        Returns total number of samples, calculated depending on the settings (batch size, dataloader, drop last etc.).
+        """
+        if self.dataloader.drop_last:
+            # if we are supposed to drop the last (incomplete) batch.
+            total_num_samples = len(self.dataloader) * self.dataloader.batch_size
+        elif self.sampler is not None:
+            total_num_samples = len(self.sampler)
+        else:
+            total_num_samples = len(self.problem)
+
+        return total_num_samples
 
 
     def get_epoch_size(self):
@@ -199,17 +206,26 @@ class ProblemManager(object):
         else:
             return (problem_size // self.dataloader.batch_size) + 1
 
-
-    def __len__(self):
+    def initialize_epoch(self):
         """
-        Returns total number of samples, calculated depending on the settings (batch size, dataloader, drop last etc.).
+        Function called to initialize a new epoch.
         """
-        if self.dataloader.drop_last:
-            # if we are supposed to drop the last (incomplete) batch.
-            total_num_samples = len(self.dataloader) * self.dataloader.batch_size
-        elif self.sampler is not None:
-            total_num_samples = len(self.sampler)
-        else:
-            total_num_samples = len(self.problem)
+        epoch = self.app_state.epoch
+        # Update problem settings depending on the epoch.
+        self.problem.initialize_epoch(epoch)
 
-        return total_num_samples
+        # Generate a single batch used for partial validation.
+        if self.name == 'validation':
+            if self.batch is None or (self.sampler is not None and "kFold" in type(self.sampler).__name__):
+                self.batch = next(iter(self.dataloader))
+        # TODO refine partial validation section.
+        # partial_validation:
+        #   interval: 100 # How often to test.
+        #   resample_at_epoch: True # at the beginning of new epoch.
+
+    def finalize_epoch(self):
+        """
+        Function called at the end of an epoch to finalize it.
+        """
+        epoch = self.app_state.epoch
+        self.problem.initialize_epoch(epoch)

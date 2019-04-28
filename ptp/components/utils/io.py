@@ -42,6 +42,7 @@ def save_nparray_to_csv_file(folder, filename, nparray, sep=','):
     os.makedirs(os.path.dirname(os.path.expanduser(folder) +'/'), exist_ok=True)
 
     name = os.path.join(os.path.expanduser(folder), filename)
+    print(name)
     
     # Write array to file, separate elements with commas.
     nparray.tofile(name, sep=sep, format="%s")

@@ -22,6 +22,24 @@ from ptp.utils.app_state import AppState
 from ptp.configuration.configuration_error import ConfigurationError
 
 
+def display_globals(logger, globals_dict):
+    """
+    Displays the global variables.
+
+    :param logger: logger object
+
+    :param globals_dict: Dictionary with globals
+    """
+    # Create the string.
+    global_str = 'Final global variables:\n'
+    global_str += '='*80 + '\n'
+    for key,value in globals_dict:
+        global_str += "  {}: {}\n".format(key, value)
+    global_str += '='*80 + '\n'
+    # Display.
+    logger.info(global_str)
+
+
 def display_parsing_results(logger, parsed_args, unparsed_args):
     """
     Displays the properly & improperly parsed arguments (if any).
@@ -51,9 +69,6 @@ def display_parsing_results(logger, parsed_args, unparsed_args):
         logger.warning(flags_str)
 
 
-    # Display results of parsing - add before export!
-    #self.display_parsing_results(logger)
-
 def export_experiment_configuration_to_yml(logger, log_dir, filename, config_interface_obj, user_confirm):
     """
     Dumps the configuration to ``yaml`` file.
@@ -73,7 +88,6 @@ def export_experiment_configuration_to_yml(logger, log_dir, filename, config_int
 
     """
     # -> At this point, all configuration for experiment is complete.
-
 
     # Log the resulting training configuration.
     conf_str = 'Final parameter registry configuration:\n'
