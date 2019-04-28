@@ -21,6 +21,8 @@ __author__ = "Tomasz Kornuta"
 import torch
 import torchvision.models as models
 
+from ptp.configuration.config_parsing import get_value_from_dictionary
+from ptp.configuration.configuration_error import ConfigurationError
 from ptp.components.models.model import Model
 from ptp.data_types.data_definition import DataDefinition
 
@@ -45,15 +47,16 @@ class TorchVisionWrapper(Model):
         self.key_inputs = self.stream_keys["inputs"]
         self.key_outputs = self.stream_keys["outputs"]
 
+        # Get operation modes.
+        self.return_feature_maps = self.config["return_feature_maps"]
+        pretrained = self.config["pretrained"]
+
         # Get model type from configuration.
-        self.model_type = self.config["model_type"]
+        self.model_type = get_value_from_dictionary("model_type", self.config, "vgg16 | sensenet121 | resnet152 | resnet50".split(" | "))
 
-        if(self.model_type == 'VGG16'):
+        if(self.model_type == 'vgg16'):
             # Get VGG16
-            self.model = models.vgg16(pretrained=True)
-
-            # Check operation mode.
-            self.return_feature_maps = self.config["return_feature_maps"]
+            self.model = models.vgg16(pretrained=pretrained)
 
             if self.return_feature_maps:
                 # Use only the "feature encoder".
@@ -71,25 +74,56 @@ class TorchVisionWrapper(Model):
 
             else:
                 # Use the whole model, but cut/reshape only the last layer.
-                # Retrieve prediction size from globals.
                 self.output_size = self.globals["output_size"]
-                # "Replace" last layer.
+                # "Replace" the last layer.
                 self.model.classifier._modules['6'] = torch.nn.Linear(4096, self.output_size)
 
         elif(self.model_type == 'densenet121'):
             # Get densenet121
-            self.model = models.densenet121(pretrained=True)
-            self.model.classifier = nn.Linear(1024, self.prediction_size)
+            self.model = models.densenet121(pretrained=pretrained)
+
+            if self.return_feature_maps:
+                raise ConfigurationError("'densenet121' doesn't support 'return_feature_maps' mode (yet)")
+
+            # Use the whole model, but cut/reshape only the last layer.
+            self.output_size = self.globals["output_size"]
+            self.model.classifier = torch.nn.Linear(1024, self.output_size)
+
 
         elif(self.model_type == 'resnet152'):
             # Get resnet152
-            self.model = models.resnet152(pretrained=True)
-            self.model.fc = nn.Linear(2048, self.prediction_size)
+            self.model = models.resnet152(pretrained=pretrained)
+
+            if self.return_feature_maps:
+                # Get all modules exluding last (avgpool) and (fc)
+                modules=list(self.model.children())[:-2]
+                self.model=torch.nn.Sequential(*modules)                
+
+                # Height of the returned features tensor (SET)
+                self.feature_maps_height = 7
+                self.globals["feature_maps_height"] = self.feature_maps_height
+                # Width of the returned features tensor (SET)
+                self.feature_maps_width = 7
+                self.globals["feature_maps_width"] = self.feature_maps_width
+                # Depth of the returned features tensor (SET)
+                self.feature_maps_depth = 2048
+                self.globals["feature_maps_depth"] = self.feature_maps_depth
+
+            else:
+                # Use the whole model, but cut/reshape only the last layer.
+                self.output_size = self.globals["output_size"]
+                self.model.fc = torch.nn.Linear(2048, self.output_size)
 
         elif(self.model_type == 'resnet50'):
             # Get resnet50
-            self.model = models.resnet50(pretrained=True)
-            self.model.fc = nn.Linear(2048, self.prediction_size)
+            self.model = models.resnet50(pretrained=pretrained)
+
+            if self.return_feature_maps:
+                raise ConfigurationError("'resnet50' doesn't support 'return_feature_maps' mode (yet)")
+
+            # Use the whole model, but cut/reshape only the last layer.
+            self.output_size = self.globals["output_size"]
+            self.model.fc = torch.nn.Linear(2048, self.output_size)
 
 
     def input_data_definitions(self):
