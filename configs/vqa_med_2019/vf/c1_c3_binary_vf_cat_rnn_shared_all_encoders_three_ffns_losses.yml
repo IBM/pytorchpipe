@@ -5,7 +5,7 @@ default_configs: vqa_med_2019/default_vqa_med_2019.yml
 training:
   problem:
     categories: C1,C3
-    export_sample_weights: ~/data/vqa_med/answers.c1_c3_binary_yn.weights.csv
+    export_sample_weights: ~/data/vqa-med/answers.c1_c3_binary_yn.weights.csv
   sampler:
     weights: ~/data/vqa-med/answers.c1_c3_binary_yn.weights.csv
 
