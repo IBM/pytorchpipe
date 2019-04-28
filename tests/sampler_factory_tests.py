@@ -42,7 +42,7 @@ class TestSamplerFactory(unittest.TestCase):
         config.add_default_params({'name': 'SubsetRandomSampler',
                                 'indices': indices})
         # Create the sampler.
-        sampler = SamplerFactory.build(TestProblemMockup(), config)
+        sampler = SamplerFactory.build(TestProblemMockup(), config, "training")
 
         # Check number of samples.
         self.assertEqual(len(sampler), 20)
@@ -55,7 +55,7 @@ class TestSamplerFactory(unittest.TestCase):
         config.add_default_params({'name': 'SubsetRandomSampler',
                                 'indices': range_str})
         # Create the sampler.
-        sampler = SamplerFactory.build(TestProblemMockup(), config)
+        sampler = SamplerFactory.build(TestProblemMockup(), config, "training")
 
         # Check number of samples.
         self.assertEqual(len(sampler), 20)
@@ -69,7 +69,7 @@ class TestSamplerFactory(unittest.TestCase):
         config.add_default_params({'name': 'SubsetRandomSampler',
                                 'indices': yaml_list})
         # Create the sampler.
-        sampler = SamplerFactory.build(TestProblemMockup(), config)
+        sampler = SamplerFactory.build(TestProblemMockup(), config, "training")
 
         # Check number of samples.
         self.assertEqual(len(sampler), 4)
@@ -88,7 +88,7 @@ class TestSamplerFactory(unittest.TestCase):
         config.add_default_params({'name': 'SubsetRandomSampler',
                                 'indices': filename})
         # Create the sampler.
-        sampler = SamplerFactory.build(TestProblemMockup(), config)
+        sampler = SamplerFactory.build(TestProblemMockup(), config, "training")
 
         # Check number of samples.
         self.assertEqual(len(sampler), 5)
