@@ -97,7 +97,7 @@ class SamplerFactory(object):
 
             # Get the class name.
             name = config['name']
-            logger.info('Trying to instantiathe the {} sampler object'.format(name))
+            logger.info('Trying to instantiate the {} sampler object'.format(name))
 
             ###########################################################################
             # Handle first special case: SubsetRandomSampler.

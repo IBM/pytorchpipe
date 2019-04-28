@@ -7,6 +7,7 @@ from .handshaking_tests import TestHandshaking
 from .pipeline_tests import TestPipeline
 from .problem_tests import TestProblem
 from .sampler_factory_tests import TestSamplerFactory
+from .samplers_tests import TestkFoldRandomSampler, TestkFoldWeightedRandomSampler
 
 __all__ = [
     'TestAppState',
@@ -18,4 +19,6 @@ __all__ = [
     'TestPipeline',
     'TestProblem',
     'TestSamplerFactory',
+    'TestkFoldRandomSampler',
+    'TestkFoldWeightedRandomSampler',
     ]

@@ -78,6 +78,8 @@ class TestkFoldRandomSampler(unittest.TestCase):
         indices = list(iter(sampler))
         # Check number of samples.
         self.assertEqual(len(indices), 13)
+        self.assertEqual(len(sampler), 13)
+        
         # Check presence of all indices.
         for ix in range(7,20):
             self.assertIn(ix, indices)
@@ -122,7 +124,7 @@ class TestkFoldWeightedRandomSampler(unittest.TestCase):
 
         # Test zero-th fold.
         indices = list(iter(sampler))
-        print(indices)
+        #print(indices)
 
         # Check that the rights indices are there.
         for ix in indices:
@@ -130,11 +132,11 @@ class TestkFoldWeightedRandomSampler(unittest.TestCase):
 
         # Test first fold.
         indices = list(iter(sampler))
-        print(indices)
+        #print(indices)
 
         # Check that the rights indices are there.
         for ix in indices:
-            self.assertIn(ix, [4,8])
+            self.assertIn(ix, [4,7])
 
 
 if __name__ == "__main__":
