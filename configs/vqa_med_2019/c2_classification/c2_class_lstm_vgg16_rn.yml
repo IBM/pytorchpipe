@@ -68,8 +68,6 @@ pipeline:
     priority: 3.1
     type: TorchVisionWrapper
     return_feature_maps: True
-    frozen: True
-    freeze: True
     streams:
       inputs: images
       outputs: feature_maps
