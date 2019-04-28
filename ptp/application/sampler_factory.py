@@ -20,10 +20,9 @@ __author__ = "Tomasz Kornuta"
 import os
 import numpy as np
 
-import torch
 import torch.utils.data.sampler as pt_samplers
-
 import ptp.utils.samplers as ptp_samplers 
+
 import ptp.utils.logger as logging
 from ptp.configuration.configuration_error import ConfigurationError
 
@@ -100,6 +99,7 @@ class SamplerFactory(object):
             name = config['name']
             logger.info('Trying to instantiathe the {} sampler object'.format(name))
 
+            ###########################################################################
             # Handle first special case: SubsetRandomSampler.
             if name == 'SubsetRandomSampler':
 
@@ -149,6 +149,7 @@ class SamplerFactory(object):
                 # Create the sampler object.
                 sampler = pt_samplers.SubsetRandomSampler(indices)
 
+            ###########################################################################
             # Handle second special case: WeightedRandomSampler.
             elif name == 'WeightedRandomSampler':
 
@@ -163,7 +164,8 @@ class SamplerFactory(object):
                 # Create sampler class.
                 sampler = pt_samplers.WeightedRandomSampler(weights, len(problem), replacement=True)
 
-            # Handle second special case: kFoldRandomSampler.
+            ###########################################################################
+            # Handle third special case: kFoldRandomSampler.
             elif name == 'kFoldRandomSampler':
 
                 # Check presence of the attribute.
@@ -176,8 +178,33 @@ class SamplerFactory(object):
                 if folds < 2:
                     raise ConfigurationError("kFoldRandomSampler requires  at least two 'folds'")
 
-                # Create the subset random sampler object.
+                # Create the sampler object.
                 sampler = ptp_samplers.kFoldRandomSampler(len(problem), folds, problem_subset_name == 'training')
+
+            ###########################################################################
+            # Handle fourd special case: kFoldWeightedRandomSampler.
+            elif name == 'kFoldWeightedRandomSampler':
+
+                # Check presence of the attribute.
+                if 'weights' not in config:
+                    raise ConfigurationError("The sampler configuration section does not contain the key 'weights' "
+                                    "required by kFoldWeightedRandomSampler")
+
+                # Load weights from file.
+                weights = np.fromfile(os.path.expanduser(config['weights']), dtype=float, count=-1, sep=',')
+
+                # Check presence of the attribute.
+                if 'folds' not in config:
+                    raise ConfigurationError("The sampler configuration section does not contain the key 'folds' "
+                                    "required by kFoldWeightedRandomSampler")
+
+                # Create indices, depending on the fold.
+                folds = config["folds"]
+                if folds < 2:
+                    raise ConfigurationError("kFoldRandomSampler requires  at least two 'folds'")
+
+                # Create the sampler object.
+                sampler = ptp_samplers.kFoldWeightedRandomSampler(weights, len(problem), folds, problem_subset_name == 'training')
 
             elif name in ['BatchSampler', 'DistributedSampler']:
                 # Sorry, don't support those. Yet;)

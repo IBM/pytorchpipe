@@ -171,7 +171,7 @@ class Problem(Component, Dataset):
 
     def finalize_epoch(self, epoch):
         """
-        Function called at the end of an epoch to execute a few tasks.
+        Function called at the end of an epoch to finalize it.
 
         .. note::
 

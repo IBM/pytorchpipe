@@ -22,7 +22,7 @@ import yaml
 import numpy as np
 
 from ptp.configuration.config_interface import ConfigInterface
-from ptp.utils.samplers import kFoldRandomSampler
+from ptp.utils.samplers import kFoldRandomSampler, kFoldWeightedRandomSampler
 
 class TestkFoldRandomSampler(unittest.TestCase):
 
@@ -107,5 +107,35 @@ class TestkFoldRandomSampler(unittest.TestCase):
             self.assertIn(ix, indices)
 
 
-#if __name__ == "__main__":
-#    unittest.main()
+class TestkFoldWeightedRandomSampler(unittest.TestCase):
+
+    def __init__(self, *args, **kwargs):
+        super(TestkFoldWeightedRandomSampler, self).__init__(*args, **kwargs)
+
+    def test_kfold_weighed_random_sampler_current_fold(self):
+        """ Tests the k-fold sampler current_fold mode. """
+        # Non-uniform weights.
+        weights = [0.5]*2 + [0] * 2 + [0.5] + [0] * 2 +[0.5]
+
+        # Create the sampler.
+        sampler = kFoldWeightedRandomSampler(weights, 8, 2, all_but_current_fold=False)
+
+        # Test zero-th fold.
+        indices = list(iter(sampler))
+        print(indices)
+
+        # Check that the rights indices are there.
+        for ix in indices:
+            self.assertIn(ix, [0,1])
+
+        # Test first fold.
+        indices = list(iter(sampler))
+        print(indices)
+
+        # Check that the rights indices are there.
+        for ix in indices:
+            self.assertIn(ix, [4,8])
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -214,7 +214,7 @@ class ProblemManager(object):
         self.problem.initialize_epoch(epoch)
 
         # Generate a single batch used for partial validation.
-        if self.name == 'validation' and self.batch == None:
+        if self.name == 'validation' and self.batch is None:
             self.batch = next(iter(self.dataloader))
 
 
