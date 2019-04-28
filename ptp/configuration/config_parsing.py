@@ -259,3 +259,28 @@ def get_value_list_from_dictionary(key, parameter_dict, accepted_values = []):
 
     # Return list.
     return values
+
+def get_value_from_dictionary(key, parameter_dict, accepted_values = []):
+    """
+    Parses value of the parameter retrieved from a given parameter dictionary using key.
+    Optionally, checks is the values is one of the accepted values.
+
+    :param key: Key of the parameter.
+    :param parameter_dict: Dictionary containing given key (e.g. config or globals)
+    :param accepted_values: List of accepted values (DEFAULT: [])
+
+    :return: List of parsed values
+    """
+    value = parameter_dict[key]
+    assert type(value) == str, "Parameter value must be a string"
+    # Preprocess parameter value.
+    if value == '':
+        return None
+
+    # Test values one by one.
+    if len(accepted_values) > 0:
+        if value not in accepted_values:
+            raise ConfigurationError("One of the values in '{}' is invalid (current: '{}', accepted: {})".format(key, value, accepted_values))
+
+    # Return value.
+    return value

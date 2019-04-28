@@ -5,12 +5,15 @@
 ####################################################################
 
 # Model type (LOADED)
-# Options: VGG16 | densenet121 | resnet152
-model_type: VGG16
+# Options: vgg16 | sensenet121 | resnet152 | resnet50
+model_type: vgg16
 
 # Parameter denoting whether the component will return (flat) prediction
 # or output of last feature layer (LOADED)
 return_feature_maps: False
+
+# Load weights of a model pretrained on ImageNet (LOADED)
+pretrained: True
 
 streams:
   ####################################################################
