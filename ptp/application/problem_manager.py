@@ -215,19 +215,13 @@ class ProblemManager(object):
         self.problem.initialize_epoch(epoch)
 
         # Generate a single batch used for partial validation.
-        if self.name == 'validation' and self.batch is None:
-            self.batch = next(iter(self.dataloader))
-
-
-        # Get single batch that ...
-        if self.name == 'training':
-            pass
-        elif self.name == 'validation':
-            pass
-        else:
-            # We do not need cross-validation for test/challenge/other sets.
-            pass
-
+        if self.name == 'validation':
+            if self.batch is None or (self.sampler is not None and "kFold" in type(self.sampler).__name__):
+                self.batch = next(iter(self.dataloader))
+        # TODO refine partial validation section.
+        # partial_validation:
+        #   interval: 100 # How often to test.
+        #   resample_at_epoch: True # at the beginning of new epoch.
 
     def finalize_epoch(self):
         """
