@@ -22,7 +22,7 @@ import torch
 from time import sleep
 from datetime import datetime
 
-import ptp.configuration.config_parsing as config_parse
+import ptp.configuration.config_parsing as config_parsing
 import ptp.utils.logger as logging
 
 from ptp.workers.worker import Worker
@@ -34,97 +34,88 @@ from ptp.utils.statistics_collector import StatisticsCollector
 from ptp.utils.statistics_aggregator import StatisticsAggregator
 
 
-class Tester(Worker):
+class Processor(Worker):
     """
-    Defines the basic ``Tester``.
+    Defines the basic ``Processor``.
 
-    If defining another type of tester, it should subclass it.
+    If defining another type of Processor, it should subclass it.
 
     """
 
-    def __init__(self, name="Tester"):
+    def __init__(self, name="Processor"):
         """
         Calls the ``Worker`` constructor, adds some additional arguments to parser.
 
-       :param name: Name of the worker (DEFAULT: "Tester").
+       :param name: Name of the worker (DEFAULT: "Processor").
        :type name: str
 
         """ 
         # Call base constructor to set up app state, registry and add default params.
-        super(Tester, self).__init__(name)
+        super(Processor, self).__init__(name)
 
+        self.parser.add_argument(
+            '--set',
+            dest='set',
+            type=str,
+            default="testing",
+            help='Name of the specific set (section containing problem) to be processed (DEFAULT: testing)')
 
     def setup_global_experiment(self):
         """
-        Sets up the global test experiment for the ``Tester``:
+        Sets up the global test experiment for the ``Processor``:
 
-            - Checks that the model to use exists on file:
+            - Checks that the model to use exists
 
-                >>> if not os.path.isfile(flags.model)
+            - Checks that the configuration file exists
 
-            - Checks that the configuration file exists:
-
-                >>> if not os.path.isfile(config_file)
-
-            - Create the configuration:
-
-                >>> self.config.add_config_params_from_yaml(config)
+            - Creates the configuration
 
         The rest of the experiment setup is done in :py:func:`setup_individual_experiment()` \
         to allow for multiple tests suppport.
 
         """
         # Call base method to parse all command line arguments and add default sections.
-        super(Tester, self).setup_experiment()
-
+        super(Processor, self).setup_experiment()
+        
+        # Retrieve checkpoint file and section
         chkpt_file = self.app_state.args.load_checkpoint
-
-        # Check if checkpoint file was indicated.
-        if chkpt_file == "":
-            print('Please pass path to and name of the file containing pipeline to be loaded as --load parameter')
-            exit(-1)
-
-
-        # Check if file with model exists.
-        if not os.path.isfile(chkpt_file):
-            print('Checkpoint file {} does not exist'.format(chkpt_file))
-            exit(-2)
-
-        # Extract path.
-        abs_config_path, _ = os.path.split(os.path.dirname(os.path.expanduser(chkpt_file)))
-
-        # Check if config file was indicated by the user.
-        if self.app_state.args.config != '':
-            root_config = self.app_state.args.config
-        else:
-            # Use the "default one".
-            root_config = os.path.join(abs_config_path, 'training_configuration.yaml')
-
-        # Check if configuration file exists.
-        if not os.path.isfile(root_config):
-            print('Config file {} does not exist'.format(root_config))
-            exit(-3)
+        self.set = self.app_state.args.set
 
         # Check the presence of the CUDA-compatible devices.
         if self.app_state.args.use_gpu and (torch.cuda.device_count() == 0):
             self.logger.error("Cannot use GPU as there are no CUDA-compatible devices present in the system!")
-            exit(-4)
+            exit(-1)
 
-        # Extract absolute path to main ptp 'config' directory.
-        # Save it in app_state!
-        self.app_state.absolute_config_path = abs_config_path[:abs_config_path.find("configs")+8] 
-        # Get relative path.
-        rel_config_path = abs_config_path[abs_config_path.find("configs")+8:]
 
-        print("TODO: different root config extraction path!!")
-        print(self.app_state.absolute_config_path)
-        exit(1)
+        # Check if checkpoint file was indicated.
+        if chkpt_file == "":
+            print('Please pass path to and name of the file containing pipeline to be loaded as --load parameter')
+            exit(-2)
+
+        # Check if file with model exists.
+        if not os.path.isfile(chkpt_file):
+            print('Checkpoint file {} does not exist'.format(chkpt_file))
+            exit(-3)
+
+        # Extract path.
+        self.abs_path, _ = os.path.split(os.path.dirname(os.path.expanduser(chkpt_file)))
+        print(self.abs_path)
+
+        # Check if config file was indicated by the user.
+        if self.app_state.args.config != '':
+            # Split and make them absolute.
+            root_configs = self.app_state.args.config.replace(" ", "").split(',')
+            # If there are - expand them to absolute paths.
+            abs_root_configs = [os.path.expanduser(config) for config in root_configs]
+        else:
+            # Use the "default one".
+            abs_root_configs = [os.path.join(self.abs_path, 'training_configuration.yml')]
 
         # Get the list of configurations which need to be loaded.
-        configs_to_load = config_parse.recurrent_config_parse(rel_config_path, [], self.app_state.absolute_config_path)
+        configs_to_load = config_parsing.recurrent_config_parse(abs_root_configs, [], self.app_state.absolute_config_path)
 
         # Read the YAML files one by one - but in reverse order -> overwrite the first indicated config(s)
-        config_parse.reverse_order_config_load(self.config, configs_to_load, self.app_state.absolute_config_path)
+        config_parsing.reverse_order_config_load(self.config, configs_to_load)
 
         # -> At this point, the Config Registry contains the configuration loaded (and overwritten) from several files.
 
@@ -133,31 +124,23 @@ class Tester(Worker):
         Setup individual test experiment in the case of multiple tests, or the main experiment in the case of \
         one test experiment.
 
-        - Set up the log directory path:
+        - Set up the log directory path
 
-            >>> os.makedirs(self.log_dir, exist_ok=False)
-
-        - Add a FileHandler to the logger (defined in BaseWorker):
-
-            >>>  self.logger.addHandler(fh)
-
-        - Set random seeds:
-
-            >>>  self.set_random_seeds('testing', self.config['testing'])
+        - Set random seeds
 
         - Creates the pipeline consisting of many components
 
         - Creates testing problem manager
 
-        - Performs testing of compatibility of testing pipeline.
+        - Performs testing of compatibility of testing pipeline
 
         """
 
         # Get testing problem type.
         try:
-            _ = self.config['testing']['problem']['type']
+            _ = self.config[self.set]['problem']['type']
         except KeyError:
-            print("Error: Couldn't retrieve the problem 'type' from the 'testing' section in the loaded configuration")
+            print("Error: Couldn't retrieve the problem 'type' from the '{}' section in the loaded configuration".format(self.set))
             exit(-5)
 
         # Get pipeline name.
@@ -171,59 +154,59 @@ class Tester(Worker):
         while True:
             # Dirty fix: if log_dir already exists, wait for 1 second and try again
             try:
-                time_str = 'test_{0:%Y%m%d_%H%M%S}'.format(datetime.now())
+                time_str = self.set+'_{0:%Y%m%d_%H%M%S}'.format(datetime.now())
                 if self.app_state.args.savetag != '':
                     time_str = time_str + "_" + self.app_state.args.savetag
-                self.log_dir = self.abs_path + '/' + time_str + '/'
+                self.app_state.log_dir = self.abs_path + '/' + time_str + '/'
                 # Lowercase dir.
-                self.log_dir = self.log_dir.lower()
-                os.makedirs(self.log_dir, exist_ok=False)
+                self.app_state.log_dir = self.app_state.log_dir.lower()
+                os.makedirs(self.app_state.log_dir, exist_ok=False)
             except FileExistsError:
                 sleep(1)
             else:
                 break
 
         # Set log dir.
-        self.app_state.log_file = self.log_dir + 'tester.log'
+        self.app_state.log_file = self.app_state.log_dir + 'processor.log'
         # Initialize logger in app state.
         self.app_state.logger = logging.initialize_logger("AppState")
         # Add handlers for the logfile to worker logger.
         logging.add_file_handler_to_logger(self.logger)
-        self.logger.info("Logger directory set to: {}".format(self.log_dir ))
+        self.logger.info("Logger directory set to: {}".format(self.app_state.log_dir ))
 
         # Set cpu/gpu types.
         self.app_state.set_types()
 
         # Set random seeds in the testing section.
-        self.set_random_seeds('testing', self.config['testing'])
+        self.set_random_seeds(self.set, self.config[self.set])
 
         # Total number of detected errors.
         errors =0
 
         ################# TESTING PROBLEM ################# 
 
-        # Build training problem manager.
-        self.testing = ProblemManager('testing', self.config['testing']) 
-        errors += self.testing.build()
+        # Build the used problem manager.
+        self.pm = ProblemManager(self.set, self.config[self.set]) 
+        errors += self.pm.build()
 
 
         # check if the maximum number of episodes is specified, if not put a
         # default equal to the size of the dataset (divided by the batch size)
         # So that by default, we loop over the test set once.
-        max_test_episodes = len(self.testing)
+        max_test_episodes = len(self.pm)
 
-        self.config['testing']['problem'].add_default_params({'max_test_episodes': max_test_episodes})
-        if self.config["testing"]["problem"]["max_test_episodes"] == -1:
+        self.config[self.set]['problem'].add_default_params({'max_test_episodes': max_test_episodes})
+        if self.config[self.set]["problem"]["max_test_episodes"] == -1:
             # Overwrite the config value!
-            self.config['testing']['problem'].add_config_params({'max_test_episodes': max_test_episodes})
+            self.config[self.set]['problem'].add_config_params({'max_test_episodes': max_test_episodes})
 
         # Warn if indicated number of episodes is larger than an epoch size:
-        if self.config["testing"]["problem"]["max_test_episodes"] > max_test_episodes:
+        if self.config[self.set]["problem"]["max_test_episodes"] > max_test_episodes:
             self.logger.warning('Indicated maximum number of episodes is larger than one epoch, reducing it.')
-            self.config['testing']['problem'].add_config_params({'max_test_episodes': max_test_episodes})
+            self.config[self.set]['problem'].add_config_params({'max_test_episodes': max_test_episodes})
 
         self.logger.info("Setting the max number of episodes to: {}".format(
-            self.config["testing"]["problem"]["max_test_episodes"]))
+            self.config[self.set]["problem"]["max_test_episodes"]))
 
         ###################### PIPELINE ######################
         
@@ -233,7 +216,7 @@ class Tester(Worker):
 
         # Show pipeline.
         summary_str = self.pipeline.summarize_all_components_header()
-        summary_str += self.testing.problem.summarize_io("testing")
+        summary_str += self.pm.problem.summarize_io(self.set)
         summary_str += self.pipeline.summarize_all_components()
         self.logger.info(summary_str)
 
@@ -244,7 +227,7 @@ class Tester(Worker):
 
         # Handshake definitions.
         self.logger.info("Handshaking testing pipeline")
-        defs_testing = self.testing.problem.output_data_definitions()
+        defs_testing = self.pm.problem.output_data_definitions()
         errors += self.pipeline.handshake(defs_testing)
 
         # Check errors.
@@ -302,43 +285,45 @@ class Tester(Worker):
         self.pipeline.eval()
 
         # Export and log configuration, optionally asking the user for confirmation.
-        self.export_experiment_configuration(self.log_dir, "testing_configuration.yaml",self.app_state.args.confirm)
+        config_parsing.display_parsing_results(self.logger, self.app_state.args, self.unparsed)
+        config_parsing.display_globals(self.logger, self.app_state.globalitems())
+        config_parsing.export_experiment_configuration_to_yml(self.logger, self.app_state.log_dir, "training_configuration.yml", self.config, self.app_state.args.confirm)
 
     def initialize_statistics_collection(self):
         """
         Function initializes all statistics collectors and aggregators used by a given worker,
         creates output files etc.
         """
-        # Create statistics collector for testing.
-        self.testing_stat_col = StatisticsCollector()
-        self.add_statistics(self.testing_stat_col)
-        self.testing.problem.add_statistics(self.testing_stat_col)
-        self.pipeline.add_statistics(self.testing_stat_col)
-        # Create the csv file to store the testing statistics.
-        self.testing_batch_stats_file = self.testing_stat_col.initialize_csv_file(self.log_dir, 'testing_statistics.csv')
+        # Create statistics collector.
+        self.stat_col = StatisticsCollector()
+        self.add_statistics(self.stat_col)
+        self.pm.problem.add_statistics(self.stat_col)
+        self.pipeline.add_statistics(self.stat_col)
+        # Create the csv file to store the statistics.
+        self.pm_batch_stats_file = self.stat_col.initialize_csv_file(self.app_state.log_dir, self.set+'_statistics.csv')
 
-        # Create statistics aggregator for testing.
-        self.testing_stat_agg = StatisticsAggregator()
-        self.add_aggregators(self.testing_stat_agg)
-        self.testing.problem.add_aggregators(self.testing_stat_agg)
-        self.pipeline.add_aggregators(self.testing_stat_agg)
-        # Create the csv file to store the testing statistic aggregations.
+        # Create statistics aggregator.
+        self.stat_agg = StatisticsAggregator()
+        self.add_aggregators(self.stat_agg)
+        self.pm.problem.add_aggregators(self.stat_agg)
+        self.pipeline.add_aggregators(self.stat_agg)
+        # Create the csv file to store the statistic aggregations.
         # Will contain a single row with aggregated statistics.
-        self.testing_set_stats_file = self.testing_stat_agg.initialize_csv_file(self.log_dir, 'testing_set_agg_statistics.csv')
+        self.pm_set_stats_file = self.stat_agg.initialize_csv_file(self.app_state.log_dir, self.set+'_set_agg_statistics.csv')
 
     def finalize_statistics_collection(self):
         """
         Finalizes statistics collection, closes all files etc.
         """
         # Close all files.
-        self.testing_batch_stats_file.close()
-        self.testing_set_stats_file.close()
+        self.pm_batch_stats_file.close()
+        self.pm_set_stats_file.close()
 
     def run_experiment(self):
         """
-        Main function of the ``Tester``: Test the loaded model over the test set.
+        Main function of the ``Processor``: Test the loaded model over the set.
 
-        Iterates over the ``DataLoader`` for a maximum number of episodes equal to the test set size.
+        Iterates over the ``DataLoader`` for a maximum number of episodes equal to the set size.
 
         The function does the following for each episode:
 
@@ -351,49 +336,54 @@ class Tester(Worker):
         # Initialize tensorboard and statistics collection.
         self.initialize_statistics_collection()
 
-        num_samples = len(self.testing)
+        num_samples = len(self.pm)
 
-        self.logger.info('Testing over the entire test set ({} samples in {} episodes)'.format(
-            num_samples, len(self.testing.dataloader)))
+        self.logger.info('Processing the entire set ({} samples in {} episodes)'.format(
+            num_samples, len(self.pm.dataloader)))
 
         try:
-            # Run test
+            # Run in no_grad mode.
             with torch.no_grad():
+                # Reset the counter.
+                self.app_state.episode = -1
 
-                episode = 0
-                for test_dict in self.testing.dataloader:
+                # Inform the problem manager that epoch has started.
+                self.pm.initialize_epoch()
 
+                for batch in self.pm.dataloader:
+                    # Increment counter.
+                    self.app_state.episode += 1
                     # Terminal condition 0: max test episodes reached.
-                    if episode == self.config["testing"]["problem"]["max_test_episodes"]:
+                    if self.app_state.episode == self.config[self.set]["problem"]["max_test_episodes"]:
                         break
 
                     # Forward pass.
-                    self.pipeline.forward(test_dict)
+                    self.pipeline.forward(batch)
                     # Collect the statistics.
-                    self.collect_all_statistics(self.testing, self.pipeline, test_dict,
-                            self.testing_stat_col, episode)
+                    self.collect_all_statistics(self.pm, self.pipeline, batch, self.stat_col)
 
                     # Export to csv - at every step.
-                    self.testing_stat_col.export_to_csv()
+                    self.stat_col.export_to_csv()
 
                     # Log to logger - at logging frequency.
-                    if episode % self.app_state.args.logging_interval == 0:
-                        self.logger.info(self.testing_stat_col.export_to_string('[Partial Test]'))
+                    if self.app_state.episode % self.app_state.args.logging_interval == 0:
+                        self.logger.info(self.stat_col.export_to_string('[Partial]'))
 
                     # move to next episode.
-                    episode += 1
+                    self.app_state.episode += 1
 
                 # End for.
+                # Inform the problem managers that the epoch has ended.
+                self.pm.finalize_epoch()
 
                 self.logger.info('\n' + '='*80)
-                self.logger.info('Test finished')
+                self.logger.info('Processing finished')
 
                 # Aggregate statistics for the whole set.
-                self.aggregate_all_statistics(self.testing, self.pipeline,
-                    self.testing_stat_col, self.testing_stat_agg, episode)
+                self.aggregate_all_statistics(self.pm, self.pipeline, self.stat_col, self.stat_agg)
 
                 # Export aggregated statistics.
-                self.export_all_statistics(self.testing_stat_agg, '[Full Test]')
+                self.export_all_statistics(self.stat_agg, '[Full Set]')
 
 
         except SystemExit as e:
@@ -405,22 +395,23 @@ class Tester(Worker):
         finally:
             # Finalize statistics collection.
             self.finalize_statistics_collection()
+            self.logger.info("Experiment logged to: {}".format(self.app_state.log_dir))
         
 
 def main():
     """
-    Entry point function for the ``Tester``.
+    Entry point function for the ``Processor``.
 
     """
-    tester = Tester()
+    processor = Processor()
     # parse args, load configuration and create all required objects.
-    tester.setup_global_experiment()
+    processor.setup_global_experiment()
 
     # finalize the experiment setup
-    tester.setup_individual_experiment()
+    processor.setup_individual_experiment()
 
     # run the experiment
-    tester.run_experiment()
+    processor.run_experiment()
 
 
 if __name__ == '__main__':

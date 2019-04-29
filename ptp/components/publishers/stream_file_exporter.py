@@ -16,24 +16,23 @@
 
 __author__ = "Tomasz Kornuta"
 
-import numpy as np
+from os import path
 
 from ptp.configuration.config_parsing import get_value_list_from_dictionary
 from ptp.components.component import Component
 from ptp.data_types.data_definition import DataDefinition
 
 
-class StreamViewer(Component):
+class StreamFileExporter(Component):
     """
-    Utility for displaying contents of streams of a single sample from the batch.
-
+    Utility for exporting contents of streams of a given batch to file.
     """
 
     def __init__(self, name, config):
         """
-        Initializes loss object.
+        Initializes the object, retrieves names of input streams and creates the output file in experiment directory.
 
-        :param name: Loss name.
+        :param name: Name of the component.
         :type name: str
 
         :param config: Dictionary of parameters (read from the configuration ``.yaml`` file).
@@ -41,7 +40,7 @@ class StreamViewer(Component):
 
         """
         # Call constructors of parent classes.
-        Component.__init__(self, name, StreamViewer, config)
+        Component.__init__(self, name, StreamFileExporter, config)
 
         # Get key mappings for indices.
         self.key_indices = self.stream_keys["indices"]
@@ -49,9 +48,15 @@ class StreamViewer(Component):
         # Load list of streams names (keys).
         self.input_stream_keys = get_value_list_from_dictionary("input_streams", self.config)
         
-        # Get sample number.
-        self.sample_number = self.config["sample_number"]
-        
+        # Get separator.
+        self.separator = self.config["separator"]
+
+        # Create file where we will write the results.
+        filename = self.config["filename"]
+        abs_filename = path.join(self.app_state.log_dir, filename)
+        self.file = open(abs_filename, 'w')
+        self.logger.info("Writing values from {} streams to {}".format(self.input_stream_keys, abs_filename))
+
 
     def input_data_definitions(self):
         """ 
@@ -74,35 +79,35 @@ class StreamViewer(Component):
 
     def __call__(self, data_dict):
         """
-        Encodes batch, or, in fact, only one field of batch ("inputs").
-        Stores result in "outputs" field of data_dict.
-
-        :param data_dict: :py:class:`ptp.utils.DataDict` object containing (among others) "indices".
-
+        Exports values from the indicated streams to file.
+        :param data_dict: :py:class:`ptp.utils.DataDict` object containing "indices" and other streams that will be exported to file.
         """
-        # Use worker interval.
-        if self.app_state.episode % self.app_state.args.logging_interval == 0:
+        # Get batch size.
+        indices = data_dict[self.key_indices]
+        batch_size = len(indices)
 
-            # Get indices.
-            indices = data_dict[self.key_indices]
-
-            # Get sample number.
-            if self.sample_number == -1:
-                # Random
-                sample_number = np.random.randint(0, len(indices))
+        # Check present streams.
+        absent_streams = []
+        present_streams = []
+        for stream_key in self.input_stream_keys:
+            if stream_key in data_dict.keys():
+                present_streams.append(stream_key)
             else:
-                sample_number = self.sample_number
+                absent_streams.append(stream_key)
 
-            # Generate displayed string.
-            absent_streams = []
-            disp_str = "Showing selected streams for sample {}:\n".format(sample_number)
+        # Export values to file.
+        for i in range(batch_size):
+            val_str = ''
             for stream_key in self.input_stream_keys:
-                if stream_key in data_dict.keys():
-                    disp_str += " '{}': {}\n".format(stream_key, data_dict[stream_key][sample_number])
-                else:
-                    absent_streams.append(stream_key)
+                if stream_key in present_streams:
+                    value = data_dict[stream_key][i]
+                    # Add value changed to string along with separator.
+                    val_str = val_str + '{}'.format(value) + self.separator
+            # Remove the last separator.
+            val_str = val_str[:-1] + '\n'
+            # Write it to file.
+            self.file.write(val_str)
 
-            # Log values and inform about missing streams.
-            self.logger.info(disp_str)
-            if len(absent_streams) > 0:
-                self.logger.warning("Could not display the following (absent) streams: {}".format(absent_streams))
+        # Log values and inform about missing streams.
+        if len(absent_streams) > 0:
+            self.logger.warning("Could not export the following (absent) streams: {}".format(absent_streams))
