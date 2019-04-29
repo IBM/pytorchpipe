@@ -72,6 +72,9 @@ class WordMappings(object):
             if word != '' and word not in self.word_to_ix:
                 self.word_to_ix[word] = len(self.word_to_ix)
 
+        if self.config["export_pad_mapping_to_globals"]:
+            self.globals["pad_mapping"] = self.word_to_ix['<PAD>']
+
         self.logger.info("Initialized word mappings with vocabulary of size {}".format(len(self.word_to_ix)))
 
         # Check if we want to export word mappings to globals.

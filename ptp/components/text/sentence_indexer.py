@@ -54,6 +54,9 @@ class SentenceIndexer(Component, WordMappings):
         # Force padding to a fixed length
         self.fixed_padding = self.config['fixed_padding']
 
+        # Wether to add <EOS> at the end of sequence
+        self.enable_eos_token = self.config['eos_token']
+
         if self.mode_reverse:
             # We will need reverse (index:word) mapping.
             self.ix_to_word = dict((v,k) for k,v in self.word_to_ix.items())
@@ -133,6 +136,7 @@ class SentenceIndexer(Component, WordMappings):
 
         # Get index of padding.
         pad_index = self.word_to_ix['<PAD>']
+        eos_index = self.word_to_ix['<EOS>'] if self.enable_eos_token else None
 
         outputs_list = []
         # Process sentences 1 by 1.
@@ -150,7 +154,7 @@ class SentenceIndexer(Component, WordMappings):
             # Apply fixed padding to all sequences if requested
             # Otherwise let torch.nn.utils.rnn.pad_sequence handle it and choose a dynamic padding
             if self.fixed_padding > 0:
-                pad_trunc_list(output_sample, self.fixed_padding, padding_value=pad_index)
+                pad_trunc_list(output_sample, self.fixed_padding, padding_value=pad_index, eos_value=eos_index)
 
             outputs_list.append(self.app_state.LongTensor(output_sample))
 

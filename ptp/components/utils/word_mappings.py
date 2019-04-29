@@ -133,7 +133,7 @@ def save_word_mappings_to_csv_file(logger, folder, filename, word_to_ix, fieldna
 
     logger.info("Saved mappings of size {} to file '{}'".format(len(word_to_ix), file_path))
 
-def pad_trunc_list(l: list, length: int, padding_value = 0):
+def pad_trunc_list(l: list, length: int, padding_value = 0, eos_value = None):
     """
     Will apply padding / clipping to list to meet requested length.
     Works on the list in-place.
@@ -146,7 +146,13 @@ def pad_trunc_list(l: list, length: int, padding_value = 0):
 
     :return: None
     """
+    
     if len(l) < length:
+        if eos_value is not None:
+            l.append(eos_value)
         l.extend([padding_value]*(length-len(l)))
+        
     elif len(l) > length:
         del l[length:]
+        if eos_value is not None:
+            l[length-1] = eos_value
