@@ -14,10 +14,6 @@ validation:
   problem:
     categories: all
 
-testing:
-  problem:
-    categories: all
-
 
 pipeline:
 

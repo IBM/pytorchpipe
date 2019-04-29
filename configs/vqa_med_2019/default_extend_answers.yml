@@ -9,12 +9,11 @@ training_answers:
     categories: all
     resize_image: &resize_image [224, 224]
     batch_size: 64
-  # No sampler, process samples in the same order.
   dataloader:
-    shuffle: False
-  # Use four workers for loading images.
-  dataloader:
-    num_workers: 4
+    # No sampler, process samples in the same order.
+    shuffle: false
+    # Use 1 worker, so batches will follow the samples order.
+    num_workers: 1
 
 validation_answers:
   problem:
@@ -23,12 +22,11 @@ validation_answers:
     split: validation
     resize_image: *resize_image     
     batch_size: 64
-  # No sampler, process samples in the same order.
   dataloader:
-    shuffle: False
-  # Use four workers for loading images.
-  dataloader:
-    num_workers: 4
+    # No sampler, process samples in the same order.
+    shuffle: false
+    # Use 1 worker, so batches will follow the samples order.
+    num_workers: 1
 
 
 # Testing parameters:
@@ -39,12 +37,11 @@ test_answers:
     split: test
     resize_image: *resize_image     
     batch_size: 64
-  # No sampler, process samples in the same order.
   dataloader:
-    shuffle: False
-  # Use four workers for loading images.
-  dataloader:
-    num_workers: 4
+    # No sampler, process samples in the same order.
+    shuffle: false
+    # Use 1 worker, so batches will follow the samples order.
+    num_workers: 1
 
 # Add component for exporting answers to files.
 pipeline:
@@ -52,7 +49,8 @@ pipeline:
 #  # Viewers.
   viewer_extended:
     type: StreamViewer
+    sample_number: 0
     priority: 100.4
-    input_streams: indices,image_ids,questions,category_names,predicted_categories
+    input_streams: indices,image_ids,questions,category_names,predicted_categories,answers,tokenized_answers,predicted_answers
 
 #: pipeline
