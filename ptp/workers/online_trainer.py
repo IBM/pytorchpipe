@@ -34,9 +34,8 @@ class OnlineTrainer(Trainer):
         it makes less sense for problems which have a very large, almost infinite, dataset (like algorithmic \
         tasks, which generate random data on-the-fly). \
          
-        This is why this OnlineTrainer was implemented. Instead of looping on epochs, it iterates directly on \
-        episodes (we call an iteration on a single batch an episode).
-
+        This is why this OnlineTrainer was implemented. Despite the fact it has the notion of epoch, it is more \
+        flexible and operates on episodes (we call an iteration on a single batch an episode). \
 
     """
 

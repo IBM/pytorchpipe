@@ -137,18 +137,11 @@ class Trainer(Worker):
             print('Error: Configuration file {} does not exist'.format(root_config))
             exit(-3)
         
-        # Extract absolute path to main ptp 'config' directory.
-        abs_config_path = os.path.abspath(root_config)
-        # Save it in app_state!
-        self.app_state.absolute_config_path = abs_config_path[:abs_config_path.find("configs")+8] 
-        # Get relative path.
-        rel_config_path = abs_config_path[abs_config_path.find("configs")+8:]
-
         # Get the list of configurations which need to be loaded.
-        configs_to_load = config_parse.recurrent_config_parse(rel_config_path, [], self.app_state.absolute_config_path)
+        configs_to_load = config_parse.recurrent_config_parse(root_config, [], self.app_state.absolute_config_path)
 
         # Read the YAML files one by one - but in reverse order -> overwrite the first indicated config(s)
-        config_parse.reverse_order_config_load(self.config, configs_to_load, self.app_state.absolute_config_path)
+        config_parse.reverse_order_config_load(self.config, configs_to_load)
 
         # -> At this point, the Param Registry contains the configuration loaded (and overwritten) from several files.
         # Log the resulting training configuration.
