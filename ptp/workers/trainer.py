@@ -17,7 +17,7 @@
 
 __author__ = "Vincent Marois, Tomasz Kornuta"
 
-import os
+from os import path,makedirs
 import yaml
 import torch
 from time import sleep
@@ -84,38 +84,25 @@ class Trainer(Worker):
 
         - Calls base class setup_experiment to parse the command line arguments,
 
-        - Loads the config file(s):
+        - Loads the config file(s)
 
-            >>> configs_to_load = self.recurrent_config_parse(flags.config, [])
+        - Set up the log directory path
 
-        - Set up the log directory path:
+        - Add a ``FileHandler`` to the logger
 
-            >>> os.makedirs(self.app_state.log_dir, exist_ok=False)
-
-        - Add a ``FileHandler`` to the logger:
-
-            >>>  self.add_file_handler_to_logger(self.log_file)
-
-        - Set random seeds:
-
-            >>>  self.set_random_seeds(self.config['training'], 'training')
+        - Set random seeds
 
         - Creates the pipeline consisting of many components
 
         - Creates training problem manager
 
-        - Handles curriculum learning if indicated:
+        - Handles curriculum learning if indicated
 
-            >>> if 'curriculum_learning' in self.config['training']:
-            >>> ...
+        - Creates validation problem manager
 
-        - Creates training problem manager
+        - Set optimizer
 
-        - Set optimizer:
-
-            >>> self.optimizer = getattr(torch.optim, optimizer_name)
-
-        - Performs testing of compatibility of both training and validation pipelines.
+        - Performs testing of compatibility of both training and validation problems and created pipeline.
 
         """
         # Call base method to parse all command line arguments and add default sections.
@@ -134,7 +121,7 @@ class Trainer(Worker):
         # Split and make them absolute.
         root_configs = self.app_state.args.config.replace(" ", "").split(',')
         # If there are - expand them to absolute paths.
-        abs_root_configs = [os.path.expanduser(config) for config in root_configs]
+        abs_root_configs = [path.expanduser(config) for config in root_configs]
         
         # Get the list of configurations which need to be loaded.
         configs_to_load = config_parse.recurrent_config_parse(abs_root_configs, [], self.app_state.absolute_config_path)
@@ -168,8 +155,10 @@ class Trainer(Worker):
         try:
             pipeline_name = self.config['pipeline']['name']
         except KeyError:
-            print("Error: Couldn't retrieve the pipeline 'name' from the loaded configuration")
-            exit(-1)
+            # Using name of the first configuration file from command line.
+            pipeline_name = path.basename(root_configs[0])
+            # Set pipeline name, so processor can use it afterwards.
+            self.config['pipeline'].add_config_params({'name': pipeline_name})
 
         # Prepare the output path for logging
         while True:  # Dirty fix: if log_dir already exists, wait for 1 second and try again
@@ -177,10 +166,10 @@ class Trainer(Worker):
                 time_str = '{0:%Y%m%d_%H%M%S}'.format(datetime.now())
                 if self.app_state.args.savetag != '':
                     time_str = time_str + "_" + self.app_state.args.savetag
-                self.app_state.log_dir = os.path.expanduser(self.app_state.args.expdir) + '/' + training_problem_type + '/' + pipeline_name + '/' + time_str + '/'
+                self.app_state.log_dir = path.expanduser(self.app_state.args.expdir) + '/' + training_problem_type + '/' + pipeline_name + '/' + time_str + '/'
                 # Lowercase dir.
                 self.app_state.log_dir = self.app_state.log_dir.lower()
-                os.makedirs(self.app_state.log_dir, exist_ok=False)
+                makedirs(self.app_state.log_dir, exist_ok=False)
             except FileExistsError:
                 sleep(1)
             else:
@@ -199,7 +188,7 @@ class Trainer(Worker):
 
         # Models dir.
         self.checkpoint_dir = self.app_state.log_dir + 'checkpoints/'
-        os.makedirs(self.checkpoint_dir, exist_ok=False)
+        makedirs(self.checkpoint_dir, exist_ok=False)
 
         # Set random seeds in the training section.
         self.set_random_seeds('training', self.config['training'])
@@ -283,7 +272,7 @@ class Trainer(Worker):
                 pipeline_name = ""
             # Try to load the model.
             if pipeline_name != "":
-                if os.path.isfile(pipeline_name):
+                if path.isfile(pipeline_name):
                     # Load parameters from checkpoint.
                     self.pipeline.load(pipeline_name)
                 else:

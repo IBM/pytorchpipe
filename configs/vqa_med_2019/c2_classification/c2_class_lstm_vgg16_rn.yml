@@ -22,7 +22,6 @@ validation:
 
 
 pipeline:
-  name: c2_class_lstm_vgg16_rn
 
   global_publisher:
     priority: 0
