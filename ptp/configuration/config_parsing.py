@@ -146,14 +146,14 @@ def load_class_default_config_file(class_type):
         exit(-2)
 
 
-def recurrent_config_parse(configs: str, configs_parsed: list, abs_config_path: str):
+def recurrent_config_parse(configs_to_parse: list, configs_parsed: list, abs_config_path: str):
     """
     Parses names of configuration files in a recursive manner, i.e. \
     by looking for ``default_config`` sections and trying to load and parse those \
     files one by one.
 
-    :param configs: String containing names of configuration files (with paths), separated by comas.
-    :type configs: str
+    :param configs_to_parse: List containing names of configuration files (with paths).
+    :type configs_to_parse: list
 
     :param configs_parsed: Configurations that were already parsed (so we won't parse them many times).
     :type configs_parsed: list
@@ -163,9 +163,6 @@ def recurrent_config_parse(configs: str, configs_parsed: list, abs_config_path: 
     :return: list of parsed configuration files.
 
     """
-    # Split and remove spaces.
-    configs_to_parse = configs.replace(" ", "").split(',')
-
     # Terminal condition.
     while len(configs_to_parse) > 0:
 
@@ -205,7 +202,7 @@ def recurrent_config_parse(configs: str, configs_parsed: list, abs_config_path: 
             # If there are - expand them to absolute paths.
             abs_default_configs_to_parse = [os.path.join(abs_config_path,config) for config in default_configs_to_parse]
             # Recursion!
-            configs_parsed = recurrent_config_parse(','.join(abs_default_configs_to_parse), configs_parsed, abs_config_path)
+            configs_parsed = recurrent_config_parse(abs_default_configs_to_parse, configs_parsed, abs_config_path)
 
     # Done, return list of loaded configs.
     return configs_parsed

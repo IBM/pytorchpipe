@@ -81,15 +81,21 @@ class Processor(Worker):
         chkpt_file = self.app_state.args.load_checkpoint
         self.set = self.app_state.args.set
 
+        # Check the presence of the CUDA-compatible devices.
+        if self.app_state.args.use_gpu and (torch.cuda.device_count() == 0):
+            self.logger.error("Cannot use GPU as there are no CUDA-compatible devices present in the system!")
+            exit(-1)
+
+
         # Check if checkpoint file was indicated.
         if chkpt_file == "":
             print('Please pass path to and name of the file containing pipeline to be loaded as --load parameter')
-            exit(-1)
+            exit(-2)
 
         # Check if file with model exists.
         if not os.path.isfile(chkpt_file):
             print('Checkpoint file {} does not exist'.format(chkpt_file))
-            exit(-2)
+            exit(-3)
 
         # Extract path.
         self.abs_path, _ = os.path.split(os.path.dirname(os.path.expanduser(chkpt_file)))
@@ -97,23 +103,16 @@ class Processor(Worker):
 
         # Check if config file was indicated by the user.
         if self.app_state.args.config != '':
-            root_config = self.app_state.args.config
+            # Split and make them absolute.
+            root_configs = self.app_state.args.config.replace(" ", "").split(',')
+            # If there are - expand them to absolute paths.
+            abs_root_configs = [os.path.expanduser(config) for config in root_configs]
         else:
             # Use the "default one".
-            root_config = os.path.join(self.abs_path, 'training_configuration.yml')
-
-        # Check if configuration file exists.
-        if not os.path.isfile(root_config):
-            print('Config file {} does not exist'.format(root_config))
-            exit(-3)
-
-        # Check the presence of the CUDA-compatible devices.
-        if self.app_state.args.use_gpu and (torch.cuda.device_count() == 0):
-            self.logger.error("Cannot use GPU as there are no CUDA-compatible devices present in the system!")
-            exit(-4)
+            abs_root_configs = [os.path.join(self.abs_path, 'training_configuration.yml')]
 
         # Get the list of configurations which need to be loaded.
-        configs_to_load = config_parsing.recurrent_config_parse(root_config, [], self.app_state.absolute_config_path)
+        configs_to_load = config_parsing.recurrent_config_parse(abs_root_configs, [], self.app_state.absolute_config_path)
 
         # Read the YAML files one by one - but in reverse order -> overwrite the first indicated config(s)
         config_parsing.reverse_order_config_load(self.config, configs_to_load)

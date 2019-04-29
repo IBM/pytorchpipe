@@ -121,24 +121,25 @@ class Trainer(Worker):
         # Call base method to parse all command line arguments and add default sections.
         super(Trainer, self).setup_experiment()
 
-        # Check if config file was selected.
-        if self.app_state.args.config == '':
-            print('Please pass configuration file(s) as --c parameter')
-            exit(-1)
-
         # Check the presence of the CUDA-compatible devices.
         if self.app_state.args.use_gpu and (torch.cuda.device_count() == 0):
             self.logger.error("Cannot use GPU as there are no CUDA-compatible devices present in the system!")
+            exit(-1)
+
+        # Check if config file was selected.
+        if self.app_state.args.config == '':
+            print('Please pass configuration file(s) as --c parameter')
             exit(-2)
 
-        # Check if config file exists.            
+        # Get configuration file(s) from command args.
         root_config = self.app_state.args.config
-        if not os.path.isfile(root_config):
-            print('Error: Configuration file {} does not exist'.format(root_config))
-            exit(-3)
+        # Split and make them absolute.
+        root_configs = self.app_state.args.config.replace(" ", "").split(',')
+        # If there are - expand them to absolute paths.
+        abs_root_configs = [os.path.expanduser(config) for config in root_configs]
         
         # Get the list of configurations which need to be loaded.
-        configs_to_load = config_parse.recurrent_config_parse(root_config, [], self.app_state.absolute_config_path)
+        configs_to_load = config_parse.recurrent_config_parse(abs_root_configs, [], self.app_state.absolute_config_path)
 
         # Read the YAML files one by one - but in reverse order -> overwrite the first indicated config(s)
         config_parse.reverse_order_config_load(self.config, configs_to_load)

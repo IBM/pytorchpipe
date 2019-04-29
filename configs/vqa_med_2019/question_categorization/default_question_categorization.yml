@@ -10,6 +10,15 @@ training:
   terminal_conditions:
     loss_stop: 1.0e-3
 
+validation:
+  problem:
+    categories: all
+
+testing:
+  problem:
+    categories: all
+
+
 pipeline:
 
   # Predictions decoder.

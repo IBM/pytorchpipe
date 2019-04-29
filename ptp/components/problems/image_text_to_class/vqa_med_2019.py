@@ -650,6 +650,7 @@ class VQAMED2019(Problem):
         :return: DataDict({'indices', 'images', 'images_ids','questions', 'answers', 'category_ids', 'image_sizes'})
 
         """
+        print([sample[self.key_indices] for sample in batch])
         # Collate indices.
         data_dict = self.create_data_dict([sample[self.key_indices] for sample in batch])
 
