@@ -53,6 +53,12 @@ class Processor(Worker):
         # Call base constructor to set up app state, registry and add default params.
         super(Processor, self).__init__(name)
 
+        self.parser.add_argument(
+            '--set',
+            dest='set',
+            type=str,
+            default="testing",
+            help='Name of the specific set (section containing problem) to be processed (DEFAULT: testing)')
 
     def setup_global_experiment(self):
         """
@@ -76,14 +82,15 @@ class Processor(Worker):
         """
         # Call base method to parse all command line arguments and add default sections.
         super(Processor, self).setup_experiment()
-
+        
+        # Retrieve checkpoint file and section
         chkpt_file = self.app_state.args.load_checkpoint
+        self.set = self.app_state.args.set
 
         # Check if checkpoint file was indicated.
         if chkpt_file == "":
             print('Please pass path to and name of the file containing pipeline to be loaded as --load parameter')
             exit(-1)
-
 
         # Check if file with model exists.
         if not os.path.isfile(chkpt_file):
@@ -99,7 +106,7 @@ class Processor(Worker):
             root_config = self.app_state.args.config
         else:
             # Use the "default one".
-            root_config = os.path.join(self.abs_path, 'training_configuration.yaml')
+            root_config = os.path.join(self.abs_path, 'training_configuration.yml')
 
         # Check if configuration file exists.
         if not os.path.isfile(root_config):
@@ -128,13 +135,7 @@ class Processor(Worker):
 
             >>> os.makedirs(self.log_dir, exist_ok=False)
 
-        - Add a FileHandler to the logger (defined in BaseWorker):
-
-            >>>  self.logger.addHandler(fh)
-
-        - Set random seeds:
-
-            >>>  self.set_random_seeds('testing', self.config['testing'])
+        - Set random seeds
 
         - Creates the pipeline consisting of many components
 
@@ -146,9 +147,9 @@ class Processor(Worker):
 
         # Get testing problem type.
         try:
-            _ = self.config['testing']['problem']['type']
+            _ = self.config[self.set]['problem']['type']
         except KeyError:
-            print("Error: Couldn't retrieve the problem 'type' from the 'testing' section in the loaded configuration")
+            print("Error: Couldn't retrieve the problem 'type' from the '{}' section in the loaded configuration".format(self.set))
             exit(-5)
 
         # Get pipeline name.
@@ -186,7 +187,7 @@ class Processor(Worker):
         self.app_state.set_types()
 
         # Set random seeds in the testing section.
-        self.set_random_seeds('testing', self.config['testing'])
+        self.set_random_seeds(self.set, self.config[self.set])
 
         # Total number of detected errors.
         errors =0
@@ -194,7 +195,7 @@ class Processor(Worker):
         ################# TESTING PROBLEM ################# 
 
         # Build the used problem manager.
-        self.pm = ProblemManager('testing', self.config['testing']) 
+        self.pm = ProblemManager(self.set, self.config[self.set]) 
         errors += self.pm.build()
 
 
@@ -203,18 +204,18 @@ class Processor(Worker):
         # So that by default, we loop over the test set once.
         max_test_episodes = len(self.pm)
 
-        self.config['testing']['problem'].add_default_params({'max_test_episodes': max_test_episodes})
-        if self.config["testing"]["problem"]["max_test_episodes"] == -1:
+        self.config[self.set]['problem'].add_default_params({'max_test_episodes': max_test_episodes})
+        if self.config[self.set]["problem"]["max_test_episodes"] == -1:
             # Overwrite the config value!
-            self.config['testing']['problem'].add_config_params({'max_test_episodes': max_test_episodes})
+            self.config[self.set]['problem'].add_config_params({'max_test_episodes': max_test_episodes})
 
         # Warn if indicated number of episodes is larger than an epoch size:
-        if self.config["testing"]["problem"]["max_test_episodes"] > max_test_episodes:
+        if self.config[self.set]["problem"]["max_test_episodes"] > max_test_episodes:
             self.logger.warning('Indicated maximum number of episodes is larger than one epoch, reducing it.')
-            self.config['testing']['problem'].add_config_params({'max_test_episodes': max_test_episodes})
+            self.config[self.set]['problem'].add_config_params({'max_test_episodes': max_test_episodes})
 
         self.logger.info("Setting the max number of episodes to: {}".format(
-            self.config["testing"]["problem"]["max_test_episodes"]))
+            self.config[self.set]["problem"]["max_test_episodes"]))
 
         ###################### PIPELINE ######################
         
@@ -224,7 +225,7 @@ class Processor(Worker):
 
         # Show pipeline.
         summary_str = self.pipeline.summarize_all_components_header()
-        summary_str += self.pm.problem.summarize_io("testing")
+        summary_str += self.pm.problem.summarize_io(self.set)
         summary_str += self.pipeline.summarize_all_components()
         self.logger.info(summary_str)
 
@@ -302,22 +303,22 @@ class Processor(Worker):
         Function initializes all statistics collectors and aggregators used by a given worker,
         creates output files etc.
         """
-        # Create statistics collector for testing.
+        # Create statistics collector.
         self.stat_col = StatisticsCollector()
         self.add_statistics(self.stat_col)
         self.pm.problem.add_statistics(self.stat_col)
         self.pipeline.add_statistics(self.stat_col)
-        # Create the csv file to store the testing statistics.
-        self.pm_batch_stats_file = self.stat_col.initialize_csv_file(self.log_dir, 'testing_statistics.csv')
+        # Create the csv file to store the statistics.
+        self.pm_batch_stats_file = self.stat_col.initialize_csv_file(self.log_dir, self.set+'_statistics.csv')
 
-        # Create statistics aggregator for testing.
+        # Create statistics aggregator.
         self.stat_agg = StatisticsAggregator()
         self.add_aggregators(self.stat_agg)
         self.pm.problem.add_aggregators(self.stat_agg)
         self.pipeline.add_aggregators(self.stat_agg)
-        # Create the csv file to store the testing statistic aggregations.
+        # Create the csv file to store the statistic aggregations.
         # Will contain a single row with aggregated statistics.
-        self.pm_set_stats_file = self.stat_agg.initialize_csv_file(self.log_dir, 'testing_set_agg_statistics.csv')
+        self.pm_set_stats_file = self.stat_agg.initialize_csv_file(self.log_dir, self.set+'_set_agg_statistics.csv')
 
     def finalize_statistics_collection(self):
         """
@@ -329,9 +330,9 @@ class Processor(Worker):
 
     def run_experiment(self):
         """
-        Main function of the ``Processor``: Test the loaded model over the test set.
+        Main function of the ``Processor``: Test the loaded model over the set.
 
-        Iterates over the ``DataLoader`` for a maximum number of episodes equal to the test set size.
+        Iterates over the ``DataLoader`` for a maximum number of episodes equal to the set size.
 
         The function does the following for each episode:
 
@@ -346,7 +347,7 @@ class Processor(Worker):
 
         num_samples = len(self.pm)
 
-        self.logger.info('Testing over the entire test set ({} samples in {} episodes)'.format(
+        self.logger.info('Processing the entire set ({} samples in {} episodes)'.format(
             num_samples, len(self.pm.dataloader)))
 
         try:
@@ -362,7 +363,7 @@ class Processor(Worker):
                     # Increment counter.
                     self.app_state.episode += 1
                     # Terminal condition 0: max test episodes reached.
-                    if self.app_state.episode == self.config["testing"]["problem"]["max_test_episodes"]:
+                    if self.app_state.episode == self.config[self.set]["problem"]["max_test_episodes"]:
                         break
 
                     # Forward pass.
@@ -375,7 +376,7 @@ class Processor(Worker):
 
                     # Log to logger - at logging frequency.
                     if self.app_state.episode % self.app_state.args.logging_interval == 0:
-                        self.logger.info(self.stat_col.export_to_string('[Partial Test]'))
+                        self.logger.info(self.stat_col.export_to_string('[Partial]'))
 
                     # move to next episode.
                     self.app_state.episode += 1
@@ -383,13 +384,13 @@ class Processor(Worker):
                 # End for.
 
                 self.logger.info('\n' + '='*80)
-                self.logger.info('Test finished')
+                self.logger.info('Processing finished')
 
                 # Aggregate statistics for the whole set.
                 self.aggregate_all_statistics(self.pm, self.pipeline, self.stat_col, self.stat_agg)
 
                 # Export aggregated statistics.
-                self.export_all_statistics(self.stat_agg, '[Full Test]')
+                self.export_all_statistics(self.stat_agg, '[Full Set]')
 
 
         except SystemExit as e:
