@@ -131,8 +131,6 @@ class Trainer(Worker):
             print('Please pass configuration file(s) as --c parameter')
             exit(-2)
 
-        # Get configuration file(s) from command args.
-        root_config = self.app_state.args.config
         # Split and make them absolute.
         root_configs = self.app_state.args.config.replace(" ", "").split(',')
         # If there are - expand them to absolute paths.
