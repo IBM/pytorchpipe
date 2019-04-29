@@ -37,6 +37,9 @@ globals:
   # 3. Keymappings of variables that will be RETRIEVED from GLOBALS.
   ####################################################################
 
+  # Target value to ignore (masking)
+  ignore_index: ignore_index
+
   ####################################################################
   # 4. Keymappings associated with GLOBAL variables that will be SET.
   ####################################################################

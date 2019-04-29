@@ -11,8 +11,14 @@ data_folder: '~/data/'
 source_vocabulary_files: ''
 
 # Additional tokens that will be added to vocabulary (LOADED)
-# This list can be extended, but <PAD> is a special token used ALWAYS for padding shorter sequences.
-additional_tokens: '<PAD>'
+# This list can be extended, but <PAD> and <EOS> are special tokens.
+# <PAD> is ALWAYS used for padding shorter sequences.
+additional_tokens: '<PAD>,<EOS>'
+
+# Enable <EOS> (end of sequence) token.
+eos_token: False
+
+export_pad_mapping_to_globals: False
 
 # File containing word (LOADED)
 word_mappings_file: 'word_mappings.csv'
