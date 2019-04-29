@@ -18,7 +18,7 @@ additional_tokens: '<PAD>,<EOS>'
 # Enable <EOS> (end of sequence) token.
 eos_token: False
 
-export_pad_mapping_to_globals: False
+export_pad_index_to_globals: False
 
 # File containing word (LOADED)
 word_mappings_file: 'word_mappings.csv'
@@ -74,6 +74,10 @@ globals:
   # It is exported to globals, so other components can use it during
   # their initialization.
   embeddings_size: embeddings_size
+
+  # Index of the <PAD> token
+  # Will be set only if `export_pad_mapping_to_globals == True`
+  pad_index: pad_index
 
   ####################################################################
   # 5. Keymappings associated with statistics that will be ADDED.

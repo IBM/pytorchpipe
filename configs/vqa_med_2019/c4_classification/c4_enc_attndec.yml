@@ -61,6 +61,7 @@ pipeline:
     globals:
       vocabulary_size: ans_vocabulary_size
       word_mappings: ans_word_mappings
+      pad_index: ans_pad_index
 
   # Single layer GRU Encoder
   encoder:
@@ -121,6 +122,8 @@ pipeline:
     streams:
       targets: indexed_answers
       loss: loss
+    globals:
+      ignore_index: ans_pad_index
 
   # Prediction decoding.
   prediction_decoder:
