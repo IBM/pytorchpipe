@@ -107,7 +107,7 @@ class OnlineTrainer(Trainer):
         # Export and log configuration, optionally asking the user for confirmation.
         config_parsing.display_parsing_results(self.logger, self.app_state.args, self.unparsed)
         config_parsing.display_globals(self.logger, self.app_state.globalitems())
-        config_parsing.export_experiment_configuration_to_yml(self.logger, self.log_dir, "training_configuration.yml", self.config, self.app_state.args.confirm)
+        config_parsing.export_experiment_configuration_to_yml(self.logger, self.app_state.log_dir, "training_configuration.yml", self.config, self.app_state.args.confirm)
 
     def run_experiment(self):
         """
@@ -345,7 +345,7 @@ class OnlineTrainer(Trainer):
             # Finalize statistics collection.
             self.finalize_statistics_collection()
             self.finalize_tensorboard()
-            self.logger.info("Experiment logged to: {}".format(self.log_dir))
+            self.logger.info("Experiment logged to: {}".format(self.app_state.log_dir))
 
 
 def main():

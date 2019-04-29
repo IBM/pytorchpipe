@@ -63,6 +63,8 @@ class AppState(metaclass=SingletonMetaClass):
         # Initialize logger logfile (as empty for now).
         self.log_file = None
         self.logger = None
+        # Set default path to current dir.
+        self.log_dir = path.expanduser(".")
 
         # Set CPU types as default.
         self.set_cpu_types()

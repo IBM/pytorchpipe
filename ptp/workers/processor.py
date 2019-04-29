@@ -64,17 +64,11 @@ class Processor(Worker):
         """
         Sets up the global test experiment for the ``Processor``:
 
-            - Checks that the model to use exists on file:
+            - Checks that the model to use exists
 
-                >>> if not os.path.isfile(flags.model)
+            - Checks that the configuration file exists
 
-            - Checks that the configuration file exists:
-
-                >>> if not os.path.isfile(config_file)
-
-            - Create the configuration:
-
-                >>> self.config.add_config_params_from_yaml(config)
+            - Creates the configuration
 
         The rest of the experiment setup is done in :py:func:`setup_individual_experiment()` \
         to allow for multiple tests suppport.
@@ -131,9 +125,7 @@ class Processor(Worker):
         Setup individual test experiment in the case of multiple tests, or the main experiment in the case of \
         one test experiment.
 
-        - Set up the log directory path:
-
-            >>> os.makedirs(self.log_dir, exist_ok=False)
+        - Set up the log directory path
 
         - Set random seeds
 
@@ -141,7 +133,7 @@ class Processor(Worker):
 
         - Creates testing problem manager
 
-        - Performs testing of compatibility of testing pipeline.
+        - Performs testing of compatibility of testing pipeline
 
         """
 
@@ -163,25 +155,25 @@ class Processor(Worker):
         while True:
             # Dirty fix: if log_dir already exists, wait for 1 second and try again
             try:
-                time_str = 'test_{0:%Y%m%d_%H%M%S}'.format(datetime.now())
+                time_str = self.set+'_{0:%Y%m%d_%H%M%S}'.format(datetime.now())
                 if self.app_state.args.savetag != '':
                     time_str = time_str + "_" + self.app_state.args.savetag
-                self.log_dir = self.abs_path + '/' + time_str + '/'
+                self.app_state.log_dir = self.abs_path + '/' + time_str + '/'
                 # Lowercase dir.
-                self.log_dir = self.log_dir.lower()
-                os.makedirs(self.log_dir, exist_ok=False)
+                self.app_state.log_dir = self.app_state.log_dir.lower()
+                os.makedirs(self.app_state.log_dir, exist_ok=False)
             except FileExistsError:
                 sleep(1)
             else:
                 break
 
         # Set log dir.
-        self.app_state.log_file = self.log_dir + 'processor.log'
+        self.app_state.log_file = self.app_state.log_dir + 'processor.log'
         # Initialize logger in app state.
         self.app_state.logger = logging.initialize_logger("AppState")
         # Add handlers for the logfile to worker logger.
         logging.add_file_handler_to_logger(self.logger)
-        self.logger.info("Logger directory set to: {}".format(self.log_dir ))
+        self.logger.info("Logger directory set to: {}".format(self.app_state.log_dir ))
 
         # Set cpu/gpu types.
         self.app_state.set_types()
@@ -296,7 +288,7 @@ class Processor(Worker):
         # Export and log configuration, optionally asking the user for confirmation.
         config_parsing.display_parsing_results(self.logger, self.app_state.args, self.unparsed)
         config_parsing.display_globals(self.logger, self.app_state.globalitems())
-        config_parsing.export_experiment_configuration_to_yml(self.logger, self.log_dir, "training_configuration.yml", self.config, self.app_state.args.confirm)
+        config_parsing.export_experiment_configuration_to_yml(self.logger, self.app_state.log_dir, "training_configuration.yml", self.config, self.app_state.args.confirm)
 
     def initialize_statistics_collection(self):
         """
@@ -309,7 +301,7 @@ class Processor(Worker):
         self.pm.problem.add_statistics(self.stat_col)
         self.pipeline.add_statistics(self.stat_col)
         # Create the csv file to store the statistics.
-        self.pm_batch_stats_file = self.stat_col.initialize_csv_file(self.log_dir, self.set+'_statistics.csv')
+        self.pm_batch_stats_file = self.stat_col.initialize_csv_file(self.app_state.log_dir, self.set+'_statistics.csv')
 
         # Create statistics aggregator.
         self.stat_agg = StatisticsAggregator()
@@ -318,7 +310,7 @@ class Processor(Worker):
         self.pipeline.add_aggregators(self.stat_agg)
         # Create the csv file to store the statistic aggregations.
         # Will contain a single row with aggregated statistics.
-        self.pm_set_stats_file = self.stat_agg.initialize_csv_file(self.log_dir, self.set+'_set_agg_statistics.csv')
+        self.pm_set_stats_file = self.stat_agg.initialize_csv_file(self.app_state.log_dir, self.set+'_set_agg_statistics.csv')
 
     def finalize_statistics_collection(self):
         """
@@ -382,6 +374,8 @@ class Processor(Worker):
                     self.app_state.episode += 1
 
                 # End for.
+                # Inform the problem managers that the epoch has ended.
+                self.pm.finalize_epoch()
 
                 self.logger.info('\n' + '='*80)
                 self.logger.info('Processing finished')
@@ -402,6 +396,7 @@ class Processor(Worker):
         finally:
             # Finalize statistics collection.
             self.finalize_statistics_collection()
+            self.logger.info("Experiment logged to: {}".format(self.app_state.log_dir))
         
 
 def main():
