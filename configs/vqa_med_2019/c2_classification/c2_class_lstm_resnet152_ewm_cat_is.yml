@@ -5,9 +5,9 @@ training:
   problem:
     batch_size: 48
     # Appy all preprocessing/data augmentations.
-    image_preprocessing: all
+    image_preprocessing: normalize
     # none | random_affine | random_horizontal_flip | normalize | all
-    question_preprocessing: all
+    question_preprocessing: lowercase,remove_punctuation,tokenize
     # none | lowercase | remove_punctuation | tokenize | random_remove_stop_words | random_shuffle_words | all
     streams: 
       # Problem is returning tokenized questions.
