@@ -95,9 +95,15 @@ class StreamViewer(Component):
                 sample_number = self.sample_number
 
             # Generate displayed string.
+            absent_streams = []
             disp_str = "Showing selected streams for sample {}:\n".format(sample_number)
             for stream_key in self.input_stream_keys:
                 if stream_key in data_dict.keys():
                     disp_str += " '{}': {}\n".format(stream_key, data_dict[stream_key][sample_number])
+                else:
+                    absent_streams.append(stream_key)
 
+            # Log values and inform about missing streams.
             self.logger.info(disp_str)
+            if len(absent_streams) > 0:
+                self.logger.warning("Coud not display the following (absent) streams: {}".format(absent_streams))
