@@ -122,7 +122,7 @@ def load_class_default_config_file(class_type):
     module = class_type.__module__.replace(".","/")
     rel_path = module[module.find("ptp")+4:]
     # Build the abs path to the default config file of a given component.
-    abs_default_config = AppState().absolute_config_path + "default/" + rel_path + ".yml"
+    abs_default_config = os.path.join(AppState().absolute_config_path, "default", rel_path) + ".yml"
 
     # Check if file exists.
     if not os.path.isfile(abs_default_config):
@@ -146,14 +146,14 @@ def load_class_default_config_file(class_type):
         exit(-2)
 
 
-def recurrent_config_parse(configs: str, configs_parsed: list, abs_config_path: str):
+def recurrent_config_parse(configs_to_parse: list, configs_parsed: list, abs_config_path: str):
     """
     Parses names of configuration files in a recursive manner, i.e. \
     by looking for ``default_config`` sections and trying to load and parse those \
     files one by one.
 
-    :param configs: String containing names of configuration files (with paths), separated by comas.
-    :type configs: str
+    :param configs_to_parse: List containing names of configuration files (with paths).
+    :type configs_to_parse: list
 
     :param configs_parsed: Configurations that were already parsed (so we won't parse them many times).
     :type configs_parsed: list
@@ -163,37 +163,33 @@ def recurrent_config_parse(configs: str, configs_parsed: list, abs_config_path: 
     :return: list of parsed configuration files.
 
     """
-    # Split and remove spaces.
-    configs_to_parse = configs.replace(" ", "").split(',')
-
     # Terminal condition.
     while len(configs_to_parse) > 0:
 
         # Get config.
         config = configs_to_parse.pop(0)
-        abs_config = abs_config_path + config
 
         # Skip empty names (after lose comas).
         if config == '':
             continue
-        print("Info: Parsing the {} configuration file".format(abs_config))
+        print("Info: Parsing the {} configuration file".format(config))
 
         # Check if it was already loaded.
         if config in configs_parsed:
-            print('Warning: Configuration file {} already parsed - skipping'.format(abs_config))
+            print('Warning: Configuration file {} already parsed - skipping'.format(config))
             continue
 
         # Check if file exists.
-        if not os.path.isfile(abs_config):
-            print('Error: Configuration file {} does not exist'.format(abs_config))
+        if not os.path.isfile(config):
+            print('Error: Configuration file {} does not exist'.format(config))
             exit(-1)
 
         try:
             # Open file and get parameter dictionary.
-            with open(abs_config, 'r') as stream:
+            with open(config, 'r') as stream:
                 param_dict = yaml.safe_load(stream)
         except yaml.YAMLError as e:
-            print("Error: Couldn't properly parse the {} configuration file".format(abs_config))
+            print("Error: Couldn't properly parse the {} configuration file".format(config))
             print('yaml.YAMLERROR:', e)
             exit(-1)
 
@@ -202,29 +198,28 @@ def recurrent_config_parse(configs: str, configs_parsed: list, abs_config_path: 
 
         # Check if there are any default configs to load.
         if 'default_configs' in param_dict:
-            # If there are - recursion!
-            configs_parsed = recurrent_config_parse(
-                param_dict['default_configs'], configs_parsed, abs_config_path)
+            default_configs_to_parse = param_dict['default_configs'].replace(" ", "").split(',')
+            # If there are - expand them to absolute paths.
+            abs_default_configs_to_parse = [os.path.join(abs_config_path,config) for config in default_configs_to_parse]
+            # Recursion!
+            configs_parsed = recurrent_config_parse(abs_default_configs_to_parse, configs_parsed, abs_config_path)
 
     # Done, return list of loaded configs.
     return configs_parsed
 
 
-def reverse_order_config_load(config_interface_obj, configs_to_load, abs_config_path):
+def reverse_order_config_load(config_interface_obj, configs_to_load):
     """
     Loads configuration files in reversed order.
 
     :param config_interface_obj: Configuration interface object.
 
-    :param configs_to_load: list of configuration files to load (relative to config directory)
-
-    :param abs_config_path: Absolute path to config directory.
-
+    :param configs_to_load: list of configuration files to load (with absolute paths)
     """
     for config in reversed(configs_to_load):
         # Load config from YAML file.
-        config_interface_obj.add_config_params_from_yaml(abs_config_path + config)
-        print('Info: Loaded configuration from file {}'.format(abs_config_path + config))
+        config_interface_obj.add_config_params_from_yaml(config)
+        print('Info: Loaded configuration from file {}'.format(config))
 
 
 def get_value_list_from_dictionary(key, parameter_dict, accepted_values = []):

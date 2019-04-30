@@ -19,6 +19,8 @@ __author__ = "Alexis Asseman, Tomasz Kornuta"
 
 import torch
 
+from os import path
+
 from ptp.utils.singleton import SingletonMetaClass
 
 
@@ -53,9 +55,16 @@ class AppState(metaclass=SingletonMetaClass):
         # Field storing global variables.
         self.__globals = dict()
 
+        # Get absolute path to configs from "~/./ptp/configs".
+        ptp_path = path.expanduser("~/.ptp/")
+        with open(path.join(ptp_path, "config.txt")) as file:
+            self.absolute_config_path = file.readline()
+
         # Initialize logger logfile (as empty for now).
         self.log_file = None
         self.logger = None
+        # Set default path to current dir.
+        self.log_dir = path.expanduser(".")
 
         # Set CPU types as default.
         self.set_cpu_types()

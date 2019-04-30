@@ -33,7 +33,7 @@ from ptp.components.problems.problem import Problem
 from ptp.data_types.data_definition import DataDefinition
 
 from ptp.components.utils.io import save_nparray_to_csv_file
-from ptp.configuration.config_parsing import get_value_list_from_dictionary
+from ptp.configuration.config_parsing import get_value_list_from_dictionary, get_value_from_dictionary
 
 
 class VQAMED2019(Problem):
@@ -109,11 +109,49 @@ class VQAMED2019(Problem):
         self.globals["category_word_mappings"] = {'C1': 0, 'C2': 1, 'C3': 2, 'C4': 3, 'BINARY': 4, '<UNK>': 5}
         self.category_idx_to_word = {0: 'C1', 1: 'C2', 2: 'C3', 3: 'C4', 4: 'BINARY', 5: '<UNK>'}
 
+        # Get image preprocessing.
+        self.image_preprocessing = get_value_list_from_dictionary(
+            "image_preprocessing", self.config,
+            'none | random_affine | random_horizontal_flip | normalize | all'.split(" | ")
+            )
+        if 'none' in self.image_preprocessing:
+            self.image_preprocessing = []
+        if 'all' in self.image_preprocessing:
+            self.image_preprocessing = 'random_affine | random_horizontal_flip | normalize'.split(" | ")
+        self.logger.info("Applied image preprocessing: {}".format(self.image_preprocessing))
+
+
+        # Get question preprocessing.
+        self.question_preprocessing = get_value_list_from_dictionary(
+            "question_preprocessing", self.config,
+            'none | lowercase | remove_punctuation | tokenize | random_remove_stop_words | random_shuffle_words | all'.split(" | ")
+            )
+        if 'none' in self.question_preprocessing:
+            self.question_preprocessing = []
+        if 'all' in self.question_preprocessing:
+            self.question_preprocessing = 'lowercase | remove_punctuation | tokenize | remove_stop_words | shuffle_words'.split(" | ")
+        self.logger.info("Applied question preprocessing: {}".format(self.question_preprocessing))
+
+        # Get answer preprocessing.
+        self.answer_preprocessing = get_value_list_from_dictionary(
+            "answer_preprocessing", self.config,
+            'none | lowercase | remove_punctuation | tokenize | all'.split(" | ")
+            )
+        if 'none' in self.answer_preprocessing:
+            self.answer_preprocessing = []
+        if 'all' in self.answer_preprocessing:
+            self.answer_preprocessing = 'lowercase | remove_punctuation | tokenize '.split(" | ")
+        self.logger.info("Applied answer preprocessing: {}".format(self.answer_preprocessing))
+
+
         # Get the absolute path.
         self.data_folder = os.path.expanduser(self.config['data_folder'])
 
+        # Get split.
+        split = get_value_from_dictionary('split', self.config, "training,validation,training_validation,test".split(","))
+
         # Set split-dependent data.
-        if self.config['split'] == 'training':
+        if split == 'training':
             # Training split folder.
             split_folder = os.path.join(self.data_folder, "ImageClef-2019-VQA-Med-Training")
             # Set source files.
@@ -131,8 +169,10 @@ class VQAMED2019(Problem):
 
             # Filter lists taking into account configuration.
             source_files, source_image_folders, source_categories = self.filter_sources(source_files, source_image_folders, source_categories)
+            # Load dataset.
+            self.dataset = self.load_dataset(source_files, source_image_folders, source_categories)
 
-        elif self.config['split'] == 'validation':
+        elif split == 'validation':
             # Validation split folder.
             split_folder = os.path.join(self.data_folder, "ImageClef-2019-VQA-Med-Validation")
 
@@ -152,8 +192,10 @@ class VQAMED2019(Problem):
 
             # Filter lists taking into account configuration.
             source_files, source_image_folders, source_categories = self.filter_sources(source_files, source_image_folders, source_categories)
+            # Load dataset.
+            self.dataset = self.load_dataset(source_files, source_image_folders, source_categories)
 
-        elif self.config['split'] == 'training_validation':
+        elif split == 'training_validation':
             # This split takes both training and validation and assumes utilization of kFoldWeightedRandomSampler.
 
             # 1. Training split folder.
@@ -198,47 +240,17 @@ class VQAMED2019(Problem):
             source_files = [*training_source_files, *valid_source_files]
             source_image_folders = [*training_source_image_folders, *valid_source_image_folders]
             source_categories  = [*training_source_categories, *valid_source_categories]
-        # else: # Test set. # TODO
+            # Load dataset.
+            self.dataset = self.load_dataset(source_files, source_image_folders, source_categories)
 
-        # Get image preprocessing.
-        self.image_preprocessing = get_value_list_from_dictionary(
-            "image_preprocessing", self.config,
-            'none | random_affine | random_horizontal_flip | normalize | all'.split(" | ")
-            )
-        if 'none' in self.image_preprocessing:
-            self.image_preprocessing = []
-        if 'all' in self.image_preprocessing:
-            self.image_preprocessing = 'random_affine | random_horizontal_flip | normalize'.split(" | ")
-        self.logger.info("Applied image preprocessing: {}".format(self.image_preprocessing))
-
-
-        # Get question preprocessing.
-        self.question_preprocessing = get_value_list_from_dictionary(
-            "question_preprocessing", self.config,
-            'none | lowercase | remove_punctuation | tokenize | random_remove_stop_words | random_shuffle_words | all'.split(" | ")
-            )
-        if 'none' in self.question_preprocessing:
-            self.question_preprocessing = []
-        if 'all' in self.question_preprocessing:
-            self.question_preprocessing = 'lowercase | remove_punctuation | tokenize | remove_stop_words | shuffle_words'.split(" | ")
-        self.logger.info("Applied question preprocessing: {}".format(self.question_preprocessing))
-
-        # Get answer preprocessing.
-        self.answer_preprocessing = get_value_list_from_dictionary(
-            "answer_preprocessing", self.config,
-            'none | lowercase | remove_punctuation | tokenize | all'.split(" | ")
-            )
-        if 'none' in self.answer_preprocessing:
-            self.answer_preprocessing = []
-        if 'all' in self.answer_preprocessing:
-            self.answer_preprocessing = 'lowercase | remove_punctuation | tokenize '.split(" | ")
-        self.logger.info("Applied answer preprocessing: {}".format(self.answer_preprocessing))
-
-
-        # Load dataset.
-        self.logger.info("Loading dataset from files:\n {}".format(source_files))
-        self.dataset = self.load_dataset(source_files, source_image_folders, source_categories)
-        self.logger.info("Loaded dataset consisting of {} samples".format(len(self.dataset)))
+        else:
+            # Test set.
+            split_folder = os.path.join(self.data_folder, "ImageClef-2019-VQA-Med-Test")
+            # Set source file.
+            source_file = os.path.join(split_folder,"VQAMed2019_Test_Questions.txt")
+            # Set image folder.
+            source_image_folder = os.path.join(split_folder, 'VQAMed2019_Test_Images')
+            self.dataset = self.load_testset(source_file, source_image_folder)
 
         # Display exemplary sample.
         self.logger.info("Exemplary sample:\n [ category: {}\t image_ids: {}\t question: {}\t answer: {} ]".format(
@@ -492,6 +504,7 @@ class VQAMED2019(Problem):
 
         :param source_categories: List of categories associated with each of those files. (<UNK> unknown)
         """
+        self.logger.info("Loading dataset from files:\n {}".format(source_files))
         # Set containing list of tuples.
         dataset = []
 
@@ -542,6 +555,67 @@ class VQAMED2019(Problem):
                 t.update()
             t.close()
 
+        self.logger.info("Loaded dataset consisting of {} samples".format(len(dataset)))
+        # Return the created list.
+        return dataset
+
+
+    def load_testset(self, data_file, image_folder):
+        """
+        Loads the test set.
+
+        :param data_file: Source file.
+
+        :param image_folder: Folder containing image files.
+
+        """
+        # Set containing list of tuples.
+        dataset = []
+        category_id = 5 # <UNK>
+        answer = '<UNK>'
+
+        # Set absolute path to file.
+        self.logger.info('Loading test set from {}...'.format(data_file))
+        # Load file content using '|' separator.
+        df = pd.read_csv(filepath_or_buffer=data_file, sep='|',header=None,
+                names=[self.key_image_ids,self.key_questions])
+
+        # Add tdqm bar.
+        t = tqdm.tqdm(total=len(df.index))
+        for _, row in df.iterrows():
+            # Retrieve question and answer.
+            question = row[self.key_questions]
+
+            # Process question - if required.
+            preprocessed_question = self.preprocess_text(
+                question,
+                'lowercase' in self.question_preprocessing,
+                'remove_punctuation' in self.question_preprocessing,
+                'tokenize' in self.question_preprocessing,
+                'remove_stop_words' in self.question_preprocessing
+                )
+
+            # Process answer - if required.
+            if 'tokenize' in self.answer_preprocessing:
+                preprocessed_answer = [answer]
+            else:
+                preprocessed_answer = answer 
+
+            # Add record to dataset.
+            dataset.append({
+                # Image name and path leading to it.
+                self.key_image_ids: row[self.key_image_ids],
+                "image_folder": image_folder,
+                self.key_questions: preprocessed_question,
+                self.key_answers: preprocessed_answer,
+                # Add category.
+                self.key_category_ids: category_id
+                })
+
+            t.update()
+        t.close()
+
+        self.logger.info("Loaded dataset consisting of {} samples".format(len(dataset)))
         # Return the created list.
         return dataset
 

@@ -34,9 +34,8 @@ class OnlineTrainer(Trainer):
         it makes less sense for problems which have a very large, almost infinite, dataset (like algorithmic \
         tasks, which generate random data on-the-fly). \
          
-        This is why this OnlineTrainer was implemented. Instead of looping on epochs, it iterates directly on \
-        episodes (we call an iteration on a single batch an episode).
-
+        This is why this OnlineTrainer was implemented. Despite the fact it has the notion of epoch, it is more \
+        flexible and operates on episodes (we call an iteration on a single batch an episode). \
 
     """
 
@@ -108,7 +107,7 @@ class OnlineTrainer(Trainer):
         # Export and log configuration, optionally asking the user for confirmation.
         config_parsing.display_parsing_results(self.logger, self.app_state.args, self.unparsed)
         config_parsing.display_globals(self.logger, self.app_state.globalitems())
-        config_parsing.export_experiment_configuration_to_yml(self.logger, self.log_dir, "training_configuration.yaml", self.config, self.app_state.args.confirm)
+        config_parsing.export_experiment_configuration_to_yml(self.logger, self.app_state.log_dir, "training_configuration.yml", self.config, self.app_state.args.confirm)
 
     def run_experiment(self):
         """
@@ -346,7 +345,7 @@ class OnlineTrainer(Trainer):
             # Finalize statistics collection.
             self.finalize_statistics_collection()
             self.finalize_tensorboard()
-            self.logger.info("Experiment logged to: {}".format(self.log_dir))
+            self.logger.info("Experiment logged to: {}".format(self.app_state.log_dir))
 
 
 def main():

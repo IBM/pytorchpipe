@@ -90,7 +90,7 @@ class Trainer(Worker):
 
         - Set up the log directory path:
 
-            >>> os.makedirs(self.log_dir, exist_ok=False)
+            >>> os.makedirs(self.app_state.log_dir, exist_ok=False)
 
         - Add a ``FileHandler`` to the logger:
 
@@ -121,34 +121,26 @@ class Trainer(Worker):
         # Call base method to parse all command line arguments and add default sections.
         super(Trainer, self).setup_experiment()
 
-        # Check if config file was selected.
-        if self.app_state.args.config == '':
-            print('Please pass configuration file(s) as --c parameter')
-            exit(-1)
-
         # Check the presence of the CUDA-compatible devices.
         if self.app_state.args.use_gpu and (torch.cuda.device_count() == 0):
             self.logger.error("Cannot use GPU as there are no CUDA-compatible devices present in the system!")
+            exit(-1)
+
+        # Check if config file was selected.
+        if self.app_state.args.config == '':
+            print('Please pass configuration file(s) as --c parameter')
             exit(-2)
 
-        # Check if config file exists.            
-        root_config = self.app_state.args.config
-        if not os.path.isfile(root_config):
-            print('Error: Configuration file {} does not exist'.format(root_config))
-            exit(-3)
+        # Split and make them absolute.
+        root_configs = self.app_state.args.config.replace(" ", "").split(',')
+        # If there are - expand them to absolute paths.
+        abs_root_configs = [os.path.expanduser(config) for config in root_configs]
         
-        # Extract absolute path to main ptp 'config' directory.
-        abs_config_path = os.path.abspath(root_config)
-        # Save it in app_state!
-        self.app_state.absolute_config_path = abs_config_path[:abs_config_path.find("configs")+8] 
-        # Get relative path.
-        rel_config_path = abs_config_path[abs_config_path.find("configs")+8:]
-
         # Get the list of configurations which need to be loaded.
-        configs_to_load = config_parse.recurrent_config_parse(rel_config_path, [], self.app_state.absolute_config_path)
+        configs_to_load = config_parse.recurrent_config_parse(abs_root_configs, [], self.app_state.absolute_config_path)
 
         # Read the YAML files one by one - but in reverse order -> overwrite the first indicated config(s)
-        config_parse.reverse_order_config_load(self.config, configs_to_load, self.app_state.absolute_config_path)
+        config_parse.reverse_order_config_load(self.config, configs_to_load)
 
         # -> At this point, the Param Registry contains the configuration loaded (and overwritten) from several files.
         # Log the resulting training configuration.
@@ -185,28 +177,28 @@ class Trainer(Worker):
                 time_str = '{0:%Y%m%d_%H%M%S}'.format(datetime.now())
                 if self.app_state.args.savetag != '':
                     time_str = time_str + "_" + self.app_state.args.savetag
-                self.log_dir = os.path.expanduser(self.app_state.args.expdir) + '/' + training_problem_type + '/' + pipeline_name + '/' + time_str + '/'
+                self.app_state.log_dir = os.path.expanduser(self.app_state.args.expdir) + '/' + training_problem_type + '/' + pipeline_name + '/' + time_str + '/'
                 # Lowercase dir.
-                self.log_dir = self.log_dir.lower()
-                os.makedirs(self.log_dir, exist_ok=False)
+                self.app_state.log_dir = self.app_state.log_dir.lower()
+                os.makedirs(self.app_state.log_dir, exist_ok=False)
             except FileExistsError:
                 sleep(1)
             else:
                 break
 
         # Set log dir.
-        self.app_state.log_file = self.log_dir + 'trainer.log'
+        self.app_state.log_file = self.app_state.log_dir + 'trainer.log'
         # Initialize logger in app state.
         self.app_state.logger = logging.initialize_logger("AppState")
         # Add handlers for the logfile to worker logger.
         logging.add_file_handler_to_logger(self.logger)
-        self.logger.info("Logger directory set to: {}".format(self.log_dir ))
+        self.logger.info("Logger directory set to: {}".format(self.app_state.log_dir))
 
         # Set cpu/gpu types.
         self.app_state.set_types()
 
         # Models dir.
-        self.checkpoint_dir = self.log_dir + 'checkpoints/'
+        self.checkpoint_dir = self.app_state.log_dir + 'checkpoints/'
         os.makedirs(self.checkpoint_dir, exist_ok=False)
 
         # Set random seeds in the training section.
@@ -387,7 +379,7 @@ class Trainer(Worker):
         self.training.problem.add_statistics(self.training_stat_col)
         self.pipeline.add_statistics(self.training_stat_col)
         # Create the csv file to store the training statistics.
-        self.training_batch_stats_file = self.training_stat_col.initialize_csv_file(self.log_dir, 'training_statistics.csv')
+        self.training_batch_stats_file = self.training_stat_col.initialize_csv_file(self.app_state.log_dir, 'training_statistics.csv')
 
         # Create statistics aggregator for training.
         self.training_stat_agg = StatisticsAggregator()
@@ -395,7 +387,7 @@ class Trainer(Worker):
         self.training.problem.add_aggregators(self.training_stat_agg)
         self.pipeline.add_aggregators(self.training_stat_agg)
         # Create the csv file to store the training statistic aggregations.
-        self.training_set_stats_file = self.training_stat_agg.initialize_csv_file(self.log_dir, 'training_set_agg_statistics.csv')
+        self.training_set_stats_file = self.training_stat_agg.initialize_csv_file(self.app_state.log_dir, 'training_set_agg_statistics.csv')
 
         # VALIDATION.
         # Create statistics collector for validation.
@@ -404,7 +396,7 @@ class Trainer(Worker):
         self.validation.problem.add_statistics(self.validation_stat_col)
         self.pipeline.add_statistics(self.validation_stat_col)
         # Create the csv file to store the validation statistics.
-        self.validation_batch_stats_file = self.validation_stat_col.initialize_csv_file(self.log_dir, 'validation_statistics.csv')
+        self.validation_batch_stats_file = self.validation_stat_col.initialize_csv_file(self.app_state.log_dir, 'validation_statistics.csv')
 
         # Create statistics aggregator for validation.
         self.validation_stat_agg = StatisticsAggregator()
@@ -412,7 +404,7 @@ class Trainer(Worker):
         self.validation.problem.add_aggregators(self.validation_stat_agg)
         self.pipeline.add_aggregators(self.validation_stat_agg)
         # Create the csv file to store the validation statistic aggregations.
-        self.validation_set_stats_file = self.validation_stat_agg.initialize_csv_file(self.log_dir, 'validation_set_agg_statistics.csv')
+        self.validation_set_stats_file = self.validation_stat_agg.initialize_csv_file(self.app_state.log_dir, 'validation_set_agg_statistics.csv')
 
 
     def finalize_statistics_collection(self):
@@ -435,16 +427,16 @@ class Trainer(Worker):
         # Create TensorBoard outputs - if TensorBoard is supposed to be used.
         if self.app_state.args.tensorboard is not None:
             from tensorboardX import SummaryWriter
-            self.training_batch_writer = SummaryWriter(self.log_dir + '/training')
+            self.training_batch_writer = SummaryWriter(self.app_state.log_dir + '/training')
             self.training_stat_col.initialize_tensorboard(self.training_batch_writer)
 
-            self.training_set_writer = SummaryWriter(self.log_dir + '/training_set_agg')
+            self.training_set_writer = SummaryWriter(self.app_state.log_dir + '/training_set_agg')
             self.training_stat_agg.initialize_tensorboard(self.training_set_writer)
             
-            self.validation_batch_writer = SummaryWriter(self.log_dir + '/validation')
+            self.validation_batch_writer = SummaryWriter(self.app_state.log_dir + '/validation')
             self.validation_stat_col.initialize_tensorboard(self.validation_batch_writer)
 
-            self.validation_set_writer = SummaryWriter(self.log_dir + '/validation_set_agg')
+            self.validation_set_writer = SummaryWriter(self.app_state.log_dir + '/validation_set_agg')
             self.validation_stat_agg.initialize_tensorboard(self.validation_set_writer)
         else:
             self.training_batch_writer = None

@@ -1,0 +1,62 @@
+# This config is not a standalone config!
+# It adds new sections (sets) without samplers and components for saving answers that we can use for getting final answers.
+
+training_answers:
+  problem:
+    type: &p_type VQAMED2019
+    data_folder: &data_folder ~/data/vqa-med
+    split: training
+    categories: all
+    resize_image: &resize_image [224, 224]
+    batch_size: 64
+  dataloader:
+    # No sampler, process samples in the same order.
+    shuffle: false
+    # Use 1 worker, so batches will follow the samples order.
+    num_workers: 1
+
+validation_answers:
+  problem:
+    type: *p_type
+    data_folder: *data_folder
+    split: validation
+    resize_image: *resize_image     
+    batch_size: 64
+  dataloader:
+    # No sampler, process samples in the same order.
+    shuffle: false
+    # Use 1 worker, so batches will follow the samples order.
+    num_workers: 1
+
+
+# Testing parameters:
+test_answers:
+  problem:
+    type: *p_type 
+    data_folder: *data_folder
+    split: test
+    resize_image: *resize_image     
+    batch_size: 64
+  dataloader:
+    # No sampler, process samples in the same order.
+    shuffle: false
+    # Use 1 worker, so batches will follow the samples order.
+    num_workers: 1
+
+# Add component for exporting answers to files.
+pipeline:
+  disable: viewer
+#  # Viewers.
+  viewer_extended:
+    priority: 100.4
+    type: StreamViewer
+    sample_number: 0
+    input_streams: indices,image_ids,questions,category_names,predicted_categories,answers,tokenized_answers,predicted_answers
+
+  exporter:
+    priority: 100.5
+    type: StreamFileExporter
+    separator: '|'
+    input_streams: indices,image_ids,questions,category_names,predicted_categories,answers,tokenized_answers,predicted_answers
+
+#: pipeline

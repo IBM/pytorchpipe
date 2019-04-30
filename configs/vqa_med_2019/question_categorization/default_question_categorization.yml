@@ -2,14 +2,18 @@
 default_configs: vqa_med_2019/default_vqa_med_2019.yml
 
 training:
+  problem:
     categories: all
     export_sample_weights: ~/data/vqa-med/answers.all.weights.csv
   sampler:
     weights: ~/data/vqa-med/answers.all.weights.csv
-
-  # settings parameters
   terminal_conditions:
     loss_stop: 1.0e-3
+
+validation:
+  problem:
+    categories: all
+
 
 pipeline:
 
