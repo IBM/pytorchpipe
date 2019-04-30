@@ -13,6 +13,9 @@ source_vocabulary_files: ''
 # Additional tokens that will be added to vocabulary (LOADED)
 additional_tokens: ''
 
+# HACK: This key is useless here, but needed by parent class. Should be removed/fixed in the future
+export_pad_index_to_globals: False
+
 # File containing word (LOADED)
 word_mappings_file: 'word_mappings.csv'
 

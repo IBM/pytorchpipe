@@ -45,8 +45,15 @@ class NLLLoss(Loss):
         # Get number of targets dimensions.
         self.num_targets_dims = self.config["num_targets_dims"]
 
+        # Get the optional ignore_index. -100 is the default value in PyTorch
+        self.ignore_index = -100
+        try:
+            self.ignore_index = self.globals["ignore_index"]
+        except KeyError:
+            pass
+
         # Set loss.
-        self.loss_function = nn.NLLLoss()
+        self.loss_function = nn.NLLLoss(ignore_index=self.ignore_index)
 
 
     def input_data_definitions(self):
