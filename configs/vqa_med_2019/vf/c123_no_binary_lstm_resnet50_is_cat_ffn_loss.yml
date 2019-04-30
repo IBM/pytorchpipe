@@ -172,7 +172,7 @@ pipeline:
   # Image encoder.
   image_encoder:
     type: TorchVisionWrapper
-    model: resnet152
+    model: resnet50
     priority: 2.1
     streams:
       inputs: images
