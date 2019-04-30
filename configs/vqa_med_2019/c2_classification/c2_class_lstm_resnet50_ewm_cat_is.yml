@@ -3,19 +3,18 @@ default_configs: vqa_med_2019/c2_classification/default_c2_classification.yml
 
 training:
   problem:
+    batch_size: 48
     # Appy all preprocessing/data augmentations.
-    image_preprocessing: normalize
-    # none | random_affine | random_horizontal_flip | normalize | all
     question_preprocessing: lowercase,remove_punctuation,tokenize
-    # none | lowercase | remove_punctuation | tokenize | random_remove_stop_words | random_shuffle_words | all
     streams: 
       # Problem is returning tokenized questions.
       questions: tokenized_questions
 
 validation:
   problem:
+    batch_size: 48
+    # Appy all preprocessing/data augmentations.
     question_preprocessing: lowercase,remove_punctuation,tokenize
-    # none | lowercase | remove_punctuation | tokenize | random_remove_stop_words | random_shuffle_words | all
     streams: 
       # Problem is returning tokenized questions.
       questions: tokenized_questions
@@ -27,8 +26,8 @@ pipeline:
     priority: 0
     type: GlobalVariablePublisher
     # Add input_size to globals.
-    keys: [question_encoder_output_size]
-    values: [100]
+    keys: [question_encoder_output_size, image_encoder_output_size, element_wise_activation_size,image_size_encoder_input_size, image_size_encoder_output_size]
+    values: [100, 100, 100, 2, 10]
 
   ################# PIPE 0: question #################
 
@@ -51,8 +50,8 @@ pipeline:
     cell_type: LSTM
     prediction_mode: Last
     use_logsoftmax: False
-    initial_state: Zero
-    #dropout_rate: 0.5
+    initial_state: Trainable
+    dropout_rate: 0.1
     hidden_size: 50
     streams:
       inputs: embedded_questions
@@ -66,34 +65,78 @@ pipeline:
   image_encoder:
     priority: 3.1
     type: TorchVisionWrapper
-    return_feature_maps: True
+    model_type: resnet50
     streams:
       inputs: images
-      outputs: feature_maps
+      outputs: image_activations
+    globals:
+      output_size: image_encoder_output_size
 
-  ################# PIPE 3: fusion + classification #################
+  ################# PIPE 3: image-question fusion  #################
   # Element wise multiplication + FF.
   question_image_fusion:
     priority: 4.1
-    type: RelationalNetwork
+    type: ElementWiseMultiplication
     dropout_rate: 0.5
-    g_theta_sizes: [100, 100]
     streams:
+      image_encodings: image_activations
       question_encodings: question_activations
-      outputs: fused_image_question_activations
+      outputs: element_wise_activations
     globals:
+      image_encoding_size: image_encoder_output_size
       question_encoding_size: question_encoder_output_size
-      output_size: fused_image_question_activation_size
+      output_size: element_wise_activation_size
 
-  classifier:
+  question_image_ffn:
     priority: 4.2
     type: FeedForwardNetwork 
-    hidden_sizes: [100,100]
+    hidden_sizes: [100]
+    dropout_rate: 0.5
+    use_logsoftmax: False
+    streams:
+      inputs: element_wise_activations
+      predictions: question_image_activations
+    globals:
+      input_size: element_wise_activation_size
+      prediction_size: element_wise_activation_size
+
+  ################# PIPE 5: image-question-image size fusion + classification #################
+  # Model - image size FFN.
+  image_size_encoder:
+    priority: 5.1
+    type: FeedForwardNetwork 
+    streams:
+      inputs: image_sizes
+      predictions: image_size_activations
+    globals:
+      input_size: image_size_encoder_input_size
+      prediction_size: image_size_encoder_output_size
+
+  # 4th subpipeline: concatenation + FF.
+  concat:
+    priority: 5.2
+    type: Concatenation
+    input_streams: [question_image_activations,image_size_activations]
+    # Concatenation 
+    dim: 1 # default
+    input_dims: [[-1,100],[-1,10]]
+    output_dims: [-1,110]
+    streams:
+      outputs: concatenated_activations
+    globals:
+      output_size: concatentated_activations_size
+
+
+  classifier:
+    priority: 5.3
+    type: FeedForwardNetwork 
+    hidden_sizes: [100]
     dropout_rate: 0.5
     streams:
-      inputs: fused_image_question_activations
+      inputs: concatenated_activations
     globals:
-      input_size: fused_image_question_activation_size
+      input_size: concatentated_activations_size
       prediction_size: vocabulary_size_c2
+
 
   #: pipeline

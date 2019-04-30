@@ -9,6 +9,10 @@ training_answers:
     categories: all
     resize_image: &resize_image [224, 224]
     batch_size: 64
+    # Appy all preprocessing/data augmentations.
+    question_preprocessing: lowercase,remove_punctuation,tokenize
+    streams: 
+      questions: tokenized_questions
   dataloader:
     # No sampler, process samples in the same order.
     shuffle: false
@@ -22,6 +26,10 @@ validation_answers:
     split: validation
     resize_image: *resize_image     
     batch_size: 64
+    # Appy all preprocessing/data augmentations.
+    question_preprocessing: lowercase,remove_punctuation,tokenize
+    streams: 
+      questions: tokenized_questions
   dataloader:
     # No sampler, process samples in the same order.
     shuffle: false
@@ -37,6 +45,10 @@ test_answers:
     split: test
     resize_image: *resize_image     
     batch_size: 64
+    # Appy all preprocessing/data augmentations.
+    question_preprocessing: lowercase,remove_punctuation,tokenize
+    streams: 
+      questions: tokenized_questions
   dataloader:
     # No sampler, process samples in the same order.
     shuffle: false
@@ -45,18 +57,35 @@ test_answers:
 
 # Add component for exporting answers to files.
 pipeline:
-  disable: viewer
-#  # Viewers.
+  disable: viewer,question_tokenizer
+  # Viewers.
   viewer_extended:
     priority: 100.4
     type: StreamViewer
     sample_number: 0
-    input_streams: indices,image_ids,questions,category_names,predicted_categories,answers,tokenized_answers,predicted_answers
+    input_streams: 
+      indices,image_ids,tokenized_questions,
+      category_names,predicted_categories,
+      answers,tokenized_answers,predicted_answers
 
-  exporter:
+  answer_exporter:
     priority: 100.5
     type: StreamFileExporter
     separator: '|'
-    input_streams: indices,image_ids,questions,category_names,predicted_categories,answers,tokenized_answers,predicted_answers
+    filename: 'answers.csv'
+    export_separator_line_to_csv: True
+    input_streams: 
+      indices,image_ids,tokenized_questions,
+      category_names,predicted_categories,
+      answers,tokenized_answers,predicted_answers
+
+  submission_exporter:
+    priority: 100.6
+    type: StreamFileExporter
+    separator: '|'
+    filename: 'submission.txt'
+    input_streams: 
+      image_ids,
+      predicted_answers
 
 #: pipeline

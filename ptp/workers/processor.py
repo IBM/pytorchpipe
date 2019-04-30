@@ -17,7 +17,7 @@
 
 __author__ = "Tomasz Kornuta, Vincent Marois, Younes Bouhadjar"
 
-import os
+from os import path,makedirs
 import torch
 from time import sleep
 from datetime import datetime
@@ -93,12 +93,12 @@ class Processor(Worker):
             exit(-2)
 
         # Check if file with model exists.
-        if not os.path.isfile(chkpt_file):
+        if not path.isfile(chkpt_file):
             print('Checkpoint file {} does not exist'.format(chkpt_file))
             exit(-3)
 
         # Extract path.
-        self.abs_path, _ = os.path.split(os.path.dirname(os.path.expanduser(chkpt_file)))
+        self.abs_path, _ = path.split(path.dirname(path.expanduser(chkpt_file)))
         print(self.abs_path)
 
         # Check if config file was indicated by the user.
@@ -106,10 +106,10 @@ class Processor(Worker):
             # Split and make them absolute.
             root_configs = self.app_state.args.config.replace(" ", "").split(',')
             # If there are - expand them to absolute paths.
-            abs_root_configs = [os.path.expanduser(config) for config in root_configs]
+            abs_root_configs = [path.expanduser(config) for config in root_configs]
         else:
             # Use the "default one".
-            abs_root_configs = [os.path.join(self.abs_path, 'training_configuration.yml')]
+            abs_root_configs = [path.join(self.abs_path, 'training_configuration.yml')]
 
         # Get the list of configurations which need to be loaded.
         configs_to_load = config_parsing.recurrent_config_parse(abs_root_configs, [], self.app_state.absolute_config_path)
@@ -160,7 +160,7 @@ class Processor(Worker):
                 self.app_state.log_dir = self.abs_path + '/' + time_str + '/'
                 # Lowercase dir.
                 self.app_state.log_dir = self.app_state.log_dir.lower()
-                os.makedirs(self.app_state.log_dir, exist_ok=False)
+                makedirs(self.app_state.log_dir, exist_ok=False)
             except FileExistsError:
                 sleep(1)
             else:
@@ -254,7 +254,7 @@ class Processor(Worker):
                 pipeline_name = ""
             # Try to load the model.
             if pipeline_name != "":
-                if os.path.isfile(pipeline_name):
+                if path.isfile(pipeline_name):
                     # Load parameters from checkpoint.
                     self.pipeline.load(pipeline_name)
                 else:
