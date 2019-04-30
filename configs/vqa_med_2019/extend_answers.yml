@@ -58,7 +58,7 @@ test_answers:
 # Add component for exporting answers to files.
 pipeline:
   disable: viewer,question_tokenizer
-#  # Viewers.
+  # Viewers.
   viewer_extended:
     priority: 100.4
     type: StreamViewer
@@ -68,13 +68,23 @@ pipeline:
       category_names,predicted_categories,
       answers,tokenized_answers,predicted_answers
 
-  exporter:
+  answer_exporter:
     priority: 100.5
     type: StreamFileExporter
-    separator: '|'
+    separator: ','
+    filename: 'answers.csv'
     input_streams: 
       indices,image_ids,tokenized_questions,
       category_names,predicted_categories,
       answers,tokenized_answers,predicted_answers
+
+  submission_exporter:
+    priority: 100.6
+    type: StreamFileExporter
+    separator: '|'
+    filename: 'submission.txt'
+    input_streams: 
+      image_ids,
+      predicted_answers
 
 #: pipeline
