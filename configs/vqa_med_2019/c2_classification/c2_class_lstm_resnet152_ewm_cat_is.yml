@@ -95,6 +95,7 @@ pipeline:
     type: FeedForwardNetwork 
     hidden_sizes: [100]
     dropout_rate: 0.5
+    use_logsoftmax: False
     streams:
       inputs: element_wise_activations
       predictions: question_image_activations
