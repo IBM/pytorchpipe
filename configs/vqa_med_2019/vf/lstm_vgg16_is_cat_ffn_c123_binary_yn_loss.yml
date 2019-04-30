@@ -161,8 +161,8 @@ pipeline:
       inputs: answers
       outputs: all_answers_ids
     globals:
-      vocabulary_size: vocabulary_size_all_c123
-      word_mappings: word_mappings_all_c123_binary_yn
+      vocabulary_size: vocabulary_size_c123_binary_yn
+      word_mappings: word_mappings_c123_binary_yn
 
   ################# PIPE 2: SHARED IMAGE ENCODER #################
 
@@ -206,10 +206,10 @@ pipeline:
       output_size: concatenated_activations_size
 
 
-  ################# PIPE 5: C1 + C2 + C3 questions #################
+  ################# PIPE 5: C1 + C2 + C3 + BINARY questions #################
 
   # Answer encoding for PIPE 5.
-  pipe5_c123_answer_indexer:
+  pipe5_c123_binary_yn_answer_indexer:
     type: LabelIndexer
     priority: 5.1
     data_folder: ~/data/vqa-med
@@ -218,13 +218,13 @@ pipeline:
     export_word_mappings_to_globals: True
     streams:
       inputs: answers
-      outputs: pipe5_c123_answers_ids
+      outputs: pipe5_c123_binary_yn_answers_ids
     globals:
       vocabulary_size: vocabulary_size_c123_binary_yn
-      word_mappings: word_mappings_all_c123_binary_yn
+      word_mappings: word_mappings_c123_binary_yn
 
   # Sample masking based on categories.
-  pipe5_c123_string_to_mask:
+  pipe5_c123_binary_yn_string_to_mask:
     priority: 5.2
     type: StringToMask
     globals:
@@ -232,33 +232,33 @@ pipeline:
     streams:
       strings: pipe0_predicted_question_categories_names
       string_indices: predicted_c123_by_question_categories_indices # NOT USED
-      masks: pipe5_c123_masks
+      masks: pipe5_c123_binary_yn_masks
 
   # Model 4: FFN C1 answering
-  pipe5_c123_ffn:
+  pipe5_c123_binary_yn_ffn:
     priority: 5.3
     type: FeedForwardNetwork
-    hidden: [50]
+    hidden: [100]
     dropout_rate: 0.5
     streams:
       inputs: concatenated_activations
-      predictions: pipe5_c123_predictions
+      predictions: pipe5_c123_binary_yn_predictions
     globals:
       input_size: concatenated_activations_size
       prediction_size: vocabulary_size_c123_binary_yn
 
-  pipe5_c123_nllloss:
+  pipe5_c123_binary_yn_nllloss:
     type: NLLLoss
     priority: 5.4
     targets_dim: 1
     use_masking: True
     streams:
-      predictions: pipe5_c123_predictions
-      masks: pipe5_c123_masks
-      targets: pipe5_c123_answers_ids
-      loss: pipe5_c123_loss
+      predictions: pipe5_c123_binary_yn_predictions
+      masks: pipe5_c123_binary_yn_masks
+      targets: pipe5_c123_binary_yn_answers_ids
+      loss: pipe5_c123_binary_yn_loss
 
-  pipe5_c123_precision_recall:
+  pipe5_c123_binary_yn_precision_recall:
     type: PrecisionRecallStatistics
     priority: 5.5
     use_word_mappings: True
@@ -266,15 +266,15 @@ pipeline:
     show_class_scores: True
     #show_confusion_matrix: True
     streams:
-      masks: pipe5_c123_masks
-      predictions: pipe5_c123_predictions
-      targets: pipe5_c123_answers_ids
+      masks: pipe5_c123_binary_yn_masks
+      predictions: pipe5_c123_binary_yn_predictions
+      targets: pipe5_c123_binary_yn_answers_ids
     globals:
-      word_mappings: word_mappings_all_c123_binary_yn
+      word_mappings: word_mappings_c123_binary_yn
     statistics:
-      precision: pipe5_c123_precision
-      recall: pipe5_c123_recall
-      f1score: pipe5_c123_f1score
+      precision: pipe5_c123_binary_yn_precision
+      recall: pipe5_c123_binary_yn_recall
+      f1score: pipe5_c123_binary_yn_f1score
 
   # C123 Predictions decoder.
   pipe5_prediction_decoder:
@@ -283,10 +283,10 @@ pipeline:
     # Use the same word mappings as label indexer.
     import_word_mappings_from_globals: True
     streams:
-      inputs: pipe5_c123_predictions
+      inputs: pipe5_c123_binary_yn_predictions
       outputs: predicted_answers
     globals:
-      word_mappings: word_mappings_all_c123_binary_yn
+      word_mappings: word_mappings_c123_binary_yn
 
   ################# PIPE 9: MERGE ANSWERS #################
 
@@ -298,7 +298,7 @@ pipeline:
     input_streams:
       tokenized_questions, category_names,
       pipe0_predicted_question_categories_names,
-      pipe5_c123_masks,
+      pipe5_c123_binary_yn_masks,
       answers, predicted_answers
 
 
