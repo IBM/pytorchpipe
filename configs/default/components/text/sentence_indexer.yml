@@ -18,6 +18,7 @@ additional_tokens: '<PAD>,<EOS>'
 # Enable <EOS> (end of sequence) token.
 eos_token: False
 
+# HACK: This key is useless here, but needed by parent class. Should be removed/fixed in the future
 export_pad_index_to_globals: False
 
 # File containing word (LOADED)

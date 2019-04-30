@@ -16,6 +16,9 @@ additional_tokens: ''
 # File containing word (LOADED)
 word_mappings_file: 'word_mappings.csv'
 
+# HACK: This key is useless here, but needed by parent class. Should be removed/fixed in the future
+export_pad_index_to_globals: False
+
 # If set, component will always (re)generate the vocabulary (LOADED)
 regenerate: False 
 
