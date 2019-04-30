@@ -11,8 +11,15 @@ data_folder: '~/data/'
 source_vocabulary_files: ''
 
 # Additional tokens that will be added to vocabulary (LOADED)
-# This list can be extended, but <PAD> is a special token used ALWAYS for padding shorter sequences.
-additional_tokens: '<PAD>'
+# This list can be extended, but <PAD> and <EOS> are special tokens.
+# <PAD> is ALWAYS used for padding shorter sequences.
+additional_tokens: '<PAD>,<EOS>'
+
+# Enable <EOS> (end of sequence) token.
+eos_token: False
+
+# HACK: This key is useless here, but needed by parent class. Should be removed/fixed in the future
+export_pad_index_to_globals: False
 
 # File containing word (LOADED)
 word_mappings_file: 'word_mappings.csv'
@@ -67,6 +74,10 @@ globals:
   # Size of the vocabulary (RETRIEVED/SET)
   # This depends on the import/export configuration flags above.
   vocabulary_size: vocabulary_size
+
+  # Index of the <PAD> token
+  # Will be set only if `export_pad_mapping_to_globals == True`
+  pad_index: pad_index
 
   ####################################################################
   # 5. Keymappings associated with statistics that will be ADDED.
