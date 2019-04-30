@@ -235,10 +235,10 @@ pipeline:
       masks: pipe5_binary_yn_masks
 
   # Model 4: FFN C1 answering
-  pipe5_binary_yn_ffn:
+  pipe5_binary_yn_classifier:
     priority: 5.3
     type: FeedForwardNetwork
-    hidden: [50]
+    hidden: [100]
     dropout_rate: 0.5
     streams:
       inputs: concatenated_activations
@@ -284,7 +284,7 @@ pipeline:
     import_word_mappings_from_globals: True
     streams:
       inputs: pipe5_binary_yn_predictions
-      outputs: pipe5_binary_yn_predicted_answers
+      outputs: predicted_answers
     globals:
       word_mappings: word_mappings_binary_yn
 
@@ -299,7 +299,7 @@ pipeline:
       tokenized_questions, category_names,
       pipe0_predicted_question_categories_names,
       pipe5_binary_yn_masks,
-      answers, pipe5_binary_yn_predicted_answers
+      answers, predicted_answers
 
 
 #: pipeline

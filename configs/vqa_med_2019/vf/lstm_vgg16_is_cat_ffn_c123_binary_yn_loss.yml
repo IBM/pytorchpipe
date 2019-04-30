@@ -284,7 +284,7 @@ pipeline:
     import_word_mappings_from_globals: True
     streams:
       inputs: pipe5_c123_predictions
-      outputs: pipe5_c123_predicted_answers
+      outputs: predicted_answers
     globals:
       word_mappings: word_mappings_all_c123_binary_yn
 
@@ -299,7 +299,7 @@ pipeline:
       tokenized_questions, category_names,
       pipe0_predicted_question_categories_names,
       pipe5_c123_masks,
-      answers, pipe5_c123_predicted_answers
+      answers, predicted_answers
 
 
 #: pipeline
