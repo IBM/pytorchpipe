@@ -9,6 +9,10 @@ training_answers:
     categories: all
     resize_image: &resize_image [224, 224]
     batch_size: 64
+    # Appy all preprocessing/data augmentations.
+    question_preprocessing: lowercase,remove_punctuation,tokenize
+    streams: 
+      questions: tokenized_questions
   dataloader:
     # No sampler, process samples in the same order.
     shuffle: false
@@ -22,6 +26,10 @@ validation_answers:
     split: validation
     resize_image: *resize_image     
     batch_size: 64
+    # Appy all preprocessing/data augmentations.
+    question_preprocessing: lowercase,remove_punctuation,tokenize
+    streams: 
+      questions: tokenized_questions
   dataloader:
     # No sampler, process samples in the same order.
     shuffle: false
@@ -37,6 +45,10 @@ test_answers:
     split: test
     resize_image: *resize_image     
     batch_size: 64
+    # Appy all preprocessing/data augmentations.
+    question_preprocessing: lowercase,remove_punctuation,tokenize
+    streams: 
+      questions: tokenized_questions
   dataloader:
     # No sampler, process samples in the same order.
     shuffle: false
@@ -45,7 +57,7 @@ test_answers:
 
 # Add component for exporting answers to files.
 pipeline:
-  disable: viewer
+  disable: viewer,question_tokenizer
 #  # Viewers.
   viewer_extended:
     priority: 100.4
