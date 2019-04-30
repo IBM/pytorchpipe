@@ -71,8 +71,9 @@ pipeline:
   answer_exporter:
     priority: 100.5
     type: StreamFileExporter
-    separator: ','
+    separator: '|'
     filename: 'answers.csv'
+    export_separator_line_to_csv: True
     input_streams: 
       indices,image_ids,tokenized_questions,
       category_names,predicted_categories,
