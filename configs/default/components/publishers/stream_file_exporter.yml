@@ -11,6 +11,9 @@ input_streams: ''
 # Separator that will be placed between values (LOADED)
 separator: ','
 
+# Adds additional line to output file enabling Excel to use different separator while loading (LOADED)
+export_separator_line_to_csv: False
+
 # Name of the file containing output values (LOADED)
 filename: 'outputs.txt'
 
