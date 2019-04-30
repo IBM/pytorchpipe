@@ -5,9 +5,9 @@ default_configs: vqa_med_2019/default_vqa_med_2019.yml
 training:
   problem:
     categories: C1,C2,C3
-    export_sample_weights: ~/data/vqa-med/answers.c1_c2_c3_binary_yn.weights.csv
+    export_sample_weights: ~/data/vqa-med/answers.c1_c2_c3.weights.csv
   sampler:
-    weights: ~/data/vqa-med/answers.c1_c2_c3_binary_yn.weights.csv
+    weights: ~/data/vqa-med/answers.c1_c2_c3.weights.csv
 
 # Validation parameters:
 validation:
@@ -16,7 +16,6 @@ validation:
 
 
 pipeline:
-  name: c1_c2_c3_binary_cat_rnn_shared_all_encoders_one_ffn_loss
   
   ################# PIPE 0: SHARED #################
 
@@ -32,14 +31,6 @@ pipeline:
   batch_size:
     type: BatchSizeStatistics
     priority: 0.1
-
-  # Questions encoding.
-  pipe1_question_tokenizer:
-    priority: 0.2
-    type: SentenceTokenizer
-    streams: 
-      inputs: questions
-      outputs: tokenized_questions
 
   ################# PIPE 0: CATEGORY #################
 
