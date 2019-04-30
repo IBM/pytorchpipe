@@ -13,7 +13,7 @@ training:
   sampler:
     weights: ~/data/vqa-med/answers.c4.weights.csv
   dataloader:
-    num_workers: 2
+    num_workers: 4
   # Termination.
   terminal_conditions:
     loss_stop: 1.0e-2
@@ -29,7 +29,7 @@ validation:
     answer_preprocessing: lowercase, remove_punctuation, tokenize
     batch_size: 32
   dataloader:
-    num_workers: 2
+    num_workers: 4
 
 pipeline:
   name: c4_enc_attndec_resnet152_ewm_cat_is
@@ -50,7 +50,7 @@ pipeline:
     data_folder: ~/data/vqa-med
     word_mappings_file: questions.all.word.mappings.csv
     fixed_padding: 10
-    additional_tokens: <EOS>
+    additional_tokens: <PAD>,<EOS>
     streams:
       inputs: questions
       outputs: embedded_questions
@@ -64,6 +64,7 @@ pipeline:
     import_word_mappings_from_globals: False
     export_word_mappings_to_globals: True
     export_pad_mapping_to_globals: True
+    additional_tokens: <PAD>,<EOS>
     eos_token: True
     fixed_padding: 10
     streams:

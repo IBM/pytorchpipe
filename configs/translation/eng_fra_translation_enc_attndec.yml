@@ -57,7 +57,7 @@ pipeline:
     source_vocabulary_files: eng-fra/eng.train.txt,eng-fra/eng.valid.txt,eng-fra/eng.test.txt
     vocabulary_mappings_file: eng-fra/eng.all.tokenized_words
     regenerate: True
-    additional_tokens: <eos>
+    additional_tokens: <PAD>,<EOS>
     import_word_mappings_from_globals: False
     export_word_mappings_to_globals: False
     fixed_padding: 10
@@ -73,11 +73,15 @@ pipeline:
     source_vocabulary_files: eng-fra/fra.train.txt,eng-fra/fra.valid.txt,eng-fra/fra.test.txt
     import_word_mappings_from_globals: False
     export_word_mappings_to_globals: True
+    export_pad_mapping_to_globals: True
+    eos_token: True
     fixed_padding: 10
+    additional_tokens: <PAD>,<EOS>
     regenerate: True
     streams:
       inputs: targets
       outputs: indexed_targets
+      pad_index: tgt_pad_index
   
   # Single layer GRU Encoder
   encoder:
@@ -135,6 +139,8 @@ pipeline:
     streams:
       targets: indexed_targets
       loss: loss
+    globals:
+      ignore_index: tgt_pad_index
 
   # Prediction decoding.
   prediction_decoder:
@@ -159,6 +165,7 @@ pipeline:
   bleu:
     type: BLEUStatistics
     priority: 100.2
+    ignored_words: ["<PAD>", "<EOS>"]
     streams:
       targets: indexed_targets
 
