@@ -186,6 +186,7 @@ pipeline:
   image_size_encoder:
     type: FeedForwardNetwork 
     priority: 3.1
+    use_losfotmax: False
     streams:
       inputs: image_sizes
       predictions: image_size_activations
