@@ -32,8 +32,8 @@ pipeline:
     priority: 0
     type: GlobalVariablePublisher
     # Add input_size to globals.
-    keys: [question_encoder_output_size, image_size_encoder_input_size, image_size_encoder_output_size, image_encoder_output_size, element_wise_activation_size, category_c123_without_yn_word_to_ix]
-    values: [100, 2, 10, 100, 100, {"C1": 0, "C2": 1, "C3": 2}]
+    keys: [question_encoder_output_size, image_size_encoder_input_size, image_size_encoder_output_size, image_encoder_output_size, element_wise_activation_size, category_c123_without_yn_word_to_ix,category_binary_yn_word_to_ix]
+    values: [100, 2, 10, 100, 100, {"C1": 0, "C2": 1, "C3": 2}, {"BINARY": 3}]
 
   # Statistics.
   batch_size:
@@ -162,8 +162,8 @@ pipeline:
       inputs: answers
       outputs: all_answers_ids
     globals:
-      vocabulary_size: vocabulary_size_c123_without_yn
-      word_mappings: word_mappings_c123_without_yn
+      vocabulary_size: vocabulary_size_c123_binary_yn
+      word_mappings: word_mappings_c123_binary_yn
 
   ################# PIPE 2: SHARED IMAGE ENCODER #################
 
@@ -243,7 +243,7 @@ pipeline:
     priority: 6.1
     type: LabelIndexer
     data_folder: ~/data/vqa-med
-    word_mappings_file: answers.c1_c2_c3_binary_yn.word.mappings.csv
+    word_mappings_file: answers.c1_c2_c3_without_yn.word.mappings.csv
     # Export mappings and size to globals.
     export_word_mappings_to_globals: True
     streams:
@@ -307,24 +307,138 @@ pipeline:
       f1score: pipe6_c123_f1score
 
   # C123 Predictions decoder.
-  pipe5_c123_prediction_decoder:
-    priority: 6.6
-    type: WordDecoder
-    # Use the same word mappings as label indexer.
-    import_word_mappings_from_globals: True
+  #pipe5_c123_prediction_decoder:
+  #  priority: 6.6
+  #  type: WordDecoder
+  #  # Use the same word mappings as label indexer.
+  #  import_word_mappings_from_globals: True
+  #  streams:
+  #    inputs: pipe6_c123_predictions
+  #    outputs: pipe6_c123_predicted_answers
+  #  globals:
+  #    word_mappings: word_mappings_c123_without_yn
+
+
+  ################# PIPE 7: Y/N questions #################
+
+  # Answer encoding for PIPE 5.
+  pipe7_binary_yn_answer_indexer:
+    type: LabelIndexer
+    priority: 7.1
+    data_folder: ~/data/vqa-med
+    word_mappings_file: answers.binary_yn.word.mappings.csv
+    # Export mappings and size to globals.
+    export_word_mappings_to_globals: True
     streams:
-      inputs: pipe6_c123_predictions
-      outputs: pipe6_c123_predicted_answers
+      inputs: answers
+      outputs: pipe7_binary_yn_answers_ids
     globals:
-      word_mappings: word_mappings_c123_without_yn
+      vocabulary_size: vocabulary_size_binary_yn
+      word_mappings: word_mappings_binary_yn
 
+  # Sample masking based on categories.
+  pipe7_binary_yn_string_to_mask:
+    priority: 7.2
+    type: StringToMask
+    globals:
+      word_mappings: category_binary_yn_word_to_ix
+    streams:
+      strings: pipe0_predicted_question_categories_names
+      string_indices: predicted_binary_question_categories_indices # NOT USED
+      masks: pipe7_binary_yn_masks
 
+  # Model 4: FFN C1 answering
+  pipe7_binary_yn_classifier:
+    priority: 7.3
+    type: FeedForwardNetwork
+    hidden: [100]
+    dropout_rate: 0.5
+    streams:
+      inputs: concatenated_activations
+      predictions: pipe7_binary_yn_predictions
+    globals:
+      input_size: concatenated_activations_size
+      prediction_size: vocabulary_size_binary_yn
 
+  pipe7_binary_yn_nllloss:
+    type: NLLLoss
+    priority: 7.4
+    targets_dim: 1
+    use_masking: True
+    streams:
+      predictions: pipe7_binary_yn_predictions
+      masks: pipe7_binary_yn_masks
+      targets: pipe7_binary_yn_answers_ids
+      loss: pipe7_binary_yn_loss
 
+  pipe7_binary_yn_precision_recall:
+    type: PrecisionRecallStatistics
+    priority: 7.5
+    use_word_mappings: True
+    use_masking: True
+    show_class_scores: True
+    #show_confusion_matrix: True
+    streams:
+      masks: pipe7_binary_yn_masks
+      predictions: pipe7_binary_yn_predictions
+      targets: pipe7_binary_yn_answers_ids
+    globals:
+      word_mappings: word_mappings_binary_yn
+    statistics:
+      precision: pipe7_binary_yn_precision
+      recall: pipe7_binary_yn_recall
+      f1score: pipe7_binary_yn_f1score
 
+  # Y/N Predictions decoder.
+  #pipe7_binary_yn_prediction_decoder:
+  #  type: WordDecoder
+  #  priority: 7.6
+  #  # Use the same word mappings as label indexer.
+  #  import_word_mappings_from_globals: True
+  #  streams:
+  #    inputs: pipe7_binary_yn_predictions
+  #    outputs: pipe7_binary_yn_predicted_answers
+  #  globals:
+  #    word_mappings: word_mappings_binary_yn
 
 
   ################# PIPE 9: MERGE ANSWERS #################
+
+  # Merge predictions
+  pipe8_merged_predictions:
+    type: JoinMaskedPredictions
+    priority: 8.1
+    # Names of used input streams.
+    input_prediction_streams: [pipe6_c123_predictions, pipe7_binary_yn_predictions]
+    input_mask_streams: [pipe6_c123_masks, pipe7_binary_yn_masks]
+    input_word_mappings: [word_mappings_c123_without_yn, word_mappings_binary_yn]
+    globals:
+      output_word_mappings: word_mappings_c123_binary_yn
+    streams:
+      output_strings: predicted_answers
+      output_indices: pipe8_merged_pred_indices
+
+  # Statistics.
+  pipe8_merged_precision_recall:
+    type: PrecisionRecallStatistics
+    priority: 8.2
+    # Use prediction indices instead of distributions.
+    use_prediction_distributions: False
+    use_word_mappings: True
+    show_class_scores: True
+    show_confusion_matrix: True
+    globals:
+      word_mappings: word_mappings_c123_binary_yn
+    streams:
+      targets: all_answers_ids
+      predictions: pipe8_merged_pred_indices
+    statistics:
+      precision: pipe8_merged_precision
+      recall: pipe8_merged_recall
+      f1score: pipe8_merged_f1score
+
+
+
 
   # Viewers.
   viewer:
@@ -334,7 +448,7 @@ pipeline:
       tokenized_questions, category_names,
       pipe0_predicted_question_categories_names,
       pipe6_c123_masks,
-      answers, pipe6_c123_predicted_answers
+      answers, predicted_answers
 
 
 #: pipeline

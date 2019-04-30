@@ -206,7 +206,7 @@ pipeline:
       output_size: concatenated_activations_size
 
 
-  ################# PIPE 5: C1 + C2 + C3 questions #################
+  ################# PIPE 5: Y/N questions #################
 
   # Answer encoding for PIPE 5.
   pipe5_binary_yn_answer_indexer:
@@ -276,7 +276,7 @@ pipeline:
       recall: pipe5_binary_yn_recall
       f1score: pipe5_binary_yn_f1score
 
-  # C123 Predictions decoder.
+  # Y/N Predictions decoder.
   pipe5_prediction_decoder:
     type: WordDecoder
     priority: 5.6
