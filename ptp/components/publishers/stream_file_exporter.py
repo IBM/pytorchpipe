@@ -58,7 +58,7 @@ class StreamFileExporter(Component):
 
         # Export additional line.
         if self.config["export_separator_line_to_csv"]:
-            self.file.write("sep={}\n",self.separator)            
+            self.file.write("sep={}\n".format(self.separator))
 
         self.logger.info("Writing values from {} streams to {}".format(self.input_stream_keys, abs_filename))
 
