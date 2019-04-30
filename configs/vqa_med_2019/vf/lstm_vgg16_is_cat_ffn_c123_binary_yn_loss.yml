@@ -32,8 +32,8 @@ pipeline:
     type: GlobalVariablePublisher
     priority: 0
     # Add input_size to globals.
-    keys: [question_lstm_output_size, image_size_encoder_input_size, image_size_encoder_output_size, image_encoder_output_size, category_c1_c2_c3_no_binary_word_to_ix]
-    values: [100, 2, 10, 100, {"C1": 0, "C2": 1, "C3": 2}]
+    keys: [question_lstm_output_size, image_size_encoder_input_size, image_size_encoder_output_size, image_encoder_output_size, category_c1_c2_c3_binary_yn_word_to_ix]
+    values: [100, 2, 10, 100, {"C1": 0, "C2": 1, "C3": 2, "BINARY": 3}]
 
   # Statistics.
   batch_size:
@@ -74,7 +74,6 @@ pipeline:
     prediction_mode: Last
     initial_state: Trainable
     use_logsoftmax: False
-    dropout_rate: 0.5
     streams:
       inputs: pipe0_embedded_questions
       predictions: pipe0_questions_activations
@@ -93,7 +92,6 @@ pipeline:
     freeze: True
     ###################
     hidden: [50]
-    dropout_rate: 0.5
     streams:
       inputs: pipe0_questions_activations
       predictions: pipe0_predicted_question_categories_preds
@@ -144,7 +142,6 @@ pipeline:
     prediction_mode: Last
     initial_state: Trainable
     use_logsoftmax: False
-    dropout_rate: 0.5
     streams:
       inputs: embedded_questions
       predictions: questions_activations
@@ -165,7 +162,7 @@ pipeline:
       outputs: all_answers_ids
     globals:
       vocabulary_size: vocabulary_size_all_c123
-      word_mappings: word_mappings_all_c123
+      word_mappings: word_mappings_all_c123_binary_yn
 
   ################# PIPE 2: SHARED IMAGE ENCODER #################
 
@@ -223,15 +220,15 @@ pipeline:
       inputs: answers
       outputs: pipe5_c123_answers_ids
     globals:
-      vocabulary_size: vocabulary_size_c123
-      word_mappings: word_mappings_all_c123
+      vocabulary_size: vocabulary_size_c123_binary_yn
+      word_mappings: word_mappings_all_c123_binary_yn
 
   # Sample masking based on categories.
   pipe5_c123_string_to_mask:
     priority: 5.2
     type: StringToMask
     globals:
-      word_mappings: category_c1_c2_c3_no_binary_word_to_ix
+      word_mappings: category_c1_c2_c3_binary_yn_word_to_ix
     streams:
       strings: pipe0_predicted_question_categories_names
       string_indices: predicted_c123_by_question_categories_indices # NOT USED
@@ -248,7 +245,7 @@ pipeline:
       predictions: pipe5_c123_predictions
     globals:
       input_size: concatenated_activations_size
-      prediction_size: vocabulary_size_c123
+      prediction_size: vocabulary_size_c123_binary_yn
 
   pipe5_c123_nllloss:
     type: NLLLoss
@@ -273,7 +270,7 @@ pipeline:
       predictions: pipe5_c123_predictions
       targets: pipe5_c123_answers_ids
     globals:
-      word_mappings: word_mappings_all_c123
+      word_mappings: word_mappings_all_c123_binary_yn
     statistics:
       precision: pipe5_c123_precision
       recall: pipe5_c123_recall
@@ -289,7 +286,7 @@ pipeline:
       inputs: pipe5_c123_predictions
       outputs: pipe5_c123_predicted_answers
     globals:
-      word_mappings: word_mappings_all_c123
+      word_mappings: word_mappings_all_c123_binary_yn
 
   ################# PIPE 9: MERGE ANSWERS #################
 
