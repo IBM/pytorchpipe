@@ -266,7 +266,7 @@ pipeline:
     priority: 5.5
     use_word_mappings: True
     use_masking: True
-    #show_class_scores: True
+    show_class_scores: True
     #show_confusion_matrix: True
     streams:
       masks: pipe5_c123_masks
@@ -279,14 +279,30 @@ pipeline:
       recall: pipe5_c123_recall
       f1score: pipe5_c123_f1score
 
+  # C123 Predictions decoder.
+  pipe5_prediction_decoder:
+    type: WordDecoder
+    priority: 5.6
+    # Use the same word mappings as label indexer.
+    import_word_mappings_from_globals: True
+    streams:
+      inputs: pipe5_c123_predictions
+      outputs: pipe5_c123_predicted_answers
+    globals:
+      word_mappings: word_mappings_all_c123
 
   ################# PIPE 9: MERGE ANSWERS #################
+
 
   # Viewers.
   viewer:
     type: StreamViewer
     priority: 9.3
-    input_streams: tokenized_questions,answers, category_names,predicted_question_categories_names, pipe5_c123_masks,pipe5_c123_answers_without_yn_ids,pipe5_c123_predictions
+    input_streams:
+      tokenized_questions, category_names,
+      pipe0_predicted_question_categories_names,
+      pipe5_c123_masks,
+      answers, pipe5_c123_predicted_answers
 
 
 #: pipeline
