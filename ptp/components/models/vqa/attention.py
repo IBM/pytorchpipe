@@ -55,8 +55,11 @@ class VQA_Attention(Model):
         self.feature_maps_width = self.globals["feature_maps_width"]
         self.feature_maps_depth = self.globals["feature_maps_depth"]
         self.question_encoding_size = self.globals["question_encoding_size"]
-        self.latent_size = self.globals["latent_size"] #TO-DO add to yml file
-        self.num_attention_heads = self.globals["multi_head_attention"]
+
+        # Get size of latent space and number of heads from config.
+        self.latent_size = self.config["latent_size"]
+        self.num_attention_heads = self.config["num_attention_heads"]
+
         # Output feature size
         self.output_size = self.feature_maps_depth*self.num_attention_heads + self.question_encoding_size
 

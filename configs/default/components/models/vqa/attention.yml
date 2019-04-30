@@ -8,6 +8,13 @@
 # Default: 0 (means that it is turned off)
 dropout_rate: 0
 
+# Size of the latent space (LOADED)
+latent_size: 100
+
+# Number of attention heads (LOADED)
+num_attention_heads: 2
+
+
 streams:
   ####################################################################
   # 2. Keymappings associated with INPUT and OUTPUT streams.

@@ -5,10 +5,7 @@ training:
   problem:
     batch_size: 48
     # Appy all preprocessing/data augmentations.
-    image_preprocessing: normalize
-    # none | random_affine | random_horizontal_flip | normalize | all
-    question_preprocessing: all
-    # none | lowercase | remove_punctuation | tokenize | random_remove_stop_words | random_shuffle_words | all
+    question_preprocessing: lowercase,remove_punctuation,tokenize
     streams:
       # Problem is returning tokenized questions.
       questions: tokenized_questions
@@ -16,22 +13,21 @@ training:
 validation:
   problem:
     batch_size: 48
+    # Appy all preprocessing/data augmentations.
     question_preprocessing: lowercase,remove_punctuation,tokenize
-    # none | lowercase | remove_punctuation | tokenize | random_remove_stop_words | random_shuffle_words | all
     streams:
       # Problem is returning tokenized questions.
       questions: tokenized_questions
 
 
 pipeline:
-  name: c2_class_lstm_resnet50_attn_cat_is
 
   global_publisher:
     priority: 0
     type: GlobalVariablePublisher
     # Add input_size to globals.
-    keys: [question_encoder_output_size, latent_size, num_attention_heads, attention_activation_size, question_image_activation_size]
-    values: [100, 100, 2, 4196, 300]
+    keys: [question_encoder_output_size, attention_activation_size, question_image_activation_size]
+    values: [100, 4196, 300]
 
   ################# PIPE 0: question #################
 
@@ -73,9 +69,7 @@ pipeline:
     return_feature_maps: True
     streams:
       inputs: images
-      outputs: feature_maps #image_activations
-    # globals:
-    #   output_size: image_encoder_output_size
+      outputs: feature_maps
 
   ################# PIPE 3: image-question fusion  #################
   # Attention + FF.
@@ -83,27 +77,15 @@ pipeline:
     priority: 4.1
     type: VQA_Attention
     dropout_rate: 0.5
+    latent_size: 100
+    num_attention_heads: 2
     streams:
-      image_encodings: feature_maps #image_activations
+      image_encodings: feature_maps
       question_encodings: question_activations
       outputs: attention_activations
     globals:
       question_encoding_size: question_encoder_output_size
-      latent_size: latent_size
-      multi_head_attention: num_attention_heads
       output_size: attention_activation_size
-
-  # question_image_ffn:
-  #   priority: 4.2
-  #   type: FeedForwardNetwork
-  #   hidden_sizes: [100]
-  #   dropout_rate: 0.5
-  #   streams:
-  #     inputs: attention_activations
-  #     predictions: question_image_activations
-  #   globals:
-  #     input_size: attention_activation_size
-  #     prediction_size: question_image_activation_size
 
   classifier:
     priority: 5.1
@@ -111,9 +93,9 @@ pipeline:
     hidden_sizes: [100]
     dropout_rate: 0.5
     streams:
-      inputs: attention_activations #question_image_activations #concatenated_activations
+      inputs: attention_activations
     globals:
-      input_size: attention_activation_size #question_image_activation_size #concatentated_activations_size
+      input_size: attention_activation_size
       prediction_size: vocabulary_size_c2
 
 
