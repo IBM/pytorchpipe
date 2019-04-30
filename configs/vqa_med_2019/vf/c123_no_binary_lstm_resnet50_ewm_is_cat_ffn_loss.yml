@@ -29,23 +29,23 @@ pipeline:
 
   # Add global variables.
   global_publisher:
-    type: GlobalVariablePublisher
     priority: 0
+    type: GlobalVariablePublisher
     # Add input_size to globals.
     keys: [question_encoder_output_size, image_size_encoder_input_size, image_size_encoder_output_size, image_encoder_output_size, element_wise_activation_size, category_c1_c2_c3_no_binary_word_to_ix]
     values: [100, 2, 10, 100, 100, {"C1": 0, "C2": 1, "C3": 2}]
 
   # Statistics.
   batch_size:
-    type: BatchSizeStatistics
     priority: 0.1
+    type: BatchSizeStatistics
 
   ################# PIPE 0: CATEGORY #################
 
   # Model 1: question embeddings
   pipe0_question_embeddings:
-    type: SentenceEmbeddings
     priority: 0.3
+    type: SentenceEmbeddings
     # LOAD AND FREEZE #
     load: 
       file: ~/image-clef-2019/experiments/q_categorization/20190416_120801/checkpoints/vqa_med_question_categorization_rnn_ffn_best.pt
@@ -114,8 +114,8 @@ pipeline:
       word_mappings: category_word_mappings
 
   pipe0_category_accuracy:
-    type: AccuracyStatistics
     priority: 0.7
+    type: AccuracyStatistics
     streams:
       targets: category_ids
       predictions: pipe0_predicted_question_categories_preds
@@ -126,8 +126,8 @@ pipeline:
 
   # Model 1: question embeddings
   pipe1_question_embeddings:
-    type: SentenceEmbeddings
     priority: 1.1
+    type: SentenceEmbeddings
     embeddings_size: 50
     pretrained_embeddings_file: glove.6B.50d.txt
     data_folder: ~/data/vqa-med
@@ -154,8 +154,8 @@ pipeline:
 
   # Answer encoding
   pipe1_all_answer_indexer:
-    type: LabelIndexer
     priority: 1.3
+    type: LabelIndexer
     data_folder: ~/data/vqa-med
     word_mappings_file: answers.c1_c2_c3_binary_yn.word.mappings.csv
     # Export mappings and size to globals.
@@ -171,9 +171,9 @@ pipeline:
 
   # Image encoder.
   image_encoder:
+    priority: 2.1
     type: TorchVisionWrapper
     model: vgg16
-    priority: 2.1
     streams:
       inputs: images
       outputs: image_activations
@@ -184,8 +184,8 @@ pipeline:
 
   # Model - image size classifier.
   image_size_encoder:
-    type: FeedForwardNetwork 
     priority: 3.1
+    type: FeedForwardNetwork 
     use_losfotmax: False
     streams:
       inputs: image_sizes
@@ -242,8 +242,8 @@ pipeline:
 
   # Answer encoding for PIPE 6.
   pipe6_c123_answer_indexer:
-    type: LabelIndexer
     priority: 6.1
+    type: LabelIndexer
     data_folder: ~/data/vqa-med
     word_mappings_file: answers.c1_c2_c3_binary_yn.word.mappings.csv
     # Export mappings and size to globals.
@@ -280,8 +280,8 @@ pipeline:
       prediction_size: vocabulary_size_c123
 
   pipe6_c123_nllloss:
-    type: NLLLoss
     priority: 6.4
+    type: NLLLoss
     targets_dim: 1
     use_masking: True
     streams:
@@ -291,8 +291,8 @@ pipeline:
       loss: pipe6_c123_loss
 
   pipe6_c123_precision_recall:
-    type: PrecisionRecallStatistics
     priority: 6.5
+    type: PrecisionRecallStatistics
     use_word_mappings: True
     use_masking: True
     show_class_scores: True
@@ -310,8 +310,8 @@ pipeline:
 
   # C123 Predictions decoder.
   pipe5_c123_prediction_decoder:
-    type: WordDecoder
     priority: 6.6
+    type: WordDecoder
     # Use the same word mappings as label indexer.
     import_word_mappings_from_globals: True
     streams:
@@ -324,8 +324,8 @@ pipeline:
 
   # Viewers.
   viewer:
-    type: StreamViewer
     priority: 9.3
+    type: StreamViewer
     input_streams:
       tokenized_questions, category_names,
       pipe0_predicted_question_categories_names,
