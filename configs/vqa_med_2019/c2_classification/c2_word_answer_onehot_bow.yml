@@ -14,7 +14,6 @@ validation:
     batch_size: 128
 
 pipeline:
-  name: c2_word_answer_onehot_bow
 
   # Answer encoding.
   answer_tokenizer:
