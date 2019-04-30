@@ -155,7 +155,7 @@ pipeline:
     priority: 1.3
     type: LabelIndexer
     data_folder: ~/data/vqa-med
-    word_mappings_file: answers.c1_c2_c3_binary_yn.word.mappings.csv
+    word_mappings_file: answers.c1_c2_c3_without_yn.word.mappings.csv
     # Export mappings and size to globals.
     export_word_mappings_to_globals: True
     streams:
@@ -314,7 +314,7 @@ pipeline:
     import_word_mappings_from_globals: True
     streams:
       inputs: pipe6_c123_predictions
-      outputs: pipe6_c123_predicted_answers
+      outputs: predicted_answers
     globals:
       word_mappings: word_mappings_c123_without_yn
 
@@ -328,7 +328,7 @@ pipeline:
       tokenized_questions, category_names,
       pipe0_predicted_question_categories_names,
       pipe6_c123_masks,
-      answers, pipe6_c123_predicted_answers
+      answers, predicted_answers
 
 
 #: pipeline
