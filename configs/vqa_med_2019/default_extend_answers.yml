@@ -63,12 +63,18 @@ pipeline:
     priority: 100.4
     type: StreamViewer
     sample_number: 0
-    input_streams: indices,image_ids,questions,category_names,predicted_categories,answers,tokenized_answers,predicted_answers
+    input_streams: 
+      indices,image_ids,tokenized_questions,
+      category_names,predicted_categories,
+      answers,tokenized_answers,predicted_answers
 
   exporter:
     priority: 100.5
     type: StreamFileExporter
     separator: '|'
-    input_streams: indices,image_ids,questions,category_names,predicted_categories,answers,tokenized_answers,predicted_answers
+    input_streams: 
+      indices,image_ids,tokenized_questions,
+      category_names,predicted_categories,
+      answers,tokenized_answers,predicted_answers
 
 #: pipeline
