@@ -156,7 +156,9 @@ class Trainer(Worker):
             pipeline_name = self.config['pipeline']['name']
         except KeyError:
             # Using name of the first configuration file from command line.
-            pipeline_name = path.basename(root_configs[0])
+            basename = path.basename(root_configs[0])
+            # Take config filename without extension.
+            pipeline_name = path.splitext(basename)[0] 
             # Set pipeline name, so processor can use it afterwards.
             self.config['pipeline'].add_config_params({'name': pipeline_name})
 
