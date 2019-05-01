@@ -71,6 +71,8 @@ class AppState(metaclass=SingletonMetaClass):
         self.use_gpu = False
         self.use_dataparallel = False
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        print(self.device)
+        exit(1)
 
         # Reset global counters.
         self.epoch = None # Processor is not using the notion of epoch.
