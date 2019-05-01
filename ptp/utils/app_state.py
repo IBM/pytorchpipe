@@ -69,6 +69,7 @@ class AppState(metaclass=SingletonMetaClass):
         # Set CPU types as default.
         self.set_cpu_types()
         self.use_gpu = False
+        self.use_dataparallel = False
 
         # Reset global counters.
         self.epoch = None # Processor is not using the notion of epoch.
@@ -85,6 +86,8 @@ class AppState(metaclass=SingletonMetaClass):
             self.logger.info('Running computations on GPU using CUDA')
             self.set_gpu_types()
             self.use_gpu = True
+            if self.args.use_dataparallel:
+                self.use_dataparallel = True
         elif self.args.use_gpu:
             self.logger.warning('GPU utilization is demanded but there are no available GPU devices! Using CPUs instead')
         else:
