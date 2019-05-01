@@ -22,6 +22,26 @@ import zipfile
 import time
 import requests
 from pathlib import Path
+import pickle
+
+
+def load_pickle(logger, filename):
+    """
+    Loads picke from file.
+
+    :param logger: Logger object.
+    :param filename: Absolute path along with the name of the file to be loaded.
+    """
+    try:
+        with open(str(filename), 'rb') as f:
+            obj = pickle.load(f)
+        logger.info('Loaded: %s', filename)
+
+    except EOFError:
+        logger.warning('Cannot load: %s', filename)
+        obj = None
+
+    return obj
 
 
 def save_nparray_to_csv_file(folder, filename, nparray, sep=','):
@@ -186,15 +206,15 @@ def download(folder, filename, url):
     with open(os.path.expanduser(file_result), "wb") as f:
         global start_time
         start_time = time.time()
-        r = requests.get(url)
-        content_length = int(r.headers.get('content-length', None))
-        count = 0
+        with requests.get(url, stream=True) as r:
+            content_length = int(r.headers.get('content-length', None))
+            count = 0
 
-        for chunk in r.iter_content(chunk_size=1024):
-            if chunk:
-                f.write(chunk)
-                count += 1
-                reporthook(count, 1024, content_length)
+            for chunk in r.iter_content(chunk_size=1024):
+                if chunk:
+                    f.write(chunk)
+                    count += 1
+                    reporthook(count, 1024, content_length)
 
     #self.logger.info('Downloading {}'.format(url))
 
@@ -230,13 +250,13 @@ def download_extract_zip_file(logger, folder, url, zipfile_name):
     logger.info("Initializing download in folder {}".format(folder))
 
     if not check_file_existence(folder, zipfile_name):
-        logger.info("Downloading file {} from {}".format(zipfile_name, url))
+        logger.info("Downloading file '{}' from {}".format(zipfile_name, url))
         download(folder, zipfile_name, url)
     else:
-        logger.info("File {} found in {}".format(zipfile_name, folder))
+        logger.info("File '{}' found in {}".format(zipfile_name, folder))
 
     # Extract data from zip.
-    logger.info("Extracting data from {}".format(zipfile_name))
+    logger.info("Extracting data from '{}'".format(zipfile_name))
     with zipfile.ZipFile(os.path.join(folder, zipfile_name), 'r') as zip_ref:
         zip_ref.extractall(folder)
     
