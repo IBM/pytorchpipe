@@ -20,7 +20,7 @@ pipeline:
     type: FeedForwardNetwork 
     priority: 2
     dropout_rate: 0.1
-    hidden_sizes: [1000, 1000, 1000, 1000]
+    hidden_sizes: [10000, 10000, 10000, 10000]
     streams:
       inputs: reshaped_images
     globals:
