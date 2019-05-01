@@ -549,7 +549,7 @@ class PipelineManager(object):
             model = self.models[i]
             # Wrap model if required.
             if self.app_state.use_dataparallel:
-                model = torch.nn.DataParallel(model)
+                model = torch.nn.DataParallel(model, device_ids=[0, 1, 2])
                 self.models[i] = model
             # Mode to cuda.
             model.to(self.app_state.device)
