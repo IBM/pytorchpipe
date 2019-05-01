@@ -138,6 +138,9 @@ class TorchVisionWrapper(Model):
                 self.output_size = self.globals["output_size"]
                 self.model.fc = torch.nn.Linear(2048, self.output_size)
 
+        if self.app_state.use_dataparallel and self.app_state.use_gpu:
+            self.model = torch.nn.DataParallel(self.model)
+
 
     def input_data_definitions(self):
         """
