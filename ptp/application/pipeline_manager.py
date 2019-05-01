@@ -215,12 +215,12 @@ class PipelineManager(object):
         for model in self.models:
             # Check if model is wrapped in dataparallel.
             print("\n\n TYPE: ", type(model))
-            #if self.app_state.use_dataparallel:
-            #    model.module.save_to_checkpoint(chkpt)
-            #    model_str += "  + Model '{}' [{}] params saved \n".format(model.module.name, type(model.module).__name__)
-            #else:
-            #    model.save_to_checkpoint(chkpt)
-            #    model_str += "  + Model '{}' [{}] params saved \n".format(model.name, type(model).__name__)
+            if self.app_state.use_dataparallel:
+                model.module.save_to_checkpoint(chkpt)
+                model_str += "  + Model '{}' [{}] params saved \n".format(model.module.name, type(model.module).__name__)
+            else:
+                model.save_to_checkpoint(chkpt)
+                model_str += "  + Model '{}' [{}] params saved \n".format(model.name, type(model).__name__)
 
         # Save the intermediate checkpoint.
         if self.app_state.args.save_intermediate:
