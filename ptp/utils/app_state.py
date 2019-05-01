@@ -107,30 +107,29 @@ class AppState(metaclass=SingletonMetaClass):
         self.set_cpu_types()
         self.use_gpu = False
         self.use_dataparallel = False
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
         # Reset global counters.
         self.epoch = None # Processor is not using the notion of epoch.
         self.episode = 0
 
         #### TEST !
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
         model = Model(input_size, output_size)
-        
+
         if torch.cuda.device_count() > 1:
             print("Let's use", torch.cuda.device_count(), "GPUs!")
             # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
             model = nn.DataParallel(model)
 
-        model.to(device)
+        model.to(self.device)
 
         rand_loader = DataLoader(dataset=RandomDataset(input_size, data_size), batch_size=batch_size, shuffle=True)
 
         for data in rand_loader:
-            input = data.to(device)
-            output = model(input)
-            print("Outside: input size", input.size(), "output_size", output.size())
+            data = data.to(self.device)
+            output = model(data)
+            print("Outside: input size", data.size(), "output_size", output.size())
 
         exit(1)
 
@@ -144,6 +143,7 @@ class AppState(metaclass=SingletonMetaClass):
         if torch.cuda.is_available() and self.args.use_gpu:
             self.logger.info('Running computations on GPU using CUDA')
             self.set_gpu_types()
+            self.device = torch.device('cuda:0')
             self.use_gpu = True
             if self.args.use_dataparallel:
                 self.use_dataparallel = True
