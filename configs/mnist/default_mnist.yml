@@ -2,7 +2,7 @@
 training:
   problem: 
     type: MNIST
-    batch_size: &b 64
+    batch_size: &b 6400
     use_train_data: True
     #resize: [32, 32]
   # Use sampler that operates on a subset.
