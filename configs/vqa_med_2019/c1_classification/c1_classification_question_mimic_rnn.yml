@@ -2,7 +2,7 @@
 default_configs: vqa_med_2019/c1_classification/default_c1_classification.yml
 
 pipeline:
-  name: c1_classification_question_rnn
+  name: c1_classification_question_mimic_rnn
   
   # Questions encoding.
   question_tokenizer:
@@ -16,8 +16,8 @@ pipeline:
   question_embeddings:
     type: SentenceEmbeddings
     priority: 1.2
-    embeddings_size: 50
-    pretrained_embeddings_file: glove.6B.50d.txt
+    embeddings_size: 300
+    pretrained_embeddings_file: mimic.fastText.no_clean.300d.pickled
     data_folder: ~/data/vqa-med
     word_mappings_file: questions.all.word.mappings.csv
     streams:
