@@ -545,10 +545,12 @@ class PipelineManager(object):
         if self.app_state.use_dataparallel:
             self.logger.info("Using DataParallel with {} GPUs!".format(torch.cuda.device_count()))
 
-        for model in self.models:
+        for i in range(len(self.models))
+            model = self.models[i]
             # Wrap model if required.
             if self.app_state.use_dataparallel:
                 model = torch.nn.DataParallel(model)
+                self.models[i] = model
             # Mode to cuda.
             model.cuda()
 
