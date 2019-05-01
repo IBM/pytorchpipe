@@ -206,15 +206,16 @@ def download(folder, filename, url):
     with open(os.path.expanduser(file_result), "wb") as f:
         global start_time
         start_time = time.time()
-        r = requests.get(url)
-        content_length = int(r.headers.get('content-length', None))
-        count = 0
-        # Initialize download status.
-        for chunk in r.iter_content(chunk_size=1024):
-            if chunk:
-                f.write(chunk)
-                count += 1
-                reporthook(count, 1024, content_length)
+        with requests.get(url, stream=True) as r:
+            content_length = int(r.headers.get('content-length', None))
+            count = 0
+
+            for chunk in r.iter_content(chunk_size=1024):
+                if chunk:
+                    f.write(chunk)
+                    count += 1
+                    reporthook(count, 1024, content_length)
+
     #self.logger.info('Downloading {}'.format(url))
 
 def reporthook(count, block_size, total_size):
