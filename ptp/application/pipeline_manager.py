@@ -510,7 +510,7 @@ class PipelineManager(object):
         """
         # TODO: Convert to gpu/CUDA.
         if self.app_state.args.use_gpu:
-            data_dict.cuda()
+            data_dict.cuda(device = self.app_state.device)
 
         for prio in self.__priorities:
             # Get component
@@ -519,7 +519,7 @@ class PipelineManager(object):
             comp(data_dict)
             # Component might add some fields to DataDict, move them to GPU if required.
             if self.app_state.args.use_gpu:
-                data_dict.cuda()
+                data_dict.cuda(device = self.app_state.device)
             #print("after {}".format(comp.name))
             #print(data_dict.keys())
 
@@ -552,7 +552,7 @@ class PipelineManager(object):
                 model = torch.nn.DataParallel(model)
                 self.models[i] = model
             # Mode to cuda.
-            model.cuda()
+            model.to(self.app_state.device)
             print(type(model))
 
 
