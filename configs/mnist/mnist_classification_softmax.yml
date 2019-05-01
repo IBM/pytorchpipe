@@ -5,6 +5,7 @@ training:
   optimizer:
     name: SGD
 
+
 pipeline:
   name: mnist_softmax_classifier
 
@@ -24,7 +25,7 @@ pipeline:
     type: FeedForwardNetwork 
     priority: 2
     dropout_rate: 0.1
-    hidden_sizes: [10000, 10000, 10000, 10000, 10000, 10000]
+    hidden_sizes: [100, 100]
     streams:
       inputs: reshaped_images
     globals:
