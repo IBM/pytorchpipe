@@ -5,7 +5,7 @@ training:
     data_folder: &data_folder ~/data/vqa-med
     split: training_validation
     resize_image: &resize_image [224, 224]
-    batch_size:  1280
+    batch_size:  64
 
   # Default sampler during training.
   sampler:
@@ -34,7 +34,7 @@ validation:
     data_folder: *data_folder
     split: training_validation
     resize_image: *resize_image     
-    batch_size:  1280
+    batch_size:  64
   # Default sampler during validation.
   sampler:
     name: kFoldRandomSampler
