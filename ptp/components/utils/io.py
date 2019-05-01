@@ -211,10 +211,10 @@ def download(folder, filename, url):
         count = 0
         # Initialize download status.
         for chunk in r.iter_content(chunk_size=1024):
-            f.write(chunk)
-            count += 1
-            reporthook(count, 1024, content_length)
-
+            if chunk:
+                f.write(chunk)
+                count += 1
+                reporthook(count, 1024, content_length)
     #self.logger.info('Downloading {}'.format(url))
 
 def reporthook(count, block_size, total_size):
