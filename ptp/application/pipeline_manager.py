@@ -213,8 +213,13 @@ class PipelineManager(object):
         model_str = ''
         # Save state dicts of all models.
         for model in self.models:
-            model.save_to_checkpoint(chkpt)
-            model_str += "  + Model '{}' [{}] params saved \n".format(model.name, type(model).__name__)
+            # Check if model is wrapped in dataparallel.
+            if self.app_state.use_dataparallel:
+                model.module.save_to_checkpoint(chkpt)
+                model_str += "  + Model '{}' [{}] params saved \n".format(model.module.name, type(model.module).__name__)
+            else:
+                model.save_to_checkpoint(chkpt)
+                model_str += "  + Model '{}' [{}] params saved \n".format(model.name, type(model).__name__)
 
         # Save the intermediate checkpoint.
         if self.app_state.args.save_intermediate:
@@ -536,7 +541,14 @@ class PipelineManager(object):
         Moves all models to GPU.
         """
         self.logger.info("Moving model(s) to GPU")
+        if self.app_state.use_dataparallel:
+            self.logger.info("Using DataParallel with {} GPUs!".format(torch.cuda.device_count()))
+
         for model in self.models:
+            # Wrap model if required.
+            if self.app_state.use_dataparallel:
+                model = torch.nn.DataParallel(model)
+            # Mode to cuda.
             model.cuda()
 
 
