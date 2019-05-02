@@ -511,7 +511,7 @@ class PipelineManager(object):
         """
         # TODO: Convert to gpu/CUDA.
         if self.app_state.args.use_gpu:
-            data_dict.to(device = self.app_state.device)
+            data_dict.cuda(device = self.app_state.device)
         print("elo problem")
         time.sleep(2)
 
@@ -523,7 +523,7 @@ class PipelineManager(object):
             comp(data_dict)
             # Component might add some fields to DataDict, move them to GPU if required.
             if self.app_state.args.use_gpu:
-                data_dict.to(device = self.app_state.device)
+                data_dict.cuda(device = self.app_state.device)
             #print("after {}".format(comp.name))
             #print(data_dict.keys())
 
