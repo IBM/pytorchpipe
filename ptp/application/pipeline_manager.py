@@ -663,9 +663,8 @@ class PipelineManager(object):
         """
         for prio in self.__priorities:
             comp = self.__components[prio]
-            print(type(comp).__name__)
             # Check if component is a wrapped model.
-            if type(comp).__name__ == "torch.nn.parallel.data_parallel.DataParallel":
+            if type(comp).__name__ == "DataParallel":
                 print("add_statistics: wrapper!!")
                 comp.module.add_statistics(stat_col)
             else: 
