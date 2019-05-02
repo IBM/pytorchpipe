@@ -138,7 +138,8 @@ class AppState(metaclass=SingletonMetaClass):
         print("Model DONE!!")
         #time.sleep(2)
 
-        rand_loader = DataLoader(dataset=RandomDataset(input_size, data_size), batch_size=batch_size, shuffle=True)
+        dataset = RandomDataset(input_size, data_size)
+        rand_loader = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=True, collate_fn=dataset.collate_fn)
         print("Dataloader DONE!!")
         #time.sleep(2)
 
