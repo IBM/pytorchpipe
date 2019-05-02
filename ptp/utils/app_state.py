@@ -136,7 +136,9 @@ class AppState(metaclass=SingletonMetaClass):
         time.sleep(2)
 
         for data in rand_loader:
+            print("\nFor: before to: input size {}, device: {}".format(data.size(), data.device))
             data = data.to(self.device)
+            print("\nFor: after to: input size {}, device: {}".format(data.size(), data.device))
             output = model(data)
             print("Outside: input size", data.size(), "output_size", output.size())
 
