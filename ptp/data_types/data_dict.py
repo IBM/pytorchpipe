@@ -228,7 +228,7 @@ class DataDict(collections.abc.MutableMapping):
 
         """
         for key in self:
-            if isinstance(self[key], torch.Tensor):# and (not self[key].is_cuda):
+            if isinstance(self[key], torch.Tensor) and (not self[key].is_cuda):
                 print("\nFor: before to: input size {}, device: {}".format(self[key].size(), self[key].device))
                 self[key] = self[key].to(device=AppState().device)#, non_blocking=non_blocking)
                 print("\nFor: after to: input size {}, device: {}".format(self[key].size(), self[key].device))
