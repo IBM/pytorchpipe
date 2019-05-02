@@ -13,6 +13,7 @@ from .vqa.element_wise_multiplication import ElementWiseMultiplication
 from .vqa.multimodal_compact_bilinear_pooling import MultimodalCompactBilinearPooling
 from .vqa.relational_network import RelationalNetwork
 from .vqa.attention import VQA_Attention
+from .vqa.multimodal_factorized_bilinear_pooling import MultimodalFactorizedBilinearPooling
 
 __all__ = [
     'ConvNetEncoder',
@@ -28,5 +29,6 @@ __all__ = [
     'MultimodalCompactBilinearPooling',
     'RelationalNetwork',
     'Attn_Decoder_RNN',
-    'VQA_Attention'
+    'VQA_Attention',
+    'MultimodalFactorizedBilinearPooling'
     ]
