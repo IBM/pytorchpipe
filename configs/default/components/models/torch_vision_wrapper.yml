@@ -5,7 +5,7 @@
 ####################################################################
 
 # Model type (LOADED)
-# Options: vgg16 | sensenet121 | resnet152 | resnet50
+# Options: vgg16 | densenet121 | resnet152 | resnet50
 model_type: vgg16
 
 # Parameter denoting whether the component will return (flat) prediction

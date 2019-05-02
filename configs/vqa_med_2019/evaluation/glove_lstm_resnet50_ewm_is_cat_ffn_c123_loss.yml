@@ -4,9 +4,17 @@ default_configs: vqa_med_2019/default_vqa_med_2019.yml
 hyperparameters:
   # In here I am putting some of the hyperparameters from spreadsheet.
 
+  question_preprocessing: &question_preprocessing lowercase, remove_punctuation
+  # Accepted formats: a,b,c or [a,b,c]
+  # none | lowercase | remove_punctuation | tokenize | random_remove_stop_words | random_shuffle_words | all
+
+  image_preprocessing: &image_preprocessing normalize
+  # Accepted formats: a,b,c or [a,b,c]
+  # none | random_affine | random_horizontal_flip | normalize | all
+
   # Image encoder.
   image_encoder_model: &image_encoder_model resnet50
-  # Options: vgg16 | sensenet121 | resnet152 | resnet50
+  # Options: vgg16 | densenet121 | resnet152 | resnet50
   image_encoder_output_size_val: &image_encoder_output_size_val 100
   
   # Question encoder.
@@ -39,7 +47,8 @@ training:
     categories: C1,C2,C3
     export_sample_weights: ~/data/vqa-med/answers.c1_c2_c3_binary_yn.weights.csv
     # Appy all preprocessing/data augmentations.
-    question_preprocessing: lowercase,remove_punctuation,tokenize
+    question_preprocessing: *question_preprocessing
+    image_preprocessing: *image_preprocessing 
     streams: 
       questions: tokenized_questions
   sampler:
@@ -62,7 +71,8 @@ validation:
     batch_size: *batch_size
     categories: C1,C2,C3
     # Appy all preprocessing/data augmentations.
-    question_preprocessing: lowercase,remove_punctuation,tokenize
+    question_preprocessing: *question_preprocessing
+    image_preprocessing: *image_preprocessing 
     streams: 
       questions: tokenized_questions
 
