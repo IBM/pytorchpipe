@@ -522,8 +522,8 @@ class PipelineManager(object):
             # Forward step.
             comp(data_dict)
             # Component might add some fields to DataDict, move them to GPU if required.
-            if self.app_state.args.use_gpu:
-                data_dict.to(device = self.app_state.device)
+            #if self.app_state.args.use_gpu:
+            data_dict.to(device = self.app_state.device)
             #print("after {}".format(comp.name))
             #print(data_dict.keys())
 
