@@ -21,6 +21,7 @@ import os
 import torch
 from datetime import datetime
 from numpy import inf
+import time
 
 import ptp.components
 
@@ -510,16 +511,19 @@ class PipelineManager(object):
         """
         # TODO: Convert to gpu/CUDA.
         if self.app_state.args.use_gpu:
-            data_dict.cuda(device = self.app_state.device)
+            data_dict.to(device = self.app_state.device)
+        print("elo problem")
+        time.sleep(2)
 
         for prio in self.__priorities:
+            print("elo ",prio)
             # Get component
             comp = self.__components[prio]
             # Forward step.
             comp(data_dict)
             # Component might add some fields to DataDict, move them to GPU if required.
             if self.app_state.args.use_gpu:
-                data_dict.cuda(device = self.app_state.device)
+                data_dict.to(device = self.app_state.device)
             #print("after {}".format(comp.name))
             #print(data_dict.keys())
 
