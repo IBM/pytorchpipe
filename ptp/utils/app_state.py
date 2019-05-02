@@ -153,7 +153,7 @@ class AppState(metaclass=SingletonMetaClass):
         for datadict in rand_loader:
             data=datadict["index"]
             print("For: before to: input data ({}) size {}, device: {}\n".format(type(data), data.size(), data.device))
-            datadict = datadatadict.to(self.device)
+            datadict = datadict.to(self.device)
             print("For: before model: input data ({}) size {}, device: {}\n".format(type(data), data.size(), data.device))
             output = model(datadict)
             print("For: after model: output_size ", output.size(),"\n")
