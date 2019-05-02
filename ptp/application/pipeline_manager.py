@@ -518,7 +518,10 @@ class PipelineManager(object):
         for prio in self.__priorities:
             # Get component
             comp = self.__components[prio]
-            print("prio: {} type: {}".format(prio, comp.name))
+            if (comp.type == "DataParallel"):
+                print("prio: {} type: DataParallel({})".format(prio, comp.module.name))
+            else:
+                print("prio: {} type: {}".format(prio, comp.name))
             # Forward step.
             comp(data_dict)
             # Component might add some fields to DataDict, move them to GPU if required.
