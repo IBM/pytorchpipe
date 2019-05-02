@@ -138,6 +138,7 @@ class FeedForwardNetwork(Model):
         x = data_dict[self.key_inputs]
 
         input_size = x.size()
+        print("\tIn Model: input size {}, device: {}".format(input_size, x.device))
 
         # Check that the input has the number of dimensions that we expect
         assert len(x.shape) == self.dimensions, \
