@@ -55,9 +55,9 @@ class Model(nn.Module):
         self.fc = nn.Linear(input_size, output_size)
 
     def forward(self, input):
-        print("\nDummy Model: input size {}, device: {}".format(input.size(), input.device))
+        print("Dummy Model: input size {}, device: {}\n".format(input.size(), input.device))
         output = self.fc(input)
-        print("\tDummy Model: output size", output.size())
+        print("Dummy Model: output size {}\n".format(output.size()))
 
         return output
 
@@ -142,7 +142,7 @@ class AppState(metaclass=SingletonMetaClass):
             output = model(data)
             print("For: after model: input size", data.size(), "output_size", output.size(),"\n")
 
-        exit(1)
+        #exit(1)
 
 
     def set_types(self):

@@ -510,10 +510,10 @@ class PipelineManager(object):
 
         """
         # TODO: Convert to gpu/CUDA.
+        print("before first to device")
         if self.app_state.args.use_gpu:
             data_dict.to(device = self.app_state.device)
-        print("elo problem")
-        time.sleep(2)
+        print("after first to device")
 
         for prio in self.__priorities:
             # Get component
