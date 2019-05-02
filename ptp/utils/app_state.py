@@ -49,7 +49,8 @@ class RandomDataset(Dataset):
 
         # Return data_dict.
         data_dict = DataDict({"index": None})
-        data_dict["index"] = index
+        data_dict["index"] = self.data[index]
+
         return data_dict
 
         #return self.data[index]
