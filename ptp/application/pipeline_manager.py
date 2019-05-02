@@ -516,14 +516,14 @@ class PipelineManager(object):
         time.sleep(2)
 
         for prio in self.__priorities:
-            print("elo ",prio)
             # Get component
             comp = self.__components[prio]
+            print("prio: {} type: {}".format(prio, comp.name))
             # Forward step.
             comp(data_dict)
             # Component might add some fields to DataDict, move them to GPU if required.
             #if self.app_state.args.use_gpu:
-            data_dict.to(device = self.app_state.device)
+            #data_dict.to(device = self.app_state.device)
             #print("after {}".format(comp.name))
             #print(data_dict.keys())
 
