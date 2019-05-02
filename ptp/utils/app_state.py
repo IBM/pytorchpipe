@@ -117,7 +117,7 @@ class AppState(metaclass=SingletonMetaClass):
         self.episode = 0
 
         #### TEST !
-        #self.test()
+        self.test()
 
     def test(self):
         model = Model(input_size, output_size)
