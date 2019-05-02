@@ -523,6 +523,7 @@ class PipelineManager(object):
             #print("after {}".format(comp.name))
             #print(data_dict.keys())
 
+
     def eval(self):
         """ 
         Sets evaluation mode for all models in the pipeline.
@@ -530,12 +531,14 @@ class PipelineManager(object):
         for model in self.models:
             model.eval
 
+
     def train(self):
         """ 
         Sets evaluation mode for all models in the pipeline.
         """
         for model in self.models:
             model.train()
+
 
     def cuda(self):
         """ 
@@ -545,15 +548,23 @@ class PipelineManager(object):
         if self.app_state.use_dataparallel:
             self.logger.info("Using DataParallel with {} GPUs!".format(torch.cuda.device_count()))
 
-        for i in range(len(self.models)):
-            model = self.models[i]
-            # Wrap model if required.
-            if self.app_state.use_dataparallel:
-                model = torch.nn.DataParallel(model)#, device_ids=[0, 1, 2])
-                self.models[i] = model
-            # Mode to cuda.
-            model.to(self.app_state.device)
-            print(type(model))
+        # Regenerate the model list AND overwrite the models on the list of components.
+        self.models = []
+        for key, component in self.__components.items():
+                # Check if class is derived (even indirectly) from Model.
+                if ComponentFactory.check_inheritance(type(component), ptp.Model.__name__):
+                    model = component
+                    # Wrap model if DataParallel mode is on..
+                    if self.app_state.use_dataparallel:
+                        model = torch.nn.DataParallel(model)
+                    # Mode to cuda.
+                    model.to(self.app_state.device)
+
+                    # Add to list.
+                    self.models.append(component)
+                    # "Overwrite" model on the component list.
+                    self.__components[key] = model
+                    print("key: {}, type: {}", type(self.__components[key]))
 
 
     def zero_grad(self):

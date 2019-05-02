@@ -117,30 +117,29 @@ class AppState(metaclass=SingletonMetaClass):
 
         #### TEST !
 
-        model = Model(input_size, output_size)
+        #model = Model(input_size, output_size)
+        #time.sleep(2)
+        #print("Model DONE!!")
 
-        time.sleep(2)
-        print("Model DONE!!")
+        #rand_loader = DataLoader(dataset=RandomDataset(input_size, data_size), batch_size=batch_size, shuffle=True)
+        #time.sleep(2)
+        #print("Dataloader DONE!!")
 
-        rand_loader = DataLoader(dataset=RandomDataset(input_size, data_size), batch_size=batch_size, shuffle=True)
-        time.sleep(2)
-        print("Dataloader DONE!!")
-
-        if torch.cuda.device_count() > 1:
-            print("Let's use", torch.cuda.device_count(), "GPUs!")
-            # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
-            model = nn.DataParallel(model)
+        #if torch.cuda.device_count() > 1:
+        #    print("Let's use", torch.cuda.device_count(), "GPUs!")
+        #    # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
+        #    model = nn.DataParallel(model)
         #
-        model.to(self.device)
-        time.sleep(2)
-        print("Move to DONE!!")
+        #model.to(self.device)
+        #time.sleep(2)
+        #print("Move to DONE!!")
 
-        for data in rand_loader:
-            data = data.to(self.device)
-            output = model(data)
-            print("Outside: input size", data.size(), "output_size", output.size())
+        #for data in rand_loader:
+        #    data = data.to(self.device)
+        #    output = model(data)
+        #    print("Outside: input size", data.size(), "output_size", output.size())
 
-        exit(1)
+        #exit(1)
 
 
     def set_types(self):
@@ -152,7 +151,7 @@ class AppState(metaclass=SingletonMetaClass):
         if torch.cuda.is_available() and self.args.use_gpu:
             self.logger.info('Running computations on GPU using CUDA')
             self.set_gpu_types()
-            self.device = torch.device('cuda:0')
+            #self.device = torch.device('cuda:0')
             self.use_gpu = True
             if self.args.use_dataparallel:
                 self.use_dataparallel = True
