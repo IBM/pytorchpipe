@@ -56,8 +56,9 @@ class Model(nn.Module):
         self.fc = nn.Linear(input_size, output_size)
 
     def forward(self, input):
+        print("\nDummy Model: input size {}, device: {}".format(input.size() x.device))
         output = self.fc(input)
-        print("\tIn Model: input size", input.size(), "output size", output.size())
+        print("\tDummy Model: output size", output.size())
 
         return output
 
@@ -117,29 +118,29 @@ class AppState(metaclass=SingletonMetaClass):
 
         #### TEST !
 
-        #model = Model(input_size, output_size)
-        #time.sleep(2)
-        #print("Model DONE!!")
+        model = Model(input_size, output_size)
+        print("Model DONE!!")
+        time.sleep(2)
 
-        #rand_loader = DataLoader(dataset=RandomDataset(input_size, data_size), batch_size=batch_size, shuffle=True)
-        #time.sleep(2)
-        #print("Dataloader DONE!!")
+        if torch.cuda.device_count() > 1:
+            print("Let's use", torch.cuda.device_count(), "GPUs!")
+            # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
+            model = nn.DataParallel(model)
+        
+        model.to(self.device)
+        print("Move to DONE!!")
+        time.sleep(2)
 
-        #if torch.cuda.device_count() > 1:
-        #    print("Let's use", torch.cuda.device_count(), "GPUs!")
-        #    # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
-        #    model = nn.DataParallel(model)
-        #
-        #model.to(self.device)
-        #time.sleep(2)
-        #print("Move to DONE!!")
+        rand_loader = DataLoader(dataset=RandomDataset(input_size, data_size), batch_size=batch_size, shuffle=True)
+        print("Dataloader DONE!!")
+        time.sleep(2)
 
-        #for data in rand_loader:
-        #    data = data.to(self.device)
-        #    output = model(data)
-        #    print("Outside: input size", data.size(), "output_size", output.size())
+        for data in rand_loader:
+            data = data.to(self.device)
+            output = model(data)
+            print("Outside: input size", data.size(), "output_size", output.size())
 
-        #exit(1)
+        exit(1)
 
 
     def set_types(self):
