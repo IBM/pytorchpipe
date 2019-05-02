@@ -151,6 +151,7 @@ class AppState(metaclass=SingletonMetaClass):
         #time.sleep(2)
 
         for datadict in rand_loader:
+            print(type(datadict),"\n")
             data=datadict["index"]
             print("For: before to: input data ({}) size {}, device: {}\n".format(type(data), data.size(), data.device))
             datadict = datadict.to(self.device)
