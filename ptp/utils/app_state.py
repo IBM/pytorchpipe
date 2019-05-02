@@ -136,11 +136,11 @@ class AppState(metaclass=SingletonMetaClass):
     def test(self):
         model = Model(input_size, output_size)
         print("Model DONE!!")
-        time.sleep(2)
+        #time.sleep(2)
 
         rand_loader = DataLoader(dataset=RandomDataset(input_size, data_size), batch_size=batch_size, shuffle=True)
         print("Dataloader DONE!!")
-        time.sleep(2)
+        #time.sleep(2)
 
 
         if torch.cuda.device_count() > 1:
@@ -148,14 +148,15 @@ class AppState(metaclass=SingletonMetaClass):
             # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
             model = nn.DataParallel(model)        
         model.to(self.device)
-        time.sleep(2)
+        #time.sleep(2)
 
-        for data in rand_loader:
+        for datadict in rand_loader:
+            data=datadict["index"]
             print("For: before to: input data ({}) size {}, device: {}\n".format(type(data), data.size(), data.device))
-            data = data.to(self.device)
+            datadict = datadatadict.to(self.device)
             print("For: before model: input data ({}) size {}, device: {}\n".format(type(data), data.size(), data.device))
-            output = model(data)
-            print("For: after model: input size", data.size(), "output_size", output.size(),"\n")
+            output = model(datadict)
+            print("For: after model: output_size ", output.size(),"\n")
 
         exit(1)
 
