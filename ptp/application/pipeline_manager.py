@@ -665,10 +665,8 @@ class PipelineManager(object):
             comp = self.__components[prio]
             # Check if component is a wrapped model.
             if type(comp).__name__ == "DataParallel":
-                print("add_statistics: wrapper!!")
                 comp.module.add_statistics(stat_col)
             else: 
-                print("else!")
                 comp.add_statistics(stat_col)
 
 
@@ -684,7 +682,11 @@ class PipelineManager(object):
         """
         for prio in self.__priorities:
             comp = self.__components[prio]
-            comp.collect_statistics(stat_col, data_dict)
+            # Check if component is a wrapped model.
+            if type(comp).__name__ == "DataParallel":
+                comp.module.collect_statistics(stat_col, data_dict)
+            else: 
+                comp.collect_statistics(stat_col, data_dict)
 
 
     def add_aggregators(self, stat_agg):
@@ -696,7 +698,11 @@ class PipelineManager(object):
         """
         for prio in self.__priorities:
             comp = self.__components[prio]
-            comp.add_aggregators(stat_agg)
+            # Check if component is a wrapped model.
+            if type(comp).__name__ == "DataParallel":
+                comp.module.add_aggregators(stat_agg)
+            else: 
+                comp.add_aggregators(stat_agg)
 
 
     def aggregate_statistics(self, stat_col, stat_agg):
@@ -710,4 +716,8 @@ class PipelineManager(object):
         """
         for prio in self.__priorities:
             comp = self.__components[prio]
-            comp.aggregate_statistics(stat_col, stat_agg)
+            # Check if component is a wrapped model.
+            if type(comp).__name__ == "DataParallel":
+                comp.module.aggregate_statistics(stat_col, stat_agg)
+            else: 
+                comp.aggregate_statistics(stat_col, stat_agg)
