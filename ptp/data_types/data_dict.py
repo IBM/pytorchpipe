@@ -205,13 +205,13 @@ class DataDict(collections.abc.MutableMapping):
     #
     #    return cpu_datadict
 
-    def cuda(self, device=None, non_blocking=False):
+    def to(self, device=None, non_blocking=False):
         """
-        Moves object(s) to GPU/CUDA memory.
+        Moves object(s) to device
 
         .. note::
 
-            Wraps call to ``torch.Tensor.cuda()``: If this object is already in CUDA memory and on the correct device, \
+            Wraps call to ``torch.Tensor.to()``: If this object is already in CUDA memory and on the correct device, \
             then no copy is performed and the original object is returned.
             If an element of `self` is not a ``torch.tensor``, it is returned as is, \
             i.e. We only move the ``torch.tensor`` (s) contained in `self`. \
@@ -227,6 +227,7 @@ class DataDict(collections.abc.MutableMapping):
         """
         for key in self:
             if isinstance(self[key], torch.Tensor) and (not self[key].is_cuda):
+                print("Moving {} to device {}".format(key, device))
                 self[key] = self[key].to(device=device, non_blocking=non_blocking)
                 #self[key] = self[key].cuda(device=device, non_blocking=non_blocking)
 
