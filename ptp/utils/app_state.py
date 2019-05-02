@@ -35,6 +35,9 @@ output_size = 2
 
 batch_size = 30
 data_size = 100
+from ptp.data_types.data_dict import DataDict
+
+
 
 class RandomDataset(Dataset):
 
@@ -43,10 +46,21 @@ class RandomDataset(Dataset):
         self.data = torch.randn(length, size)
 
     def __getitem__(self, index):
-        return self.data[index]
+
+        # Return data_dict.
+        data_dict = DataDict({"index": None})
+        data_dict["index"] = index
+        return data_dict
+
+        #return self.data[index]
 
     def __len__(self):
         return self.len
+
+    def collate_fn(self, batch):
+        print("Collate!")
+        return DataDict({key: torch.utils.data.dataloader.default_collate([sample[key] for sample in batch]) for key in batch[0]})
+
 
 class Model(nn.Module):
     # Our model
@@ -54,7 +68,8 @@ class Model(nn.Module):
         super(Model, self).__init__()
         self.fc = nn.Linear(input_size, output_size)
 
-    def forward(self, input):
+    def forward(self, datadict):
+        input = datadict["index"]
         print("Dummy Model: input size {}, device: {}\n".format(input.size(), input.device))
         output = self.fc(input)
         print("Dummy Model: output size {}\n".format(output.size()))
@@ -142,7 +157,7 @@ class AppState(metaclass=SingletonMetaClass):
             output = model(data)
             print("For: after model: input size", data.size(), "output_size", output.size(),"\n")
 
-        #exit(1)
+        exit(1)
 
 
     def set_types(self):
