@@ -103,6 +103,9 @@ class LeNet5(Model):
         # Unpack DataDict.
         img = data_dict[self.key_inputs]
 
+        input_size = img.size()
+        print("LeNet5 Model: input size {}, device: {}\n".format(input_size, img.device))
+
         # Pass inputs through layers.
         x = self.conv1(img)
         x = torch.nn.functional.relu(x)
@@ -116,6 +119,10 @@ class LeNet5(Model):
         x = self.linear1(x)
         x = torch.nn.functional.relu(x)
         x = self.linear2(x)
+
+        output_size = x.size()
+        print("LeNet5 Model: output size {}\n".format(output_size))
+
         # Log softmax.
         predictions = torch.nn.functional.log_softmax(x, dim=1)
         # Add predictions to datadict.
