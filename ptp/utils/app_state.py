@@ -123,6 +123,7 @@ class AppState(metaclass=SingletonMetaClass):
             model = nn.DataParallel(model)
 
         model.to(self.device)
+        print("DONE!!")
 
         rand_loader = DataLoader(dataset=RandomDataset(input_size, data_size), batch_size=batch_size, shuffle=True)
 
