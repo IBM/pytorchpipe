@@ -140,7 +140,7 @@ class AppState(metaclass=SingletonMetaClass):
             output = model(data)
             print("Outside: input size", data.size(), "output_size", output.size())
 
-        exit(1)
+        #exit(1)
 
 
     def set_types(self):
