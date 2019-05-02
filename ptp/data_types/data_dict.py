@@ -20,8 +20,6 @@ __author__ = "Vincent Marois, Tomasz Kornuta"
 import torch
 import collections
 
-from ptp.utils.app_state import AppState
-
 class DataDict(collections.abc.MutableMapping):
     """
     - Mapping: A container object that supports arbitrary key lookups and implements the methods ``__getitem__``, \
@@ -230,7 +228,7 @@ class DataDict(collections.abc.MutableMapping):
         for key in self:
             if isinstance(self[key], torch.Tensor):# and (not self[key].is_cuda):
                 print("\nFor: before to: {} size {}, type {}, device: {}".format(key, self[key].size(), type(self[key]), self[key].device))
-                self[key] = self[key].to(device=AppState().device)#, non_blocking=non_blocking)
+                self[key] = self[key].to(device=device)#, non_blocking=non_blocking)
                 print("\nFor: after to: {} size {}, type {}, device: {}".format(key, self[key].size(), type(self[key]), self[key].device))
                 #self[key] = self[key].cuda(device=device, non_blocking=non_blocking)
 
