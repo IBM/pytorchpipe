@@ -110,14 +110,16 @@ class AppState(metaclass=SingletonMetaClass):
         self.set_cpu_types()
         self.use_gpu = False
         self.use_dataparallel = False
-        self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
         # Reset global counters.
         self.epoch = None # Processor is not using the notion of epoch.
         self.episode = 0
 
         #### TEST !
+        #self.test()
 
+    def test(self):
         model = Model(input_size, output_size)
         print("Model DONE!!")
         time.sleep(2)
@@ -136,9 +138,9 @@ class AppState(metaclass=SingletonMetaClass):
         time.sleep(2)
 
         for data in rand_loader:
-            print("\nFor: before to: input size {}, device: {}".format(data.size(), data.device))
+            print("\nFor: before to: input data ({}) size {}, device: {}".format(type(data), data.size(), data.device))
             data = data.to(self.device)
-            print("\nFor: after to: input size {}, device: {}".format(data.size(), data.device))
+            print("\nFor: after to: input data ({}) size {}, device: {}".format(type(data), data.size(), data.device))
             output = model(data)
             print("Outside: input size", data.size(), "output_size", output.size())
 
