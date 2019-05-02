@@ -34,7 +34,7 @@ input_size = 5
 output_size = 2
 
 batch_size = 30
-data_size = 1000
+data_size = 100
 
 class RandomDataset(Dataset):
 
@@ -50,7 +50,6 @@ class RandomDataset(Dataset):
 
 class Model(nn.Module):
     # Our model
-
     def __init__(self, input_size, output_size):
         super(Model, self).__init__()
         self.fc = nn.Linear(input_size, output_size)
@@ -124,27 +123,26 @@ class AppState(metaclass=SingletonMetaClass):
         print("Model DONE!!")
         time.sleep(2)
 
-        if torch.cuda.device_count() > 1:
-            print("Let's use", torch.cuda.device_count(), "GPUs!")
-            # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
-            model = nn.DataParallel(model)
-        
-        model.to(self.device)
-        print("Move to DONE!!")
-        time.sleep(2)
-
         rand_loader = DataLoader(dataset=RandomDataset(input_size, data_size), batch_size=batch_size, shuffle=True)
         print("Dataloader DONE!!")
         time.sleep(2)
 
-        for data in rand_loader:
-            print("\nFor: before to: input data ({}) size {}, device: {}".format(type(data), data.size(), data.device))
-            data = data.to(self.device)
-            print("\nFor: after to: input data ({}) size {}, device: {}".format(type(data), data.size(), data.device))
-            output = model(data)
-            print("Outside: input size", data.size(), "output_size", output.size())
 
-        #exit(1)
+        if torch.cuda.device_count() > 1:
+            print("Let's use", torch.cuda.device_count(), "GPUs!")
+            # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
+            model = nn.DataParallel(model)        
+        model.to(self.device)
+        time.sleep(2)
+
+        for data in rand_loader:
+            print("For: before to: input data ({}) size {}, device: {}\n".format(type(data), data.size(), data.device))
+            data = data.to(self.device)
+            print("For: before model: input data ({}) size {}, device: {}\n".format(type(data), data.size(), data.device))
+            output = model(data)
+            print("For: after model: input size", data.size(), "output_size", output.size(),"\n")
+
+        exit(1)
 
 
     def set_types(self):
