@@ -669,6 +669,7 @@ class PipelineManager(object):
                 print("add_statistics: wrapper!!")
                 comp.module.add_statistics(stat_col)
             else: 
+                print("else!")
                 comp.add_statistics(stat_col)
 
 
