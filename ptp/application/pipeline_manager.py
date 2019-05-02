@@ -665,7 +665,7 @@ class PipelineManager(object):
             comp = self.__components[prio]
             print(type(comp))
             # Check if component is a wrapped model.
-            if ComponentFactory.check_inheritance(type(comp), "torch.nn.parallel.data_parallel.DataParallel"):
+            if type(comp).__name__ == "torch.nn.parallel.data_parallel.DataParallel":
                 print("add_statistics: wrapper!!")
                 comp.module.add_statistics(stat_col)
             else: 
