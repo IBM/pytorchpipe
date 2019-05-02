@@ -565,7 +565,7 @@ class PipelineManager(object):
                     model.to(self.app_state.device)
 
                     # Add to list.
-                    self.models.append(component)
+                    self.models.append(model)
                     # "Overwrite" model on the component list.
                     self.__components[key] = model
                     print("key: {}, type: {}", type(self.__components[key]))
