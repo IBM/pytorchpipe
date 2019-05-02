@@ -518,7 +518,7 @@ class PipelineManager(object):
         for prio in self.__priorities:
             # Get component
             comp = self.__components[prio]
-            if (comp.type == "DataParallel"):
+            if (type(comp).__name__ == "DataParallel"):
                 print("prio: {} type: DataParallel({})".format(prio, comp.module.name))
             else:
                 print("prio: {} type: {}".format(prio, comp.name))
