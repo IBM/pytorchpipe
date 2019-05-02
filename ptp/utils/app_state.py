@@ -131,7 +131,7 @@ class AppState(metaclass=SingletonMetaClass):
         #    # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
         #    model = nn.DataParallel(model)
         #
-        #model.to(self.device)
+        model.to(self.device)
         time.sleep(2)
         print("Move to DONE!!")
 
