@@ -56,7 +56,7 @@ class Model(nn.Module):
         self.fc = nn.Linear(input_size, output_size)
 
     def forward(self, input):
-        print("\nDummy Model: input size {}, device: {}".format(input.size() input.device))
+        print("\nDummy Model: input size {}, device: {}".format(input.size(), input.device))
         output = self.fc(input)
         print("\tDummy Model: output size", output.size())
 
