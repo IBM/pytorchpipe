@@ -34,7 +34,7 @@ input_size = 5
 output_size = 2
 
 batch_size = 30
-data_size = 100
+data_size = 1000
 
 class RandomDataset(Dataset):
 
@@ -126,10 +126,10 @@ class AppState(metaclass=SingletonMetaClass):
         time.sleep(2)
         print("Dataloader DONE!!")
 
-        #if torch.cuda.device_count() > 1:
-        #    print("Let's use", torch.cuda.device_count(), "GPUs!")
-        #    # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
-        #    model = nn.DataParallel(model)
+        if torch.cuda.device_count() > 1:
+            print("Let's use", torch.cuda.device_count(), "GPUs!")
+            # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
+            model = nn.DataParallel(model)
         #
         model.to(self.device)
         time.sleep(2)
