@@ -159,8 +159,9 @@ class AppState(metaclass=SingletonMetaClass):
             #new_datadict = DataDict({key: None for key in datadict.keys()})
             #new_datadict["index"] = datadict["index"].to(self.device)
             #datadict = new_datadict
-            datadict["index"] = datadict["index"].to(self.device)
-            print(datadict)
+            datadict1 = {}
+            datadict1["index"] = datadict["index"].to(self.device)
+            #print(datadict)
 
             #data=datadict["index"]
 
@@ -168,7 +169,7 @@ class AppState(metaclass=SingletonMetaClass):
             #data = data.to(self.device)
             #datadict.to(self.device)
             #print("For: before model: input data ({}) size {}, device: {}\n".format(type(data), data.size(), data.device))
-            output = model(datadict)
+            output = model(datadict1)
             print("For: after model: output_size ", output.size(),"\n")
 
         exit(1)
