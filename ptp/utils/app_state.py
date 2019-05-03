@@ -156,9 +156,10 @@ class AppState(metaclass=SingletonMetaClass):
         for datadict in rand_loader:
             print(type(datadict),"\n")
             #datadict = DataDict(datadict)
-            new_datadict = DataDict({key: None for key in datadict.keys()})
-            new_datadict["index"] = datadict["index"].to(self.device)
-            datadict = new_datadict
+            #new_datadict = DataDict({key: None for key in datadict.keys()})
+            #new_datadict["index"] = datadict["index"].to(self.device)
+            #datadict = new_datadict
+            datadict["index" = datadict["index"].to(self.device)
             print(datadict)
 
             #data=datadict["index"]
