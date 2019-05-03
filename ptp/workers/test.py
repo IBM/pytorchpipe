@@ -6,12 +6,6 @@ from torch.utils.data import Dataset, DataLoader
 import time
 
 
-# Parameters and DataLoaders
-input_size = 5
-output_size = 2
-
-batch_size = 30
-data_size = 100
 from ptp.data_types.data_dict import DataDict
 
 from torch.nn.parallel._functions import Scatter, Gather
@@ -193,7 +187,7 @@ class RandomDataset(Problem):
 from ptp.components.models.model import Model
 from ptp.data_types.data_definition import DataDefinition
 
-class TestModel(Model):
+class TestModel1(Model):
     # Our model
     def __init__(self, input_size, output_size):
         super(Model, self).__init__()
@@ -205,7 +199,7 @@ class TestModel(Model):
         output = self.fc(input)
         print("Dummy Model: output size {}\n".format(output.size()))
 
-        datadict["output"] = output
+        datadict["middle"] = output
         #print("saved to output : ",type(output))
         #return output
 
@@ -213,17 +207,51 @@ class TestModel(Model):
         return {"index": DataDefinition(1,1,"str")}
 
     def output_data_definitions(self):
-        return {"output": DataDefinition(1,1,"str")}
+        return {"middle": DataDefinition(1,1,"str")}
 
+
+class TestModel2(Model):
+    # Our model
+    def __init__(self, input_size, output_size):
+        super(Model, self).__init__()
+        self.fc = nn.Linear(input_size, output_size)
+
+    def forward(self, datadict):
+        input = datadict["middle"]
+
+        print("Dummy Model: input size {}, device: {}\n".format(input.size(), input.device))
+        output = self.fc(input)
+        print("Dummy Model: output size {}\n".format(output.size()))
+
+        datadict["output"] = output
+        #print("saved to output : ",type(output))
+        #return output
+
+    def input_data_definitions(self):
+        return {"middle": DataDefinition(1,1,"str")}
+
+    def output_data_definitions(self):
+        return {"output": DataDefinition(1,1,"str")}
 
 
 
 if __name__ == "__main__":
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    #device = torch.device('cpu')
 
+    use_dataparallel = False
 
-    model = TestModel(input_size, output_size)
-    print("Model DONE!!")
+    # Parameters and DataLoaders
+    input_size = 5
+    middle_size = 2
+    output_size = 3
+
+    batch_size = 30
+    data_size = 100000
+
+    model1 = TestModel1(input_size, middle_size)
+    model2 = TestModel2(middle_size, output_size)
+    print("Models DONE!!")
     #time.sleep(2)
 
     dataset = RandomDataset(input_size, data_size)
@@ -235,8 +263,11 @@ if __name__ == "__main__":
     if torch.cuda.device_count() > 1:
         print("Let's use", torch.cuda.device_count(), "GPUs!")
         # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
-        model = PTPDataParallel(model)        
-    model.to(device)
+        model1 = PTPDataParallel(model1) 
+        model2 = PTPDataParallel(model2) 
+        use_dataparallel = True       
+    model1.to(device)
+    model2.to(device)
     print("DataParallel DONE!!")
     #time.sleep(2)
 
@@ -259,12 +290,24 @@ if __name__ == "__main__":
         #data = data.to(self.device)
         #datadict.to(self.device)
         #print("For: before model: input data ({}) size {}, device: {}\n".format(type(data), data.size(), data.device))
-        print("datadict before model: ",datadict)
-        outputs = model(datadict)
-        for key in model.module.output_data_definitions().keys():
-            datadict[key] = outputs[key]
 
-        print("datadict after model: ",datadict)
+        print("datadict before model1: ",datadict)
+        if use_dataparallel:
+            outputs = model1(datadict)
+            for key in model1.module.output_data_definitions().keys():
+                datadict[key] = outputs[key]
+        else: 
+            model1(datadict)
+
+        print("datadict before model2: ",datadict)
+        if use_dataparallel:
+            outputs = model2(datadict)
+            for key in model2.module.output_data_definitions().keys():
+                datadict[key] = outputs[key]
+        else: 
+            model2(datadict)
+
+        print("datadict after model2: ",datadict)
         
         #output = datadict["output"]
         #print(type(output))
