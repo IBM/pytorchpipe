@@ -157,16 +157,16 @@ class AppState(metaclass=SingletonMetaClass):
             print(type(datadict),"\n")
             #datadict = DataDict(datadict)
             new_datadict = DataDict({key: None for key in datadict.keys()})
-            new_datadict["index"] = datadict["index"]
+            new_datadict["index"] = datadict["index"].to(self.device)
             datadict = new_datadict
             print(datadict)
 
-            data=datadict["index"]
+            #data=datadict["index"]
 
-            print("For: before to: input data ({}) size {}, device: {}\n".format(type(data), data.size(), data.device))
-            data = data.to(self.device)
+            #print("For: before to: input data ({}) size {}, device: {}\n".format(type(data), data.size(), data.device))
+            #data = data.to(self.device)
             #datadict.to(self.device)
-            print("For: before model: input data ({}) size {}, device: {}\n".format(type(data), data.size(), data.device))
+            #print("For: before model: input data ({}) size {}, device: {}\n".format(type(data), data.size(), data.device))
             output = model(datadict)
             print("For: after model: output_size ", output.size(),"\n")
 
