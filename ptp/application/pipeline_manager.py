@@ -216,7 +216,6 @@ class PipelineManager(object):
         # Save state dicts of all models.
         for model in self.models:
             # Check if model is wrapped in dataparallel.
-            print("\n\n TYPE: ", type(model))
             if self.app_state.use_dataparallel:
                 model.module.save_to_checkpoint(chkpt)
                 model_str += "  + Model '{}' [{}] params saved \n".format(model.module.name, type(model.module).__name__)
@@ -516,7 +515,6 @@ class PipelineManager(object):
         for prio in self.__priorities:
             # Get component
             comp = self.__components[prio]
-            #if self.app_state.use_dataparallel:
             if (type(comp).__name__ == "DataDictParallel"):
                 # Forward of wrapper returns outputs in separate DataDict.
                 outputs = comp(data_dict)
@@ -526,6 +524,8 @@ class PipelineManager(object):
             else: 
                 # "Normal" forward step.
                 comp(data_dict)
+                # Move data to device.
+                data_dict.to(device = self.app_state.device)
 
 
     def eval(self):
