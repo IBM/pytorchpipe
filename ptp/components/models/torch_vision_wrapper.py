@@ -52,7 +52,7 @@ class TorchVisionWrapper(Model):
         pretrained = self.config["pretrained"]
 
         # Get model type from configuration.
-        self.model_type = get_value_from_dictionary("model_type", self.config, "vgg16 | sensenet121 | resnet152 | resnet50".split(" | "))
+        self.model_type = get_value_from_dictionary("model_type", self.config, "vgg16 | densenet121 | resnet152 | resnet50".split(" | "))
 
         if(self.model_type == 'vgg16'):
             # Get VGG16
