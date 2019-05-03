@@ -272,7 +272,7 @@ class PipelineManager(object):
         # This is to be able to load a CUDA-trained model on CPU
         chkpt = torch.load(checkpoint_file, map_location=lambda storage, loc: storage)
 
-        log_str = "Importing pipeline '{}' parameters from checkpoint from {} (episode: {}, loss: {}, status: {}):\n".format(
+        log_str = "Loading models constituting the '{}' pipeline from checkpoint defined in {} (episode: {}, loss: {}, status: {}):\n".format(
                 chkpt['name'],
                 chkpt['timestamp'],
                 chkpt['episode'],
@@ -306,7 +306,7 @@ class PipelineManager(object):
             The 'load' variable should contain path with filename of the checkpoint from which we want to load particular model.
         """
         error = False
-        log_str = 'Trying to load the pre-trained models:\n'
+        log_str = ''
         # Iterate over models.
         for model in self.models:
             if "load" in model.config.keys():
@@ -359,11 +359,16 @@ class PipelineManager(object):
 
         # Log results.
         if error:
+            # Log errors - always.
+            log_str = 'Failed while trying to load the pre-trained models:\n' + log_str
             self.logger.error(log_str)
             # Exit by following the logic: if user wanted to load the model but failed, then continuing the experiment makes no sense.
             exit(-6)
         else:
-            self.logger.info(log_str)
+            # Log info - only if some models were loaded.
+            if len(log_str) > 0:
+                log_str = 'Successfully loaded the pre-trained models:\n' + log_str
+                self.logger.info(log_str)
 
 
     def freeze_models(self):
