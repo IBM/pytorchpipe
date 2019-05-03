@@ -118,7 +118,7 @@ class RecurrentNeuralNetwork(Model):
             except KeyError:
                 raise ConfigurationError( "Invalid RNN type, available options for 'cell_type' are ['LSTM', 'GRU', 'RNN_TANH', 'RNN_RELU'] (currently '{}')".format(self.cell_type))
         
-        # Parameters - for a single sample.
+        # Parameters - for a single sample 2 x [NUM_LAYERS x BATCH_SIZE x HIDDEN_SIZE]
         h0 = torch.zeros(self.num_layers, 1, self.hidden_size)
         c0 = torch.zeros(self.num_layers, 1, self.hidden_size)
 
@@ -228,9 +228,9 @@ class RecurrentNeuralNetwork(Model):
         # Input hidden state
         if self.initial_state == "Input":
             if self.cell_type == "LSTM":
-                d[self.key_input_state] = DataDefinition([2, self.num_layers, -1, self.hidden_size], [torch.Tensor], "Batch of LSTM initial hidden states (h0/c0) passed from another LSTM [2 x NUM_LAYERS x SEQ_LEN x HIDDEN_SIZE]")
+                d[self.key_input_state] = DataDefinition([-1, 2, self.num_layers, self.hidden_size], [torch.Tensor], "Batch of LSTM last hidden states (h0/c0) passed from another LSTM that will be used as initial [BATCH_SIZE x 2 x NUM_LAYERS x SEQ_LEN x HIDDEN_SIZE]")
             else:
-                d[self.key_input_state] = DataDefinition([self.num_layers, -1, self.hidden_size], [torch.Tensor], "Batch of RNN initial hidden states passed from another RNN [NUM_LAYERS x SEQ_LEN x HIDDEN_SIZE]")
+                d[self.key_input_state] = DataDefinition([-1, self.num_layers, self.hidden_size], [torch.Tensor], "Batch of RNN last hidden states passed from another RNN that will be used as initial [BATCH_SIZE x NUM_LAYERS x SEQ_LEN x HIDDEN_SIZE]")
 
         return d
 
@@ -253,9 +253,9 @@ class RecurrentNeuralNetwork(Model):
         # Output: hidden state stream.
         if self.output_last_state:
             if self.cell_type == "LSTM":
-                d[self.key_output_state] = DataDefinition([2, self.num_layers, -1, self.hidden_size], [torch.Tensor], "Batch of LSTM final hidden states (h0/c0) [2 x NUM_LAYERS x SEQ_LEN x HIDDEN_SIZE]")
+                d[self.key_output_state] = DataDefinition([-1, 2, self.num_layers, self.hidden_size], [torch.Tensor], "Batch of LSTM final hidden states (h0/c0) [BATCH_SIZE x 2 x NUM_LAYERS x SEQ_LEN x HIDDEN_SIZE]")
             else:
-                d[self.key_output_state] = DataDefinition([self.num_layers, -1, self.hidden_size], [torch.Tensor], "Batch of RNN final hidden states [NUM_LAYERS x SEQ_LEN x HIDDEN_SIZE]")
+                d[self.key_output_state] = DataDefinition([-1, self.num_layers, self.hidden_size], [torch.Tensor], "Batch of RNN final hidden states [BATCH_SIZE x NUM_LAYERS x SEQ_LEN x HIDDEN_SIZE]")
 
         return d
 
@@ -285,14 +285,26 @@ class RecurrentNeuralNetwork(Model):
             if inputs.dim() == 2:
                 inputs = inputs.unsqueeze(1)
             batch_size = inputs.shape[0]
+
+        print("{}: input shape: {}, device: {}\n".format(self.name, inputs.shape, inputs.device))
+
         
 
         # Get initial state, depending on the settings.
         if self.initial_state == "Input":
-            # Initialize hidden state.
+            # Initialize hidden state from inputs - as last hidden state from external component.
             hidden = data_dict[self.key_input_state]
+            # Flip batch and num_layer dims so batch will be third/second!
+            if self.cell_type  == 'LSTM':
+                # For LSTM: [BATCH_SIZE x NUM_LAYERS x 2 x HIDDEN_SIZE]  -> [2 x NUM_LAYERS x BATCH_SIZE x HIDDEN_SIZE]
+                hidden = hidden.transpose(0,2)
+            else: 
+                # For others: [BATCH_SIZE x NUM_LAYERS x HIDDEN_SIZE] -> [NUM_LAYERS x BATCH_SIZE x HIDDEN_SIZE]
+                hidden = hidden.transpose(0,1)
         else:
             hidden = self.initialize_hiddens_state(batch_size)
+
+        print("{}: hidden shape: {}, device: {}\n".format(self.name, hidden.shape, hidden.device))
 
         activations = []
 
@@ -355,4 +367,12 @@ class RecurrentNeuralNetwork(Model):
                 pass
 
         if self.output_last_state:
+            # Flip batch and num_layer dims so batch will be first!
+            if self.cell_type  == 'LSTM':
+                # For LSTM: [2 x NUM_LAYERS x BATCH_SIZE x HIDDEN_SIZE] -> [BATCH_SIZE x NUM_LAYERS x 2 x HIDDEN_SIZE] 
+                hidden = hidden.transpose(0,2)
+            else: 
+                # For others: [NUM_LAYERS x BATCH_SIZE x HIDDEN_SIZE] -> [BATCH_SIZE x NUM_LAYERS x HIDDEN_SIZE] 
+                hidden = hidden.transpose(0,1)
+            # Export last hidden state.
             data_dict.extend({self.key_output_state: hidden})

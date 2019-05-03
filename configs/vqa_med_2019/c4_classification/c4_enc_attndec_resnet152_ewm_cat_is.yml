@@ -49,7 +49,7 @@ pipeline:
     pretrained_embeddings_file: glove.6B.100d.txt
     data_folder: ~/data/vqa-med
     word_mappings_file: questions.all.word.mappings.csv
-    fixed_padding: 10
+    fixed_padding: 10 # The longest question!
     additional_tokens: <PAD>,<EOS>
     streams:
       inputs: questions
@@ -66,7 +66,7 @@ pipeline:
     export_pad_mapping_to_globals: True
     additional_tokens: <PAD>,<EOS>
     eos_token: True
-    fixed_padding: 10
+    fixed_padding: 10 # The longest question!
     streams:
       inputs: answers
       outputs: indexed_answers
@@ -88,9 +88,11 @@ pipeline:
 
   # Single layer GRU Encoder
   encoder:
-    type: RecurrentNeuralNetwork
-    cell_type: GRU
     priority: 3
+    type: RecurrentNeuralNetwork
+    # Do not wrap that model with DataDictParallel!
+    parallelize: False
+    cell_type: GRU
     initial_state: Trainable
     hidden_size: 100
     num_layers: 1
@@ -110,7 +112,7 @@ pipeline:
   reshaper_1:
     priority: 3.01
     type: ReshapeTensor
-    input_dims: [1, -1, 100]
+    input_dims: [-1, 1, 100]
     output_dims: [-1, 100]
     streams:
       inputs: s2s_state_output
@@ -148,7 +150,7 @@ pipeline:
     priority: 3.3
     type: ReshapeTensor
     input_dims: [-1, 100]
-    output_dims: [1, -1, 100]
+    output_dims: [-1, 1, 100]
     streams:
       inputs: question_image_activations
       outputs: question_image_activations_reshaped

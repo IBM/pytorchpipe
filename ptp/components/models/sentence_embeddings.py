@@ -111,7 +111,7 @@ class SentenceEmbeddings(Model, WordMappings):
         # Unpack DataDict.
         inputs = data_dict[self.key_inputs]
 
-        #print("{}: input len: {}, device: {}\n".format(self.name, len(inputs), "-"))
+        print("{}: input len: {}, device: {}\n".format(self.name, len(inputs), "-"))
 
         # Get index of padding.
         pad_index = self.word_to_ix['<PAD>']
@@ -163,7 +163,7 @@ class SentenceEmbeddings(Model, WordMappings):
         padded_indices = torch.nn.utils.rnn.pad_sequence(indices_list, batch_first=True, padding_value=pad_index)
         embedds = self.embeddings(padded_indices)
         
-        #print("{}: embedds shape: {}, device: {}\n".format(self.name, embedds.shape, embedds.device))
+        print("{}: embedds shape: {}, device: {}\n".format(self.name, embedds.shape, embedds.device))
 
         # Add embeddings to datadict.
         data_dict.extend({self.key_outputs: embedds})
