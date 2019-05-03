@@ -164,8 +164,8 @@ class AppState(metaclass=SingletonMetaClass):
             data=datadict["index"]
 
             print("For: before to: input data ({}) size {}, device: {}\n".format(type(data), data.size(), data.device))
-            #data = data.to(self.device)
-            datadict.to(self.device)
+            data = data.to(self.device)
+            #datadict.to(self.device)
             print("For: before model: input data ({}) size {}, device: {}\n".format(type(data), data.size(), data.device))
             output = model(datadict)
             print("For: after model: output_size ", output.size(),"\n")
