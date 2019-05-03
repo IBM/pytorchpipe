@@ -116,14 +116,13 @@ class DataDictParallel(torch.nn.DataParallel):
             return self.module(*inputs[0], **kwargs[0])
 
         # Preprocessing: get only the inputs important for to the wrapped model (optimization).
-        #inputs_tuple = []
-        #for i, item in enumerate(inputs):
-        #    print("i = ",i)
-        #    input_dict = DataDict({key: value for key,value in item.items() if key in self.module.input_data_definitions().keys()})
-        #    inputs_tuple.append(input_dict)
+        inputs_tuple = []
+        for i, item in enumerate(inputs):
+            print("i = ",i)
+            input_dict = DataDict({key: value for key,value in item.items() if key in self.module.input_data_definitions().keys()})
+            inputs_tuple.append(input_dict)
         # Convert to tuple
-        #inputs_tuple = tuple(inputs_tuple)
-        inputs_tuple = inputs
+        inputs_tuple = tuple(inputs_tuple)
 
         inputs_tuple, kwargs = self.scatter(inputs_tuple, kwargs, self.device_ids)
         print("input after scatter():",inputs_tuple)
@@ -264,7 +263,8 @@ if __name__ == "__main__":
         # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
         model1 = DataDictParallel(model1) 
         model2 = DataDictParallel(model2) 
-        use_dataparallel = True       
+        use_dataparallel = True
+    # Move to desired device.
     model1.to(device)
     model2.to(device)
     print("DataParallel DONE!!")
@@ -272,23 +272,8 @@ if __name__ == "__main__":
 
     #datadict1 = {}#DataDict({"index":None,"output":None})
     for datadict in rand_loader:
-        print("Got object from loader: {}".format(type(datadict)))
-        #datadict = DataDict(datadict)
-        #new_datadict = DataDict({key: None for key in datadict.keys()})
-        #new_datadict["index"] = datadict["index"].to(self.device)
-        #datadict = new_datadict
-        print("Before to device: ", type(datadict["index"]),datadict["index"].device)
-        
-        datadict["index"] = datadict["index"].to(device)
-        print("After to device: ", type(datadict["index"]),datadict["index"].device)
-        print("datadict type: ",type(datadict))
-
-        #data=datadict["index"]
-
-        #print("For: before to: input data ({}) size {}, device: {}\n".format(type(data), data.size(), data.device))
-        #data = data.to(self.device)
-        #datadict.to(self.device)
-        #print("For: before model: input data ({}) size {}, device: {}\n".format(type(data), data.size(), data.device))
+        print("!!!!!  Got object from loader: {}".format(type(datadict)))
+        datadict.to(device)
 
         print("datadict before model1: ",datadict)
         if use_dataparallel:
@@ -296,8 +281,11 @@ if __name__ == "__main__":
             # Postprocessing: copy only the outputs of the wrapped model.
             for key in model1.module.output_data_definitions().keys():
                 datadict.extend({key: outputs[key]})
-        else: 
+        else:
             model1(datadict)
+
+        # Let's see what will happen here!
+        datadict.to(device)
 
         print("datadict before model2: ",datadict)
         if use_dataparallel:
@@ -309,8 +297,11 @@ if __name__ == "__main__":
             model2(datadict)
 
         print("datadict after model2: ",datadict)
-        
-        #output = datadict["output"]
+
+        output = datadict["output"]
+        loss = output.sum()
+        loss.backward()
+
         #print(type(output))
         #output = datadict2["output"]
         #print("For: after model: output_size ", output.size(),"\n")

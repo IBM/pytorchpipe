@@ -205,7 +205,7 @@ class DataDict(collections.abc.MutableMapping):
     #
     #    return cpu_datadict
 
-    def to(self, device=None, non_blocking=False):
+    def to(self, device=None, keys_to_move=None, non_blocking=False):
         """
         Moves object(s) to device
 
@@ -227,6 +227,9 @@ class DataDict(collections.abc.MutableMapping):
         """
         for key in self:
             if isinstance(self[key], torch.Tensor):# and (not self[key].is_cuda):
+                # Skip keys that are not in the keys_to_move list (if it was passed).
+                if keys_to_move is not None and key not in keys_to_move:
+                    continue
                 print("\nFor: before to: {} size {}, type {}, device: {}".format(key, self[key].size(), type(self[key]), self[key].device))
                 self[key] = self[key].to(device=device)#, non_blocking=non_blocking)
                 print("\nFor: after to: {} size {}, type {}, device: {}".format(key, self[key].size(), type(self[key]), self[key].device))
