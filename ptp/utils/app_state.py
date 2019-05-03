@@ -155,7 +155,8 @@ class AppState(metaclass=SingletonMetaClass):
 
         for datadict in rand_loader:
             print(type(datadict),"\n")
-            datadict = DataDict(datadict)                
+            #datadict = DataDict(datadict)
+            datadict = DataDict({key: batch for key,batch in datadict.items()})
             print(datadict)
 
             data=datadict["index"]
