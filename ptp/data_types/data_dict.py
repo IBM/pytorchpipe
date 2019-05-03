@@ -46,6 +46,7 @@ class DataDict(collections.abc.MutableMapping):
         """
         self.__dict__.update(*args, **kwargs)
 
+
     def __setitem__(self, key, value, addkey=False):
         """
         key:value setter function.
@@ -68,6 +69,7 @@ class DataDict(collections.abc.MutableMapping):
             raise KeyError(msg)
         else:
             self.__dict__[key] = value
+
 
     def extend(self, dict_to_add):
         """
@@ -101,7 +103,6 @@ class DataDict(collections.abc.MutableMapping):
         # Remove.
         for key in rem_keys:
             self.__delitem__(key, delkey=True)
-
 
 
     def __getitem__(self, key):
@@ -157,53 +158,6 @@ class DataDict(collections.abc.MutableMapping):
         """
         return '{}, DataDict({})'.format(super(DataDict, self).__repr__(), self.__dict__)
 
-    #def numpy(self):
-    #    """
-    #    Converts the DataDict to numpy objects.
-    #
-    #    .. note::
-    #
-    #        The ``torch.tensor`` (s) contained in `self` are converted using ``torch.Tensor.numpy()`` : \
-    #        This tensor and the returned ndarray share the same underlying storage. \
-    #        Changes to ``self`` tensor will be reflected in the ndarray and vice versa.    
-    #
-    #        If an element of ``self`` is not a ``torch.tensor``, it is returned as is.
-    #
-    #    :return: Converted DataDict.  
-    #
-    #    """
-    #    numpy_datadict = self.__class__({key: None for key in self.keys()})
-    #
-    #    for key in self:
-    #        if isinstance(self[key], torch.Tensor):
-    #            numpy_datadict[key] = self[key].numpy()
-    #        else:
-    #            numpy_datadict[key] = self[key]
-    #
-    #    return numpy_datadict
-
-    #def cpu(self):
-    #    """
-    #    Moves the DataDict to memory accessible to the CPU.
-    #
-    #    .. note::
-    #
-    #        The ``torch.tensor`` (s) contained in `self` are converted using ``torch.Tensor.cpu()`` .
-    #        If an element of `self` is not a ``torch.tensor``, it is returned as is, \
-    #        i.e. We only move the ``torch.tensor`` (s) contained in `self`.
-    #
-    #    :return: Converted DataDict.
-    #
-    #    """
-    #    cpu_datadict = self.__class__({key: None for key in self.keys()})
-    #
-    #    for key in self:
-    #        if isinstance(self[key], torch.Tensor):
-    #            cpu_datadict[key] = self[key].cpu()
-    #        else:
-    #            cpu_datadict[key] = self[key]
-    #
-    #    return cpu_datadict
 
     def to(self, device=None, keys_to_move=None, non_blocking=False):
         """
@@ -230,28 +184,4 @@ class DataDict(collections.abc.MutableMapping):
                 # Skip keys that are not in the keys_to_move list (if it was passed).
                 if keys_to_move is not None and key not in keys_to_move:
                     continue
-                print("\nFor: before to: {} size {}, type {}, device: {}".format(key, self[key].size(), type(self[key]), self[key].device))
                 self[key] = self[key].to(device=device)#, non_blocking=non_blocking)
-                print("\nFor: after to: {} size {}, type {}, device: {}".format(key, self[key].size(), type(self[key]), self[key].device))
-                #self[key] = self[key].cuda(device=device, non_blocking=non_blocking)
-
-
-    #def detach(self):
-    #    """
-    #    Returns a new DataDict, detached from the current graph.
-    #    The result will never require gradient.
-    #
-    #    .. note::
-    #        Wraps call to ``torch.Tensor.detach()`` : the ``torch.tensor`` (s) in the returned ``DataDict`` use the same\
-    #        data tensor(s) as the original one(s).
-    #        In-place modifications on either of them will be seen, and may trigger errors in correctness checks.
-    #
-    #    """
-    #    detached_datadict = self.__class__({key: None for key in self.keys()})
-    #    for key in self:
-    #        if isinstance(self[key], torch.Tensor):
-    #            detached_datadict[key] = self[key].detach()
-    #        else:
-    #            detached_datadict[key] = self[key]
-    #
-    #    return detached_datadict

@@ -29,6 +29,7 @@ import ptp.utils.logger as logging
 from ptp.utils.app_state import AppState
 from ptp.configuration.configuration_error import ConfigurationError
 from ptp.application.component_factory import ComponentFactory
+from ptp.utils.data_dict_parallel import DataDictParallel
 
 class PipelineManager(object):
     """
@@ -509,26 +510,22 @@ class PipelineManager(object):
         :param data_dict: :py:class:`ptp.utils.DataDict` object containing both input data to be processed and that will be extended by the results.
 
         """
-        # TODO: Convert to gpu/CUDA.
-        print("before first to device")
         if self.app_state.args.use_gpu:
             data_dict.to(device = self.app_state.device)
-        print("after first to device")
 
         for prio in self.__priorities:
             # Get component
             comp = self.__components[prio]
-            if (type(comp).__name__ == "DataParallel"):
-                print("prio: {} type: DataParallel({})".format(prio, comp.module.name))
-            else:
-                print("prio: {} type: {}".format(prio, comp.name))
-            # Forward step.
-            comp(data_dict)
-            # Component might add some fields to DataDict, move them to GPU if required.
-            #if self.app_state.args.use_gpu:
-            #data_dict.to(device = self.app_state.device)
-            #print("after {}".format(comp.name))
-            #print(data_dict.keys())
+            #if self.app_state.use_dataparallel:
+            if (type(comp).__name__ == "DataDictParallel"):
+                # Forward of wrapper returns outputs in separate DataDict.
+                outputs = comp(data_dict)
+                # Postprocessing: copy only the outputs of the wrapped model.
+                for key in comp.module.output_data_definitions().keys():
+                    data_dict.extend({key: outputs[key]})
+            else: 
+                # "Normal" forward step.
+                comp(data_dict)
 
 
     def eval(self):
@@ -551,9 +548,9 @@ class PipelineManager(object):
         """ 
         Moves all models to GPU.
         """
-        self.logger.info("Moving model(s) to GPU")
+        self.logger.info("Moving model(s) to GPU(s)")
         if self.app_state.use_dataparallel:
-            self.logger.info("Using DataParallel with {} GPUs!".format(torch.cuda.device_count()))
+            self.logger.info("Using data parallelization on {} GPUs!".format(torch.cuda.device_count()))
 
         # Regenerate the model list AND overwrite the models on the list of components.
         self.models = []
@@ -561,9 +558,9 @@ class PipelineManager(object):
                 # Check if class is derived (even indirectly) from Model.
                 if ComponentFactory.check_inheritance(type(component), ptp.Model.__name__):
                     model = component
-                    # Wrap model if DataParallel mode is on..
+                    # Wrap model with DataDictParallel when required.
                     if self.app_state.use_dataparallel:
-                        model = torch.nn.DataParallel(model)
+                        model = DataDictParallel(model)
                     # Mode to cuda.
                     model.to(self.app_state.device)
 
@@ -571,7 +568,6 @@ class PipelineManager(object):
                     self.models.append(model)
                     # "Overwrite" model on the component list.
                     self.__components[key] = model
-                    print("key: {}, type: {}", type(self.__components[key]))
 
 
     def zero_grad(self):
@@ -670,11 +666,7 @@ class PipelineManager(object):
         """
         for prio in self.__priorities:
             comp = self.__components[prio]
-            # Check if component is a wrapped model.
-            if type(comp).__name__ == "DataParallel":
-                comp.module.add_statistics(stat_col)
-            else: 
-                comp.add_statistics(stat_col)
+            comp.add_statistics(stat_col)
 
 
     def collect_statistics(self, stat_col, data_dict):
@@ -689,11 +681,7 @@ class PipelineManager(object):
         """
         for prio in self.__priorities:
             comp = self.__components[prio]
-            # Check if component is a wrapped model.
-            if type(comp).__name__ == "DataParallel":
-                comp.module.collect_statistics(stat_col, data_dict)
-            else: 
-                comp.collect_statistics(stat_col, data_dict)
+            comp.collect_statistics(stat_col, data_dict)
 
 
     def add_aggregators(self, stat_agg):
@@ -705,11 +693,7 @@ class PipelineManager(object):
         """
         for prio in self.__priorities:
             comp = self.__components[prio]
-            # Check if component is a wrapped model.
-            if type(comp).__name__ == "DataParallel":
-                comp.module.add_aggregators(stat_agg)
-            else: 
-                comp.add_aggregators(stat_agg)
+            comp.add_aggregators(stat_agg)
 
 
     def aggregate_statistics(self, stat_col, stat_agg):
@@ -723,8 +707,4 @@ class PipelineManager(object):
         """
         for prio in self.__priorities:
             comp = self.__components[prio]
-            # Check if component is a wrapped model.
-            if type(comp).__name__ == "DataParallel":
-                comp.module.aggregate_statistics(stat_col, stat_agg)
-            else: 
-                comp.aggregate_statistics(stat_col, stat_agg)
+            comp.aggregate_statistics(stat_col, stat_agg)

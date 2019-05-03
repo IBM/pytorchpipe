@@ -137,8 +137,7 @@ class FeedForwardNetwork(Model):
         # Get inputs.
         x = data_dict[self.key_inputs]
 
-        input_size = x.size()
-        print("FFN Model: input size {}, device: {}\n".format(input_size, x.device))
+        print("FFN Model: input shape: {}, device: {}\n".format(x.shape, x.device))
 
         # Check that the input has the number of dimensions that we expect
         assert len(x.shape) == self.dimensions, \
@@ -154,9 +153,6 @@ class FeedForwardNetwork(Model):
 
         # Restore the input dimensions but the last one (as it's been resized by the FFN)
         x = x.view(*origin_shape[0:self.dimensions-1], -1)
-
-        output_size = x.size()
-        print("FFN Model: output size {}\n".format(output_size))
 
         # Add predictions to datadict.
         data_dict.extend({self.key_predictions: x})
