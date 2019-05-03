@@ -43,7 +43,10 @@ def datadict_scatter(inputs, target_gpus, dim=0):
             return list(map(type(obj), zip(*map(scatter_map, obj.items()))))
         if isinstance(obj, DataDict) and len(obj) > 0:
             return list(map(type(obj), zip(*map(scatter_map, obj.items()))))    
-        return [obj for targets in target_gpus]
+        # Return "unscattered" object for all GPUs.
+        # This seems to be the cause of the issue for SentenceEmbeddings!
+        # TODO: further investigate.
+        return [obj for _ in target_gpus]
 
     # After scatter_map is called, a scatter_map cell will exist. This cell
     # has a reference to the actual function scatter_map, which has references
