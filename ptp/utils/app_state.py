@@ -159,7 +159,7 @@ class AppState(metaclass=SingletonMetaClass):
             #new_datadict = DataDict({key: None for key in datadict.keys()})
             #new_datadict["index"] = datadict["index"].to(self.device)
             #datadict = new_datadict
-            datadict["index" = datadict["index"].to(self.device)
+            datadict["index"] = datadict["index"].to(self.device)
             print(datadict)
 
             #data=datadict["index"]
