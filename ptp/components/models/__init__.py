@@ -14,6 +14,7 @@ from .vqa.multimodal_compact_bilinear_pooling import MultimodalCompactBilinearPo
 from .vqa.relational_network import RelationalNetwork
 from .vqa.attention import VQA_Attention
 from .vqa.multimodal_factorized_bilinear_pooling import MultimodalFactorizedBilinearPooling
+from .vqa.self_attention import SelfAttention
 
 __all__ = [
     'ConvNetEncoder',
@@ -30,5 +31,6 @@ __all__ = [
     'RelationalNetwork',
     'Attn_Decoder_RNN',
     'VQA_Attention',
-    'MultimodalFactorizedBilinearPooling'
+    'MultimodalFactorizedBilinearPooling',
+    'SelfAttention'
     ]

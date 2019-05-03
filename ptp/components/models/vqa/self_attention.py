@@ -22,15 +22,17 @@ import torch
 
 from ptp.components.models.model import Model
 from ptp.data_types.data_definition import DataDefinition
-import torch.nn.functional as F
 
-class MultimodalFactorizedBilinearPooling(Model):
+
+class SelfAttention(Model):
     """
     Element of one of the classical baselines for Visual Question Answering.
-    The multi-modal data is fused via sum-pooling of the element-wise multiplied high-dimensional representations and returned (for subsequent classification, done in a separate component e.g. ffn).
+    Attention within an image or text is computed.
+    The attention weighted data (question or image) is returned (for subsequent classification, done in a separate component e.g. ffn).
+    Currently only supports self-attention on text data
 
-    On the basis of: Zhou Yu, Jun Yu. "Beyond Bilinear: Generalized Multi-modal Factorized High-order Pooling for Visual Question Answering" (2015).
-    Code: https://github.com/Cadene/block.bootstrap.pytorch/blob/master/block/models/networks/fusions/fusions.py
+    On the basis of: Vaswani et. al Attention is all you need (2017)
+
     """
     def __init__(self, name, config):
         """
@@ -42,35 +44,27 @@ class MultimodalFactorizedBilinearPooling(Model):
         :type config: ``ptp.configuration.ConfigInterface``
 
         """
-        super(MultimodalFactorizedBilinearPooling, self).__init__(name, MultimodalFactorizedBilinearPooling, config)
+        super(SelfAttention, self).__init__(name, SelfAttention, config)
 
         # Get key mappings.
-        self.key_image_encodings = self.stream_keys["image_encodings"]
         self.key_question_encodings = self.stream_keys["question_encodings"]
         self.key_outputs = self.stream_keys["outputs"]
 
         # Retrieve input/output sizes from globals.
-        self.image_encoding_size = self.globals["image_encoding_size"]
         self.question_encoding_size = self.globals["question_encoding_size"]
 
         # Get size of latent space and number of heads from config.
         self.latent_size = self.config["latent_size"]
-        self.factor = self.config["pool_factor"]
+        self.num_attention_heads = self.config["num_attention_heads"]
+
         # Output feature size
-        self.output_size = self.latent_size
-
-        # Map image and question encodings to a common latent space of dimension 'latent_size'.
-        self.image_encodings_ff = torch.nn.Linear(self.image_encoding_size, self.latent_size*self.factor)
-        self.question_encodings_ff = torch.nn.Linear(self.question_encoding_size, self.latent_size*self.factor)
-
+        self.output_size = self.question_encoding_size*self.num_attention_heads
         # Create activation layer.
         self.activation = torch.nn.ReLU()
 
-        # Retrieve dropout rate value - if set, will put dropout between every layer.
-        dropout_rate = self.config["dropout_rate"]
-
-        # Create dropout layer.
-        self.dropout = torch.nn.Dropout(dropout_rate)
+        # Create FF layers
+        self.W1 = torch.nn.Linear(self.question_encoding_size, self.latent_size)
+        self.W2 = torch.nn.Linear(self.latent_size, self.num_attention_heads)
 
 
     def input_data_definitions(self):
@@ -80,8 +74,7 @@ class MultimodalFactorizedBilinearPooling(Model):
         :return: dictionary containing input data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
         """
         return {
-            self.key_image_encodings: DataDefinition([-1, self.image_encoding_size], [torch.Tensor], "Batch of encoded images [BATCH_SIZE x IMAGE_ENCODING_SIZE]"),
-            self.key_question_encodings: DataDefinition([-1, self.question_encoding_size], [torch.Tensor], "Batch of encoded questions [BATCH_SIZE x QUESTION_ENCODING_SIZE]"),
+            self.key_question_encodings: DataDefinition([-1, -1, self.question_encoding_size], [torch.Tensor], "Batch of encoded questions [BATCH_SIZE x SEQ_LEN x QUESTION_ENCODING_SIZE]"),
             }
 
 
@@ -104,23 +97,21 @@ class MultimodalFactorizedBilinearPooling(Model):
         """
 
         # Unpack DataDict.
-        enc_img = data_dict[self.key_image_encodings] #[48, 2048]
-        enc_q = data_dict[self.key_question_encodings] #[48, 100]
+        input_enc = data_dict[self.key_question_encodings] # [batch, num_words, embed_dim] # Dense prediction from RNN
+        batch_size = input_enc.size()[0] # [48, 8, 100]
 
-        # Map image and question encodings to high-dimensional space using FF
-        latent_img = self.dropout(self.image_encodings_ff(enc_img)) # [48, 512]
-        latent_q =  self.dropout(self.question_encodings_ff(enc_q)) # [48, 512]
+        # Attention computed as two FF layers with ReLU activation and softmax for probabilities ==> softmax(FF(ReLU(FF(input))))
+        self.Attention = torch.softmax(self.W2(self.activation(self.W1(input_enc))), dim = 1) # [48, 8, 4] [batch, num_words, num_heads]
 
-        # Element-wise mutliplication of image and question encodings
-        enc_z = latent_img * latent_q # [48, 512]
-        # Dropout regularization
-        enc_z = self.dropout(enc_z)
-        enc_z = enc_z.view(enc_z.size(0), self.latent_size, self.factor) # [48, 256, 2]
-        # Sum pooling
-        enc_z = enc_z.sum(2) # [48, 256]
-        # Power and L2 normalization
-        enc_z = torch.sqrt(self.activation(enc_z)) - torch.sqrt(self.activation(-enc_z))
-        outputs = F.normalize(enc_z, p=2, dim=1) # [48, 256]
+        # Multiply attention weights with question encoding
+        input_enc_weighted = torch.matmul(self.Attention.transpose(1,2),input_enc)
+        print("input_enc_weighted", input_enc_weighted.shape)
+
+        # Concatenate features from multi-head attention
+        outputs = input_enc_weighted.view(batch_size, -1)
+        # # Alternatively: combine multi-head attention using a mean or sum operation
+        # outputs = torch.sum(input_enc_weighted,1)/self.num_attention_heads
+        print("outputs", outputs.shape)
 
         # Add predictions to datadict.
         data_dict.extend({self.key_outputs: outputs})

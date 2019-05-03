@@ -18,9 +18,9 @@ hidden_size: 100
 input_mode: Dense
 
 # Prediction mode (LOADED)
-# Options: 
+# Options:
 #   * Dense (passes every activation through output layer) |
-#   * Last (passes only the last activation though output layer) |
+#   * Last (passes only the last activation through output layer) |
 #   * None (all outputs are discarded)
 prediction_mode: Dense
 
@@ -55,7 +55,7 @@ output_last_state: False
 # If true, output of the last layer will be additionally processed with Log Softmax (LOADED)
 use_logsoftmax: True
 
-streams: 
+streams:
   ####################################################################
   # 2. Keymappings associated with INPUT and OUTPUT streams.
   ####################################################################
@@ -92,4 +92,3 @@ globals:
   ####################################################################
   # 5. Keymappings associated with statistics that will be ADDED.
   ####################################################################
-
