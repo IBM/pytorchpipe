@@ -133,9 +133,10 @@ class FeedForwardNetwork(Model):
             - inputs: expected inputs [BATCH_SIZE x ... x INPUT_SIZE],
             - predictions: returned output with predictions (log_probs) [BATCH_SIZE x ... x NUM_CLASSES]
         """
-
         # Get inputs.
         x = data_dict[self.key_inputs]
+        
+        #print("{}: input shape: {}, device: {}\n".format(self.name, x.shape, x.device))
 
         # Check that the input has the number of dimensions that we expect
         assert len(x.shape) == self.dimensions, \

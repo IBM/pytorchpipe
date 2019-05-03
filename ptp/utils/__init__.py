@@ -1,4 +1,5 @@
 from .app_state import AppState
+from .data_dict_parallel import DataDictParallel
 from .globals_facade import GlobalsFacade
 from .key_mappings_facade import KeyMappingsFacade
 from .samplers import kFoldRandomSampler
@@ -11,6 +12,7 @@ from .termination_condition import TerminationCondition
 
 __all__ = [
     'AppState',
+    'DataDictParallel',
     'GlobalsFacade',
     'KeyMappingsFacade',
     'kFoldRandomSampler',

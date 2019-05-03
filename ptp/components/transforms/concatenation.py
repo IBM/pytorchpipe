@@ -100,6 +100,9 @@ class Concatenation(Component):
         # Get inputs to be concatentated.
         inputs = [data_dict[stream_key] for stream_key in self.input_stream_keys]
 
+        #print("{}: input shape: {}, device: {}\n".format(self.name, [input.shape for input in inputs], [input.device for input in inputs]))
+
+
         # Concat.
         outputs = torch.cat(inputs, dim=self.dim)
 

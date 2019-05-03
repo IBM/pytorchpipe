@@ -116,6 +116,7 @@ class LeNet5(Model):
         x = self.linear1(x)
         x = torch.nn.functional.relu(x)
         x = self.linear2(x)
+
         # Log softmax.
         predictions = torch.nn.functional.log_softmax(x, dim=1)
         # Add predictions to datadict.

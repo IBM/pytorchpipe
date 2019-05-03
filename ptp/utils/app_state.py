@@ -69,6 +69,8 @@ class AppState(metaclass=SingletonMetaClass):
         # Set CPU types as default.
         self.set_cpu_types()
         self.use_gpu = False
+        self.use_dataparallel = False
+        self.device = torch.device('cpu')
 
         # Reset global counters.
         self.epoch = None # Processor is not using the notion of epoch.
@@ -84,7 +86,12 @@ class AppState(metaclass=SingletonMetaClass):
         if torch.cuda.is_available() and self.args.use_gpu:
             self.logger.info('Running computations on GPU using CUDA')
             self.set_gpu_types()
+            # Use GPU.
             self.use_gpu = True
+            self.device = torch.device('cuda')
+            # Use DataParallel if more than 1 device is available.
+            if torch.cuda.device_count() > 1:
+                self.use_dataparallel = True
         elif self.args.use_gpu:
             self.logger.warning('GPU utilization is demanded but there are no available GPU devices! Using CPUs instead')
         else:

@@ -28,6 +28,11 @@ import ptp.utils.logger as logging
 from ptp.utils.app_state import AppState
 from ptp.configuration.configuration_error import ConfigurationError
 from ptp.application.component_factory import ComponentFactory
+from ptp.utils.data_dict_parallel import DataDictParallel
+
+
+components_to_skip_in_data_parallel = ["SentenceEmbeddings", "IndexEmbeddings"]
+
 
 class PipelineManager(object):
     """
@@ -213,8 +218,13 @@ class PipelineManager(object):
         model_str = ''
         # Save state dicts of all models.
         for model in self.models:
-            model.save_to_checkpoint(chkpt)
-            model_str += "  + Model '{}' [{}] params saved \n".format(model.name, type(model).__name__)
+            # Check if model is wrapped in dataparallel.
+            if (type(model).__name__ == "DataDictParallel"):
+                model.module.save_to_checkpoint(chkpt)
+                model_str += "  + Model '{}' [{}] params saved \n".format(model.module.name, type(model.module).__name__)
+            else:
+                model.save_to_checkpoint(chkpt)
+                model_str += "  + Model '{}' [{}] params saved \n".format(model.name, type(model).__name__)
 
         # Save the intermediate checkpoint.
         if self.app_state.args.save_intermediate:
@@ -502,20 +512,24 @@ class PipelineManager(object):
         :param data_dict: :py:class:`ptp.utils.DataDict` object containing both input data to be processed and that will be extended by the results.
 
         """
-        # TODO: Convert to gpu/CUDA.
         if self.app_state.args.use_gpu:
-            data_dict.cuda()
+            data_dict.to(device = self.app_state.device)
 
         for prio in self.__priorities:
             # Get component
             comp = self.__components[prio]
-            # Forward step.
-            comp(data_dict)
-            # Component might add some fields to DataDict, move them to GPU if required.
-            if self.app_state.args.use_gpu:
-                data_dict.cuda()
-            #print("after {}".format(comp.name))
-            #print(data_dict.keys())
+            if (type(comp).__name__ == "DataDictParallel"):
+                # Forward of wrapper returns outputs in separate DataDict.
+                outputs = comp(data_dict)
+                # Postprocessing: copy only the outputs of the wrapped model.
+                for key in comp.module.output_data_definitions().keys():
+                    data_dict.extend({key: outputs[key]})
+            else: 
+                # "Normal" forward step.
+                comp(data_dict)
+                # Move data to device.
+                data_dict.to(device = self.app_state.device)
+
 
     def eval(self):
         """ 
@@ -524,6 +538,7 @@ class PipelineManager(object):
         for model in self.models:
             model.eval
 
+
     def train(self):
         """ 
         Sets evaluation mode for all models in the pipeline.
@@ -531,14 +546,33 @@ class PipelineManager(object):
         for model in self.models:
             model.train()
 
+
     def cuda(self):
         """ 
         Moves all models to GPU.
         """
-        self.logger.info("Moving model(s) to GPU")
-        for model in self.models:
-            model.cuda()
+        self.logger.info("Moving model(s) to GPU(s)")
+        if self.app_state.use_dataparallel:
+            self.logger.info("Using data parallelization on {} GPUs!".format(torch.cuda.device_count()))
 
+        # Regenerate the model list AND overwrite the models on the list of components.
+        self.models = []
+        for key, component in self.__components.items():
+
+            # Check if class is derived (even indirectly) from Model.
+            if ComponentFactory.check_inheritance(type(component), ptp.Model.__name__):
+                model = component
+                # Wrap model with DataDictParallel when required.
+                if self.app_state.use_dataparallel and type(model).__name__ not in components_to_skip_in_data_parallel:
+                    print("Moving to GPU", model.name)
+                    model = DataDictParallel(model)
+                # Mode to cuda.
+                model.to(self.app_state.device)
+
+                # Add to list.
+                self.models.append(model)
+                # "Overwrite" model on the component list.
+                self.__components[key] = model
 
     def zero_grad(self):
         """ 
