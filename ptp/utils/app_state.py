@@ -23,62 +23,6 @@ from os import path
 
 from ptp.utils.singleton import SingletonMetaClass
 
-import torch
-import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader
-
-import time
-
-# Parameters and DataLoaders
-input_size = 5
-output_size = 2
-
-batch_size = 30
-data_size = 100
-from ptp.data_types.data_dict import DataDict
-
-
-
-class RandomDataset(Dataset):
-
-    def __init__(self, size, length):
-        self.len = length
-        self.data = torch.randn(length, size)
-
-    def __getitem__(self, index):
-
-        # Return data_dict.
-        data_dict = DataDict({"index": None})
-        data_dict["index"] = self.data[index]
-
-        return data_dict
-
-        #return self.data[index]
-
-    def __len__(self):
-        return self.len
-
-    #def collate_fn(self, batch):
-    #    print("Collate!")
-    #    
-    #    return DataDict({key: torch.utils.data.dataloader.default_collate([sample[key] for sample in batch]) for key in batch[0]})
-
-
-class Model(nn.Module):
-    # Our model
-    def __init__(self, input_size, output_size):
-        super(Model, self).__init__()
-        self.fc = nn.Linear(input_size, output_size)
-
-    def forward(self, datadict):
-        input = datadict["index"]
-        print("Dummy Model: input size {}, device: {}\n".format(input.size(), input.device))
-        output = self.fc(input)
-        print("Dummy Model: output size {}\n".format(output.size()))
-
-        return output
-
-
 
 class AppState(metaclass=SingletonMetaClass):
     """
@@ -131,48 +75,6 @@ class AppState(metaclass=SingletonMetaClass):
         # Reset global counters.
         self.epoch = None # Processor is not using the notion of epoch.
         self.episode = 0
-
-        #### TEST !
-        self.test()
-
-    def test(self):
-        model = Model(input_size, output_size)
-        print("Model DONE!!")
-        #time.sleep(2)
-
-        dataset = RandomDataset(input_size, data_size)
-        rand_loader = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=True)#, collate_fn=dataset.collate_fn)
-        print("Dataloader DONE!!")
-        #time.sleep(2)
-
-
-        if torch.cuda.device_count() > 1:
-            print("Let's use", torch.cuda.device_count(), "GPUs!")
-            # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
-            model = nn.DataParallel(model)        
-        model.to(self.device)
-        #time.sleep(2)
-
-        for datadict in rand_loader:
-            print(type(datadict),"\n")
-            #datadict = DataDict(datadict)
-            #new_datadict = DataDict({key: None for key in datadict.keys()})
-            #new_datadict["index"] = datadict["index"].to(self.device)
-            #datadict = new_datadict
-            datadict1 = {}
-            datadict1["index"] = datadict["index"].to(self.device)
-            #print(datadict)
-
-            #data=datadict["index"]
-
-            #print("For: before to: input data ({}) size {}, device: {}\n".format(type(data), data.size(), data.device))
-            #data = data.to(self.device)
-            #datadict.to(self.device)
-            #print("For: before model: input data ({}) size {}, device: {}\n".format(type(data), data.size(), data.device))
-            output = model(datadict1)
-            print("For: after model: output_size ", output.size(),"\n")
-
-        exit(1)
 
 
     def set_types(self):
