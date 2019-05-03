@@ -68,6 +68,40 @@ def datadict_scatter_kwargs(inputs, kwargs, target_gpus, dim=0):
     kwargs = tuple(kwargs)
     return inputs, kwargs
 
+def datadict_gather(outputs, target_device, dim=0):
+    r"""
+    Gathers tensors from different GPUs on a specified device
+      (-1 means the CPU).
+    """
+    def gather_map(outputs):
+        out = outputs[0]
+        if isinstance(out, torch.Tensor):
+            return Gather.apply(target_device, dim, *outputs)
+        if out is None:
+            return None
+
+        if isinstance(obj, DataDict) and len(obj) > 0:
+            print("DataDict!\n")
+            if not all((len(out) == len(d) for d in outputs)):
+                raise ValueError('All dicts must have the same number of keys')
+            return type(out)(((k, gather_map([d[k] for d in outputs]))
+                              for k in out))
+
+        if isinstance(out, dict):
+            if not all((len(out) == len(d) for d in outputs)):
+                raise ValueError('All dicts must have the same number of keys')
+            return type(out)(((k, gather_map([d[k] for d in outputs]))
+                              for k in out))
+
+        return type(out)(map(gather_map, zip(*outputs)))
+
+    # Recursive function calls like this create reference cycles.
+    # Setting the function to None clears the refcycle.
+    try:
+        return gather_map(outputs)
+    finally:
+        gather_map = None
+
 
 
 
@@ -80,27 +114,34 @@ class PTPDataParallel(torch.nn.DataParallel):
 
     # PyTorch v1.0.1
     def forward(self, *inputs, **kwargs):
+        # Simple processing.
         if not self.device_ids:
             return self.module(*inputs, **kwargs)
-        # Preprocessing for scattering: get only the inputs to the model, as list.
-        #input_dict = {}
-        #print(type(self.module))
-        #for key in self.module.input_data_definitions().keys():
-        #    input_dict[key] = inputs[key]
-        #print("input_dict:",input_dict)
-
-        inputs, kwargs = self.scatter(inputs, kwargs, self.device_ids)
-
+        # One device - also easy.
         if len(self.device_ids) == 1:
             return self.module(*inputs[0], **kwargs[0])
+
+        #print(type(self.module))
+        # Preprocessing for scattering: get only the inputs to the model, as list.
+        #inputs_tuple = ()
+        #for item in inputs:
+        #    print(item["index"])
+        #    input_dict = {key: value for key,value in item.items() if key in self.module.input_data_definitions().keys()}
+        #    inputs_tuple = inputs_tuple + (input_dict,)
+        #print("inputs_tuple:",inputs_tuple)
+
+        inputs, kwargs = self.scatter(inputs, kwargs, self.device_ids)
+        print("input after scatter():",inputs)
+
         replicas = self.replicate(self.module, self.device_ids[:len(inputs)])
-        print("replicas w forwards(): ",replicas)
-        outputs = self.parallel_apply(replicas, inputs, kwargs)
-        #outputs = inputs
-        print("outputs w forwards(): ",outputs)
 
-        return self.gather(outputs, self.output_device)
+        self.parallel_apply(replicas, inputs, kwargs)
+        print("inputs after parallel_appy(): ",inputs)
 
+        outputs = self.gather(inputs, self.output_device)
+        print("after gather(): ",outputs)
+        # Return 0-th tuple, i.e. DdataDict.
+        return outputs[0]
 
 
     def replicate(self, module, device_ids):
@@ -120,10 +161,9 @@ class PTPDataParallel(torch.nn.DataParallel):
         return gather(outputs, output_device, dim=self.dim)
 
 
+from ptp.components.problems.problem import Problem
 
-
-
-class RandomDataset(Dataset):
+class RandomDataset(Problem):
 
     def __init__(self, size, length):
         self.len = length
@@ -142,12 +182,18 @@ class RandomDataset(Dataset):
     def __len__(self):
         return self.len
 
+    def output_data_definitions(self):
+        return {"index": DataDefinition(1,1,"str")}
+
     #def collate_fn(self, batch):
     #    print("Collate!")
     #    
     #    return DataDict({key: torch.utils.data.dataloader.default_collate([sample[key] for sample in batch]) for key in batch[0]})
 
-class Model(nn.Module):
+from ptp.components.models.model import Model
+from ptp.data_types.data_definition import DataDefinition
+
+class TestModel(Model):
     # Our model
     def __init__(self, input_size, output_size):
         super(Model, self).__init__()
@@ -160,8 +206,15 @@ class Model(nn.Module):
         print("Dummy Model: output size {}\n".format(output.size()))
 
         datadict["output"] = output
-        print("saved to output : ",type(output))
-        return output
+        #print("saved to output : ",type(output))
+        #return output
+
+    def input_data_definitions(self):
+        return {"index": DataDefinition(1,1,"str")}
+
+    def output_data_definitions(self):
+        return {"output": DataDefinition(1,1,"str")}
+
 
 
 
@@ -169,7 +222,7 @@ if __name__ == "__main__":
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
-    model = Model(input_size, output_size)
+    model = TestModel(input_size, output_size)
     print("Model DONE!!")
     #time.sleep(2)
 
@@ -187,7 +240,7 @@ if __name__ == "__main__":
     print("DataParallel DONE!!")
     #time.sleep(2)
 
-    datadict1 = {}#DataDict({"index":None,"output":None})
+    #datadict1 = {}#DataDict({"index":None,"output":None})
     for datadict in rand_loader:
         print("Got object from loader: {}".format(type(datadict)))
         #datadict = DataDict(datadict)
@@ -195,8 +248,9 @@ if __name__ == "__main__":
         #new_datadict["index"] = datadict["index"].to(self.device)
         #datadict = new_datadict
         print("Before to device: ", type(datadict["index"]),datadict["index"].device)
-        datadict1["index"] = datadict["index"].to(device)
-        print("After to device: ", type(datadict1["index"]),datadict1["index"].device)
+        
+        datadict["index"] = datadict["index"].to(device)
+        print("After to device: ", type(datadict["index"]),datadict["index"].device)
         #print(datadict)
 
         #data=datadict["index"]
@@ -205,9 +259,15 @@ if __name__ == "__main__":
         #data = data.to(self.device)
         #datadict.to(self.device)
         #print("For: before model: input data ({}) size {}, device: {}\n".format(type(data), data.size(), data.device))
-        output = model(datadict1)
-        print(type(output))
-        #output = datadict1["output"]
+        print("datadict before model: ",datadict)
+        outputs = model(datadict)
+        for key in model.module.output_data_definitions().keys():
+            datadict[key] = outputs[key]
+
+        print("datadict after model: ",datadict)
+        
+        #output = datadict["output"]
+        #print(type(output))
         #output = datadict2["output"]
-        print("For: after model: output_size ", output.size(),"\n")
+        #print("For: after model: output_size ", output.size(),"\n")
 
