@@ -153,11 +153,12 @@ class AppState(metaclass=SingletonMetaClass):
         model.to(self.device)
         #time.sleep(2)
 
-        for ddict in rand_loader:
-            print(type(ddict),"\n")
+        for datadict in rand_loader:
+            print(type(datadict),"\n")
             #datadict = DataDict(datadict)
-            datadict = DataDict({key: None for key in ddict.keys()})
-            datadict["index"] = ddict["index"]
+            new_datadict = DataDict({key: None for key in datadict.keys()})
+            new_datadict["index"] = datadict["index"]
+            datadict = new_datadict
             print(datadict)
 
             data=datadict["index"]
