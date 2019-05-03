@@ -58,9 +58,10 @@ class RandomDataset(Dataset):
     def __len__(self):
         return self.len
 
-    def collate_fn(self, batch):
-        print("Collate!")
-        return DataDict({key: torch.utils.data.dataloader.default_collate([sample[key] for sample in batch]) for key in batch[0]})
+    #def collate_fn(self, batch):
+    #    print("Collate!")
+    #    
+    #    return DataDict({key: torch.utils.data.dataloader.default_collate([sample[key] for sample in batch]) for key in batch[0]})
 
 
 class Model(nn.Module):
@@ -140,7 +141,7 @@ class AppState(metaclass=SingletonMetaClass):
         #time.sleep(2)
 
         dataset = RandomDataset(input_size, data_size)
-        rand_loader = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=True, collate_fn=dataset.collate_fn)
+        rand_loader = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=True)#, collate_fn=dataset.collate_fn)
         print("Dataloader DONE!!")
         #time.sleep(2)
 
@@ -154,7 +155,9 @@ class AppState(metaclass=SingletonMetaClass):
 
         for datadict in rand_loader:
             print(type(datadict),"\n")
+            print(datadict)
             data=datadict["index"]
+
             print("For: before to: input data ({}) size {}, device: {}\n".format(type(data), data.size(), data.device))
             # data = data.to(self.device)
             datadict.to(self.device)
