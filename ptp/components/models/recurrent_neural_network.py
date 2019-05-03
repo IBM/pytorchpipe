@@ -285,10 +285,7 @@ class RecurrentNeuralNetwork(Model):
             if inputs.dim() == 2:
                 inputs = inputs.unsqueeze(1)
             batch_size = inputs.shape[0]
-
-        print("{}: input shape: {}, device: {}\n".format(self.name, inputs.shape, inputs.device))
-
-        
+        #print("{}: input shape: {}, device: {}\n".format(self.name, inputs.shape, inputs.device))
 
         # Get initial state, depending on the settings.
         if self.initial_state == "Input":
@@ -303,8 +300,7 @@ class RecurrentNeuralNetwork(Model):
                 hidden = hidden.transpose(0,1)
         else:
             hidden = self.initialize_hiddens_state(batch_size)
-
-        print("{}: hidden shape: {}, device: {}\n".format(self.name, hidden.shape, hidden.device))
+        #print("{}: hidden shape: {}, device: {}\n".format(self.name, hidden.shape, hidden.device))
 
         activations = []
 

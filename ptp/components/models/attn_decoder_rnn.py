@@ -185,14 +185,13 @@ class Attn_Decoder_RNN(Model):
         
         inputs = data_dict[self.key_inputs]
         batch_size = inputs.shape[0]
-        print("{}: input shape: {}, device: {}\n".format(self.name, inputs.shape, inputs.device))
+        #print("{}: input shape: {}, device: {}\n".format(self.name, inputs.shape, inputs.device))
 
         # Initialize hidden state from inputs - as last hidden state from external component.
         hidden = data_dict[self.key_input_state]
         # For RNNs (aside of LSTM): [BATCH_SIZE x NUM_LAYERS x HIDDEN_SIZE] -> [NUM_LAYERS x BATCH_SIZE x HIDDEN_SIZE]
         hidden = hidden.transpose(0,1)
-        print("{}: hidden shape: {}, device: {}\n".format(self.name, hidden.shape, hidden.device))
-
+        #print("{}: hidden shape: {}, device: {}\n".format(self.name, hidden.shape, hidden.device))
 
         # List that will contain the output sequence
         activations = []

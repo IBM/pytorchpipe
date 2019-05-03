@@ -49,7 +49,7 @@ pipeline:
     pretrained_embeddings_file: glove.6B.100d.txt
     data_folder: ~/data/vqa-med
     word_mappings_file: questions.all.word.mappings.csv
-    fixed_padding: 10 # The longest question!
+    fixed_padding: 10 # The longest question! max is 19!
     additional_tokens: <PAD>,<EOS>
     streams:
       inputs: questions
@@ -66,7 +66,7 @@ pipeline:
     export_pad_mapping_to_globals: True
     additional_tokens: <PAD>,<EOS>
     eos_token: True
-    fixed_padding: 10 # The longest question!
+    fixed_padding: 10 # The longest question! max is 19!
     streams:
       inputs: answers
       outputs: indexed_answers
@@ -163,7 +163,7 @@ pipeline:
     priority: 4
     hidden_size: 100
     use_logsoftmax: False
-    autoregression_length: 10
+    autoregression_length: 10 # Current implementation requires this value to be equal to fixed_padding in SentenceEmbeddings/Indexer...
     prediction_mode: Dense
     dropout_rate: 0.1
     streams:
@@ -200,8 +200,8 @@ pipeline:
 
   # Prediction decoding.
   prediction_decoder:
-    type: SentenceIndexer
     priority: 10
+    type: SentenceIndexer
     # Reverse mode.
     reverse: True
     # Use distributions as inputs.

@@ -153,7 +153,7 @@ def pad_trunc_list(l: list, length: int, padding_value = 0, eos_value = None):
         
     elif len(l) > length:
         #print("pad_trunc_list to cat!: {}".format(len(l)))
+        #exit(1)
         del l[length:]
         if eos_value is not None:
             l[length-1] = eos_value
-        #exit(1)
