@@ -31,6 +31,10 @@ from ptp.configuration.configuration_error import ConfigurationError
 from ptp.application.component_factory import ComponentFactory
 from ptp.utils.data_dict_parallel import DataDictParallel
 
+
+components_to_skip_in_data_parallel = ["SentenceEmbeddings", "IndexEmbeddings"]
+
+
 class PipelineManager(object):
     """
     Class responsible for instantiating the pipeline consisting of several components.
@@ -216,7 +220,7 @@ class PipelineManager(object):
         # Save state dicts of all models.
         for model in self.models:
             # Check if model is wrapped in dataparallel.
-            if self.app_state.use_dataparallel:
+            if (type(model).__name__ == "DataDictParallel"):
                 model.module.save_to_checkpoint(chkpt)
                 model_str += "  + Model '{}' [{}] params saved \n".format(model.module.name, type(model.module).__name__)
             else:
@@ -555,20 +559,21 @@ class PipelineManager(object):
         # Regenerate the model list AND overwrite the models on the list of components.
         self.models = []
         for key, component in self.__components.items():
-                # Check if class is derived (even indirectly) from Model.
-                if ComponentFactory.check_inheritance(type(component), ptp.Model.__name__):
-                    model = component
-                    # Wrap model with DataDictParallel when required.
-                    if self.app_state.use_dataparallel:
-                        model = DataDictParallel(model)
-                    # Mode to cuda.
-                    model.to(self.app_state.device)
 
-                    # Add to list.
-                    self.models.append(model)
-                    # "Overwrite" model on the component list.
-                    self.__components[key] = model
+            # Check if class is derived (even indirectly) from Model.
+            if ComponentFactory.check_inheritance(type(component), ptp.Model.__name__):
+                model = component
+                # Wrap model with DataDictParallel when required.
+                if self.app_state.use_dataparallel and type(model).__name__ not in components_to_skip_in_data_parallel:
+                    print("Moving to GPU", model.name)
+                    model = DataDictParallel(model)
+                # Mode to cuda.
+                model.to(self.app_state.device)
 
+                # Add to list.
+                self.models.append(model)
+                # "Overwrite" model on the component list.
+                self.__components[key] = model
 
     def zero_grad(self):
         """ 

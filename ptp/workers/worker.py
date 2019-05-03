@@ -104,13 +104,6 @@ class Worker(object):
                     'in the system. (Default: False)')
 
             self.parser.add_argument(
-                '--dataparallel',
-                dest='use_dataparallel',
-                action='store_true',
-                help='Compatible models will be converted to torch.nn.DataParallel to use all the '
-                    'available GPUs in parallel. To be used with the --gpu option. (Default: False)')
-
-            self.parser.add_argument(
                 '--expdir',
                 dest='expdir',
                 type=str,

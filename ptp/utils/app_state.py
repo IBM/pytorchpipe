@@ -90,7 +90,7 @@ class AppState(metaclass=SingletonMetaClass):
             self.use_gpu = True
             self.device = torch.device('cuda')
             # Use DataParallel if more than 1 device is available.
-            if self.args.use_dataparallel and torch.cuda.device_count() > 1:
+            if torch.cuda.device_count() > 1:
                 self.use_dataparallel = True
         elif self.args.use_gpu:
             self.logger.warning('GPU utilization is demanded but there are no available GPU devices! Using CPUs instead')

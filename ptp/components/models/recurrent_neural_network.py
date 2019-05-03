@@ -278,12 +278,14 @@ class RecurrentNeuralNetwork(Model):
             batch_size = data_dict[self.key_input_state][0].shape[1]
             # Set zero inputs [BATCH_SIZE x SEQ_LEN x INPUT_SIZE].
             inputs = torch.zeros(batch_size, self.hidden_size, requires_grad=False).type(self.app_state.FloatTensor)
+
         else:
             # Get inputs [BATCH_SIZE x SEQ_LEN x INPUT_SIZE]
             inputs = data_dict[self.key_inputs]
             if inputs.dim() == 2:
                 inputs = inputs.unsqueeze(1)
             batch_size = inputs.shape[0]
+        
 
         # Get initial state, depending on the settings.
         if self.initial_state == "Input":

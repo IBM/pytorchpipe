@@ -180,7 +180,7 @@ class TorchVisionWrapper(Model):
         # Unpack DataDict.
         img = data_dict[self.key_inputs]
 
-        print("{}: input shape: {}, device: {}\n".format(self.name, img.shape, img.device))
+        #print("{}: input shape: {}, device: {}\n".format(self.name, img.shape, img.device))
 
         outputs = self.model(img)
 
