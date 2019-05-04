@@ -1,9 +1,28 @@
 # Load config defining problems for training, validation and testing.
 default_configs: vqa_med_2019/c4_classification/default_c4_classification.yml
 
-pipeline:
-  name: c4_word_answer_onehot_bow
+# Training parameters:
+training:
+  problem:
+    categories: C4
+    batch_size: 512
+    # In here we won't use images at all.
+    stream_images: False
+  dataloader:
+    num_workers: 0
+    
+# Validation parameters:
+validation:
+  problem:
+    categories: C4
+    batch_size: 512
+    # In here we won't use images at all.
+    stream_images: False
+  dataloader:
+    num_workers: 0
 
+
+pipeline:
   # Answer encoding.
   answer_tokenizer:
     type: SentenceTokenizer

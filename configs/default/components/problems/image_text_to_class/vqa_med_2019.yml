@@ -15,6 +15,9 @@ split: training
 # Options: all | c1 | c2 | c3 | c4 (or any combination of the latter 4)
 categories: all
 
+# Flag indicating whether the problem will load and return images (LOADED)
+stream_images: True
+
 # Resize parameter (LOADED)
 # When present, resizes the images from original size to [height, width]
 # Depth remains set to 3.
