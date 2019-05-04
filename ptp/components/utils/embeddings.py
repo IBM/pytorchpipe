@@ -116,12 +116,24 @@ def load_pretrained_embeddings(logger, folder, embeddings_name, word_to_ix, embe
             # Parse file and cherry pick the vectors that fit our vocabulary.
             for line in f.readlines():
                 values = line.split()
-                # Get word.
-                word = values[0]
+                if len(values) > embeddings_size+1:
+                    #print(len(values))
+                    # Case: two (or more) words!
+                    num_words = len(values) - embeddings_size
+                    words = values[0:num_words]
+                    word = ' '.join(words)
+                    #print(word)
+                    # Get remaining vector.
+                    vector = np.array(values[num_words:], dtype='float32')
+                else:
+                    # Get word.
+                    word = values[0]
+                    # Get remaining vector.
+                    vector = np.array(values[1:], dtype='float32')
+
                 # Get index.
                 index = word_to_ix.get(word)
                 if index:
-                    vector = np.array(values[1:], dtype='float32')
                     assert (len(vector) == embeddings_size), "Embeddings size must be equal to the size of pretrained embeddings!"
                     # Ok, set vector.
                     embeddings[index] = vector
