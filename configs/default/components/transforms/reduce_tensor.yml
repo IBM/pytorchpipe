@@ -1,0 +1,47 @@
+# This file defines the default values for the ReduceTensor transformation.
+
+####################################################################
+# 1. CONFIGURATION PARAMETERS that will be LOADED by the component.
+####################################################################
+
+# Number of input dimensions, including batch (LOADED)
+num_inputs_dims: 2
+
+# Dimension along with the reduction will be applied (LOADED)
+reduction_dim: 1
+
+# Reduction type (LOADED)
+# Options: sum | mean | min | max | argmin | argmax
+reduction_type: sum
+
+# If True, the output tensor is of the same size as input, except dim where it is of size 1 (LOADED)
+keepdim: False
+
+streams: 
+  ####################################################################
+  # 2. Keymappings associated with INPUT and OUTPUT streams.
+  ####################################################################
+
+  # Stream containing input tensor (INPUT)
+  inputs: inputs
+
+  # Stream containing output tensor (OUTPUT)
+  outputs: outputs
+
+globals:
+  ####################################################################
+  # 3. Keymappings of variables that will be RETRIEVED from GLOBALS.
+  ####################################################################
+
+  # Size of the intput_item (GET)
+  # (last dimenstion)
+  input_size: input_size
+
+  ####################################################################
+  # 4. Keymappings associated with GLOBAL variables that will be SET.
+  ####################################################################
+
+  ####################################################################
+  # 5. Keymappings associated with statistics that will be ADDED.
+  ####################################################################
+
