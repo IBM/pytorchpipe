@@ -4,12 +4,11 @@ default_configs: vqa_med_2019/default_vqa_med_2019.yml
 # Training parameters:
 training:
   problem:
-    batch_size: 64
+    batch_size: 200 # requires to use 4 GPUs!
     categories: C4
     question_preprocessing: lowercase, remove_punctuation, tokenize #, random_remove_stop_words #,random_shuffle_words 
     answer_preprocessing: lowercase, remove_punctuation, tokenize
     export_sample_weights: ~/data/vqa-med/answers.c4.weights.csv
-    batch_size: 32
   sampler:
     weights: ~/data/vqa-med/answers.c4.weights.csv
   dataloader:
@@ -23,11 +22,10 @@ training:
 # Validation parameters:
 validation:
   problem:
-    batch_size: 64
+    batch_size: 200
     categories: C4
     question_preprocessing: lowercase, remove_punctuation, tokenize
     answer_preprocessing: lowercase, remove_punctuation, tokenize
-    batch_size: 32
   dataloader:
     num_workers: 4
 

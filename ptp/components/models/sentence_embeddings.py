@@ -73,6 +73,10 @@ class SentenceEmbeddings(Model, WordMappings):
             emb_vectors = emb.load_pretrained_embeddings(self.logger, self.data_folder, self.config["pretrained_embeddings_file"], self.word_to_ix, self.embeddings_size)
             self.embeddings.weight = torch.nn.Parameter(emb_vectors)
 
+        # Get index of <PAD> from vocabulary.
+        self.pad_index = self.word_to_ix['<PAD>']
+
+
 
     def input_data_definitions(self):
         """ 
@@ -112,9 +116,6 @@ class SentenceEmbeddings(Model, WordMappings):
         inputs = data_dict[self.key_inputs]
         #print("{}: input len: {}, device: {}\n".format(self.name, len(inputs), "-"))
 
-        # Get index of padding.
-        pad_index = self.word_to_ix['<PAD>']
-
         indices_list = []
         # Process samples 1 by one.
         for sample in inputs:
@@ -131,15 +132,14 @@ class SentenceEmbeddings(Model, WordMappings):
             # Apply fixed padding to all sequences if requested
             # Otherwise let torch.nn.utils.rnn.pad_sequence handle it and choose a dynamic padding
             if self.fixed_padding > 0:
-                pad_trunc_list(output_sample, self.fixed_padding, padding_value=pad_index)
+                pad_trunc_list(output_sample, self.fixed_padding, padding_value=self.pad_index)
 
             #indices_list.append(self.app_state.FloatTensor(output_sample))
             indices_list.append(self.app_state.LongTensor(output_sample))
 
+        # Padd indices using pad index retrieved from vocabulary.
+        padded_indices = torch.nn.utils.rnn.pad_sequence(indices_list, batch_first=True, padding_value=self.pad_index)
         # Embedd indices.
-        #embedds = self.embeddings(unsorted_padded_indices_tensor)
-
-        padded_indices = torch.nn.utils.rnn.pad_sequence(indices_list, batch_first=True, padding_value=pad_index)
         embedds = self.embeddings(padded_indices)
         
         #print("{}: embedds shape: {}, device: {}\n".format(self.name, embedds.shape, embedds.device))
