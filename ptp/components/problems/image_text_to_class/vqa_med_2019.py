@@ -87,7 +87,10 @@ class VQAMED2019(Problem):
 
         # Get flag informing whether we want to stream images or not.
         self.stream_images = self.config['stream_images']
-        
+
+        # Get flag indicating whether we want to (pre)aload all images at the start.
+        self.preload_images = self.config['preload_images']
+
         # Check the desired image size.
         if len(self.config['resize_image']) != 2:
             self.logger.error("'resize_image' field must contain 2 values: the desired height and width")
@@ -547,8 +550,8 @@ class VQAMED2019(Problem):
                     False
                     )
 
-                # Add record to dataset.
-                dataset.append({
+                # Create item "dictionary".
+                item = {
                     # Image name and path leading to it.
                     self.key_image_ids: row[self.key_image_ids],
                     "image_folder": image_folder,
@@ -556,7 +559,16 @@ class VQAMED2019(Problem):
                     self.key_answers: preprocessed_answer,
                     # Add category.
                     self.key_category_ids: category
-                    })
+                    }
+
+                # Preload image.
+                if self.preload_images and self.stream_images:
+                    img, img_size = self.get_image(row[self.key_image_ids], image_folder)
+                    item[self.key_images] = img
+                    item[self.key_image_sizes] = img_size
+
+                # Add item to dataset.
+                dataset.append(item)
 
                 t.update()
             t.close()
@@ -607,8 +619,8 @@ class VQAMED2019(Problem):
             else:
                 preprocessed_answer = answer 
 
-            # Add record to dataset.
-            dataset.append({
+            # Create item "dictionary".
+            item = {
                 # Image name and path leading to it.
                 self.key_image_ids: row[self.key_image_ids],
                 "image_folder": image_folder,
@@ -616,7 +628,16 @@ class VQAMED2019(Problem):
                 self.key_answers: preprocessed_answer,
                 # Add category.
                 self.key_category_ids: category_id
-                })
+                }
+
+            # Preload image.
+            if self.preload_images and self.stream_images:
+                img, img_size = self.get_image(row[self.key_image_ids], image_folder)
+                item[self.key_images] = img
+                item[self.key_image_sizes] = img_size
+
+            # Add item to dataset.
+            dataset.append(item)
 
             t.update()
         t.close()
@@ -625,6 +646,52 @@ class VQAMED2019(Problem):
         # Return the created list.
         return dataset
 
+    def get_image(self, img_id, img_folder):
+        """
+        Function loads and returns image along with its size.
+        Additionally, it performs all the required transformations.
+
+        :param img_id: Identifier of the images.
+        :param img_folder: Path to the image.
+
+        :return: image (Tensor), image size (Tensor, w,h, both scaled to (0,1>)
+        """
+
+        extension = '.jpg'
+        # Load the image.
+        img = Image.open(os.path.join(img_folder, img_id + extension))
+        # Get its width and height.
+        width, height = img.size
+
+        image_transformations_list = []
+        # Optional.
+        if 'random_affine' in self.image_preprocessing:
+            rotate = (-45, 80)
+            translate = (0.05, 0.25)
+            scale = (0.5, 2)
+            image_transformations_list.append(transforms.RandomAffine(rotate, translate, scale))
+        if 'random_horizontal_flip' in self.image_preprocessing:
+            image_transformations_list.append(transforms.RandomHorizontalFlip())
+            
+        # Add two obligatory transformations.
+        image_transformations_list.append(transforms.Resize([self.height,self.width]))
+        image_transformations_list.append(transforms.ToTensor())
+
+        # Optional normalizastion.
+        if 'normalize' in self.image_preprocessing:
+            # Use normalization that the pretrained models from TorchVision require.
+            image_transformations_list.append(transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]))
+
+        # Resize the image and transform to Torch Tensor.
+        transforms_com = transforms.Compose(image_transformations_list)
+        # Apply transformations.
+        img = transforms_com(img)
+
+        # Get scaled image size.
+        img_size = torch.FloatTensor([float(height/self.scale_image_height), float(width/self.scale_image_width)])
+
+        # Return image and size.
+        return img, img_size
 
     def __getitem__(self, index):
         """
@@ -647,42 +714,20 @@ class VQAMED2019(Problem):
 
         # Load the adequate image - only when required.
         if self.stream_images:
-            img_folder = item["image_folder"]
-            extension = '.jpg'
-            # Load the image.
-            img = Image.open(os.path.join(img_folder, img_id + extension))
-            # Get its width and height.
-            width, height = img.size
 
-            image_transformations_list = []
-            # Optional.
-            if 'random_affine' in self.image_preprocessing:
-                rotate = (-45, 80)
-                translate = (0.05, 0.25)
-                scale = (0.5, 2)
-                image_transformations_list.append(transforms.RandomAffine(rotate, translate, scale))
-            if 'random_horizontal_flip' in self.image_preprocessing:
-                image_transformations_list.append(transforms.RandomHorizontalFlip())
-                
-            # Add two obligatory transformations.
-            image_transformations_list.append(transforms.Resize([self.height,self.width]))
-            image_transformations_list.append(transforms.ToTensor())
-
-            # Optional normalizastion.
-            if 'normalize' in self.image_preprocessing:
-                # Use normalization that the pretrained models from TorchVision require.
-                image_transformations_list.append(transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]))
-
-            # Resize the image and transform to Torch Tensor.
-            transforms_com = transforms.Compose(image_transformations_list)
-            # Apply transformations.
-            img = transforms_com(img)
+            if self.preload_images:
+                # Use preloaded values.
+                img = item[self.key_images]             
+                img_size = item[self.key_image_sizes]             
+            else:
+                # Load at the very moment.
+                img, img_size = self.get_image(img_id, item["image_folder"])
 
             # Image related variables.
             data_dict[self.key_images] = img
 
             # Scale width and height to range (0,1).
-            data_dict[self.key_image_sizes] = torch.FloatTensor([float(height/self.scale_image_height), float(width/self.scale_image_width)])
+            data_dict[self.key_image_sizes] = img_size
 
         # Apply question transformations.
         preprocessed_question = item[self.key_questions]

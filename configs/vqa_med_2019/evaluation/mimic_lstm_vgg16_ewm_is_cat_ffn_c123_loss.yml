@@ -38,7 +38,9 @@ hyperparameters:
   # Final classifier: FFN.
   answer_classifier_hidden_sizes_val: &answer_classifier_hidden_sizes_val [83]
 
-  batch_size: &batch_size 64
+  batch_size: &batch_size 200
+  preload_images: &preload_images True
+  num_workers: &num_workers 0
 
 # Training parameters:
 training:
@@ -49,10 +51,15 @@ training:
     # Appy all preprocessing/data augmentations.
     question_preprocessing: *question_preprocessing
     image_preprocessing: *image_preprocessing 
+    # Preload images.
+    preload_images: *preload_images
     streams: 
       questions: tokenized_questions
   sampler:
     weights: ~/data/vqa-med/answers.c1_c2_c3_binary_yn.weights.csv
+  # Use four workers for loading images.
+  dataloader:
+    num_workers: *num_workers
 
   # Optimizer parameters:
   optimizer:
@@ -67,14 +74,19 @@ training:
 
 # Validation parameters:
 validation:
+  partial_validation_interval: 100
   problem:
     batch_size: *batch_size
     categories: C1,C2,C3
     # Appy all preprocessing/data augmentations.
     question_preprocessing: *question_preprocessing
     image_preprocessing: *image_preprocessing 
+    # Preload images.
+    preload_images: *preload_images
     streams: 
       questions: tokenized_questions
+  dataloader:
+    num_workers: *num_workers
 
 
 pipeline:
