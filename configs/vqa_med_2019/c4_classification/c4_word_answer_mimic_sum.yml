@@ -46,7 +46,7 @@ pipeline:
     priority: 1.2
     type: SentenceEmbeddings
     embeddings_size: 300
-    pretrained_embeddings_file: glove.840B.300d.txt
+    pretrained_embeddings_file: mimic.fastText.no_clean.300d.pickled
     data_folder: ~/data/vqa-med
     word_mappings_file: answer_words.c4.preprocessed.word.mappings.csv
     export_word_mappings_to_globals: True

@@ -40,7 +40,9 @@ fixed_padding: -1
 
 # File containing pretrained embeddings (LOADED)
 # Empty means that no embeddings will be loaded.
-# Options: '' | glove.6B.50d.txt | glove.6B.100d.txt | glove.6B.200d.txt | glove.6B.300d.txt | glove.42B.300d.txt | glove.840B.300d.txt | glove.twitter.27B.txt | mimic.fastText.no_clean.300d.pickled
+# Options: 
+# '' | glove.6B.50d.txt | glove.6B.100d.txt | glove.6B.200d.txt | glove.6B.300d.txt |
+# glove.42B.300d.txt | glove.840B.300d.txt | glove.twitter.27B.txt | mimic.fastText.no_clean.300d.pickled
 pretrained_embeddings_file: ''
 
 streams: 

@@ -23,14 +23,6 @@ validation:
 
 
 pipeline:
-
-  global_publisher:
-    priority: 0
-    type: GlobalVariablePublisher
-    # Add input_size to globals.
-    keys: [answer_word_embeddings_size]
-    values: [300]
-
   # Answer encoding.
   answer_tokenizer:
     type: SentenceTokenizer
@@ -41,12 +33,9 @@ pipeline:
       inputs: answers
       outputs: tokenized_answer_words
 
-  # Model 1: Embeddings
-  answer_embeddings:
+  answer_onehot_encoder:
+    type: SentenceOneHotEncoder
     priority: 1.2
-    type: SentenceEmbeddings
-    embeddings_size: 300
-    pretrained_embeddings_file: glove.840B.300d.txt
     data_folder: ~/data/vqa-med
     word_mappings_file: answer_words.c4.preprocessed.word.mappings.csv
     export_word_mappings_to_globals: True
@@ -57,18 +46,29 @@ pipeline:
       vocabulary_size: answer_words_vocabulary_size
       word_mappings: answer_words_word_mappings
 
+  answer_to_tensor:
+    type: ListToTensor
+    priority: 1.3
+    num_inputs_dims: 3
+    streams:
+      inputs: encoded_answer_words
+      outputs: tensor_answer_words
+    globals:
+      input_size: answer_words_vocabulary_size
+
+
   answer_reduction:
     type: ReduceTensor
-    priority: 1.3
+    priority: 1.4
     num_inputs_dims: 3
     reduction_dim: 1
     reduction_type: sum
     keepdim: False
     streams:
-      inputs: encoded_answer_words
-      outputs: reduced_answers
+      inputs: tensor_answer_words
+      outputs: reduced_answer_words
     globals:
-      input_size: answer_word_embeddings_size
+      input_size: answer_words_vocabulary_size
 
   # Model.
   classifier:
@@ -77,9 +77,9 @@ pipeline:
     dropout_rate: 0.5
     priority: 3
     streams:
-      inputs: reduced_answers
+      inputs: reduced_answer_words
     globals:
-      input_size: answer_word_embeddings_size
+      input_size: answer_words_vocabulary_size
       prediction_size: vocabulary_size_c4
 
    # Viewers.
