@@ -85,6 +85,12 @@ class VQAMED2019(Problem):
         self.key_category_names = self.stream_keys["category_names"]
         self.key_image_sizes = self.stream_keys["image_sizes"]
 
+        # Get flag informing whether we want to stream images or not.
+        self.stream_images = self.config['stream_images']
+
+        # Get flag indicating whether we want to (pre)aload all images at the start.
+        self.preload_images = self.config['preload_images']
+
         # Check the desired image size.
         if len(self.config['resize_image']) != 2:
             self.logger.error("'resize_image' field must contain 2 values: the desired height and width")
@@ -275,12 +281,15 @@ class VQAMED2019(Problem):
         # Add all "standard" streams.
         d = {
             self.key_indices: DataDefinition([-1, 1], [list, int], "Batch of sample indices [BATCH_SIZE] x [1]"),
-            self.key_images: DataDefinition([-1, self.depth, self.height, self.width], [torch.Tensor], "Batch of images [BATCH_SIZE x IMAGE_DEPTH x IMAGE_HEIGHT x IMAGE_WIDTH]"),
             self.key_image_ids: DataDefinition([-1, 1], [list, str], "Batch of image names, each being a single word [BATCH_SIZE] x [STRING]"),
-            self.key_image_sizes: DataDefinition([-1, 2], [torch.Tensor], "Batch of original sizes (height, width) of images [BATCH_SIZE x 2]"),
             self.key_category_ids: DataDefinition([-1], [torch.Tensor], "Batch of target category indices, each being a single index [BATCH_SIZE]"),
             self.key_category_names: DataDefinition([-1, 1], [list, str], "Batch of category target names, each being a single word [BATCH_SIZE] x [STRING]"),
             }
+        
+        # Return images only when required.
+        if self.stream_images:
+            d[self.key_images] = DataDefinition([-1, self.depth, self.height, self.width], [torch.Tensor], "Batch of images [BATCH_SIZE x IMAGE_DEPTH x IMAGE_HEIGHT x IMAGE_WIDTH]")
+            d[self.key_image_sizes] = DataDefinition([-1, 2], [torch.Tensor], "Batch of original sizes (height, width) of images [BATCH_SIZE x 2]")
 
         # Add stream with questions.
         if 'tokenize' in self.question_preprocessing:
@@ -541,8 +550,8 @@ class VQAMED2019(Problem):
                     False
                     )
 
-                # Add record to dataset.
-                dataset.append({
+                # Create item "dictionary".
+                item = {
                     # Image name and path leading to it.
                     self.key_image_ids: row[self.key_image_ids],
                     "image_folder": image_folder,
@@ -550,7 +559,16 @@ class VQAMED2019(Problem):
                     self.key_answers: preprocessed_answer,
                     # Add category.
                     self.key_category_ids: category
-                    })
+                    }
+
+                # Preload image.
+                if self.preload_images and self.stream_images:
+                    img, img_size = self.get_image(row[self.key_image_ids], image_folder)
+                    item[self.key_images] = img
+                    item[self.key_image_sizes] = img_size
+
+                # Add item to dataset.
+                dataset.append(item)
 
                 t.update()
             t.close()
@@ -601,8 +619,8 @@ class VQAMED2019(Problem):
             else:
                 preprocessed_answer = answer 
 
-            # Add record to dataset.
-            dataset.append({
+            # Create item "dictionary".
+            item = {
                 # Image name and path leading to it.
                 self.key_image_ids: row[self.key_image_ids],
                 "image_folder": image_folder,
@@ -610,7 +628,16 @@ class VQAMED2019(Problem):
                 self.key_answers: preprocessed_answer,
                 # Add category.
                 self.key_category_ids: category_id
-                })
+                }
+
+            # Preload image.
+            if self.preload_images and self.stream_images:
+                img, img_size = self.get_image(row[self.key_image_ids], image_folder)
+                item[self.key_images] = img
+                item[self.key_image_sizes] = img_size
+
+            # Add item to dataset.
+            dataset.append(item)
 
             t.update()
         t.close()
@@ -619,22 +646,17 @@ class VQAMED2019(Problem):
         # Return the created list.
         return dataset
 
-
-    def __getitem__(self, index):
+    def get_image(self, img_id, img_folder):
         """
-        Getter method to access the dataset and return a single sample.
+        Function loads and returns image along with its size.
+        Additionally, it performs all the required transformations.
 
-        :param index: index of the sample to return.
-        :type index: int
+        :param img_id: Identifier of the images.
+        :param img_folder: Path to the image.
 
-        :return: DataDict({'indices', 'images', 'images_ids','questions', 'answers', 'category_ids', 'image_sizes'})
+        :return: image (Tensor), image size (Tensor, w,h, both scaled to (0,1>)
         """
-        # Get item.
-        item = self.dataset[index]
 
-        # Load the adequate image.
-        img_id = item[self.key_image_ids]
-        img_folder = item["image_folder"]
         extension = '.jpg'
         # Load the image.
         img = Image.open(os.path.join(img_folder, img_id + extension))
@@ -665,14 +687,47 @@ class VQAMED2019(Problem):
         # Apply transformations.
         img = transforms_com(img)
 
+        # Get scaled image size.
+        img_size = torch.FloatTensor([float(height/self.scale_image_height), float(width/self.scale_image_width)])
+
+        # Return image and size.
+        return img, img_size
+
+    def __getitem__(self, index):
+        """
+        Getter method to access the dataset and return a single sample.
+
+        :param index: index of the sample to return.
+        :type index: int
+
+        :return: DataDict({'indices', 'images', 'images_ids','questions', 'answers', 'category_ids', 'image_sizes'})
+        """
+        # Get item.
+        item = self.dataset[index]
+
         # Create the resulting sample (data dict).
         data_dict = self.create_data_dict(index)
 
-        # Image related variables.
-        data_dict[self.key_images] = img
+        # Load and stream the image ids.
+        img_id = item[self.key_image_ids]
         data_dict[self.key_image_ids] = img_id
-        # Scale width and height to range (0,1).
-        data_dict[self.key_image_sizes] = torch.FloatTensor([float(height/self.scale_image_height), float(width/self.scale_image_width)])
+
+        # Load the adequate image - only when required.
+        if self.stream_images:
+
+            if self.preload_images:
+                # Use preloaded values.
+                img = item[self.key_images]             
+                img_size = item[self.key_image_sizes]             
+            else:
+                # Load at the very moment.
+                img, img_size = self.get_image(img_id, item["image_folder"])
+
+            # Image related variables.
+            data_dict[self.key_images] = img
+
+            # Scale width and height to range (0,1).
+            data_dict[self.key_image_sizes] = img_size
 
         # Apply question transformations.
         preprocessed_question = item[self.key_questions]
@@ -728,9 +783,10 @@ class VQAMED2019(Problem):
         data_dict = self.create_data_dict([sample[self.key_indices] for sample in batch])
 
         # Stack images.
-        data_dict[self.key_images] = torch.stack([item[self.key_images] for item in batch]).type(torch.FloatTensor)
         data_dict[self.key_image_ids] = [item[self.key_image_ids] for item in batch]
-        data_dict[self.key_image_sizes] = torch.stack([item[self.key_image_sizes] for item in batch]).type(torch.FloatTensor)
+        if self.stream_images:
+            data_dict[self.key_images] = torch.stack([item[self.key_images] for item in batch]).type(torch.FloatTensor)
+            data_dict[self.key_image_sizes] = torch.stack([item[self.key_image_sizes] for item in batch]).type(torch.FloatTensor)
 
         # Collate lists/lists of lists.
         data_dict[self.key_questions] = [item[self.key_questions] for item in batch]
