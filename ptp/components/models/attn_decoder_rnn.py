@@ -82,7 +82,7 @@ class Attn_Decoder_RNN(Model):
         # Create dropout layer.
         self.dropout = torch.nn.Dropout(dropout_rate)
 
-        # Create rnn cell.
+        # Create rnn cell: hardcoded one layer GRU.
         self.rnn_cell = getattr(torch.nn, "GRU")(self.input_size, self.hidden_size, 1, dropout=dropout_rate, batch_first=True)
 
         # Create layers for the attention
@@ -149,7 +149,7 @@ class Attn_Decoder_RNN(Model):
         d[self.key_inputs] = DataDefinition([-1, -1, self.hidden_size], [torch.Tensor], "Batch of encoder outputs [BATCH_SIZE x SEQ_LEN x INPUT_SIZE]")
 
         # Input hidden state
-        d[self.key_input_state] = DataDefinition([1, -1, self.hidden_size], [torch.Tensor], "Batch of RNN last states")
+        d[self.key_input_state] = DataDefinition([-1, 1, self.hidden_size], [torch.Tensor], "Batch of RNN last hidden states passed from another RNN that will be used as initial [BATCH_SIZE x NUM_LAYERS x SEQ_LEN x HIDDEN_SIZE]")
 
         return d
 
@@ -167,9 +167,9 @@ class Attn_Decoder_RNN(Model):
             # Only last prediction.
             d[self.key_predictions] = DataDefinition([-1, self.prediction_size], [torch.Tensor], "Batch of predictions, each represented as probability distribution over classes [BATCH_SIZE x SEQ_LEN x PREDICTION_SIZE]")
 
-        # Output hidden state stream
+        # Output hidden state stream TODO: why do we need that?
         if self.output_last_state:
-            d[self.key_output_state] = DataDefinition([1, -1, self.hidden_size], [torch.Tensor], "Batch of RNN last states")
+            d[self.key_output_state] = DataDefinition([-1, 1, self.hidden_size], [torch.Tensor], "Batch of RNN final hidden states [BATCH_SIZE x NUM_LAYERS x SEQ_LEN x HIDDEN_SIZE]")
         
         return d
 
@@ -185,9 +185,13 @@ class Attn_Decoder_RNN(Model):
         
         inputs = data_dict[self.key_inputs]
         batch_size = inputs.shape[0]
+        #print("{}: input shape: {}, device: {}\n".format(self.name, inputs.shape, inputs.device))
 
-        # Initialize hidden state.
+        # Initialize hidden state from inputs - as last hidden state from external component.
         hidden = data_dict[self.key_input_state]
+        # For RNNs (aside of LSTM): [BATCH_SIZE x NUM_LAYERS x HIDDEN_SIZE] -> [NUM_LAYERS x BATCH_SIZE x HIDDEN_SIZE]
+        hidden = hidden.transpose(0,1)
+        #print("{}: hidden shape: {}, device: {}\n".format(self.name, hidden.shape, hidden.device))
 
         # List that will contain the output sequence
         activations = []
@@ -232,4 +236,7 @@ class Attn_Decoder_RNN(Model):
 
         # Output last hidden state, if requested
         if self.output_last_state:
+            # For others: [NUM_LAYERS x BATCH_SIZE x HIDDEN_SIZE] -> [BATCH_SIZE x NUM_LAYERS x HIDDEN_SIZE] 
+            hidden = hidden.transpose(0,1)
+            # Export last hidden state.
             data_dict.extend({self.key_output_state: hidden})
