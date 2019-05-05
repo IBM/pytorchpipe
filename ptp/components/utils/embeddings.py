@@ -19,7 +19,10 @@ __author__ = "Tomasz Kornuta"
 
 import os
 import numpy as np
+import tqdm
+
 import torch
+
 import ptp.components.utils.io as io
 
 
@@ -111,23 +114,39 @@ def load_pretrained_embeddings(logger, folder, embeddings_name, word_to_ix, embe
         else: 
             logger.info("File '{}' containing pretrained embeddings found in '{}' folder".format(embeddings_name, folder))
 
+        # Get number of lines/vectors.
+        num_lines = sum([1 for line in open(os.path.join(folder, embeddings_name))])
+        t = tqdm.tqdm(total=num_lines)
 
         with open(os.path.join(folder, embeddings_name)) as f:
             # Parse file and cherry pick the vectors that fit our vocabulary.
             for line in f.readlines():
                 values = line.split()
-                # Get word.
-                word = values[0]
+                if len(values) > embeddings_size+1:
+                    #print(len(values))
+                    # Case: two (or more) words!
+                    num_words = len(values) - embeddings_size
+                    words = values[0:num_words]
+                    word = ' '.join(words)
+                    #print(word)
+                    # Get remaining vector.
+                    vector = np.array(values[num_words:], dtype='float32')
+                else:
+                    # Get word.
+                    word = values[0]
+                    # Get remaining vector.
+                    vector = np.array(values[1:], dtype='float32')
                 # Get index.
                 index = word_to_ix.get(word)
                 if index:
-                    vector = np.array(values[1:], dtype='float32')
                     assert (len(vector) == embeddings_size), "Embeddings size must be equal to the size of pretrained embeddings!"
                     # Ok, set vector.
                     embeddings[index] = vector
                     # Increment counter.
                     num_loaded_embs += 1
-    
+                t.update()
+            t.close()
+
     logger.info("Loaded {} pretrained embeddings for vocabulary of size {} from {}".format(num_loaded_embs, len(word_to_ix), embeddings_name))
 
     # Return matrix with embeddings.

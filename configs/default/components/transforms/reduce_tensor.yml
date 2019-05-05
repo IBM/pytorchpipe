@@ -1,32 +1,31 @@
-# This file defines the default values for the VQA_Attention model.
+# This file defines the default values for the ReduceTensor transformation.
 
 ####################################################################
 # 1. CONFIGURATION PARAMETERS that will be LOADED by the component.
 ####################################################################
 
-# Dropout rate (LOADED)
-# Default: 0 (means that it is turned off)
-dropout_rate: 0
+# Number of input dimensions, including batch (LOADED)
+num_inputs_dims: 2
 
-# Size of the latent space (LOADED)
-latent_size: 100
+# Dimension along with the reduction will be applied (LOADED)
+reduction_dim: 1
 
-# Number of attention heads (LOADED)
-num_attention_heads: 2
+# Reduction type (LOADED)
+# Options: sum | mean | min | max | argmin | argmax
+reduction_type: sum
 
+# If True, the output tensor is of the same size as input, except dim where it is of size 1 (LOADED)
+keepdim: False
 
-streams:
+streams: 
   ####################################################################
   # 2. Keymappings associated with INPUT and OUTPUT streams.
   ####################################################################
 
-  # Stream containing batch of encoded images (INPUT)
-  feature_maps: feature_maps
+  # Stream containing input tensor (INPUT)
+  inputs: inputs
 
-  # Stream containing batch of encoded questions (INPUT)
-  question_encodings: question_encodings
-
-  # Stream containing outputs (OUTPUT)
+  # Stream containing output tensor (OUTPUT)
   outputs: outputs
 
 globals:
@@ -34,25 +33,15 @@ globals:
   # 3. Keymappings of variables that will be RETRIEVED from GLOBALS.
   ####################################################################
 
-  # Height of the features tensor (RETRIEVED)
-  feature_maps_height: feature_maps_height
-
-  # Width of the features tensor (RETRIEVED)
-  feature_maps_width: feature_maps_width
-
-  # Depth of the features tensor (RETRIEVED)
-  feature_maps_depth: feature_maps_depth
-  
-  # Size of the question encodings input (RETRIEVED)
-  question_encoding_size: question_encoding_size
+  # Size of the intput_item (GET)
+  # (last dimenstion)
+  input_size: input_size
 
   ####################################################################
   # 4. Keymappings associated with GLOBAL variables that will be SET.
   ####################################################################
 
-  # Size of the output (SET)
-  output_size: output_size
-
   ####################################################################
   # 5. Keymappings associated with statistics that will be ADDED.
   ####################################################################
+

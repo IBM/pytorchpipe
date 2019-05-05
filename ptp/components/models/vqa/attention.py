@@ -62,6 +62,8 @@ class VQA_Attention(Model):
 
         # Output feature size
         self.output_size = self.feature_maps_depth*self.num_attention_heads + self.question_encoding_size
+        # Export to globals.
+        self.globals["output_size"] = self.output_size
 
         # Map image and question encodings to a common latent space of dimension 'latent_size'.
         self.image_encodings_conv = torch.nn.Conv2d(self.feature_maps_depth, self.latent_size, 1, bias=False)
