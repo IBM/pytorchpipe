@@ -5,6 +5,9 @@ training:
   problem:
     categories: all
     export_sample_weights: ~/data/vqa-med/answers.all.weights.csv
+    # Do not load and stream images!
+    stream_images: False
+    batch_size:  256
   sampler:
     weights: ~/data/vqa-med/answers.all.weights.csv
   terminal_conditions:
@@ -13,6 +16,9 @@ training:
 validation:
   problem:
     categories: all
+    # Do not load and stream images!
+    stream_images: False
+    batch_size:  256
 
 
 pipeline:

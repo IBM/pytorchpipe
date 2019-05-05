@@ -6,7 +6,7 @@ training_answers:
     type: &p_type VQAMED2019
     data_folder: &data_folder ~/data/vqa-med
     split: training
-    categories: all
+    categories: C4
     resize_image: &resize_image [224, 224]
     batch_size: 64
     # Appy all preprocessing/data augmentations.
@@ -24,7 +24,7 @@ validation_answers:
     type: *p_type
     data_folder: *data_folder
     split: validation
-    categories: all
+    categories: C4
     resize_image: *resize_image     
     batch_size: 64
     # Appy all preprocessing/data augmentations.
@@ -37,24 +37,6 @@ validation_answers:
     # Use 1 worker, so batches will follow the samples order.
     num_workers: 1
 
-
-# Testing parameters:
-test_answers:
-  problem:
-    type: *p_type 
-    data_folder: *data_folder
-    split: test
-    resize_image: *resize_image     
-    batch_size: 64
-    # Appy all preprocessing/data augmentations.
-    question_preprocessing: lowercase,remove_punctuation,tokenize
-    streams: 
-      questions: tokenized_questions
-  dataloader:
-    # No sampler, process samples in the same order.
-    shuffle: false
-    # Use 1 worker, so batches will follow the samples order.
-    num_workers: 1
 
 # Add component for exporting answers to files.
 pipeline:

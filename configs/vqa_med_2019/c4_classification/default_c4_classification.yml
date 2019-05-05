@@ -70,8 +70,8 @@ pipeline:
     type: PrecisionRecallStatistics
     priority: 100.3
     use_word_mappings: True
-    show_class_scores: True
-    show_confusion_matrix: True
+    #show_class_scores: True
+    #show_confusion_matrix: True
     streams:
       targets: answers_ids
     globals:

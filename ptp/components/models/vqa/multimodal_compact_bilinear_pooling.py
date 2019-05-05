@@ -61,8 +61,13 @@ class MultimodalCompactBilinearPooling(Model):
         self.output_size = self.globals["output_size"]
 
         # Initialize sketch projection matrices.
-        self.image_sketch_projection_matrix = self.generate_count_sketch_projection_matrix(self.image_encoding_size, self.output_size)
-        self.question_sketch_projection_matrix = self.generate_count_sketch_projection_matrix(self.question_encoding_size, self.output_size)
+        image_sketch_projection_matrix = self.generate_count_sketch_projection_matrix(self.image_encoding_size, self.output_size)
+        question_sketch_projection_matrix = self.generate_count_sketch_projection_matrix(self.question_encoding_size, self.output_size)
+
+        # Make them parameters of the model, so can be stored/loaded and trained (optionally).
+        trainable_projections = self.config["trainable_projections"]
+        self.image_sketch_projection_matrix = torch.nn.Parameter(image_sketch_projection_matrix, requires_grad=trainable_projections)
+        self.question_sketch_projection_matrix = torch.nn.Parameter(question_sketch_projection_matrix, requires_grad=trainable_projections)
 
 
     def generate_count_sketch_projection_matrix(self, input_size, output_size):
@@ -77,21 +82,22 @@ class MultimodalCompactBilinearPooling(Model):
         # Generate s: 1 or -1
         s = 2 * np.random.randint(2, size=input_size) - 1
         s = torch.from_numpy(s)
-        #print("s=",s)
+        #print("s=",s.shape)
 
         # Generate h (indices)
         h = np.random.randint(output_size, size=input_size)
-        #print("h=",h)
+        #print("h=",h.shape)
         indices = np.concatenate((np.arange(input_size)[..., np.newaxis],h[..., np.newaxis]), axis=1)
         indices = torch.from_numpy(indices)
-        #print("indices=",indices)
+        #print("indices=",indices.shape)
 
         # Generate sparse matrix.
         sparse_sketch_matrix = torch.sparse.FloatTensor(indices.t(), s, torch.Size([input_size, output_size]))
-        #print("\n sparse_sketch_matrix=",sparse_sketch_matrix)
+        #print("\n sparse_sketch_matrix=",sparse_sketch_matrix.shape)
         # Return dense matrix.
         dense_ssm = sparse_sketch_matrix.to_dense().type(self.app_state.FloatTensor)
         #print("\n dense_ssm=",dense_ssm)
+
         return dense_ssm
 
         
@@ -125,16 +131,16 @@ class MultimodalCompactBilinearPooling(Model):
         :param data_dict: DataDict({'images',**})
         :type data_dict: ``ptp.dadatypes.DataDict``
         """
-
         # Unpack DataDict.
         enc_img = data_dict[self.key_image_encodings]
         enc_q = data_dict[self.key_question_encodings]
-        #print("\n enc_img=",enc_img)
-        #print("\n image_sketch_projection_matrix=",self.image_sketch_projection_matrix)
+
+        sketch_pm_img = self.image_sketch_projection_matrix
+        sketch_pm_q = self.question_sketch_projection_matrix
 
         # Project both batches.
-        sketch_img = enc_img.mm(self.image_sketch_projection_matrix)
-        sketch_q = enc_q.mm(self.question_sketch_projection_matrix)
+        sketch_img = enc_img.mm(sketch_pm_img)
+        sketch_q = enc_q.mm(sketch_pm_q)
 
         # Add imaginary parts (with zeros).
         sketch_img_reim = torch.stack([sketch_img, torch.zeros(sketch_img.shape).type(self.app_state.FloatTensor)], dim=2)

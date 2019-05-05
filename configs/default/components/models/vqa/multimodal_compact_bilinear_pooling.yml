@@ -4,6 +4,10 @@
 # 1. CONFIGURATION PARAMETERS that will be LOADED by the component.
 ####################################################################
 
+# Parameter denoting whether projection matrices are trainable (LOADED)
+# Setting flag that to true will result in trainable, dense (i.e. not "sketch") projection layers.
+trainable_projections: False
+
 streams: 
   ####################################################################
   # 2. Keymappings associated with INPUT and OUTPUT streams.

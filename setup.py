@@ -166,9 +166,9 @@ setup(
         'nltk',
         'pandas',
         'pillow',
-        #'torchtext',
-        'torchvision',
-        'torch',
+        'torchtext==0.3.1',
+        'torchvision==0.2.1',
+        'torch==1.0.1',
         'PyYAML',
         'requests'
         ],

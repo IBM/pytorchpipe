@@ -20,11 +20,12 @@ import torch
 
 from ptp.components.component import Component
 from ptp.data_types.data_definition import DataDefinition
+from ptp.configuration.config_parsing import get_value_from_dictionary
 
 
-class ListToTensor(Component):
+class ReduceTensor(Component):
     """
-    Class responsible for transforming list (of lists) to a tensor.
+    Class responsible for reducing tensor using indicated reduction method along a given dimension.
 
     """
 
@@ -40,7 +41,7 @@ class ListToTensor(Component):
 
         """
         # Call constructors of parent classes.
-        Component.__init__(self, name, ListToTensor, config)
+        Component.__init__(self, name, ReduceTensor, config)
 
         # Set key mappings.
         self.key_inputs = self.stream_keys["inputs"]
@@ -48,10 +49,27 @@ class ListToTensor(Component):
         
         # Get number of input dimensions from configuration.
         self.num_inputs_dims = self.config["num_inputs_dims"]
-
         # Get size of a single input item (last dimension) from globals.
         self.input_size =  self.globals["input_size"]
 
+        # Get reduction tparamsype from configuration.
+        self.dim =  self.config["reduction_dim"]
+        self.keepdim =  self.config["keepdim"]
+
+        # Set reduction type.
+        rt = get_value_from_dictionary(
+            "reduction_type", self.config,
+            'sum | mean | min | max | argmin | argmax'.split(" | ")
+            )
+        reduction_types = {}
+        reduction_types["sum"] = torch.sum
+        reduction_types["mean"] = torch.mean
+        reduction_types["min"] = torch.min
+        reduction_types["max"] = torch.max
+        reduction_types["argmin"] = torch.argmin
+        reduction_types["argmax"] = torch.argmax
+
+        self.reduction = reduction_types[rt]
 
 
     def input_data_definitions(self):
@@ -60,11 +78,14 @@ class ListToTensor(Component):
 
         :return: dictionary containing input data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
         """
+        # Generate the description of input stream.
+        dims_desc  = ["DIM {}".format(i) for i in range(self.num_inputs_dims-1)]
+        desc = "Batch of outputs [" + " x ".join(dims_desc) + "]"
         return {
             self.key_inputs: DataDefinition(
                 [-1]*(self.num_inputs_dims-1) + [self.input_size],
-                [list]*(self.num_inputs_dims-1) + [torch.Tensor],
-                "Batch of inputs [DIM 1 x DIM 2 x ... x INPUT_SIZE]")
+                [torch.Tensor],
+                desc)
             }
 
     def output_data_definitions(self):
@@ -73,11 +94,22 @@ class ListToTensor(Component):
 
         :return: Empty dictionary.
         """
+        # Generate the dimensions and description of output stream.
+        if self.keepdim:
+            dims = [-1]*(self.num_inputs_dims-1) + [self.input_size]
+            dims[self.dim] = 1
+            dims_desc  = ["DIM {}".format(i) for i in range(self.num_inputs_dims)]
+            dims_desc[self.dim] = "1"
+            desc = "Batch of outputs [" + " x ".join(dims_desc) + "]"
+        else:
+            dims = [-1]*(self.num_inputs_dims-2) + [self.input_size]
+            dims_desc  = ["DIM {}".format(i) for i in range(self.num_inputs_dims-1)]
+            desc = "Batch of outputs [" + " x ".join(dims_desc) + "]"
         return {
             self.key_outputs: DataDefinition(
-                [-1]*(self.num_inputs_dims-1) + [self.input_size],
+                dims,
                 [torch.Tensor],
-                "Batch of outputs [DIM 1 x DIM 2 x ... x INPUT_SIZE]")
+                desc)
             }
 
 
@@ -95,42 +127,7 @@ class ListToTensor(Component):
         # Get inputs to be encoded.
         inputs = data_dict[self.key_inputs]
 
-        # Change to tensor.
-        if self.num_inputs_dims == 1:
-            # CASE: Single tensor.
-            outputs = input
-        elif self.num_inputs_dims == 2:
-            # CASE: List of tensors.
-
-            # This needs testing - padding?
-            outputs = torch.stack(inputs)
-
-        elif self.num_inputs_dims == 3:
-            # CASE: List of lists of tensors.
-
-            # Get type.
-            ttype = type(inputs[0][0])
-            # Generate tensor that will be added as padding - all zeros.
-            pad_tensor = ttype([0]*self.input_size)
-            if self.app_state.use_gpu:
-                pad_tensor = pad_tensor.cuda()
-
-            # Get max length of lists.
-            max_len = max([len(lst) for lst in inputs])
-
-            # List of stacked tensors.
-            stacked_tensor_lst = []
-
-            # Iterate over list of lists.
-            for lst in inputs:
-                # "Manual" padding of each inner list.
-                if len(lst) < max_len:
-                    lst.extend([pad_tensor] * (max_len - len(lst)))
-                # Stack inner list.
-                stacked_tensor = torch.stack(lst)
-                stacked_tensor_lst.append(stacked_tensor)
-            # Finally, pad the result.
-            outputs = torch.stack(stacked_tensor_lst)
+        outputs =  self.reduction(inputs, self.dim, self.keepdim)
 
         # Create the returned dict.
         data_dict.extend({self.key_outputs: outputs})

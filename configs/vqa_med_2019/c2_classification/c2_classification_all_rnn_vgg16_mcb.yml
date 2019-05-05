@@ -8,7 +8,7 @@ pipeline:
     type: GlobalVariablePublisher
     # Add input_size to globals.
     keys: [question_encoder_output_size, image_encoder_output_size, fused_image_question_activation_size]
-    values: [200, 1000, 100]
+    values: [200, 500, 100]
 
   ################# PIPE 0: question #################
   # Questions encoding.
