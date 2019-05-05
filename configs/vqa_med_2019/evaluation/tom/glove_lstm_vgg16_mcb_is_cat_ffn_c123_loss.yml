@@ -15,7 +15,7 @@ hyperparameters:
   # Image encoder.
   image_encoder_model: &image_encoder_model vgg16
   # Options: vgg16 | densenet121 | resnet152 | resnet50
-  image_encoder_output_size_val: &image_encoder_output_size_val 100
+  image_encoder_output_size_val: &image_encoder_output_size_val 1000
   
   # Question encoder.
   question_encoder_embeddings: &question_encoder_embeddings glove.6B.50d.txt
@@ -27,20 +27,20 @@ hyperparameters:
   # Fusion I: image + question
   question_image_fusion_type_val: &question_image_fusion_type MultimodalCompactBilinearPooling
   # Options: ElementWiseMultiplication | MultimodalCompactBilinearPooling | 
-  question_image_fusion_size_val: &question_image_fusion_size_val 100
+  question_image_fusion_size_val: &question_image_fusion_size_val 200
 
   # Image size encoder.
   image_size_encoder_output_size_val: &image_size_encoder_output_size_val 10
 
   # Fusion II: (image + question) + image size (must be = question_image_fusion_size_val + image_size_encoder_output_size_val)
-  question_image_size_fusion_size_val: &question_image_size_fusion_size_val 110
+  question_image_size_fusion_size_val: &question_image_size_fusion_size_val 210
 
   # Final classifier: FFN.
-  answer_classifier_hidden_sizes_val: &answer_classifier_hidden_sizes_val [100]
+  answer_classifier_hidden_sizes_val: &answer_classifier_hidden_sizes_val [500]
 
-  batch_size: &batch_size 100
+  batch_size: &batch_size 200
   preload_images: &preload_images True
-  num_workers: &num_workers 0
+  num_workers: &num_workers 1
 
 # Training parameters:
 training:

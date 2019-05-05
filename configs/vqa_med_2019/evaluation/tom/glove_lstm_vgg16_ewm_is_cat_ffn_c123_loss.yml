@@ -40,7 +40,7 @@ hyperparameters:
 
   batch_size: &batch_size 100
   preload_images: &preload_images True
-  num_workers: &num_workers 0
+  num_workers: &num_workers 1
 
 # Training parameters:
 training:

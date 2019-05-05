@@ -38,9 +38,10 @@ hyperparameters:
   # Final classifier: FFN.
   answer_classifier_hidden_sizes_val: &answer_classifier_hidden_sizes_val [83]
 
+  # Parameters related to GPU/CPU distribution.
   batch_size: &batch_size 200
   preload_images: &preload_images True
-  num_workers: &num_workers 0
+  num_workers: &num_workers 1
 
 # Training parameters:
 training:

@@ -13,7 +13,7 @@ hyperparameters:
   # none | random_affine | random_horizontal_flip | normalize | all
 
   # Image encoder.
-  image_encoder_model: &image_encoder_model resnet50
+  image_encoder_model: &image_encoder_model resnet152
   # Options: vgg16 | densenet121 | resnet152 | resnet50
   image_encoder_output_size_val: &image_encoder_output_size_val 100
   
@@ -25,8 +25,8 @@ hyperparameters:
   question_encoder_output_size_val: &question_encoder_output_size_val 100
   
   # Fusion I: image + question
-  question_image_fusion_type_val: &question_image_fusion_type ElementWiseMultiplication
-  # Options: ElementWiseMultiplication | ? (component: question_image_fusion)
+  question_image_fusion_type_val: &question_image_fusion_type MultimodalCompactBilinearPooling
+  # Options: ElementWiseMultiplication | MultimodalCompactBilinearPooling | VQA_Attention
   question_image_fusion_size_val: &question_image_fusion_size_val 100
 
   # Image size encoder.
@@ -38,9 +38,9 @@ hyperparameters:
   # Final classifier: FFN.
   answer_classifier_hidden_sizes_val: &answer_classifier_hidden_sizes_val [100]
 
-  batch_size: &batch_size 64
-  preload_images: &preload_images True
-  num_workers: &num_workers 0
+  batch_size: &batch_size 150
+  preload_images: &preload_images False
+  num_workers: &num_workers 3
 
 # Training parameters:
 training:
