@@ -90,6 +90,10 @@ validation:
 
 
 pipeline:
+  # Disable flow 0.
+  disable: 
+    pipe0_question_embeddings,pipe0_question_embeddings,pipe0_lstm,pipe0_classifier,
+    pipe0_category_decoder,pipe0_category_accuracy
   
   ################# PIPE 0: SHARED #################
 
