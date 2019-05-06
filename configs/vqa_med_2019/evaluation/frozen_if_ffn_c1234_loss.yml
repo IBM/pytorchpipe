@@ -1,0 +1,154 @@
+# Load config defining problems for training, validation and testing.
+default_configs:
+  vqa_med_2019/default_vqa_med_2019.yml,
+  vqa_med_2019/frozen_pipelines/frozen_input_fusion_glove_lstm_vgg_att_is_cat.yml
+  #vqa_med_2019/frozen_pipelines/frozen_question_categorization_glove_rnn_ffn.yml
+
+c123_hyperparameters:
+  # In here I am putting some of the hyperparameters from spreadsheet.
+
+  question_preprocessing: &question_preprocessing lowercase, remove_punctuation, tokenize
+  # Accepted formats: a,b,c or [a,b,c]
+  # none | lowercase | remove_punctuation | tokenize | random_remove_stop_words | random_shuffle_words | all
+
+  image_preprocessing: &image_preprocessing normalize
+  # Accepted formats: a,b,c or [a,b,c]
+  # none | random_affine | random_horizontal_flip | normalize | all
+
+  # Final classifier: FFN.
+  answer_classifier_hidden_sizes_val: &answer_classifier_hidden_sizes_val [500,500]
+
+  batch_size: &batch_size 256
+  preload_images: &preload_images False
+  num_workers: &num_workers 4
+
+# Training parameters:
+training:
+  problem:
+    batch_size: *batch_size
+    categories: all
+    export_sample_weights: ~/data/vqa-med/answers.c1_c2_c3_c4_binary_yn.weights.csv
+    # Appy all preprocessing/data augmentations.
+    question_preprocessing: *question_preprocessing
+    image_preprocessing: *image_preprocessing 
+    # Preload images.
+    preload_images: *preload_images
+    streams: 
+      questions: tokenized_questions
+  sampler:
+    weights: ~/data/vqa-med/answers.c1_c2_c3_c4_binary_yn.weights.csv
+  # Use four workers for loading images.
+  dataloader:
+    num_workers: *num_workers
+
+  # Optimizer parameters:
+  optimizer:
+    name: Adam
+    lr: 0.0001
+
+  # Terminal conditions:
+  terminal_conditions:
+    loss_stop: 1.0e-3
+    episode_limit: 10000
+    epoch_limit: -1
+
+# Validation parameters:
+validation:
+  partial_validation_interval: 100
+  problem:
+    batch_size: *batch_size
+    categories: all
+    # Appy all preprocessing/data augmentations.
+    question_preprocessing: *question_preprocessing
+    image_preprocessing: *image_preprocessing 
+    # Preload images: false, as we will need them only once, at the end.
+    preload_images: false
+    streams: 
+      questions: tokenized_questions
+  dataloader:
+    num_workers: 1
+
+
+pipeline:
+
+  ################# PIPE 6: C1 + C2 + C3 questions #################
+
+  # Answer encoding.
+  pipe6_c1234_answer_indexer:
+    priority: 6.2
+    type: LabelIndexer
+    data_folder: ~/data/vqa-med
+    word_mappings_file: answers.all.word.mappings.csv
+    # Export mappings and size to globals.
+    export_word_mappings_to_globals: True
+    streams:
+      inputs: answers
+      outputs: answers_ids
+    globals:
+      vocabulary_size: vocabulary_size_c1234_binary_yn
+      word_mappings: word_mappings_c1234_binary_yn
+
+
+  # Model 4: FFN C123 answering
+  pipe6_c1234_answer_classifier:
+    priority: 6.3
+    type: FeedForwardNetwork
+    hidden: *answer_classifier_hidden_sizes_val
+    dropout_rate: 0.5
+    streams:
+      inputs: concatenated_activations
+      predictions: pipe6_c1234_predictions
+    globals:
+      input_size: concatenated_activations_size
+      prediction_size: vocabulary_size_c1234_binary_yn
+
+  pipe6_c1234_nllloss:
+    priority: 6.4
+    type: NLLLoss
+    targets_dim: 1
+    streams:
+      predictions: pipe6_c1234_predictions
+      targets: answers_ids
+      loss: pipe6_c1234_loss
+
+  pipe6_c1234_precision_recall:
+    priority: 6.5
+    type: PrecisionRecallStatistics
+    use_word_mappings: True
+    #show_class_scores: True
+    #show_confusion_matrix: True
+    streams:
+      predictions: pipe6_c1234_predictions
+      targets: answers_ids
+    globals:
+      word_mappings: word_mappings_c1234_binary_yn
+    statistics:
+      precision: pipe6_c1234_precision
+      recall: pipe6_c1234_recall
+      f1score: pipe6_c1234_f1score
+
+  # C123 Predictions decoder.
+  pipe6_c1234_binary_yn_prediction_decoder:
+    priority: 6.6
+    type: WordDecoder
+    # Use the same word mappings as label indexer.
+    import_word_mappings_from_globals: True
+    streams:
+      inputs: pipe6_c1234_predictions
+      outputs: predicted_answers
+    globals:
+      word_mappings: word_mappings_c1234_binary_yn
+
+  ################# PIPE 9: MERGE ANSWERS #################
+
+  # Viewers.
+  viewer:
+    priority: 9.3
+    type: StreamViewer
+    input_streams:
+      tokenized_questions,
+      category_names, predicted_category_names,
+      answers, predicted_answers
+
+
+#: pipeline

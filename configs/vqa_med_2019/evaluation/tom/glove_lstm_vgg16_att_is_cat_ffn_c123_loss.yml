@@ -1,5 +1,6 @@
 # Load config defining problems for training, validation and testing.
-default_configs: vqa_med_2019/default_vqa_med_2019.yml #,vqa_med_2019/question_categorization/frozen_pipeline_qc_glove_rnn_ffn.yml
+default_configs:
+  vqa_med_2019/default_vqa_med_2019.yml #,vqa_med_2019/frozen_pipelines/frozen_question_categorization_glove_rnn_ffn.yml
 
 hyperparameters:
   # In here I am putting some of the hyperparameters from spreadsheet.
@@ -40,9 +41,9 @@ hyperparameters:
   # Final classifier: FFN.
   answer_classifier_hidden_sizes_val: &answer_classifier_hidden_sizes_val [500]
 
-  batch_size: &batch_size 100
-  preload_images: &preload_images True
-  num_workers: &num_workers 1
+  batch_size: &batch_size 300
+  preload_images: &preload_images False
+  num_workers: &num_workers 4
 
 # Training parameters:
 training:

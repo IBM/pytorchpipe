@@ -1,12 +1,16 @@
 # Part of pipeline containing components constituting the "Inputs Fusion" pipeline.
 
 # Inputs:
-#   * 
-#   * 
+#  streams:
+#   * tokenized_questions
+#   * images
+#   * image_sizes
 
 # Outputs:
-#   * 
-#   * 
+#  streams:
+#   * concatenated_activations
+#  globals:
+#   * concatenated_activations_size
 
 # "Inputs Fusion" 
 # 0.: 
@@ -24,44 +28,50 @@ checkpoint: &checkpoint ~/image-clef-2019/experiments/c4_encoders/20190504_20244
 # This one will be skipped, as this is C123 classifier!
 #  + Model 'pipe6_c123_answer_classifier' [FeedForwardNetwork] params saved 
 
+pipe_if0_hyperparameters:
+  # WARNING: as we are loading the pretrained pipeline, all those values must stay!
+
+  # Image encoder.
+  image_encoder_model: &image_encoder_model vgg16
+  
+  # Question encoder.
+  question_encoder_embeddings: &question_encoder_embeddings glove.6B.50d.txt
+  # Options: '' | glove.6B.50d.txt | glove.6B.100d.txt | glove.6B.200d.txt | glove.6B.300d.txt | glove.42B.300d.txt | glove.840B.300d.txt | glove.twitter.27B.txt | mimic.fastText.no_clean.300d.pickled
+  question_encoder_embeddings_size_val: &question_encoder_embeddings_size_val 50
+  question_encoder_lstm_size_val: &question_encoder_lstm_size_val 50
+  question_encoder_output_size_val: &question_encoder_output_size_val 100
+  
+  # Fusion I: image + question
+  question_image_fusion_type_val: &question_image_fusion_type VQA_Attention
+
+  # Image size encoder.
+  image_size_encoder_output_size_val: &image_size_encoder_output_size_val 10
+
+  # Fusion II: (image + question) + image size (must be = question_image_fusion_size_val + image_size_encoder_output_size_val)
+  question_image_size_fusion_size_val: &question_image_size_fusion_size_val 1134
+
 
 pipeline:
 
   ################# PIPE 0: SHARED #################
 
   # Add global variables.
-  global_publisher:
+  pipe_if0_global_publisher:
     priority: 0.11
     type: GlobalVariablePublisher
     # Add input_size to globals.
-    keys: [question_encoder_output_size, image_size_encoder_input_size, image_size_encoder_output_size] #, image_encoder_output_size] #, fused_activation_size]
-    values: [*question_encoder_output_size_val, 2, *image_size_encoder_output_size_val] #, *image_encoder_output_size_val] #, *question_image_fusion_size_val]
+    keys: [question_encoder_output_size, image_size_encoder_input_size, image_size_encoder_output_size]
+    values: [*question_encoder_output_size_val, 2, *image_size_encoder_output_size_val]
 
   # Statistics.
-  batch_size:
+  pipe_if0_batch_size:
     priority: 0.12
     type: BatchSizeStatistics
-
-  # Answer encoding.
-  #pipe1_all_answer_indexer:
-  #  priority: 0.13
-  #  type: LabelIndexer
-  #  data_folder: ~/data/vqa-med
-  #  word_mappings_file: answers.c1_c2_c3_binary_yn.word.mappings.csv
-  #  # Export mappings and size to globals.
-  #  export_word_mappings_to_globals: True
-  #  streams:
-  #    inputs: answers
-  #    outputs: answers_ids
-  #  globals:
-  #    vocabulary_size: vocabulary_size_c123_binary_yn
-  #    word_mappings: word_mappings_c123_binary_yn
-
 
   ################# PIPE 1: SHARED QUESTION ENCODER #################
 
   # Model 1: question embeddings
-  pipe1_question_embeddings:
+  pipe_if1_question_embeddings:
     priority: 1.1
     type: SentenceEmbeddings
     embeddings_size: *question_encoder_embeddings_size_val
@@ -78,10 +88,10 @@ pipeline:
       inputs: tokenized_questions
       outputs: embedded_questions
     globals:
-      embeddings_size: pipe1_embeddings_size     
+      embeddings_size: pipe_if1_embeddings_size     
   
   # Model 2: question RNN
-  pipe1_lstm:
+  pipe_if1_lstm:
     priority: 1.2
     type: RecurrentNeuralNetwork
     cell_type: LSTM
@@ -92,20 +102,20 @@ pipeline:
     # LOAD AND FREEZE #
     load: 
       file: *checkpoint
-      model: pipe1_question_embeddings
+      model: pipe1_lstm
     freeze: True
     ###################
     streams:
       inputs: embedded_questions
       predictions: question_activations
     globals:
-      input_size: pipe1_embeddings_size
+      input_size: pipe_if1_embeddings_size
       prediction_size: question_encoder_output_size
 
   ################# PIPE 2: SHARED IMAGE ENCODER #################
 
   # Image encoder.
-  image_encoder:
+  pipe_if2_image_encoder:
     priority: 2.1
     type: TorchVisionWrapper
     model: *image_encoder_model
@@ -113,7 +123,7 @@ pipeline:
     # LOAD AND FREEZE #
     load: 
       file: *checkpoint
-      model: pipe1_question_embeddings
+      model: image_encoder
     freeze: True
     ###################
     streams:
@@ -123,14 +133,14 @@ pipeline:
   ################# PIPE 3: SHARED IMAGE SIZE ENCODER #################
 
   # Model - image size classifier.
-  image_size_encoder:
+  pipe_if3_image_size_encoder:
     priority: 3.1
     type: FeedForwardNetwork 
     use_logsoftmax: False
     # LOAD AND FREEZE #
     load: 
       file: *checkpoint
-      model: pipe1_question_embeddings
+      model: image_size_encoder
     freeze: True
     ###################
     streams:
@@ -142,13 +152,19 @@ pipeline:
 
   ################# PIPE 4: image-question fusion  #################
   # Attention + FF.
-  question_image_fusion:
+  pipe_if4_question_image_fusion:
     priority: 4.1
     type: *question_image_fusion_type
     dropout_rate: 0.5
     # Attention params.
     latent_size: 100
     num_attention_heads: 2
+    # LOAD AND FREEZE #
+    load: 
+      file: *checkpoint
+      model: question_image_fusion
+    freeze: True
+    ###################
     streams:
       image_encodings: feature_maps
       question_encodings: question_activations
@@ -158,12 +174,17 @@ pipeline:
       output_size: fused_activation_size
 
 
-  question_image_ffn:
+  pipe_if4_question_image_ffn:
     priority: 4.2
     type: FeedForwardNetwork 
-    #hidden_sizes: [*question_image_fusion_size_val]
     dropout_rate: 0.5
     use_logsoftmax: False
+    # LOAD AND FREEZE #
+    load: 
+      file: *checkpoint
+      model: question_image_ffn
+    freeze: True
+    ###################
     streams:
       inputs: fused_activations
       predictions: question_image_activations
@@ -174,7 +195,7 @@ pipeline:
   ################# PIPE 5: image-question-image size fusion #################
 
   # 5th subpipeline: concatenation 
-  concat:
+  pipe_if5_concat:
     priority: 5.1
     type: Concatenation
     input_streams: [question_image_activations,image_size_activations]

@@ -1,0 +1,73 @@
+# Load config defining problems for training, validation and testing.
+default_configs:
+  vqa_med_2019/frozen_pipelines/frozen_input_fusion_glove_lstm_vgg_att_is_cat.yml,
+  vqa_med_2019/frozen_pipelines/frozen_question_categorization_glove_rnn_ffn.yml
+
+
+training_validation:
+  problem:
+    type: &p_type VQAMED2019
+    data_folder: &data_folder ~/data/vqa-med
+    split: training_validation
+    categories: all
+    resize_image: &resize_image [224, 224]
+    batch_size: 64
+    # Appy all preprocessing/data augmentations.
+    question_preprocessing: lowercase,remove_punctuation,tokenize
+    streams: 
+      questions: tokenized_questions
+
+  dataloader:
+    # No sampler, process samples in the same order.
+    shuffle: false
+    # Use 1 worker, so batches will follow the samples order.
+    num_workers: 1
+
+
+hyperparams:
+  # Final classifier: FFN.
+  answer_classifier_hidden_sizes_val: &answer_classifier_hidden_sizes_val [500]
+
+
+# Add component for exporting answers to files.
+pipeline:
+  name: input_fusion_processor_io
+
+  ################# PIPE 6: C1 + C2 + C3 questions #################
+
+  # Answer encoding.
+  pipe6_c123_binary_yn_answer_indexer:
+    priority: 6.2
+    type: LabelIndexer
+    data_folder: ~/data/vqa-med
+    word_mappings_file: answers.c1_c2_c3_binary_yn.word.mappings.csv
+    # Export mappings and size to globals.
+    export_word_mappings_to_globals: True
+    streams:
+      inputs: answers
+      outputs: answers_ids
+    globals:
+      vocabulary_size: vocabulary_size_c123_binary_yn
+      word_mappings: word_mappings_c123_binary_yn
+
+
+  # Viewers.
+  viewer_extended:
+    priority: 100.4
+    type: StreamViewer
+    sample_number: 0
+    input_streams: 
+      indices,image_ids,tokenized_questions,
+      concatenated_activations_size,
+      category,names,
+      answers
+
+  fused_inputs_exporter:
+    priority: 100.5
+    type: StreamFileExporter
+    separator: '|'
+    filename: 'fused_inputs.csv'
+    export_separator_line_to_csv: True
+    input_streams: 
+      indices #, concatenated_activations
+

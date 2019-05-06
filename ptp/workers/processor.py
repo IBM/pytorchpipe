@@ -86,20 +86,24 @@ class Processor(Worker):
             self.logger.error("Cannot use GPU as there are no CUDA-compatible devices present in the system!")
             exit(-1)
 
+        # Config that will be used.
+        abs_root_configs = None
 
         # Check if checkpoint file was indicated.
-        if chkpt_file == "":
-            print('Please pass path to and name of the file containing pipeline to be loaded as --load parameter')
-            exit(-2)
+        if chkpt_file != "":
+            #print('Please pass path to and name of the file containing pipeline to be loaded as --load parameter')
+            #exit(-2)
 
-        # Check if file with model exists.
-        if not path.isfile(chkpt_file):
-            print('Checkpoint file {} does not exist'.format(chkpt_file))
-            exit(-3)
+            # Check if file with model exists.
+            if not path.isfile(chkpt_file):
+                print('Checkpoint file {} does not exist'.format(chkpt_file))
+                exit(-3)
 
-        # Extract path.
-        self.abs_path, _ = path.split(path.dirname(path.expanduser(chkpt_file)))
-        print(self.abs_path)
+            # Extract path.
+            self.abs_path, _ = path.split(path.dirname(path.expanduser(chkpt_file)))
+
+            # Use the "default" config.
+            abs_root_configs = [path.join(self.abs_path, 'training_configuration.yml')]
 
         # Check if config file was indicated by the user.
         if self.app_state.args.config != '':
@@ -107,9 +111,20 @@ class Processor(Worker):
             root_configs = self.app_state.args.config.replace(" ", "").split(',')
             # If there are - expand them to absolute paths.
             abs_root_configs = [path.expanduser(config) for config in root_configs]
-        else:
-            # Use the "default one".
-            abs_root_configs = [path.join(self.abs_path, 'training_configuration.yml')]
+
+            # Using name of the first configuration file from command line.
+            basename = path.basename(root_configs[0])
+            # Take config filename without extension.
+            pipeline_name = path.splitext(basename)[0] 
+
+            # Use path to experiments + pipeline.
+            self.abs_path = path.join(path.expanduser(self.app_state.args.expdir), pipeline_name)
+
+
+        if abs_root_configs is None:
+            print('Please indicate configuration file to be used (--config) and/or pass path to and name of the file containing pipeline to be loaded (--load)')
+            exit(-2)
+
 
         # Get the list of configurations which need to be loaded.
         configs_to_load = config_parsing.recurrent_config_parse(abs_root_configs, [], self.app_state.absolute_config_path)
