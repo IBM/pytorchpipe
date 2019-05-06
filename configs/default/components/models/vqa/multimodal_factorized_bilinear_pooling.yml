@@ -47,6 +47,9 @@ globals:
   # 4. Keymappings associated with GLOBAL variables that will be SET.
   ####################################################################
 
+  # Size of the output (SET)
+  output_size: output_size
+
   ####################################################################
   # 5. Keymappings associated with statistics that will be ADDED.
   ####################################################################
