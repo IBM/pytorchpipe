@@ -40,9 +40,9 @@ hyperparameters:
   # Final classifier: FFN.
   answer_classifier_hidden_sizes_val: &answer_classifier_hidden_sizes_val [500]
 
-  batch_size: &batch_size 100
-  preload_images: &preload_images True
-  num_workers: &num_workers 1
+  batch_size: &batch_size 300
+  preload_images: &preload_images False
+  num_workers: &num_workers 4
 
 # Training parameters:
 training:
