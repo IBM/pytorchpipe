@@ -19,6 +19,7 @@
 # 0.56: pipe_qc_category_accuracy
 
 # Loaded checkpoint: 20190505_130406
+checkpoint: &checkpoint ~/image-clef-2019/experiments/q_categorization/20190505_130406/checkpoints/vqa_med_question_categorization_rnn_ffn_best.pt
 
 pipeline:
   ################# PIPE: QUESTION CATEGORIZATION #################
@@ -37,7 +38,7 @@ pipeline:
     type: SentenceEmbeddings
     # LOAD AND FREEZE #
     load: 
-      file: ~/image-clef-2019/experiments/q_categorization/20190505_130406/checkpoints/vqa_med_question_categorization_rnn_ffn_best.pt
+      file: *checkpoint
       model: question_embeddings
     freeze: True
     ###################
@@ -58,7 +59,7 @@ pipeline:
     cell_type: LSTM
     # LOAD AND FREEZE #
     load: 
-      file: ~/image-clef-2019/experiments/q_categorization/20190505_130406/checkpoints/vqa_med_question_categorization_rnn_ffn_best.pt
+      file: *checkpoint
       model: lstm
     freeze: True
     ###################
@@ -78,7 +79,7 @@ pipeline:
     type: FeedForwardNetwork
     # LOAD AND FREEZE #
     load: 
-      file: ~/image-clef-2019/experiments/q_categorization/20190505_130406/checkpoints/vqa_med_question_categorization_rnn_ffn_best.pt
+      file: *checkpoint
       model: classifier
     freeze: True
     ###################

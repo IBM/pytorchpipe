@@ -1,12 +1,15 @@
 # Part of pipeline containing components constituting the "Inputs Fusion" pipeline.
 
 # Inputs:
+#  streams:
 #   * tokenized_questions
 #   * images
 #   * image_sizes
 
 # Outputs:
+#  streams:
 #   * concatenated_activations
+#  globals:
 #   * concatenated_activations_size
 
 # "Inputs Fusion" 
