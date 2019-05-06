@@ -1,5 +1,5 @@
 # Load config defining problems for training, validation and testing.
-default_configs: vqa_med_2019/default_vqa_med_2019.yml
+default_configs: vqa_med_2019/default_vqa_med_2019.yml #,vqa_med_2019/question_categorization/frozen_pipeline_qc_glove_rnn_ffn.yml
 
 hyperparameters:
   # In here I am putting some of the hyperparameters from spreadsheet.
@@ -92,11 +92,7 @@ validation:
 
 
 pipeline:
-  # Disable flow 0.
-  disable: 
-    pipe0_question_embeddings,pipe0_question_embeddings,pipe0_lstm,pipe0_classifier,
-    pipe0_category_decoder,pipe0_category_accuracy
-  
+
   ################# PIPE 0: SHARED #################
 
   # Add global variables.
@@ -128,97 +124,6 @@ pipeline:
       word_mappings: word_mappings_c123_binary_yn
 
 
-  ################# PIPE 0: QUESTION CATEGORIZATION #################
-
-  # Add global variables - the ones related to only question categorization.
-  pipe0_global_publisher:
-    priority: 0.3
-    type: GlobalVariablePublisher
-    # Add input_size to globals.
-    keys: [pipe0_question_encoder_output_size]
-    values: [100]
-
-  # Model 1: question embeddings
-  pipe0_question_embeddings:
-    priority: 0.4
-    type: SentenceEmbeddings
-    # LOAD AND FREEZE #
-    load: 
-      file: ~/image-clef-2019/experiments/q_categorization/20190416_120801/checkpoints/vqa_med_question_categorization_rnn_ffn_best.pt
-      model: question_embeddings
-    freeze: True
-    ###################
-    embeddings_size: 50
-    pretrained_embeddings_file: glove.6B.50d.txt
-    data_folder: ~/data/vqa-med
-    word_mappings_file: questions.all.word.mappings.csv
-    streams:
-      inputs: tokenized_questions
-      outputs: pipe0_embedded_questions
-    globals:
-      embeddings_size: pipe0_embeddings_size
-  
-  # Model 2: question RNN
-  pipe0_lstm:
-    priority: 0.5
-    type: RecurrentNeuralNetwork
-    cell_type: LSTM
-    # LOAD AND FREEZE #
-    load: 
-      file: ~/image-clef-2019/experiments/q_categorization/20190416_120801/checkpoints/vqa_med_question_categorization_rnn_ffn_best.pt
-      model: lstm
-    freeze: True
-    ###################
-    prediction_mode: Last
-    initial_state: Trainable
-    use_logsoftmax: False
-    streams:
-      inputs: pipe0_embedded_questions
-      predictions: pipe0_question_activations
-    globals:
-      input_size: pipe0_embeddings_size
-      prediction_size: pipe0_question_encoder_output_size
-
-  # Model 3: FFN question category
-  pipe0_classifier:
-    priority: 0.6
-    type: FeedForwardNetwork
-    # LOAD AND FREEZE #
-    load: 
-      file: ~/image-clef-2019/experiments/q_categorization/20190416_120801/checkpoints/vqa_med_question_categorization_rnn_ffn_best.pt
-      model: classifier
-    freeze: True
-    ###################
-    hidden: [50]
-    dropout_rate: 0.7
-    streams:
-      inputs: pipe0_question_activations
-      predictions: pipe0_predicted_question_categories_preds
-    globals:
-      input_size: pipe0_question_encoder_output_size # Set by global publisher
-      prediction_size: num_categories # C1,C2,C3,C4, BINARY, UNK
-
-  pipe0_category_decoder:
-    priority: 0.8
-    type: WordDecoder
-    # Use the same word mappings as label indexer.
-    import_word_mappings_from_globals: True
-    streams:
-      inputs: pipe0_predicted_question_categories_preds
-      outputs: pipe0_predicted_question_categories_names
-    globals:
-      vocabulary_size: num_categories
-      word_mappings: category_word_mappings
-
-  pipe0_category_accuracy:
-    priority: 0.9
-    type: AccuracyStatistics
-    streams:
-      targets: category_ids
-      predictions: pipe0_predicted_question_categories_preds
-    statistics:
-      accuracy: categorization_accuracy
-  
   ################# PIPE 1: SHARED QUESTION ENCODER #################
 
   # Model 1: question embeddings
@@ -384,7 +289,7 @@ pipeline:
     type: StreamViewer
     input_streams:
       tokenized_questions,
-      category_names, pipe0_predicted_question_categories_names,
+      category_names, predicted_category_names,
       answers, predicted_answers
 
 

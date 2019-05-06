@@ -1,0 +1,165 @@
+# Part of pipeline containing components constituting the "Inputs Fusion" pipeline.
+
+# Inputs:
+#   * 
+#   * 
+
+# Outputs:
+#   * 
+#   * 
+
+# "Inputs Fusion" 
+# 0.: 
+
+# Loaded checkpoint: 20190504_202441
+# glove_lstm_vgg16_att_is_cat_ffn_c123_loss / 20190504_202441
+#[2019-05-04 20:27:15] - INFO - glove_lstm_vgg16_att_is_cat_ffn_c123_loss >>> Exporting pipeline 'glove_lstm_vgg16_att_is_cat_ffn_c123_loss' parameters to checkpoint:
+# /home/tkornuta/experiments/vqamed2019/glove_lstm_vgg16_att_is_cat_ffn_c123_loss/20190504_202441/checkpoints/glove_lstm_vgg16_att_is_cat_ffn_c123_loss_best.pt
+#  + Model 'pipe1_question_embeddings' [SentenceEmbeddings] params saved 
+#  + Model 'pipe1_lstm' [RecurrentNeuralNetwork] params saved 
+#  + Model 'image_encoder' [TorchVisionWrapper] params saved 
+#  + Model 'image_size_encoder' [FeedForwardNetwork] params saved 
+#  + Model 'question_image_fusion' [VQA_Attention] params saved 
+#  + Model 'question_image_ffn' [FeedForwardNetwork] params saved 
+
+# This one will be skipped, as this is C123 classifier!
+#  + Model 'pipe6_c123_answer_classifier' [FeedForwardNetwork] params saved 
+
+
+pipeline:
+
+  ################# PIPE 0: SHARED #################
+
+  # Add global variables.
+  global_publisher:
+    priority: 0
+    type: GlobalVariablePublisher
+    # Add input_size to globals.
+    keys: [question_encoder_output_size, image_size_encoder_input_size, image_size_encoder_output_size] #, image_encoder_output_size] #, fused_activation_size]
+    values: [*question_encoder_output_size_val, 2, *image_size_encoder_output_size_val] #, *image_encoder_output_size_val] #, *question_image_fusion_size_val]
+
+  # Statistics.
+  batch_size:
+    priority: 0.1
+    type: BatchSizeStatistics
+
+  # Answer encoding.
+  pipe1_all_answer_indexer:
+    priority: 0.2
+    type: LabelIndexer
+    data_folder: ~/data/vqa-med
+    word_mappings_file: answers.c1_c2_c3_binary_yn.word.mappings.csv
+    # Export mappings and size to globals.
+    export_word_mappings_to_globals: True
+    streams:
+      inputs: answers
+      outputs: answers_ids
+    globals:
+      vocabulary_size: vocabulary_size_c123_binary_yn
+      word_mappings: word_mappings_c123_binary_yn
+
+
+  ################# PIPE 1: SHARED QUESTION ENCODER #################
+
+  # Model 1: question embeddings
+  pipe1_question_embeddings:
+    priority: 1.1
+    type: SentenceEmbeddings
+    embeddings_size: *question_encoder_embeddings_size_val
+    pretrained_embeddings_file: *question_encoder_embeddings
+    data_folder: ~/data/vqa-med
+    word_mappings_file: questions.all.word.mappings.csv
+    streams:
+      inputs: tokenized_questions
+      outputs: embedded_questions
+    globals:
+      embeddings_size: pipe1_embeddings_size     
+  
+  # Model 2: question RNN
+  pipe1_lstm:
+    priority: 1.2
+    type: RecurrentNeuralNetwork
+    cell_type: LSTM
+    hidden_size: *question_encoder_lstm_size_val
+    prediction_mode: Last
+    initial_state: Trainable
+    use_logsoftmax: False
+    streams:
+      inputs: embedded_questions
+      predictions: question_activations
+    globals:
+      input_size: pipe1_embeddings_size
+      prediction_size: question_encoder_output_size
+
+  ################# PIPE 2: SHARED IMAGE ENCODER #################
+
+  # Image encoder.
+  image_encoder:
+    priority: 2.1
+    type: TorchVisionWrapper
+    model: *image_encoder_model
+    return_feature_maps: True
+    streams:
+      inputs: images
+      outputs: feature_maps
+
+  ################# PIPE 3: SHARED IMAGE SIZE ENCODER #################
+
+  # Model - image size classifier.
+  image_size_encoder:
+    priority: 3.1
+    type: FeedForwardNetwork 
+    use_losfotmax: False
+    streams:
+      inputs: image_sizes
+      predictions: image_size_activations
+    globals:
+      input_size: image_size_encoder_input_size
+      prediction_size: image_size_encoder_output_size
+
+  ################# PIPE 4: image-question fusion  #################
+  # Attention + FF.
+  question_image_fusion:
+    priority: 4.1
+    type: *question_image_fusion_type
+    dropout_rate: 0.5
+    # Attention params.
+    latent_size: 100
+    num_attention_heads: 2
+    streams:
+      image_encodings: feature_maps
+      question_encodings: question_activations
+      outputs: fused_activations
+    globals:
+      question_encoding_size: question_encoder_output_size
+      output_size: fused_activation_size
+
+
+  question_image_ffn:
+    priority: 4.2
+    type: FeedForwardNetwork 
+    #hidden_sizes: [*question_image_fusion_size_val]
+    dropout_rate: 0.5
+    use_logsoftmax: False
+    streams:
+      inputs: fused_activations
+      predictions: question_image_activations
+    globals:
+      input_size: fused_activation_size
+      prediction_size: fused_activation_size
+
+  ################# PIPE 5: image-question-image size fusion #################
+
+  # 5th subpipeline: concatenation 
+  concat:
+    priority: 5.1
+    type: Concatenation
+    input_streams: [question_image_activations,image_size_activations]
+    # Concatenation 
+    dim: 1 # default
+    input_dims: [[-1,1124],[-1,*image_size_encoder_output_size_val]]
+    output_dims: [-1,*question_image_size_fusion_size_val]
+    streams:
+      outputs: concatenated_activations
+    globals:
+      output_size: concatenated_activations_size
