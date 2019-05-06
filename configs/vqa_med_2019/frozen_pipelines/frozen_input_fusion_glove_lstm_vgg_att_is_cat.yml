@@ -29,21 +29,10 @@ checkpoint: &checkpoint ~/image-clef-2019/experiments/c4_encoders/20190504_20244
 #  + Model 'pipe6_c123_answer_classifier' [FeedForwardNetwork] params saved 
 
 pipe_if0_hyperparameters:
-  # In here I am putting some of the hyperparameters from spreadsheet.
-
-  question_preprocessing: &question_preprocessing lowercase, remove_punctuation, tokenize
-  # Accepted formats: a,b,c or [a,b,c]
-  # none | lowercase | remove_punctuation | tokenize | random_remove_stop_words | random_shuffle_words | all
-
-  image_preprocessing: &image_preprocessing normalize
-  # Accepted formats: a,b,c or [a,b,c]
-  # none | random_affine | random_horizontal_flip | normalize | all
+  # WARNING: as we are loading the pretrained pipeline, all those values must stay!
 
   # Image encoder.
   image_encoder_model: &image_encoder_model vgg16
-  # Options: vgg16 | densenet121 | resnet152 | resnet50
-  #image_encoder_output_size_val: &image_encoder_output_size_val 100
-  # INFO: this variable is not important, as we are using features in this pipeline!!
   
   # Question encoder.
   question_encoder_embeddings: &question_encoder_embeddings glove.6B.50d.txt
@@ -54,9 +43,6 @@ pipe_if0_hyperparameters:
   
   # Fusion I: image + question
   question_image_fusion_type_val: &question_image_fusion_type VQA_Attention
-  # Options: ElementWiseMultiplication | VQA_Attention
-  #question_image_fusion_size_val: &question_image_fusion_size_val 1124
-  # INFO: this variable is set by VQA_Attention component!
 
   # Image size encoder.
   image_size_encoder_output_size_val: &image_size_encoder_output_size_val 10
@@ -74,29 +60,13 @@ pipeline:
     priority: 0.11
     type: GlobalVariablePublisher
     # Add input_size to globals.
-    keys: [question_encoder_output_size, image_size_encoder_input_size, image_size_encoder_output_size] #, image_encoder_output_size] #, fused_activation_size]
-    values: [*question_encoder_output_size_val, 2, *image_size_encoder_output_size_val] #, *image_encoder_output_size_val] #, *question_image_fusion_size_val]
+    keys: [question_encoder_output_size, image_size_encoder_input_size, image_size_encoder_output_size]
+    values: [*question_encoder_output_size_val, 2, *image_size_encoder_output_size_val]
 
   # Statistics.
   pipe_if0_batch_size:
     priority: 0.12
     type: BatchSizeStatistics
-
-  # Answer encoding.
-  #pipe1_all_answer_indexer:
-  #  priority: 0.13
-  #  type: LabelIndexer
-  #  data_folder: ~/data/vqa-med
-  #  word_mappings_file: answers.c1_c2_c3_binary_yn.word.mappings.csv
-  #  # Export mappings and size to globals.
-  #  export_word_mappings_to_globals: True
-  #  streams:
-  #    inputs: answers
-  #    outputs: answers_ids
-  #  globals:
-  #    vocabulary_size: vocabulary_size_c123_binary_yn
-  #    word_mappings: word_mappings_c123_binary_yn
-
 
   ################# PIPE 1: SHARED QUESTION ENCODER #################
 
@@ -207,7 +177,6 @@ pipeline:
   pipe_if4_question_image_ffn:
     priority: 4.2
     type: FeedForwardNetwork 
-    #hidden_sizes: [*question_image_fusion_size_val]
     dropout_rate: 0.5
     use_logsoftmax: False
     # LOAD AND FREEZE #

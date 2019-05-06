@@ -4,7 +4,7 @@ default_configs:
   vqa_med_2019/frozen_pipelines/frozen_input_fusion_glove_lstm_vgg_att_is_cat.yml,
   vqa_med_2019/frozen_pipelines/frozen_question_categorization_glove_rnn_ffn.yml
 
-hyperparameters:
+c4_hyperparameters:
   # In here I am putting some of the hyperparameters from spreadsheet.
 
   question_preprocessing: &question_preprocessing lowercase, remove_punctuation, tokenize
@@ -15,12 +15,6 @@ hyperparameters:
   # Accepted formats: a,b,c or [a,b,c]
   # none | random_affine | random_horizontal_flip | normalize | all
 
-  # Fusion II: (image + question) + image size (must be = question_image_fusion_size_val + image_size_encoder_output_size_val)
-  question_image_size_fusion_size_val: &question_image_size_fusion_size_val 1134
-
-  # Final classifier: FFN.
-  answer_classifier_hidden_sizes_val: &answer_classifier_hidden_sizes_val [500]
-
   batch_size: &batch_size 256
   preload_images: &preload_images False
   num_workers: &num_workers 4
@@ -29,8 +23,8 @@ hyperparameters:
 training:
   problem:
     batch_size: *batch_size
-    categories: C1,C2,C3
-    export_sample_weights: ~/data/vqa-med/answers.c1_c2_c3_binary_yn.weights.csv
+    categories: C4
+    export_sample_weights: ~/data/vqa-med/answers.c4.weights.csv
     # Appy all preprocessing/data augmentations.
     question_preprocessing: *question_preprocessing
     image_preprocessing: *image_preprocessing 
@@ -39,7 +33,7 @@ training:
     streams: 
       questions: tokenized_questions
   sampler:
-    weights: ~/data/vqa-med/answers.c1_c2_c3_binary_yn.weights.csv
+    weights: ~/data/vqa-med/answers.c4.weights.csv
   # Use four workers for loading images.
   dataloader:
     num_workers: *num_workers
@@ -60,7 +54,7 @@ validation:
   partial_validation_interval: 100
   problem:
     batch_size: *batch_size
-    categories: C1,C2,C3
+    categories: C4
     # Appy all preprocessing/data augmentations.
     question_preprocessing: *question_preprocessing
     image_preprocessing: *image_preprocessing 

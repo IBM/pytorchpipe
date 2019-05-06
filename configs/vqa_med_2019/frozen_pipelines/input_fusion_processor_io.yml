@@ -69,5 +69,5 @@ pipeline:
     filename: 'fused_inputs.csv'
     export_separator_line_to_csv: True
     input_streams: 
-      indices, concatenated_activations
+      indices #, concatenated_activations
 
