@@ -11,10 +11,9 @@
 # "Inputs Fusion" 
 # 0.: 
 
+checkpoint: &checkpoint ~/image-clef-2019/experiments/c4_encoders/20190504_202441/checkpoints/glove_lstm_vgg16_att_is_cat_ffn_c123_loss_best.pt
 # Loaded checkpoint: 20190504_202441
-# glove_lstm_vgg16_att_is_cat_ffn_c123_loss / 20190504_202441
-#[2019-05-04 20:27:15] - INFO - glove_lstm_vgg16_att_is_cat_ffn_c123_loss >>> Exporting pipeline 'glove_lstm_vgg16_att_is_cat_ffn_c123_loss' parameters to checkpoint:
-# /home/tkornuta/experiments/vqamed2019/glove_lstm_vgg16_att_is_cat_ffn_c123_loss/20190504_202441/checkpoints/glove_lstm_vgg16_att_is_cat_ffn_c123_loss_best.pt
+# ~/image-clef-2019/experiments/c4_encoders/20190504_202441/checkpoints/glove_lstm_vgg16_att_is_cat_ffn_c123_loss_best.pt
 #  + Model 'pipe1_question_embeddings' [SentenceEmbeddings] params saved 
 #  + Model 'pipe1_lstm' [RecurrentNeuralNetwork] params saved 
 #  + Model 'image_encoder' [TorchVisionWrapper] params saved 
@@ -32,7 +31,7 @@ pipeline:
 
   # Add global variables.
   global_publisher:
-    priority: 0
+    priority: 0.11
     type: GlobalVariablePublisher
     # Add input_size to globals.
     keys: [question_encoder_output_size, image_size_encoder_input_size, image_size_encoder_output_size] #, image_encoder_output_size] #, fused_activation_size]
@@ -40,23 +39,23 @@ pipeline:
 
   # Statistics.
   batch_size:
-    priority: 0.1
+    priority: 0.12
     type: BatchSizeStatistics
 
   # Answer encoding.
-  pipe1_all_answer_indexer:
-    priority: 0.2
-    type: LabelIndexer
-    data_folder: ~/data/vqa-med
-    word_mappings_file: answers.c1_c2_c3_binary_yn.word.mappings.csv
-    # Export mappings and size to globals.
-    export_word_mappings_to_globals: True
-    streams:
-      inputs: answers
-      outputs: answers_ids
-    globals:
-      vocabulary_size: vocabulary_size_c123_binary_yn
-      word_mappings: word_mappings_c123_binary_yn
+  #pipe1_all_answer_indexer:
+  #  priority: 0.13
+  #  type: LabelIndexer
+  #  data_folder: ~/data/vqa-med
+  #  word_mappings_file: answers.c1_c2_c3_binary_yn.word.mappings.csv
+  #  # Export mappings and size to globals.
+  #  export_word_mappings_to_globals: True
+  #  streams:
+  #    inputs: answers
+  #    outputs: answers_ids
+  #  globals:
+  #    vocabulary_size: vocabulary_size_c123_binary_yn
+  #    word_mappings: word_mappings_c123_binary_yn
 
 
   ################# PIPE 1: SHARED QUESTION ENCODER #################
@@ -69,6 +68,12 @@ pipeline:
     pretrained_embeddings_file: *question_encoder_embeddings
     data_folder: ~/data/vqa-med
     word_mappings_file: questions.all.word.mappings.csv
+    # LOAD AND FREEZE #
+    load: 
+      file: *checkpoint
+      model: pipe1_question_embeddings
+    freeze: True
+    ###################
     streams:
       inputs: tokenized_questions
       outputs: embedded_questions
@@ -84,6 +89,12 @@ pipeline:
     prediction_mode: Last
     initial_state: Trainable
     use_logsoftmax: False
+    # LOAD AND FREEZE #
+    load: 
+      file: *checkpoint
+      model: pipe1_question_embeddings
+    freeze: True
+    ###################
     streams:
       inputs: embedded_questions
       predictions: question_activations
@@ -99,6 +110,12 @@ pipeline:
     type: TorchVisionWrapper
     model: *image_encoder_model
     return_feature_maps: True
+    # LOAD AND FREEZE #
+    load: 
+      file: *checkpoint
+      model: pipe1_question_embeddings
+    freeze: True
+    ###################
     streams:
       inputs: images
       outputs: feature_maps
@@ -109,7 +126,13 @@ pipeline:
   image_size_encoder:
     priority: 3.1
     type: FeedForwardNetwork 
-    use_losfotmax: False
+    use_logsoftmax: False
+    # LOAD AND FREEZE #
+    load: 
+      file: *checkpoint
+      model: pipe1_question_embeddings
+    freeze: True
+    ###################
     streams:
       inputs: image_sizes
       predictions: image_size_activations
