@@ -30,7 +30,6 @@ validation:
     num_workers: 4
 
 pipeline:
-  name: c4_enc_attndec_resnet152_ewm_cat_is
 
   global_publisher:
     priority: 0
