@@ -59,6 +59,9 @@ class MultimodalFactorizedBilinearPooling(Model):
         # Output feature size
         self.output_size = self.latent_size
 
+        # Export to globals.
+        self.globals["output_size"] = self.output_size
+
         # Map image and question encodings to a common latent space of dimension 'latent_size'.
         self.image_encodings_ff = torch.nn.Linear(self.image_encoding_size, self.latent_size*self.factor)
         self.question_encodings_ff = torch.nn.Linear(self.question_encoding_size, self.latent_size*self.factor)
@@ -113,6 +116,7 @@ class MultimodalFactorizedBilinearPooling(Model):
 
         # Element-wise mutliplication of image and question encodings
         enc_z = latent_img * latent_q # [48, 512]
+
         # Dropout regularization
         enc_z = self.dropout(enc_z)
         enc_z = enc_z.view(enc_z.size(0), self.latent_size, self.factor) # [48, 256, 2]

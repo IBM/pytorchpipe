@@ -14,6 +14,11 @@ latent_size: 100
 # Number of attention heads (LOADED)
 num_attention_heads: 2
 
+# Type of output returned
+# Options: Image | Fusion
+# Details: attention-weighted image |  concatenation of attention-weighted image and RNN encoded question
+output_mode: Fusion
+
 
 streams:
   ####################################################################
@@ -42,7 +47,7 @@ globals:
 
   # Depth of the features tensor (RETRIEVED)
   feature_maps_depth: feature_maps_depth
-  
+
   # Size of the question encodings input (RETRIEVED)
   question_encoding_size: question_encoding_size
 

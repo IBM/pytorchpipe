@@ -104,14 +104,12 @@ class SelfAttention(Model):
         self.Attention = torch.softmax(self.W2(self.activation(self.W1(input_enc))), dim = 1) # [48, 8, 4] [batch, num_words, num_heads]
 
         # Multiply attention weights with question encoding
-        input_enc_weighted = torch.matmul(self.Attention.transpose(1,2),input_enc)
-        print("input_enc_weighted", input_enc_weighted.shape)
+        input_enc_weighted = torch.matmul(self.Attention.transpose(1,2),input_enc) # [48, 4, 100] [batch, num_heads, embed_dim]
 
         # Concatenate features from multi-head attention
-        outputs = input_enc_weighted.view(batch_size, -1)
+        outputs = input_enc_weighted.view(batch_size, -1) # [48, 400] [batch, num_heads*embed_dim]
         # # Alternatively: combine multi-head attention using a mean or sum operation
         # outputs = torch.sum(input_enc_weighted,1)/self.num_attention_heads
-        print("outputs", outputs.shape)
 
         # Add predictions to datadict.
         data_dict.extend({self.key_outputs: outputs})

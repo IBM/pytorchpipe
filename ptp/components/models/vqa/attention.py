@@ -60,8 +60,17 @@ class VQA_Attention(Model):
         self.latent_size = self.config["latent_size"]
         self.num_attention_heads = self.config["num_attention_heads"]
 
+        # Output new attention weighted image encoding only, or both image and question image_encodings
+        self.output_mode = self.config["output_mode"]
+
         # Output feature size
-        self.output_size = self.feature_maps_depth*self.num_attention_heads + self.question_encoding_size
+        if(self.output_mode == 'Image'):
+            self.output_size = self.feature_maps_depth*self.num_attention_heads
+        elif(self.output_mode == 'Fusion'):
+            self.output_size = self.feature_maps_depth*self.num_attention_heads + self.question_encoding_size
+        else:
+            print("'output_mode' unspecified for VQA Attention in config") #TODO: find a better way to report corner case issue
+
         # Export to globals.
         self.globals["output_size"] = self.output_size
 
@@ -137,8 +146,12 @@ class VQA_Attention(Model):
         attention_enc_img = apply_attention(enc_img, attention) # [48, 2048, 7, 7], [48, 2, 7, 7]
         # print("attention im", attention_enc_img.shape)
 
-        # Fusion -- Concatenate attention-weighted image encodings and question encodings.
-        outputs = torch.cat([attention_enc_img, latent_q], dim=1)
+        if(self.output_mode == 'Image'):
+        # Output attention-weighted image encodings
+            outputs = attention_enc_img
+        elif(self.output_mode == 'None'):
+            # Fusion -- Concatenate attention-weighted image encodings and question encodings.
+            outputs = torch.cat([attention_enc_img, latent_q], dim=1)
         # print("outputs", outputs.shape)
         # Add predictions to datadict.
         data_dict.extend({self.key_outputs: outputs})
@@ -165,4 +178,4 @@ def apply_attention(input, attention):
     attention = torch.nn.functional.softmax(attention, dim=-1).unsqueeze(2) # [n, g, 1, s] [batch, multi_head, 1, height*width] [48, 2, 1, 7*7]
     weighted = attention * input # [n, g, c, s] [48, 2, 2048, 7*7]
     weighted_mean = weighted.sum(dim=-1) # [n, g, c] [48, 2, 2048]
-    return weighted_mean.view(n, -1) # [48, 4196]
+    return weighted_mean.view(n, -1) # [48, 4096]
