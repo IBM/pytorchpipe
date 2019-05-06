@@ -1,0 +1,114 @@
+# Part of pipeline containing components constituting the "Question Categorizer" pipeline.
+
+# Inputs:
+#   * tokenized_questions
+#   * category_ids (targets)
+
+# Outputs:
+#   * predicted_categories (predictions)
+#   * predicted_category_names
+
+# "Question Categorizer"
+# 0.51: pipe_qc_global_publisher
+# 0.52: pipe_qc_question_embeddings
+# 0.53: pipe_qc_lstm
+# 0.54: pipe_qc_classifier
+
+# Plus additional components for displaying/statistics:
+# 0.55: pipe_qc_category_decoder
+# 0.56: pipe_qc_category_accuracy
+
+# Loaded checkpoint: 20190505_130406
+
+pipeline:
+  ################# PIPE: QUESTION CATEGORIZATION #################
+
+  # Add global variables - the ones related to only question categorization.
+  pipe_qc_global_publisher:
+    priority: 0.51
+    type: GlobalVariablePublisher
+    # Add input_size to globals.
+    keys: [pipe_qc_question_encoder_output_size]
+    values: [100]
+
+  # Model 1: question embeddings
+  pipe_qc_question_embeddings:
+    priority: 0.52
+    type: SentenceEmbeddings
+    # LOAD AND FREEZE #
+    load: 
+      file: ~/image-clef-2019/experiments/q_categorization/20190505_130406/checkpoints/vqa_med_question_categorization_rnn_ffn_best.pt
+      model: question_embeddings
+    freeze: True
+    ###################
+    embeddings_size: 50
+    pretrained_embeddings_file: glove.6B.50d.txt
+    data_folder: ~/data/vqa-med
+    word_mappings_file: questions.all.word.mappings.csv
+    streams:
+      inputs: tokenized_questions
+      outputs: pipe_qc_embedded_questions
+    globals:
+      embeddings_size: pipe_qc_embeddings_size
+  
+  # Model 2: question RNN
+  pipe_qc_lstm:
+    priority: 0.53
+    type: RecurrentNeuralNetwork
+    cell_type: LSTM
+    # LOAD AND FREEZE #
+    load: 
+      file: ~/image-clef-2019/experiments/q_categorization/20190505_130406/checkpoints/vqa_med_question_categorization_rnn_ffn_best.pt
+      model: lstm
+    freeze: True
+    ###################
+    prediction_mode: Last
+    initial_state: Trainable
+    use_logsoftmax: False
+    streams:
+      inputs: pipe_qc_embedded_questions
+      predictions: pipe_qc_question_activations
+    globals:
+      input_size: pipe_qc_embeddings_size
+      prediction_size: pipe_qc_question_encoder_output_size
+
+  # Model 3: FFN question category
+  pipe_qc_classifier:
+    priority: 0.54
+    type: FeedForwardNetwork
+    # LOAD AND FREEZE #
+    load: 
+      file: ~/image-clef-2019/experiments/q_categorization/20190505_130406/checkpoints/vqa_med_question_categorization_rnn_ffn_best.pt
+      model: classifier
+    freeze: True
+    ###################
+    hidden: [50]
+    dropout_rate: 0.7
+    streams:
+      inputs: pipe_qc_question_activations
+      predictions: predicted_categories
+    globals:
+      input_size: pipe_qc_question_encoder_output_size # Set by global publisher
+      prediction_size: num_categories # C1,C2,C3,C4, BINARY, UNK
+
+  pipe_qc_category_decoder:
+    priority: 0.55
+    type: WordDecoder
+    # Use the same word mappings as label indexer.
+    import_word_mappings_from_globals: True
+    streams:
+      inputs: predicted_categories
+      outputs: predicted_category_names
+    globals:
+      vocabulary_size: num_categories
+      word_mappings: category_word_mappings
+
+  pipe_qc_category_accuracy:
+    priority: 0.56
+    type: AccuracyStatistics
+    streams:
+      targets: category_ids
+      predictions: predicted_categories
+    statistics:
+      accuracy: categorization_accuracy
+ 
