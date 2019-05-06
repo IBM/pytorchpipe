@@ -40,9 +40,6 @@ globals:
   # Size of the question encodings input (RETRIEVED)
   question_encoding_size: question_encoding_size
 
-  # Size of the output (RETRIEVED)
-  output_size: output_size
-
   ####################################################################
   # 4. Keymappings associated with GLOBAL variables that will be SET.
   ####################################################################

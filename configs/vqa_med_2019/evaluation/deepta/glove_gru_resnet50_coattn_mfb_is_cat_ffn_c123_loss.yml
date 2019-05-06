@@ -17,12 +17,12 @@ hyperparameters:
   # Options: vgg16 | densenet121 | resnet152 | resnet50
   # image_encoder_output_size_val: &image_encoder_output_size_val 2048
   image_attention_multihead_size_val: &image_attention_multihead_size_val 2
-  image_attention_output_size_val: &image_attention_output_size_val 4096
+  # image_attention_output_size_val: &image_attention_output_size_val 4096
 
   # Question encoder.
-  question_encoder_embeddings: &question_encoder_embeddings glove.6B.50d.txt
+  question_encoder_embeddings: &question_encoder_embeddings glove.6B.100d.txt
   # Options: '' | glove.6B.50d.txt | glove.6B.100d.txt | glove.6B.200d.txt | glove.6B.300d.txt | glove.42B.300d.txt | glove.840B.300d.txt | glove.twitter.27B.txt | mimic.fastText.no_clean.300d.pickled
-  question_encoder_embeddings_size_val: &question_encoder_embeddings_size_val 50
+  question_encoder_embeddings_size_val: &question_encoder_embeddings_size_val 100
   question_encoder_lstm_size_val: &question_encoder_lstm_size_val 128
   question_encoder_output_size_val: &question_encoder_output_size_val 200
   question_attention_multihead_size_val: &question_attention_multihead_size_val 4
@@ -66,7 +66,7 @@ training:
   # Terminal conditions:
   terminal_conditions:
     loss_stop: 1.0e-3
-    episode_limit: 5000 #10000
+    episode_limit: 2000 #10000
     epoch_limit: -1
 
 # Validation parameters:
@@ -90,10 +90,8 @@ pipeline:
     priority: 0
     type: GlobalVariablePublisher
     # Add input_size to globals.
-    keys: [question_encoder_output_size, question_attention_output_size, image_size_encoder_input_size, image_size_encoder_output_size, image_attention_output_size, fused_activation_size]
-    values: [*question_encoder_output_size_val, *question_attention_output_size_val, 2, *image_size_encoder_output_size_val, *image_attention_output_size_val, *question_image_fusion_size_val]
-    # keys: [question_encoder_output_size, image_size_encoder_input_size, image_size_encoder_output_size]
-    # values: [*question_encoder_output_size_val, 2, *image_size_encoder_output_size_val]
+    keys: [question_encoder_output_size, question_attention_output_size, image_size_encoder_input_size, image_size_encoder_output_size, fused_activation_size]
+    values: [*question_encoder_output_size_val, *question_attention_output_size_val, 2, *image_size_encoder_output_size_val, *question_image_fusion_size_val]
 
   # Statistics.
   batch_size:
@@ -114,98 +112,6 @@ pipeline:
     globals:
       vocabulary_size: vocabulary_size_c123_binary_yn
       word_mappings: word_mappings_c123_binary_yn
-
-
-  ################# PIPE 0: QUESTION CATEGORIZATION #################
-
-  # Add global variables - the ones related to only question categorization.
-  pipe0_global_publisher:
-    priority: 0.3
-    type: GlobalVariablePublisher
-    # Add input_size to globals.
-    keys: [pipe0_question_encoder_output_size]
-    values: [100]
-
-  # Model 1: question embeddings
-  pipe0_question_embeddings:
-    priority: 0.4
-    type: SentenceEmbeddings
-    # LOAD AND FREEZE #
-    load:
-      file: ~/Repositories/image-clef-2019/experiments/q_categorization/20190416_120801/checkpoints/vqa_med_question_categorization_rnn_ffn_best.pt
-      model: question_embeddings
-    freeze: True
-    ###################
-    embeddings_size: 50
-    pretrained_embeddings_file: glove.6B.50d.txt
-    data_folder: ~/data/vqa-med
-    word_mappings_file: questions.all.word.mappings.csv
-    streams:
-      inputs: tokenized_questions
-      outputs: pipe0_embedded_questions
-    globals:
-      embeddings_size: pipe0_embeddings_size
-
-  # Model 2: question RNN
-  pipe0_lstm:
-    priority: 0.5
-    type: RecurrentNeuralNetwork
-    cell_type: LSTM
-    # LOAD AND FREEZE #
-    load:
-      file: ~/Repositories/image-clef-2019/experiments/q_categorization/20190416_120801/checkpoints/vqa_med_question_categorization_rnn_ffn_best.pt
-      model: lstm
-    freeze: True
-    ###################
-    prediction_mode: Last
-    initial_state: Trainable
-    use_logsoftmax: False
-    streams:
-      inputs: pipe0_embedded_questions
-      predictions: pipe0_question_activations
-    globals:
-      input_size: pipe0_embeddings_size
-      prediction_size: pipe0_question_encoder_output_size
-
-  # Model 3: FFN question category
-  pipe0_classifier:
-    priority: 0.6
-    type: FeedForwardNetwork
-    # LOAD AND FREEZE #
-    load:
-      file: ~/Repositories/image-clef-2019/experiments/q_categorization/20190416_120801/checkpoints/vqa_med_question_categorization_rnn_ffn_best.pt
-      model: classifier
-    freeze: True
-    ###################
-    hidden: [50]
-    dropout_rate: 0.7
-    streams:
-      inputs: pipe0_question_activations
-      predictions: pipe0_predicted_question_categories_preds
-    globals:
-      input_size: pipe0_question_encoder_output_size # Set by global publisher
-      prediction_size: num_categories # C1,C2,C3,C4, BINARY, UNK
-
-  pipe0_category_decoder:
-    priority: 0.8
-    type: WordDecoder
-    # Use the same word mappings as label indexer.
-    import_word_mappings_from_globals: True
-    streams:
-      inputs: pipe0_predicted_question_categories_preds
-      outputs: pipe0_predicted_question_categories_names
-    globals:
-      vocabulary_size: num_categories
-      word_mappings: category_word_mappings
-
-  pipe0_category_accuracy:
-    priority: 0.9
-    type: AccuracyStatistics
-    streams:
-      targets: category_ids
-      predictions: pipe0_predicted_question_categories_preds
-    statistics:
-      accuracy: categorization_accuracy
 
   ################# PIPE 1: SHARED QUESTION ENCODER #################
 
@@ -260,13 +166,12 @@ pipeline:
   image_encoder:
     priority: 2.1
     type: TorchVisionWrapper
-    model: *image_encoder_model
+    model_type: *image_encoder_model
     return_feature_maps: True
     streams:
       inputs: images
       outputs: feature_maps
-    # globals:
-    #   output_size: image_encoder_output_size
+
 
   image_attention:
     priority: 2.2
@@ -281,7 +186,7 @@ pipeline:
       outputs: image_attention_activations
     globals:
       question_encoding_size: question_attention_output_size
-      image_encoding_size: image_attention_output_size
+      output_size: image_attention_output_size
 
   ################# PIPE 3: image-question fusion  #################
   # MFB.
@@ -298,7 +203,7 @@ pipeline:
     globals:
       image_encoding_size: image_attention_output_size
       question_encoding_size: question_attention_output_size
-      output_size: fused_activation_size
+      # output_size: image_attention_output_size #fused_activation_size
 
   ################# PIPE 4: SHARED IMAGE SIZE ENCODER #################
 
@@ -313,19 +218,6 @@ pipeline:
     globals:
       input_size: image_size_encoder_input_size
       prediction_size: image_size_encoder_output_size
-
-  # question_image_ffn:
-  #   priority: 4.2
-  #   type: FeedForwardNetwork
-  #   # hidden_sizes: [*question_image_fusion_size_val]
-  #   dropout_rate: 0.5
-  #   use_logsoftmax: False
-  #   streams:
-  #     inputs: fused_activations
-  #     predictions: question_image_activations
-  #   globals:
-  #     input_size: fused_activation_size
-  #     prediction_size: fused_activation_size
 
   ################# PIPE 5: image-question-image size fusion #################
 
@@ -405,6 +297,3 @@ pipeline:
       tokenized_questions,
       category_names, pipe0_predicted_question_categories_names,
       answers, predicted_answers
-
-
-#: pipeline

@@ -116,6 +116,7 @@ class MultimodalFactorizedBilinearPooling(Model):
 
         # Element-wise mutliplication of image and question encodings
         enc_z = latent_img * latent_q # [48, 512]
+
         # Dropout regularization
         enc_z = self.dropout(enc_z)
         enc_z = enc_z.view(enc_z.size(0), self.latent_size, self.factor) # [48, 256, 2]

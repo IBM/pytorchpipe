@@ -66,8 +66,10 @@ class VQA_Attention(Model):
         # Output feature size
         if(self.output_mode == 'Image'):
             self.output_size = self.feature_maps_depth*self.num_attention_heads
-        elif(self.output_mode == 'None'):
+        elif(self.output_mode == 'Fusion'):
             self.output_size = self.feature_maps_depth*self.num_attention_heads + self.question_encoding_size
+        else:
+            print("'output_mode' unspecified for VQA Attention in config") #TODO: find a better way to report corner case issue
 
         # Export to globals.
         self.globals["output_size"] = self.output_size
