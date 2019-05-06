@@ -31,7 +31,7 @@ hyperparams:
 
 # Add component for exporting answers to files.
 pipeline:
-  name: input_fusion
+  name: input_fusion_processor_io
 
   ################# PIPE 6: C1 + C2 + C3 questions #################
 
@@ -51,56 +51,6 @@ pipeline:
       word_mappings: word_mappings_c123_binary_yn
 
 
-  # Model 4: FFN C123 answering
-  pipe6_c123_binary_yn_answer_classifier:
-    priority: 6.3
-    type: FeedForwardNetwork
-    hidden: *answer_classifier_hidden_sizes_val
-    dropout_rate: 0.5
-    streams:
-      inputs: concatenated_activations
-      predictions: pipe6_c123_predictions
-    globals:
-      input_size: concatenated_activations_size
-      prediction_size: vocabulary_size_c123_binary_yn
-
-  pipe6_c123_binary_yn_nllloss:
-    priority: 6.4
-    type: NLLLoss
-    targets_dim: 1
-    streams:
-      predictions: pipe6_c123_predictions
-      targets: answers_ids
-      loss: pipe6_c123_loss
-
-  pipe6_c123_binary_yn_precision_recall:
-    priority: 6.5
-    type: PrecisionRecallStatistics
-    use_word_mappings: True
-    show_class_scores: True
-    #show_confusion_matrix: True
-    streams:
-      predictions: pipe6_c123_predictions
-      targets: answers_ids
-    globals:
-      word_mappings: word_mappings_c123_binary_yn
-    statistics:
-      precision: pipe6_c123_precision
-      recall: pipe6_c123_recall
-      f1score: pipe6_c123_f1score
-
-  # C123 Predictions decoder.
-  pipe5_c123_binary_yn_prediction_decoder:
-    priority: 6.6
-    type: WordDecoder
-    # Use the same word mappings as label indexer.
-    import_word_mappings_from_globals: True
-    streams:
-      inputs: pipe6_c123_predictions
-      outputs: predicted_answers
-    globals:
-      word_mappings: word_mappings_c123_binary_yn
-
   # Viewers.
   viewer_extended:
     priority: 100.4
@@ -108,15 +58,16 @@ pipeline:
     sample_number: 0
     input_streams: 
       indices,image_ids,tokenized_questions,
-      category_names,predicted_categories,
-      answers,tokenized_answers,predicted_answers
+      concatenated_activations_size,
+      category,names,
+      answers
 
   fused_inputs_exporter:
     priority: 100.5
     type: StreamFileExporter
     separator: '|'
     filename: 'fused_inputs.csv'
-    export_separator_line_to_csv: False
+    export_separator_line_to_csv: True
     input_streams: 
-      indices
+      indices, concatenated_activations
 

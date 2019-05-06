@@ -112,8 +112,13 @@ class Processor(Worker):
             # If there are - expand them to absolute paths.
             abs_root_configs = [path.expanduser(config) for config in root_configs]
 
-            # Use path to experiments.
-            self.abs_path = path.expanduser(self.app_state.args.expdir)
+            # Using name of the first configuration file from command line.
+            basename = path.basename(root_configs[0])
+            # Take config filename without extension.
+            pipeline_name = path.splitext(basename)[0] 
+
+            # Use path to experiments + pipeline.
+            self.abs_path = path.join(path.expanduser(self.app_state.args.expdir), pipeline_name)
 
 
         if abs_root_configs is None:
