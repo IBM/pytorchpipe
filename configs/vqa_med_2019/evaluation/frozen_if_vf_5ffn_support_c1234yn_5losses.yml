@@ -4,7 +4,7 @@ default_configs:
   vqa_med_2019/frozen_pipelines/frozen_input_fusion_glove_lstm_vgg_att_is_cat.yml,
   vqa_med_2019/frozen_pipelines/frozen_question_categorization_glove_rnn_ffn.yml
 
-c123_hyperparameters:
+c1234_hyperparameters:
   # In here I am putting some of the hyperparameters from spreadsheet.
 
   question_preprocessing: &question_preprocessing lowercase, remove_punctuation, tokenize
@@ -15,8 +15,23 @@ c123_hyperparameters:
   # Accepted formats: a,b,c or [a,b,c]
   # none | random_affine | random_horizontal_flip | normalize | all
 
-  # Final classifier: FFN.
-  answer_classifier_hidden_sizes_val: &answer_classifier_hidden_sizes_val [500]
+  # Hidden size of C1/C2/C3 "supporting fact" networks.
+  c123_support_hidden_sizes_val: &c123_support_hidden_sizes_val [500]
+
+  # Size of output of C1/C2/C3 "supporting fact" networks.
+  c123_support_output_size_val: &c123_support_output_size_val 100
+
+  # Hidden size of C1/C2/C3 support networks.
+  binary_hidden_sizes_val: &binary_hidden_sizes_val [500]
+
+  # C4 classifier hidden sizes.
+  c4_hidden_sizes_val: &c4_hidden_sizes_val [500, 500]
+
+  # This comes from inputs fusion.
+  activation_size_val: &activation_size_val 1134
+
+  # Activation size + 3 * support output size
+  activation_support_size_val: &activation_support_size_val  1434
 
   batch_size: &batch_size 512
   preload_images: &preload_images False
@@ -78,8 +93,8 @@ pipeline:
     type: GlobalVariablePublisher
     priority: 6.0
     # Add input_size to globals.
-    keys: [category_c1_word_to_ix, category_c2_word_to_ix, category_c3_word_to_ix, category_c4_word_to_ix, category_binary_word_to_ix]
-    values: [{"C1": 0}, {"C2": 0}, {"C3": 0}, {"C4": 0}, {"BINARY": 0}]
+    keys: [category_c1_word_to_ix, category_c2_word_to_ix, category_c3_word_to_ix, category_c4_word_to_ix, category_binary_word_to_ix, c123_support_output_size]
+    values: [{"C1": 0}, {"C2": 0}, {"C3": 0}, {"C4": 0}, {"BINARY": 0}, *c123_support_output_size_val]
 
   # Sample masking based on categories.
   c1_string_to_mask:
@@ -218,21 +233,34 @@ pipeline:
 
   ################# PIPE 8: C1 questions #################
 
-  # Model: FFN for C1 answering
-  c1_answer_classifier:
+  c1_support_network:
     priority: 8.1
     type: FeedForwardNetwork
-    hidden: *answer_classifier_hidden_sizes_val
+    hidden: *c123_support_hidden_sizes_val
     dropout_rate: 0.5
+    # This is support network, so we do not want softmax... do we?
+    use_logsoftmax: false
     streams:
       inputs: concatenated_activations
-      predictions: c1_predictions
+      predictions: c1_support
     globals:
       input_size: concatenated_activations_size
+      prediction_size: c123_support_output_size
+
+  c1_answer_classifier:
+    priority: 8.2
+    type: FeedForwardNetwork
+    # No hidden layer, only projection to answer + softmax!
+    dropout_rate: 0.5
+    streams:
+      inputs: c1_support
+      predictions: c1_predictions
+    globals:
+      input_size: c123_support_output_size
       prediction_size: c1_without_yn_vocabulary_size
 
   c1_nllloss:
-    priority: 8.2
+    priority: 8.3
     type: NLLLoss
     targets_dim: 1
     use_masking: True
@@ -243,7 +271,7 @@ pipeline:
       loss: c1_loss
 
   c1_precision_recall:
-    priority: 8.3
+    priority: 8.4
     type: PrecisionRecallStatistics
     use_word_mappings: True
     show_class_scores: True
@@ -261,7 +289,7 @@ pipeline:
       f1score: c1_f1score
 
   c1_prediction_decoder:
-    priority: 8.4
+    priority: 8.5
     type: WordDecoder
     # Use the same word mappings as label indexer.
     import_word_mappings_from_globals: True
@@ -274,21 +302,34 @@ pipeline:
 
   ################# PIPE 9: C2 questions #################
 
-  # Model: FFN for C2 answering
-  c2_answer_classifier:
+  c2_support_network:
     priority: 9.1
     type: FeedForwardNetwork
-    hidden: *answer_classifier_hidden_sizes_val
+    hidden: *c123_support_hidden_sizes_val
     dropout_rate: 0.5
+    # This is support network, so we do not want softmax... do we?
+    use_logsoftmax: false
     streams:
       inputs: concatenated_activations
-      predictions: c2_predictions
+      predictions: c2_support
     globals:
       input_size: concatenated_activations_size
+      prediction_size: c123_support_output_size
+
+  c2_answer_classifier:
+    priority: 9.2
+    type: FeedForwardNetwork
+    # No hidden layer, only projection to answer + softmax!
+    dropout_rate: 0.5
+    streams:
+      inputs: c2_support
+      predictions: c2_predictions
+    globals:
+      input_size: c123_support_output_size
       prediction_size: c2_vocabulary_size
 
   c2_nllloss:
-    priority: 9.2
+    priority: 9.3
     type: NLLLoss
     targets_dim: 1
     use_masking: True
@@ -299,7 +340,7 @@ pipeline:
       loss: c2_loss
 
   c2_precision_recall:
-    priority: 9.3
+    priority: 9.4
     type: PrecisionRecallStatistics
     use_word_mappings: True
     show_class_scores: True
@@ -317,7 +358,7 @@ pipeline:
       f1score: c2_f1score
 
   c2_prediction_decoder:
-    priority: 9.4
+    priority: 9.5
     type: WordDecoder
     # Use the same word mappings as label indexer.
     import_word_mappings_from_globals: True
@@ -330,21 +371,34 @@ pipeline:
 
   ################# PIPE 10: C3 questions #################
 
-  # Model: FFN for c3 answering
-  c3_answer_classifier:
+  c3_support_network:
     priority: 10.1
     type: FeedForwardNetwork
-    hidden: *answer_classifier_hidden_sizes_val
+    hidden: *c123_support_hidden_sizes_val
     dropout_rate: 0.5
+    # This is support network, so we do not want softmax... do we?
+    use_logsoftmax: false
     streams:
       inputs: concatenated_activations
-      predictions: c3_predictions
+      predictions: c3_support
     globals:
       input_size: concatenated_activations_size
+      prediction_size: c123_support_output_size
+
+  c3_answer_classifier:
+    priority: 10.2
+    type: FeedForwardNetwork
+    # No hidden layer, only projection to answer + softmax!
+    dropout_rate: 0.5
+    streams:
+      inputs: c3_support
+      predictions: c3_predictions
+    globals:
+      input_size: c123_support_output_size
       prediction_size: c3_vocabulary_size
 
   c3_nllloss:
-    priority: 10.2
+    priority: 10.3
     type: NLLLoss
     targets_dim: 1
     use_masking: True
@@ -355,7 +409,7 @@ pipeline:
       loss: c3_loss
 
   c3_precision_recall:
-    priority: 10.3
+    priority: 10.4
     type: PrecisionRecallStatistics
     use_word_mappings: True
     show_class_scores: True
@@ -373,7 +427,7 @@ pipeline:
       f1score: c3_f1score
 
   c3_prediction_decoder:
-    priority: 10.4
+    priority: 10.5
     type: WordDecoder
     # Use the same word mappings as label indexer.
     import_word_mappings_from_globals: True
@@ -386,21 +440,36 @@ pipeline:
 
   ################# PIPE 11: C4 questions #################
 
+  # Concatenate input fused activatons with three supporting streams.
+  activation_support_concat:
+    priority: 11.1
+    type: Concatenation
+    input_streams: [concatenated_activations,c1_support,c2_support,c3_support]
+    # Concatenation 
+    dim: 1 # default
+    input_dims: [[-1,*activation_size_val],[-1,*c123_support_output_size_val],[-1,*c123_support_output_size_val],[-1,*c123_support_output_size_val]]
+    output_dims: [-1,*activation_support_size_val]
+    streams:
+      outputs: concatenated_activations_supports
+    globals:
+      output_size: concatenated_activations_supports_size
+
+
   # Model: FFN for C4 answering
   c4_answer_classifier:
-    priority: 11.1
+    priority: 11.2
     type: FeedForwardNetwork
-    hidden: *answer_classifier_hidden_sizes_val
+    hidden: *c4_hidden_sizes_val
     dropout_rate: 0.5
     streams:
-      inputs: concatenated_activations
+      inputs: concatenated_activations_supports
       predictions: c4_predictions
     globals:
-      input_size: concatenated_activations_size
+      input_size: concatenated_activations_supports_size
       prediction_size: c4_without_yn_vocabulary_size
 
   c4_nllloss:
-    priority: 11.2
+    priority: 11.3
     type: NLLLoss
     targets_dim: 1
     use_masking: True
@@ -411,7 +480,7 @@ pipeline:
       loss: c4_loss
 
   c4_precision_recall:
-    priority: 11.3
+    priority: 11.4
     type: PrecisionRecallStatistics
     use_word_mappings: True
     #show_class_scores: True
@@ -429,7 +498,7 @@ pipeline:
       f1score: c4_f1score
 
   c4_prediction_decoder:
-    priority: 11.4
+    priority: 11.5
     type: WordDecoder
     # Use the same word mappings as label indexer.
     import_word_mappings_from_globals: True
@@ -444,19 +513,19 @@ pipeline:
 
   # Model: FFN for BINARY Y/N answering
   binary_answer_classifier:
-    priority: 12.1
+    priority: 12.2
     type: FeedForwardNetwork
-    hidden: *answer_classifier_hidden_sizes_val
+    hidden: *binary_hidden_sizes_val
     dropout_rate: 0.5
     streams:
-      inputs: concatenated_activations
+      inputs: concatenated_activations_supports
       predictions: binary_predictions
     globals:
-      input_size: concatenated_activations_size
+      input_size: concatenated_activations_supports_size
       prediction_size: binary_yn_vocabulary_size
 
   binary_nllloss:
-    priority: 12.2
+    priority: 12.3
     type: NLLLoss
     targets_dim: 1
     use_masking: True
@@ -467,7 +536,7 @@ pipeline:
       loss: binary_loss
 
   binary_precision_recall:
-    priority: 12.3
+    priority: 12.4
     type: PrecisionRecallStatistics
     use_word_mappings: True
     show_class_scores: True
@@ -485,7 +554,7 @@ pipeline:
       f1score: binary_f1score
 
   binary_prediction_decoder:
-    priority: 12.4
+    priority: 12.5
     type: WordDecoder
     # Use the same word mappings as label indexer.
     import_word_mappings_from_globals: True
