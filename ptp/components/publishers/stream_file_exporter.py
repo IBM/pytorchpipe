@@ -56,9 +56,13 @@ class StreamFileExporter(Component):
         abs_filename = path.join(self.app_state.log_dir, filename)
         self.file = open(abs_filename, 'w')
 
-        # Export additional line.
+        # Export additional line with separator.
         if self.config["export_separator_line_to_csv"]:
             self.file.write("sep={}\n".format(self.separator))
+
+        # Export header - once, when we will process the first batch.
+        self.export_header = self.config["export_header_to_csv"]
+        
 
         self.logger.info("Writing values from {} streams to {}".format(self.input_stream_keys, abs_filename))
 
@@ -99,6 +103,19 @@ class StreamFileExporter(Component):
                 present_streams.append(stream_key)
             else:
                 absent_streams.append(stream_key)
+
+        # Export header - only once.
+        if self.export_header:
+            header = ''
+            for stream_key in self.input_stream_keys:
+                if stream_key in present_streams:
+                    header = header + stream_key + self.separator
+            # Remove the last separator.
+            header = header[:-1] + '\n'
+            # Write header to file.
+            self.file.write(header)
+            # Do it only once.
+            self.export_header = False
 
         # Export values to file.
         for i in range(batch_size):
