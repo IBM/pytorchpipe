@@ -267,16 +267,17 @@ class Processor(Worker):
                 msg = "'pipeline' section of the configuration file"
             else:
                 pipeline_name = ""
-            # Try to load the model.
+            # Try to load the the whole pipeline.
             if pipeline_name != "":
                 if path.isfile(pipeline_name):
                     # Load parameters from checkpoint.
                     self.pipeline.load(pipeline_name)
                 else:
                     raise Exception("Couldn't load the checkpoint {} indicated in the {}: file does not exist".format(pipeline_name, msg))
-
-            # Try to load the models parameters - one by one, if set so in the configuration file.
-            self.pipeline.load_models()
+                # If we succeeded, we do not want to load the models from the file anymore!
+            else:
+                # Try to load the models parameters - one by one, if set so in the configuration file.
+                self.pipeline.load_models()
             
         except KeyError:
             self.logger.error("File {} indicated in the {} seems not to be a valid model checkpoint".format(pipeline_name, msg))
