@@ -284,7 +284,6 @@ pipeline:
 
   ################# PIPE 6: C2 question #################
 
-  # Answer encoding for PIPE 6.
   pipe6_c2_answer_indexer:
     type: LabelIndexer
     priority: 6.1
@@ -310,7 +309,6 @@ pipeline:
       string_indices: predicted_c2_question_categories_indices # NOT USED
       masks: pipe6_c2_masks
 
-  # Model 4: FFN C1 answering
   pipe6_c2_ffn:
     priority: 6.3
     type: FeedForwardNetwork
@@ -503,7 +501,7 @@ pipeline:
     input_prediction_streams: [pipe5_c1_predictions, pipe6_c2_predictions, pipe7_c3_predictions, pipe8_binary_predictions]
     input_mask_streams: [pipe5_c1_masks, pipe6_c2_masks, pipe7_c3_masks, pipe8_binary_masks]
     input_word_mappings: [word_mappings_c1_without_yn, word_mappings_c2, word_mappings_c3, word_mappings_binary_yn]
-    globals:
+    globals: 
       output_word_mappings: word_mappings_all_c1_c2_c3_binary
     streams:
       output_strings: pipe9_merged_predictions

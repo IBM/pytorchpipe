@@ -18,8 +18,8 @@
 # 0.55: pipe_qc_category_decoder
 # 0.56: pipe_qc_category_accuracy
 
-# Loaded checkpoint: 20190505_130406
-checkpoint: &checkpoint ~/image-clef-2019/experiments/q_categorization/20190505_130406/checkpoints/vqa_med_question_categorization_rnn_ffn_best.pt
+# Loaded checkpoint: 20190506_200228
+checkpoint: &checkpoint ~/image-clef-2019/experiments/q_categorization/20190506_200228/checkpoints/vqa_med_question_categorization_rnn_ffn_best.pt
 
 pipeline:
   ################# PIPE: QUESTION CATEGORIZATION #################
