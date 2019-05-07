@@ -66,8 +66,8 @@ pipeline:
     sample_number: 0
     input_streams: 
       indices,image_ids,tokenized_questions,
-      category_names,predicted_categories,
-      answers,tokenized_answers,predicted_answers
+      category_names,predicted_category_names,
+      answers,predicted_answers
 
   answer_exporter:
     priority: 100.5
@@ -75,10 +75,11 @@ pipeline:
     separator: '|'
     filename: 'answers.csv'
     export_separator_line_to_csv: True
+    export_header_to_csv: True
     input_streams: 
       indices,image_ids,tokenized_questions,
-      category_names,predicted_categories,
-      answers,tokenized_answers,predicted_answers
+      category_names,predicted_category_names,
+      answers,predicted_answers
 
   submission_exporter:
     priority: 100.6
