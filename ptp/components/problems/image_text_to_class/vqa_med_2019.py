@@ -747,7 +747,7 @@ class VQAMED2019(Problem):
 
         # Question category related variables.
         # Check if this is binary question.
-        if self.predict_yes_no(item[self.key_answers]):
+        if self.predict_yes_no(item[self.key_questions]):
             data_dict[self.key_category_ids] = 4 # Binary.
             data_dict[self.key_category_names] = self.category_idx_to_word[4]
         else:

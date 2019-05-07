@@ -18,7 +18,7 @@ c123_hyperparameters:
   # Final classifier: FFN.
   answer_classifier_hidden_sizes_val: &answer_classifier_hidden_sizes_val [500]
 
-  batch_size: &batch_size 256
+  batch_size: &batch_size 512
   preload_images: &preload_images False
   num_workers: &num_workers 4
 
@@ -235,7 +235,9 @@ pipeline:
     priority: 8.2
     type: NLLLoss
     targets_dim: 1
+    use_masking: True
     streams:
+      masks: c1_masks
       predictions: c1_predictions
       targets: c1_without_yn_answers_ids
       loss: c1_loss
@@ -244,9 +246,11 @@ pipeline:
     priority: 8.3
     type: PrecisionRecallStatistics
     use_word_mappings: True
-    #show_class_scores: True
+    show_class_scores: True
     #show_confusion_matrix: True
+    use_masking: True
     streams:
+      masks: c1_masks
       predictions: c1_predictions
       targets: c1_without_yn_answers_ids
     globals:
@@ -287,7 +291,9 @@ pipeline:
     priority: 9.2
     type: NLLLoss
     targets_dim: 1
+    use_masking: True
     streams:
+      masks: c2_masks
       predictions: c2_predictions
       targets: c2_answers_ids
       loss: c2_loss
@@ -296,9 +302,11 @@ pipeline:
     priority: 9.3
     type: PrecisionRecallStatistics
     use_word_mappings: True
-    #show_class_scores: True
+    show_class_scores: True
     #show_confusion_matrix: True
+    use_masking: True
     streams:
+      masks: c2_masks
       predictions: c2_predictions
       targets: c2_answers_ids
     globals:
@@ -339,7 +347,9 @@ pipeline:
     priority: 10.2
     type: NLLLoss
     targets_dim: 1
+    use_masking: True
     streams:
+      masks: c3_masks
       predictions: c3_predictions
       targets: c3_answers_ids
       loss: c3_loss
@@ -348,9 +358,11 @@ pipeline:
     priority: 10.3
     type: PrecisionRecallStatistics
     use_word_mappings: True
-    #show_class_scores: True
+    show_class_scores: True
     #show_confusion_matrix: True
+    use_masking: True
     streams:
+      masks: c3_masks
       predictions: c3_predictions
       targets: c3_answers_ids
     globals:
@@ -391,7 +403,9 @@ pipeline:
     priority: 11.2
     type: NLLLoss
     targets_dim: 1
+    use_masking: True
     streams:
+      masks: c4_masks
       predictions: c4_predictions
       targets: c4_without_yn_answers_ids
       loss: c4_loss
@@ -402,7 +416,9 @@ pipeline:
     use_word_mappings: True
     #show_class_scores: True
     #show_confusion_matrix: True
+    use_masking: True
     streams:
+      masks: c4_masks
       predictions: c4_predictions
       targets: c4_without_yn_answers_ids
     globals:
@@ -443,7 +459,9 @@ pipeline:
     priority: 12.2
     type: NLLLoss
     targets_dim: 1
+    use_masking: True
     streams:
+      masks: binary_masks
       predictions: binary_predictions
       targets: binary_yn_answers_ids
       loss: binary_loss
@@ -452,9 +470,11 @@ pipeline:
     priority: 12.3
     type: PrecisionRecallStatistics
     use_word_mappings: True
-    #show_class_scores: True
+    show_class_scores: True
     #show_confusion_matrix: True
+    use_masking: True
     streams:
+      masks: binary_masks
       predictions: binary_predictions
       targets: binary_yn_answers_ids
     globals:
