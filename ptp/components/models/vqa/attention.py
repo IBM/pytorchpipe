@@ -149,7 +149,7 @@ class VQA_Attention(Model):
         if(self.output_mode == 'Image'):
         # Output attention-weighted image encodings
             outputs = attention_enc_img
-        elif(self.output_mode == 'None'):
+        elif(self.output_mode == 'Fusion'):
             # Fusion -- Concatenate attention-weighted image encodings and question encodings.
             outputs = torch.cat([attention_enc_img, latent_q], dim=1)
         # print("outputs", outputs.shape)

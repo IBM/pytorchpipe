@@ -53,7 +53,12 @@ class WordMappings(object):
             assert (len(self.word_to_ix) > 0), "The word mappings imported from global variables are empty!"
             # We could also get vocabulary_size from globals... but what for;)
 
-        elif self.word_mappings_file != "" and os.path.exists(word_mappings_file_path) and not self.config['regenerate']:
+        elif self.word_mappings_file != "" and not self.config['regenerate']:
+            if not os.path.exists(word_mappings_file_path):
+                self.logger.warning("Cannot load word mappings from '{}' because the file does not exist".format(word_mappings_file_path))
+                # This is a show stopper.
+                exit(-1)
+
             # Try to load the preprocessed word mappings.
             self.word_to_ix = wm.load_word_mappings_from_csv_file(self.logger, self.data_folder, self.word_mappings_file)
             assert (len(self.word_to_ix) > 0), "The word mappings loaded from file are empty!"

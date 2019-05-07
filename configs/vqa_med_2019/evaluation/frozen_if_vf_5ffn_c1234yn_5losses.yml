@@ -1,0 +1,497 @@
+# Load config defining problems for training, validation and testing.
+default_configs:
+  vqa_med_2019/default_vqa_med_2019.yml,
+  vqa_med_2019/frozen_pipelines/frozen_input_fusion_glove_lstm_vgg_att_is_cat.yml,
+  vqa_med_2019/frozen_pipelines/frozen_question_categorization_glove_rnn_ffn.yml
+
+c123_hyperparameters:
+  # In here I am putting some of the hyperparameters from spreadsheet.
+
+  question_preprocessing: &question_preprocessing lowercase, remove_punctuation, tokenize
+  # Accepted formats: a,b,c or [a,b,c]
+  # none | lowercase | remove_punctuation | tokenize | random_remove_stop_words | random_shuffle_words | all
+
+  image_preprocessing: &image_preprocessing normalize
+  # Accepted formats: a,b,c or [a,b,c]
+  # none | random_affine | random_horizontal_flip | normalize | all
+
+  # Final classifier: FFN.
+  answer_classifier_hidden_sizes_val: &answer_classifier_hidden_sizes_val [500]
+
+  batch_size: &batch_size 256
+  preload_images: &preload_images False
+  num_workers: &num_workers 4
+
+# Training parameters:
+training:
+  problem:
+    batch_size: *batch_size
+    categories: all
+    export_sample_weights: ~/data/vqa-med/answers.c1_c2_c3_c4_binary_yn.weights.csv
+    # Appy all preprocessing/data augmentations.
+    question_preprocessing: *question_preprocessing
+    image_preprocessing: *image_preprocessing 
+    # Preload images.
+    preload_images: *preload_images
+    streams: 
+      questions: tokenized_questions
+  sampler:
+    weights: ~/data/vqa-med/answers.c1_c2_c3_c4_binary_yn.weights.csv
+  # Use workers for loading images.
+  dataloader:
+    num_workers: *num_workers
+
+  # Optimizer parameters:
+  optimizer:
+    name: Adam
+    lr: 0.0001
+
+  # Terminal conditions:
+  terminal_conditions:
+    loss_stop: 1.0e-3
+    episode_limit: 10000
+    epoch_limit: -1
+
+# Validation parameters:
+validation:
+  partial_validation_interval: 100
+  problem:
+    batch_size: *batch_size
+    categories: all
+    # Appy all preprocessing/data augmentations.
+    question_preprocessing: *question_preprocessing
+    image_preprocessing: *image_preprocessing 
+    # Preload images: false, as we will need them only once, at the end.
+    preload_images: false
+    streams: 
+      questions: tokenized_questions
+  dataloader:
+    num_workers: 1
+
+
+pipeline:
+
+  ################# PIPE 6: masks for all 5 classifiers #################
+
+  # Add global variables.
+  c1234_global_publisher:
+    type: GlobalVariablePublisher
+    priority: 6.0
+    # Add input_size to globals.
+    keys: [category_c1_word_to_ix, category_c2_word_to_ix, category_c3_word_to_ix, category_c4_word_to_ix, category_binary_word_to_ix]
+    values: [{"C1": 0}, {"C2": 0}, {"C3": 0}, {"C4": 0}, {"BINARY": 0}]
+
+  # Sample masking based on categories.
+  c1_string_to_mask:
+    priority: 6.1
+    type: StringToMask
+    globals:
+      word_mappings: category_c1_word_to_ix
+    streams:
+      # Input: predicted categories by the "question categorizer" pipeline.
+      strings: predicted_category_names
+      masks: c1_masks
+
+  c2_string_to_mask:
+    priority: 6.2
+    type: StringToMask
+    globals:
+      word_mappings: category_c2_word_to_ix
+    streams:
+      strings: predicted_category_names
+      masks: c2_masks
+
+  c3_string_to_mask:
+    priority: 6.3
+    type: StringToMask
+    globals:
+      word_mappings: category_c3_word_to_ix
+    streams:
+      strings: predicted_category_names
+      masks: c3_masks
+
+  c4_string_to_mask:
+    priority: 6.4
+    type: StringToMask
+    globals:
+      word_mappings: category_c4_word_to_ix
+    streams:
+      strings: predicted_category_names
+      masks: c4_masks
+
+  binary_string_to_mask:
+    priority: 6.5
+    type: StringToMask
+    globals:
+      word_mappings: category_binary_word_to_ix
+    streams:
+      strings: predicted_category_names
+      masks: binary_masks
+
+  ################# PIPE 7: answers/targets for all 5 classifiers #################
+
+  c1_answer_indexer:
+    type: LabelIndexer
+    priority: 7.1
+    data_folder: ~/data/vqa-med
+    word_mappings_file: answers.c1_without_yn.word.mappings.csv
+    # Export mappings and size to globals.
+    export_word_mappings_to_globals: True
+    streams:
+      inputs: answers
+      outputs: c1_without_yn_answers_ids
+    globals:
+      vocabulary_size: c1_without_yn_vocabulary_size
+      word_mappings: c1_without_yn_word_mappings
+
+  c2_answer_indexer:
+    type: LabelIndexer
+    priority: 7.2
+    data_folder: ~/data/vqa-med
+    word_mappings_file: answers.c2.word.mappings.csv
+    # Export mappings and size to globals.
+    export_word_mappings_to_globals: True
+    streams:
+      inputs: answers
+      outputs: c2_answers_ids
+    globals:
+      vocabulary_size: c2_vocabulary_size
+      word_mappings: c2_word_mappings
+
+  c3_answer_indexer:
+    type: LabelIndexer
+    priority: 7.3
+    data_folder: ~/data/vqa-med
+    word_mappings_file: answers.c3.word.mappings.csv
+    # Export mappings and size to globals.
+    export_word_mappings_to_globals: True
+    streams:
+      inputs: answers
+      outputs: c3_answers_ids
+    globals:
+      vocabulary_size: c3_vocabulary_size
+      word_mappings: c3_word_mappings
+
+  c4_answer_indexer:
+    type: LabelIndexer
+    priority: 7.4
+    data_folder: ~/data/vqa-med
+    word_mappings_file: answers.c4_without_yn.word.mappings.csv
+    # Export mappings and size to globals.
+    export_word_mappings_to_globals: True
+    streams:
+      inputs: answers
+      outputs: c4_without_yn_answers_ids
+    globals:
+      vocabulary_size: c4_without_yn_vocabulary_size
+      word_mappings: c4_without_yn_word_mappings
+
+  binary_answer_indexer:
+    type: LabelIndexer
+    priority: 7.6
+    data_folder: ~/data/vqa-med
+    word_mappings_file: answers.binary_yn.word.mappings.csv
+    # Export mappings and size to globals.
+    export_word_mappings_to_globals: True
+    streams:
+      inputs: answers
+      outputs: binary_yn_answers_ids
+    globals:
+      vocabulary_size: binary_yn_vocabulary_size
+      word_mappings: binary_yn_word_mappings
+
+  # Answer encoding for all classes.
+  #c1234_answer_indexer:
+  #  priority: 7.5
+  #  type: LabelIndexer
+  #  data_folder: ~/data/vqa-med
+  #  word_mappings_file: answers.all.word.mappings.csv
+  #  # Export mappings and size to globals.
+  #  export_word_mappings_to_globals: True
+  #  streams:
+  #    inputs: answers
+  #    outputs: answers_ids
+  #  globals:
+  #    vocabulary_size: c1234_binary_yn_vocabulary_size
+  #    word_mappings: c1234_binary_yn_word_mappings
+
+
+  ################# PIPE 8: C1 questions #################
+
+  # Model: FFN for C1 answering
+  c1_answer_classifier:
+    priority: 8.1
+    type: FeedForwardNetwork
+    hidden: *answer_classifier_hidden_sizes_val
+    dropout_rate: 0.5
+    streams:
+      inputs: concatenated_activations
+      predictions: c1_predictions
+    globals:
+      input_size: concatenated_activations_size
+      prediction_size: c1_without_yn_vocabulary_size
+
+  c1_nllloss:
+    priority: 8.2
+    type: NLLLoss
+    targets_dim: 1
+    streams:
+      predictions: c1_predictions
+      targets: c1_without_yn_answers_ids
+      loss: c1_loss
+
+  c1_precision_recall:
+    priority: 8.3
+    type: PrecisionRecallStatistics
+    use_word_mappings: True
+    #show_class_scores: True
+    #show_confusion_matrix: True
+    streams:
+      predictions: c1_predictions
+      targets: c1_without_yn_answers_ids
+    globals:
+      word_mappings: c1_without_yn_word_mappings
+    statistics:
+      precision: c1_precision
+      recall: c1_recall
+      f1score: c1_f1score
+
+  c1_prediction_decoder:
+    priority: 8.4
+    type: WordDecoder
+    # Use the same word mappings as label indexer.
+    import_word_mappings_from_globals: True
+    streams:
+      inputs: c1_predictions
+      outputs: c1_without_yn_prediction_labels
+    globals:
+      word_mappings: c1_without_yn_word_mappings
+
+
+  ################# PIPE 9: C2 questions #################
+
+  # Model: FFN for C2 answering
+  c2_answer_classifier:
+    priority: 9.1
+    type: FeedForwardNetwork
+    hidden: *answer_classifier_hidden_sizes_val
+    dropout_rate: 0.5
+    streams:
+      inputs: concatenated_activations
+      predictions: c2_predictions
+    globals:
+      input_size: concatenated_activations_size
+      prediction_size: c2_vocabulary_size
+
+  c2_nllloss:
+    priority: 9.2
+    type: NLLLoss
+    targets_dim: 1
+    streams:
+      predictions: c2_predictions
+      targets: c2_answers_ids
+      loss: c2_loss
+
+  c2_precision_recall:
+    priority: 9.3
+    type: PrecisionRecallStatistics
+    use_word_mappings: True
+    #show_class_scores: True
+    #show_confusion_matrix: True
+    streams:
+      predictions: c2_predictions
+      targets: c2_answers_ids
+    globals:
+      word_mappings: c2_word_mappings
+    statistics:
+      precision: c2_precision
+      recall: c2_recall
+      f1score: c2_f1score
+
+  c2_prediction_decoder:
+    priority: 9.4
+    type: WordDecoder
+    # Use the same word mappings as label indexer.
+    import_word_mappings_from_globals: True
+    streams:
+      inputs: c2_predictions
+      outputs: c2_prediction_labels
+    globals:
+      word_mappings: c2_word_mappings
+
+
+  ################# PIPE 10: C3 questions #################
+
+  # Model: FFN for c3 answering
+  c3_answer_classifier:
+    priority: 10.1
+    type: FeedForwardNetwork
+    hidden: *answer_classifier_hidden_sizes_val
+    dropout_rate: 0.5
+    streams:
+      inputs: concatenated_activations
+      predictions: c3_predictions
+    globals:
+      input_size: concatenated_activations_size
+      prediction_size: c3_vocabulary_size
+
+  c3_nllloss:
+    priority: 10.2
+    type: NLLLoss
+    targets_dim: 1
+    streams:
+      predictions: c3_predictions
+      targets: c3_answers_ids
+      loss: c3_loss
+
+  c3_precision_recall:
+    priority: 10.3
+    type: PrecisionRecallStatistics
+    use_word_mappings: True
+    #show_class_scores: True
+    #show_confusion_matrix: True
+    streams:
+      predictions: c3_predictions
+      targets: c3_answers_ids
+    globals:
+      word_mappings: c3_word_mappings
+    statistics:
+      precision: c3_precision
+      recall: c3_recall
+      f1score: c3_f1score
+
+  c3_prediction_decoder:
+    priority: 10.4
+    type: WordDecoder
+    # Use the same word mappings as label indexer.
+    import_word_mappings_from_globals: True
+    streams:
+      inputs: c3_predictions
+      outputs: c3_prediction_labels
+    globals:
+      word_mappings: c3_word_mappings
+
+
+  ################# PIPE 11: C4 questions #################
+
+  # Model: FFN for C4 answering
+  c4_answer_classifier:
+    priority: 11.1
+    type: FeedForwardNetwork
+    hidden: *answer_classifier_hidden_sizes_val
+    dropout_rate: 0.5
+    streams:
+      inputs: concatenated_activations
+      predictions: c4_predictions
+    globals:
+      input_size: concatenated_activations_size
+      prediction_size: c4_without_yn_vocabulary_size
+
+  c4_nllloss:
+    priority: 11.2
+    type: NLLLoss
+    targets_dim: 1
+    streams:
+      predictions: c4_predictions
+      targets: c4_without_yn_answers_ids
+      loss: c4_loss
+
+  c4_precision_recall:
+    priority: 11.3
+    type: PrecisionRecallStatistics
+    use_word_mappings: True
+    #show_class_scores: True
+    #show_confusion_matrix: True
+    streams:
+      predictions: c4_predictions
+      targets: c4_without_yn_answers_ids
+    globals:
+      word_mappings: c4_without_yn_word_mappings
+    statistics:
+      precision: c4_precision
+      recall: c4_recall
+      f1score: c4_f1score
+
+  c4_prediction_decoder:
+    priority: 11.4
+    type: WordDecoder
+    # Use the same word mappings as label indexer.
+    import_word_mappings_from_globals: True
+    streams:
+      inputs: c4_predictions
+      outputs: c4_without_yn_prediction_labels
+    globals:
+      word_mappings: c4_without_yn_word_mappings
+
+
+  ################# PIPE 12: BINARY Y/N questions #################
+
+  # Model: FFN for BINARY Y/N answering
+  binary_answer_classifier:
+    priority: 12.1
+    type: FeedForwardNetwork
+    hidden: *answer_classifier_hidden_sizes_val
+    dropout_rate: 0.5
+    streams:
+      inputs: concatenated_activations
+      predictions: binary_predictions
+    globals:
+      input_size: concatenated_activations_size
+      prediction_size: binary_yn_vocabulary_size
+
+  binary_nllloss:
+    priority: 12.2
+    type: NLLLoss
+    targets_dim: 1
+    streams:
+      predictions: binary_predictions
+      targets: binary_yn_answers_ids
+      loss: binary_loss
+
+  binary_precision_recall:
+    priority: 12.3
+    type: PrecisionRecallStatistics
+    use_word_mappings: True
+    #show_class_scores: True
+    #show_confusion_matrix: True
+    streams:
+      predictions: binary_predictions
+      targets: binary_yn_answers_ids
+    globals:
+      word_mappings: binary_yn_word_mappings
+    statistics:
+      precision: binary_precision
+      recall: binary_recall
+      f1score: binary_f1score
+
+  binary_prediction_decoder:
+    priority: 12.4
+    type: WordDecoder
+    # Use the same word mappings as label indexer.
+    import_word_mappings_from_globals: True
+    streams:
+      inputs: binary_predictions
+      outputs: binary_prediction_labels
+    globals:
+      word_mappings: binary_yn_word_mappings
+
+  ################# PIPE 13: MERGE ANSWERS #################
+
+  # Viewers.
+  viewer:
+    priority: 13.1
+    type: StreamViewer
+    input_streams:
+      tokenized_questions,
+      category_names, predicted_category_names,
+      c1_masks, c2_masks, c3_masks, c4_masks, binary_masks,
+      answers,
+      c1_without_yn_prediction_labels,
+      c2_prediction_labels,
+      c3_prediction_labels,
+      c4_without_yn_prediction_labels,
+      binary_prediction_labels
+
+
+
+#: pipeline

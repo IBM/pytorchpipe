@@ -71,7 +71,7 @@ validation:
 
 pipeline:
 
-  ################# PIPE 6: C1 + C2 + C3 questions #################
+  ################# PIPE 6: C1 + C2 + C3 + C4 questions #################
 
   # Answer encoding.
   pipe6_c1234_answer_indexer:

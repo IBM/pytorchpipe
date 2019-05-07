@@ -82,6 +82,9 @@ def load_word_mappings_from_csv_file(logger, folder, filename):
     """        
     file_path = os.path.join(os.path.expanduser(folder), filename)
 
+    if not os.path.exists(file_path):
+        logger.warning("Cannot load word mappings from '{}' because the file does not exist".format(file_path))
+
     with open(file_path, mode='rt') as csvfile:
         # Check the presence of the header.
         sniffer = csv.Sniffer()
