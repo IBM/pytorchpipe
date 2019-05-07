@@ -201,19 +201,19 @@ pipeline:
       word_mappings: binary_yn_word_mappings
 
   # Answer encoding for all classes.
-  #c1234_answer_indexer:
-  #  priority: 7.5
-  #  type: LabelIndexer
-  #  data_folder: ~/data/vqa-med
-  #  word_mappings_file: answers.all.word.mappings.csv
-  #  # Export mappings and size to globals.
-  #  export_word_mappings_to_globals: True
-  #  streams:
-  #    inputs: answers
-  #    outputs: answers_ids
-  #  globals:
-  #    vocabulary_size: c1234_binary_yn_vocabulary_size
-  #    word_mappings: c1234_binary_yn_word_mappings
+  c1234_answer_indexer:
+    priority: 7.7
+    type: LabelIndexer
+    data_folder: ~/data/vqa-med
+    word_mappings_file: answers.all.word.mappings.csv
+    # Export mappings and size to globals.
+    export_word_mappings_to_globals: True
+    streams:
+      inputs: answers
+      outputs: answers_ids
+    globals:
+      vocabulary_size: c1234_binary_yn_vocabulary_size
+      word_mappings: c1234_binary_yn_word_mappings
 
 
   ################# PIPE 8: C1 questions #################
@@ -497,9 +497,42 @@ pipeline:
 
   ################# PIPE 13: MERGE ANSWERS #################
 
+  # Merge predictions.
+  pipe9_merged_predictions:
+    type: JoinMaskedPredictions
+    priority: 13.1
+    # Names of used input streams.
+    input_prediction_streams: [c1_predictions, c2_predictions, c3_predictions, c4_predictions, binary_predictions]
+    input_mask_streams: [c1_masks, c2_masks, c3_masks, c4_masks, binary_masks]
+    input_word_mappings: [c1_without_yn_word_mappings, c2_word_mappings, c3_word_mappings, c4_without_yn_word_mappings, binary_yn_word_mappings]
+    globals: 
+      output_word_mappings: c1234_binary_yn_word_mappings
+    streams:
+      output_strings: predicted_answers
+      output_indices: merged_prediction_indices
+
+  # Statistics.
+  pipe9_merged_precision_recall:
+    type: PrecisionRecallStatistics
+    priority: 13.2
+    # Use prediction indices instead of distributions.
+    use_prediction_distributions: False
+    use_word_mappings: True
+    #show_class_scores: True
+    #show_confusion_matrix: True
+    globals:
+      word_mappings: c1234_binary_yn_word_mappings
+    streams:
+      targets: answers_ids
+      predictions: merged_prediction_indices
+    statistics:
+      precision: merged_precision
+      recall: merged_recall
+      f1score: merged_f1score
+
   # Viewers.
   viewer:
-    priority: 13.1
+    priority: 13.3
     type: StreamViewer
     input_streams:
       tokenized_questions,
@@ -510,7 +543,8 @@ pipeline:
       c2_prediction_labels,
       c3_prediction_labels,
       c4_without_yn_prediction_labels,
-      binary_prediction_labels
+      binary_prediction_labels,
+      predicted_answers
 
 
 
