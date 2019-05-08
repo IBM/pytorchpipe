@@ -174,7 +174,7 @@ class kFoldWeightedRandomSampler(kFoldRandomSampler):
             sample index is drawn for a row, it cannot be drawn again for that row.
         """
         # Call k-fold base class constructor.
-        super().__init__(num_samples, num_folds, all_but_current_fold)
+        super().__init__(num_samples, num_folds, epochs_per_fold, all_but_current_fold)
         # Get replacement flag.
         if not isinstance(replacement, bool):
             raise ValueError("replacement should be a boolean value, but got "

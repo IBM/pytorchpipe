@@ -177,9 +177,11 @@ class SamplerFactory(object):
                 folds = config["folds"]
                 if folds < 2:
                     raise ConfigurationError("kFoldRandomSampler requires  at least two 'folds'")
+                # Get epochs per fold (default: 1).
+                epochs_per_fold = config.get("epochs_per_fold", 1)
 
                 # Create the sampler object.
-                sampler = ptp_samplers.kFoldRandomSampler(len(problem), folds, problem_subset_name == 'training')
+                sampler = ptp_samplers.kFoldRandomSampler(len(problem), folds, epochs_per_fold, problem_subset_name == 'training')
 
             ###########################################################################
             # Handle fourd special case: kFoldWeightedRandomSampler.
@@ -202,9 +204,11 @@ class SamplerFactory(object):
                 folds = config["folds"]
                 if folds < 2:
                     raise ConfigurationError("kFoldRandomSampler requires  at least two 'folds'")
+                # Get epochs per fold (default: 1).
+                epochs_per_fold = config.get("epochs_per_fold", 1)
 
                 # Create the sampler object.
-                sampler = ptp_samplers.kFoldWeightedRandomSampler(weights, len(problem), folds, problem_subset_name == 'training')
+                sampler = ptp_samplers.kFoldWeightedRandomSampler(weights, len(problem), folds, epochs_per_fold, problem_subset_name == 'training')
 
             elif name in ['BatchSampler', 'DistributedSampler']:
                 # Sorry, don't support those. Yet;)

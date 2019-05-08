@@ -10,7 +10,8 @@ training:
   # Default sampler during training.
   sampler:
     name: kFoldWeightedRandomSampler
-    folds: 5
+    folds: 10
+    epochs_per_fold: 20
   # Use four workers for loading images.
   dataloader:
     num_workers: 4
@@ -38,7 +39,8 @@ validation:
   # Default sampler during validation.
   sampler:
     name: kFoldRandomSampler
-    folds: 5
+    folds: 10
+    epochs_per_fold: 20
   # Use four workers for loading images.
   dataloader:
     num_workers: 4
