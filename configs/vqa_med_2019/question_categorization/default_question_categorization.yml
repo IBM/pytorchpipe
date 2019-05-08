@@ -31,7 +31,7 @@ pipeline:
     import_word_mappings_from_globals: True
     streams:
       inputs: predictions
-      outputs: predicted_categories
+      outputs: predicted_category_names
     globals:
       vocabulary_size: num_categories
       word_mappings: category_word_mappings
@@ -72,6 +72,6 @@ pipeline:
   viewer:
     type: StreamViewer
     priority: 100.4
-    input_streams: questions,category_names,predicted_categories
+    input_streams: questions,category_names,predicted_category_names
 
 #: pipeline
