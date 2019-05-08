@@ -369,8 +369,6 @@ class VQAMED2019(Problem):
         """
         # 0. Create "answers dataset" object for faster computations.
         answers_dataset = []
-        for i in range(len(self.dataset)):
-            sample 
         for sample in self.dataset:
             if ('tokenize' in self.answer_preprocessing):
                 # Need to create one string.
