@@ -140,7 +140,7 @@ class AccuracyStatistics(Component):
         else:
             accuracy = 0
 
-        return accuracy
+        return accuracy, batch_size
 
 
     def add_statistics(self, stat_col):
@@ -151,6 +151,7 @@ class AccuracyStatistics(Component):
 
         """
         stat_col.add_statistics(self.key_accuracy, '{:6.4f}')
+        stat_col.add_statistics(self.key_accuracy+'_support', None)
 
     def collect_statistics(self, stat_col, data_dict):
         """
@@ -159,7 +160,10 @@ class AccuracyStatistics(Component):
         :param stat_col: ``StatisticsCollector``.
 
         """
-        stat_col[self.key_accuracy] = self.calculate_accuracy(data_dict)
+        acc, batch_size = self.calculate_accuracy(data_dict)
+        stat_col[self.key_accuracy] = acc
+        stat_col[self.key_accuracy+'_support'] = batch_size
+        
 
     def add_aggregators(self, stat_agg):
         """
@@ -169,8 +173,8 @@ class AccuracyStatistics(Component):
 
         """
         stat_agg.add_aggregator(self.key_accuracy, '{:7.5f}')  # represents the average accuracy
-        stat_agg.add_aggregator(self.key_accuracy+'_min', '{:7.5f}')
-        stat_agg.add_aggregator(self.key_accuracy+'_max', '{:7.5f}')
+        #stat_agg.add_aggregator(self.key_accuracy+'_min', '{:7.5f}')
+        #stat_agg.add_aggregator(self.key_accuracy+'_max', '{:7.5f}')
         stat_agg.add_aggregator(self.key_accuracy+'_std', '{:7.5f}')
 
 
@@ -184,24 +188,13 @@ class AccuracyStatistics(Component):
 
         """
         accuracies = stat_col[self.key_accuracy]
+        batch_sizes = stat_col[self.key_accuracy+'_support']
 
-        # Check if batch size was collected.
-        if "batch_size" in stat_col.keys():
-            batch_sizes = stat_col['batch_size']
+        # Calculate weighted precision.
+        accuracies_avg = np.average(accuracies, weights=batch_sizes)
+        accuracies_var = np.average((accuracies-accuracies_avg)**2, weights=batch_sizes)
 
-            # Calculate weighted precision.
-            accuracies_avg = np.average(accuracies, weights=batch_sizes)
-            accuracies_var = np.average((accuracies-accuracies_avg)**2, weights=batch_sizes)
-
-            stat_agg[self.key_accuracy] = accuracies_avg
-            stat_agg[self.key_accuracy+'_min'] = np.min(accuracies)
-            stat_agg[self.key_accuracy+'_max'] = np.max(accuracies)
-            stat_agg[self.key_accuracy+'_std'] = math.sqrt(accuracies_var)
-        else:
-            # Else: use simple mean.
-            stat_agg[self.key_accuracy] = np.mean(accuracies)
-            stat_agg[self.key_accuracy+'_min'] = np.min(accuracies)
-            stat_agg[self.key_accuracy+'_max'] = np.max(accuracies)
-            stat_agg[self.key_accuracy+'_std'] = np.std(accuracies)
-            # But inform user about that!
-            self.logger.warning("Aggregated statistics might contain errors due to the lack of information about sizes of aggregated batches")
+        stat_agg[self.key_accuracy] = accuracies_avg
+        #stat_agg[self.key_accuracy+'_min'] = np.min(accuracies)
+        #stat_agg[self.key_accuracy+'_max'] = np.max(accuracies)
+        stat_agg[self.key_accuracy+'_std'] = math.sqrt(accuracies_var)

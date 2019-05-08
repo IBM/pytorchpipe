@@ -55,7 +55,7 @@ class StatisticsCollector(Mapping):
         """
         self.formatting[key] = formatting
 
-        # instantiate associated value as list.
+        # instantiate associated value as a list.
         self.statistics[key] = list()
 
     def __getitem__(self, key):
@@ -137,10 +137,15 @@ class StatisticsCollector(Mapping):
 
         # Iterate through keys and concatenate them.
         for key in self.statistics.keys():
-            header_str += key + ","
+            # If formatting is set to '' - ignore this key.
+            if self.formatting.get(key) is not None:
+                header_str += key + ","
 
-        # Remove last coma and add \n.
-        header_str = header_str[:-1] + '\n'
+        # Remove last coma.
+        if len(header_str) > 0:
+            header_str = header_str[:-1]
+        #  Add \n.
+        header_str = header_str + '\n'
 
         # Open file for writing.
         self.csv_file = open(log_dir + filename, 'w', 1)
@@ -165,14 +170,19 @@ class StatisticsCollector(Mapping):
         # Iterate through values and concatenate them.
         values_str = ''
         for key, value in self.statistics.items():
-            # Get formatting - using '{}' as default.
-            format_str = self.formatting.get(key, '{}')
+            # If formatting is set to None - ignore this key.
+            if self.formatting.get(key) is not None:
+                # Get formatting - using '{}' as default.
+                format_str = self.formatting.get(key, '{}')
 
-            # Add value to string using formatting.
-            values_str += format_str.format(value[-1]) + ","
+                # Add value to string using formatting.
+                values_str += format_str.format(value[-1]) + ","
 
-        # Remove last coma and add \n.
-        values_str = values_str[:-1] + '\n'
+        # Remove last coma.
+        if len(values_str) > 1:
+            values_str = values_str[:-1]
+        # Add last \n.
+        values_str = values_str + '\n'
 
         csv_file.write(values_str)
 
@@ -185,12 +195,13 @@ class StatisticsCollector(Mapping):
 
         # Iterate through key, values and format them.
         for key, value in self.statistics.items():
+            # If formatting is set to None - ignore this key.
+            if self.formatting.get(key) is not None:
+                # Get formatting - using '{}' as default.
+                format_str = self.formatting.get(key, '{}')
 
-            # Get formatting - using '{}' as default.
-            format_str = self.formatting.get(key, '{}')
-
-            # Add to dict.
-            chkpt[key]  = format_str.format(value[-1])
+                # Add to dict.
+                chkpt[key]  = format_str.format(value[-1])
 
         return chkpt
 
@@ -209,14 +220,20 @@ class StatisticsCollector(Mapping):
         # Iterate through keys and values and concatenate them.
         stat_str = ''
         for key, value in self.statistics.items():
-            stat_str += key + ' '
-            # Get formatting - using '{}' as default.
-            format_str = self.formatting.get(key, '{}')
-            # Add value to string using formatting.
-            stat_str += format_str.format(value[-1]) + "; "
+            # If formatting is set to None - ignore this key.
+            if self.formatting.get(key) is not None:
+                stat_str += key + ' '
+                # Get formatting - using '{}' as default.
+                format_str = self.formatting.get(key, '{}')
+                # Add value to string using formatting.
+                stat_str += format_str.format(value[-1]) + "; "
 
-        # Remove last two element.
-        stat_str = stat_str[:-2] + " " + additional_tag
+        # Remove last two elements.
+        if len(stat_str) > 2:
+            stat_str = stat_str[:-2]
+        
+        # Add addtional tag.
+        stat_str = stat_str + " " + additional_tag
 
         return stat_str
 
@@ -248,19 +265,23 @@ class StatisticsCollector(Mapping):
             # Skip episode.
             if key == 'episode':
                 continue
-            tb_writer.add_scalar(key, value[-1], episode)
+            # If formatting is set to None - ignore this key.
+            if self.formatting.get(key) is not None:
+                tb_writer.add_scalar(key, value[-1], episode)
 
 
 if __name__ == "__main__":
 
     stat_col = StatisticsCollector()
-    stat_col.add_statistic('loss', '{:12.10f}')
-    stat_col.add_statistic('episode', '{:06d}')
-    stat_col.add_statistic('acc', '{:2.3f}')
+    stat_col.add_statistics('loss', '{:12.10f}')
+    stat_col.add_statistics('episode', '{:06d}')
+    stat_col.add_statistics('acc', '{:2.3f}')
+    stat_col.add_statistics('acc_help', None)
 
     stat_col['episode'] = 0
     stat_col['loss'] = 0.7
     stat_col['acc'] = 100
+    stat_col['acc_help'] = 121
 
     csv_file = stat_col.initialize_csv_file('./', 'collector_test.csv')
     stat_col.export_to_csv(csv_file)
@@ -270,7 +291,7 @@ if __name__ == "__main__":
     stat_col['loss'] = 0.7
     stat_col['acc'] = 99.3
 
-    stat_col.add_statistic('seq_length', '{:2.0f}')
+    stat_col.add_statistics('seq_length', '{:2.0f}')
     stat_col['seq_length'] = 5
 
     stat_col.export_to_csv(csv_file)
