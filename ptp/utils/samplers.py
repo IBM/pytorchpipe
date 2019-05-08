@@ -33,15 +33,19 @@ class kFoldRandomSampler(Sampler):
     Every time __iter__() method is called, it moves to next fold/set of folds. 
     """
 
-    def __init__(self, num_samples, num_folds, all_but_current_fold = True):
+    def __init__(self, num_samples, num_folds, epochs_per_fold = 1, all_but_current_fold = True):
         """
         Initializes the sampler by generating the indices associated with the fold(s) that are to be used.
 
-        :param num_samples: Size of the dataset        
+        :param num_samples: Size of the dataset
+
         :param num_folds: Number of folds
-        :param all_but_current_fold: Operation mode (DEFAULT: True):
-            When True, generates indices for all-but-one folds (for training). \
-            When False, generates indices for only one fold (for validation). \
+
+        :param epochs_per_fold: Number of epochs that need to pass before sampler moves to next fold(s) (DEFAULT: 1)
+
+        :param all_but_current_fold: Operation mode (DEFAULT: True): \
+            When True, generates indices for all-but-one folds (for training) \
+            When False, generates indices for only one fold (for validation)
         """
         # Get number of samples (size of "whole dataset").
         if not isinstance(num_samples, _int_classes) or isinstance(num_samples, bool) or \
@@ -55,12 +59,23 @@ class kFoldRandomSampler(Sampler):
                 num_folds <= 0:
             raise ValueError("num_folds should be a positive integeral "
                              "value, but got num_folds={}".format(num_folds))
-        self.num_folds = num_folds
 
+        # Get number epochs per fold.
+        if not isinstance(epochs_per_fold, _int_classes) or isinstance(epochs_per_fold, bool) or \
+                epochs_per_fold <= 0:
+            raise ValueError("epochs_per_fold should be a positive integeral "
+                             "value, but got num_folds={}".format(epochs_per_fold))
+
+        # Store fold-related parameres.
         self.all_but_current_fold = all_but_current_fold
-        # Initialize current "fold" as -1, so then dataloder will call next() for the first time 
-        # it will return samples for 0-th fold/all-but-0th fold.
-        self.current_fold = -1
+        self.num_folds = num_folds
+        self.epochs_per_fold = epochs_per_fold
+
+        # Initialize current "fold" so it will return samples for 0-th fold/all-but-0th fold.
+        self.current_fold = 0
+        # "Left epochs": +1 is related to "initial", additional generation of indices - below.
+        self.epochs_left = self.epochs_per_fold +1
+
         # Generate "initial" indices.
         self.indices = self.regenerate_indices()
 
@@ -73,9 +88,7 @@ class kFoldRandomSampler(Sampler):
         # Fold size and indices.
         all_indices = range(self.num_samples)
         fold_size = ceil(self.num_samples / self.num_folds)
-
-        # Modulo current fold number by total number of folds.
-        fold = self.current_fold % self.num_folds
+        fold = self.current_fold
 
         # Generate indices associated with the given fold / all except the given fold.
         if self.all_but_current_fold:
@@ -106,11 +119,17 @@ class kFoldRandomSampler(Sampler):
         """
         Return "shuffled" indices.
         """
-        # Next fold.
-        self.current_fold += 1
+        # "Decrease" the number of epochs with this fold.
+        self.epochs_left = self.epochs_left - 1
+        if self.epochs_left <= 0:
+            # Next fold, modulo by the total number of folds.
+            self.current_fold = (self.current_fold  + 1) % self.num_folds
 
-        # Regenerate indices.
-        self.indices = self.regenerate_indices()
+            # Regenerate indices.
+            self.indices = self.regenerate_indices()
+
+            # Reset epochs counter.
+            self.epochs_left = self.epochs_per_fold
 
         # Return permutated indices.
         return (self.indices[i] for i in torch.randperm(len(self.indices)))
@@ -132,23 +151,30 @@ class kFoldWeightedRandomSampler(kFoldRandomSampler):
     Every time __iter__() method is called, it moves to next fold/set of folds. 
     """
 
-    def __init__(self, weights, num_samples, num_folds, all_but_current_fold = True, replacement=True):
+    def __init__(self, weights, num_samples, num_folds, epochs_per_fold = 1, all_but_current_fold = True, replacement=True):
         """
         Initializes the sampler by generating the indices associated with the fold(s) that are to be used.
 
-        :param num_samples: Size of the dataset        
+        :param num_samples: Size of the dataset    
+
         :param num_folds: Number of folds
-        :param all_but_current_fold: Operation mode (DEFAULT: True):
-            When True, generates indices for all-but-one folds (for training). \
-            When False, generates indices for only one fold (for validation). \
+
+        :param epochs_per_fold: Number of epochs that need to pass before sampler moves to next fold(s) (DEFAULT: 1)
+
+        :param all_but_current_fold: Operation mode (DEFAULT: True): \
+            When True, generates indices for all-but-one folds (for training) \
+            When False, generates indices for only one fold (for validation)
+
         :params weights: a sequence of weights, not necessary summing up to one
+
         :param num_samples: number of samples to draw
+
         :param replacement: if ``True``, samples are drawn with replacement.
             If not, they are drawn without replacement, which means that when a
             sample index is drawn for a row, it cannot be drawn again for that row.
         """
         # Call k-fold base class constructor.
-        super().__init__(num_samples, num_folds, all_but_current_fold)
+        super().__init__(num_samples, num_folds, epochs_per_fold, all_but_current_fold)
         # Get replacement flag.
         if not isinstance(replacement, bool):
             raise ValueError("replacement should be a boolean value, but got "
@@ -159,12 +185,17 @@ class kFoldWeightedRandomSampler(kFoldRandomSampler):
         self.weights = torch.tensor(weights, dtype=torch.double)
 
     def __iter__(self):
-        # Next fold.
-        self.current_fold += 1
+        # "Decrease" the number of epochs with this fold.
+        self.epochs_left = self.epochs_left - 1
+        if self.epochs_left <= 0:
+            # Next fold, modulo by the total number of folds.
+            self.current_fold = (self.current_fold  + 1) % self.num_folds
 
-        # Regenerate indices.
-        self.indices = self.regenerate_indices()
+            # Regenerate indices.
+            self.indices = self.regenerate_indices()
 
+            # Reset epochs counter.
+            self.epochs_left = self.epochs_per_fold
 
         # Select the corresponging weights.
         weights = torch.take(self.weights, torch.tensor(self.indices))

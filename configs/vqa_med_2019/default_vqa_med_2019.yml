@@ -6,11 +6,15 @@ training:
     split: training_validation
     resize_image: &resize_image [224, 224]
     batch_size:  64
+    # Generate and export shuffled indices.
+    shuffle_indices: True
+    export_indices: shuffled_indices.npy
 
   # Default sampler during training.
   sampler:
     name: kFoldWeightedRandomSampler
-    folds: 5
+    folds: 10
+    epochs_per_fold: 20
   # Use four workers for loading images.
   dataloader:
     num_workers: 4
@@ -35,10 +39,14 @@ validation:
     split: training_validation
     resize_image: *resize_image     
     batch_size:  64
+    # Import shuffled indices.
+    import_indices: shuffled_indices.npy
+
   # Default sampler during validation.
   sampler:
     name: kFoldRandomSampler
-    folds: 5
+    folds: 10
+    epochs_per_fold: 20
   # Use four workers for loading images.
   dataloader:
     num_workers: 4

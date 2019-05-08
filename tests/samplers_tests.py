@@ -68,6 +68,33 @@ class TestkFoldRandomSampler(unittest.TestCase):
             self.assertIn(ix, indices)
 
 
+    def test_kfold_random_sampler_current_fold_10epochs(self):
+        """ Tests the k-fold sampler current_fold mode. """
+
+        # Create the sampler.
+        sampler = kFoldRandomSampler(20, 3, 10, all_but_current_fold=False)
+
+        # First 10 epochs - the same indices from 0-7 range.
+        for _ in range(10):
+            # Test zero-th fold.
+            indices = list(iter(sampler))
+            # Check number of samples.
+            self.assertEqual(len(indices), 7)
+            # Check presence of all indices.
+            for ix in range(0,7):
+                self.assertIn(ix, indices)
+
+        # Next 10 epochs - the same indices from 7-14 range.
+        for _ in range(10):
+            # Test zero-th fold.
+            indices = list(iter(sampler))
+            # Check number of samples.
+            self.assertEqual(len(indices), 7)
+            # Check presence of all indices.
+            for ix in range(7,14):
+                self.assertIn(ix, indices)
+
+
     def test_kfold_random_sampler_all_but_current_fold(self):
         """ Tests the k-fold sampler all_but_current_fold mode. """
 

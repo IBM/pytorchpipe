@@ -55,6 +55,23 @@ answer_preprocessing: none
 # Those weights can be next used by weighted samplers (e.g. kFoldWeightedSampler)
 export_sample_weights: ''
 
+# Shuffle the indices of the input (source) files/samples.
+# Leaving that to false will results in the original order of files samples,
+# i.e. C1, then C2, then C3 etc.
+shuffle_indices: False
+
+# Generate and export (potentially shuffled) indices (LOADED)
+# If not empty, will:
+#  * shuffle indices of all samples and export them to a file.
+#  * use those indices during sampling.
+export_indices: ''
+
+# Import (potentially shuffled) indices (LOADED)
+# If not empty, will:
+#  * import them to a file.
+#  * use those indices during sampling.
+import_indices: ''
+
 streams:
   ####################################################################
   # 2. Keymappings associated with INPUT and OUTPUT streams.
