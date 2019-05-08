@@ -258,12 +258,29 @@ class VQAMED2019(Problem):
             source_image_folder = os.path.join(split_folder, 'VQAMed2019_Test_Images')
             self.dataset = self.load_testset(source_file, source_image_folder)
 
+        # Ok, now we got the whole dataset (for given "split").
+        self.ix = np.arange(len(self.dataset))
+        if self.config["import_indices"] != '':
+            # Try to load indices from the file.
+            self.ix = np.load(os.path.join(self.app_state.log_dir, self.config["import_indices"]))
+            self.logger.info("Imported indices from '{}'".format(os.path.join(self.app_state.log_dir, self.config["export_indices"])))
+        else:
+            # Ok, check whether we want to shuffle.
+            if self.config["shuffle_indices"]:
+                np.random.shuffle(self.ix)
+            # Export if required.
+            if self.config["export_indices"] != '':
+                # export indices to file.
+                np.save(os.path.join(self.app_state.log_dir, self.config["export_indices"]), self.ix)
+                self.logger.info("Exported indices to '{}'".format(os.path.join(self.app_state.log_dir, self.config["export_indices"])))
+
         # Display exemplary sample.
-        self.logger.info("Exemplary sample:\n [ category: {}\t image_ids: {}\t question: {}\t answer: {} ]".format(
-            self.dataset[0][self.key_category_ids],
-            self.dataset[0][self.key_image_ids],
-            self.dataset[0][self.key_questions],
-            self.dataset[0][self.key_answers]
+        self.logger.info("Exemplary sample 0 ({}):\n [ category: {}\t image_ids: {}\t question: {}\t answer: {} ]".format(
+            self.ix[0],
+            self.category_idx_to_word[self.dataset[self.ix[0]][self.key_category_ids]],
+            self.dataset[self.ix[0]][self.key_image_ids],
+            self.dataset[self.ix[0]][self.key_questions],
+            self.dataset[self.ix[0]][self.key_answers]
             ))
 
         # Check if we want the problem to calculate and export the weights.
@@ -703,7 +720,7 @@ class VQAMED2019(Problem):
         :return: DataDict({'indices', 'images', 'images_ids','questions', 'answers', 'category_ids', 'image_sizes'})
         """
         # Get item.
-        item = self.dataset[index]
+        item = self.dataset[self.ix[index]]
 
         # Create the resulting sample (data dict).
         data_dict = self.create_data_dict(index)
