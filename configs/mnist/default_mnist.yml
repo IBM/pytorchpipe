@@ -48,9 +48,9 @@ pipeline:
     priority: 10.0
 
   # Statistics.
-  #batch_size:
-  #  type: BatchSizeStatistics
-  #  priority: 100.0
+  batch_size:
+    type: BatchSizeStatistics
+    priority: 100.0
 
   accuracy:
     type: AccuracyStatistics
