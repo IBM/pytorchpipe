@@ -52,9 +52,14 @@ pipeline:
     type: BatchSizeStatistics
     priority: 100.0
 
+  accuracy:
+    type: AccuracyStatistics
+    priority: 100.1
+
+
   precision_recall:
     type: PrecisionRecallStatistics
-    priority: 100.1
+    priority: 100.2
     use_word_mappings: True
     show_class_scores: True
     globals:

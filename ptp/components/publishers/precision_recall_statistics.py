@@ -121,16 +121,21 @@ class PrecisionRecallStatistics(Component):
         if self.app_state.episode % self.app_state.args.logging_interval == 0:
 
             # Calculate all four statistics.
-            confusion_matrix, precision, recall, f1score, support = self.calculate_statistics(data_dict)
+            confusion_matrix, precisions, recalls, f1scores, supports = self.calculate_statistics(data_dict)
 
             if self.show_confusion_matrix:
                 self.logger.info("Confusion matrix:\n{}".format(confusion_matrix))
 
             # Calculate weighted averages.
-            support_sum = sum(support)
-            precision_avg = sum([pi*si / support_sum if support_sum > 0 else 0.0 for (pi,si) in zip(precision,support)])
-            recall_avg = sum([ri*si / support_sum if support_sum > 0 else 0.0 for (ri,si) in zip(recall,support)])
-            f1score_avg = sum([fi*si / support_sum if support_sum > 0 else 0.0 for (fi,si) in zip(f1score,support)])
+            support_sum = sum(supports)
+            if support_sum > 0:
+                precision_avg = sum([pi*si for (pi,si) in zip(precisions,supports)]) / support_sum 
+                recall_avg = sum([ri*si for (ri,si) in zip(recalls,supports)]) / support_sum
+                f1score_avg = sum([fi*si for (fi,si) in zip(f1scores,supports)]) / support_sum
+            else:
+                precision_avg = 0
+                recall_avg = 0
+                f1score_avg = 0
 
             # Log class scores.
             if self.show_class_scores:
@@ -138,7 +143,7 @@ class PrecisionRecallStatistics(Component):
                 log_str+= "|-----------|--------|---------|---------|-------\n"
                 for i in range(self.num_classes):
                     log_str += "|    {:05.4f} | {:05.4f} |  {:05.4f} |   {:5d} | {}\n".format(
-                        precision[i], recall[i], f1score[i], support[i], self.labels[i])
+                        precisions[i], recalls[i], f1scores[i], supports[i], self.labels[i])
                 log_str+= "|-----------|--------|---------|---------|-------\n"
                 log_str += "|    {:05.4f} | {:05.4f} |  {:05.4f} |   {:5d} | Weighted Avg\n".format(
                         precision_avg, recall_avg, f1score_avg, support_sum)
@@ -205,24 +210,25 @@ class PrecisionRecallStatistics(Component):
 
         # Precision is the fraction of events where we correctly declared i
         # out of all instances where the algorithm declared i.
-        precision = [float(tpi) / float(tpi+fpi) if (tpi+fpi) > 0 else 0.0 for (tpi,fpi) in zip(tp,fp)]
+        precisions = [float(tpi) / float(tpi+fpi) if (tpi+fpi) > 0 else 0.0 for (tpi,fpi) in zip(tp,fp)]
 
         # Recall is the fraction of events where we correctly declared i 
         # out of all of the cases where the true of state of the world is i.
-        recall = [float(tpi) / float(tpi+fni) if (tpi+fni) > 0 else 0.0 for (tpi,fni) in zip(tp,fn)]
+        recalls = [float(tpi) / float(tpi+fni) if (tpi+fni) > 0 else 0.0 for (tpi,fni) in zip(tp,fn)]
 
-        # Calcualte f1-score.
-        f1score = [ 2 * pi * ri / float(pi+ri) if (pi+ri) > 0 else 0.0 for (pi,ri) in zip(precision,recall)]
+        # Calcualte f1-scores.
+        f1scores = [ 2 * pi * ri / float(pi+ri) if (pi+ri) > 0 else 0.0 for (pi,ri) in zip(precisions,recalls)]
 
         # Get support.
-        support = np.sum(confusion_matrix, axis=1)
+        supports = np.sum(confusion_matrix, axis=1)
 
         #print('precision: {}'.format(precision))
         #print('recall: {}'.format(recall))
         #print('f1score: {}'.format(f1score))
         #print('support: {}'.format(support))
 
-        return confusion_matrix, precision, recall, f1score, support
+        return confusion_matrix, precisions, recalls, f1scores, supports
+
 
     def add_statistics(self, stat_col):
         """
@@ -231,9 +237,13 @@ class PrecisionRecallStatistics(Component):
         :param stat_col: ``StatisticsCollector``.
 
         """
+        # Those will be displayed.
         stat_col.add_statistics(self.key_precision, '{:05.4f}')
         stat_col.add_statistics(self.key_recall, '{:05.4f}')
         stat_col.add_statistics(self.key_f1score, '{:05.4f}')
+        # That one will be collected and used by aggregator.
+        stat_col.add_statistics(self.key_f1score+'_support', None)
+
 
     def collect_statistics(self, stat_col, data_dict):
         """
@@ -243,18 +253,32 @@ class PrecisionRecallStatistics(Component):
 
         """
         # Calculate all four statistics.
-        _, precision, recall, f1score, support = self.calculate_statistics(data_dict)
+        _, precisions, recalls, f1scores, supports = self.calculate_statistics(data_dict)
 
         # Calculate weighted averages.
-        support_sum = sum(support)
-        precision_avg = sum([pi*si / support_sum if support_sum > 0 else 0.0 for (pi,si) in zip(precision,support)])
-        recall_avg = sum([ri*si / support_sum if support_sum > 0 else 0.0 for (ri,si) in zip(recall,support)])
-        f1score_avg = sum([fi*si / support_sum if support_sum > 0 else 0.0 for (fi,si) in zip(f1score,support)])
+        precision_sum = sum([pi*si for (pi,si) in zip(precisions,supports)])
+        recall_sum = sum([ri*si for (ri,si) in zip(recalls,supports)])
+        f1score_sum = sum([fi*si for (fi,si) in zip(f1scores,supports)])
+        support_sum = sum(supports)
 
-        # Export to statistics.
+        if support_sum > 0:
+            precision_avg = precision_sum / support_sum 
+            recall_avg = recall_sum / support_sum
+            f1score_avg = f1score_sum / support_sum
+        else:
+            precision_avg = 0
+            recall_avg = 0
+            f1score_avg = 0
+
+        # Export averages to statistics.
         stat_col[self.key_precision] = precision_avg
         stat_col[self.key_recall] = recall_avg
         stat_col[self.key_f1score] = f1score_avg
+
+        # Export support to statistics.
+        stat_col[self.key_f1score+'_support'] = support_sum
+
+
 
     def add_aggregators(self, stat_agg):
         """
@@ -280,44 +304,28 @@ class PrecisionRecallStatistics(Component):
         :param stat_agg: ``StatisticsAggregator``
 
         """
-        precisions = stat_col[self.key_precision]
-        recalls = stat_col[self.key_recall]
-        f1scores = stat_col[self.key_f1score]
+        precision_sums = stat_col[self.key_precision]
+        recall_sums = stat_col[self.key_recall]
+        f1score_sums = stat_col[self.key_f1score]
+        supports = stat_col[self.key_f1score+'_support']
 
-        # Check if batch size was collected.
-        if "batch_size" in stat_col.keys():
-            batch_sizes = stat_col['batch_size']
+        # Calculate weighted precision.
+        precisions_avg = np.average(precision_sums, weights=supports)
+        precisions_var = np.average((precision_sums-precisions_avg)**2, weights=supports)
+        
+        stat_agg[self.key_precision] = precisions_avg
+        stat_agg[self.key_precision+'_std'] = math.sqrt(precisions_var)
 
-            # Calculate weighted precision.
-            precisions_avg = np.average(precisions, weights=batch_sizes)
-            precisions_var = np.average((precisions-precisions_avg)**2, weights=batch_sizes)
-            
-            stat_agg[self.key_precision] = precisions_avg
-            stat_agg[self.key_precision+'_std'] = math.sqrt(precisions_var)
+        # Calculate weighted recall.
+        recalls_avg = np.average(recall_sums, weights=supports)
+        recalls_var = np.average((recall_sums-recalls_avg)**2, weights=supports)
 
-            # Calculate weighted recall.
-            recalls_avg = np.average(recalls, weights=batch_sizes)
-            recalls_var = np.average((recalls-recalls_avg)**2, weights=batch_sizes)
+        stat_agg[self.key_recall] = recalls_avg
+        stat_agg[self.key_recall+'_std'] = math.sqrt(recalls_var)
 
-            stat_agg[self.key_recall] = recalls_avg
-            stat_agg[self.key_recall+'_std'] = math.sqrt(recalls_var)
+        # Calculate weighted f1 score.
+        f1scores_avg = np.average(f1score_sums, weights=supports)
+        f1scores_var = np.average((f1score_sums-f1scores_avg)**2, weights=supports)
 
-            # Calculate weighted f1 score.
-            f1scores_avg = np.average(f1scores, weights=batch_sizes)
-            f1scores_var = np.average((f1scores-f1scores_avg)**2, weights=batch_sizes)
-
-            stat_agg[self.key_f1score] = f1scores_avg
-            stat_agg[self.key_f1score+'_std'] = math.sqrt(f1scores_var)
-
-        else:
-            # Else: use simple mean.
-            stat_agg[self.key_precision] = np.mean(precisions)
-            stat_agg[self.key_precision+'_std'] = 0.0 if len(precisions) <= 1 else np.std(precisions)
-
-            stat_agg[self.key_recall] = np.mean(recalls)
-            stat_agg[self.key_recall+'_std'] = 0.0 if len(recalls) <= 1 else np.std(recalls)
-
-            stat_agg[self.key_f1score] = np.mean(f1scores)
-            stat_agg[self.key_f1score+'_std'] = 0.0 if len(f1scores) <= 1 else np.std(f1scores)
-            # But inform user about that!
-            self.logger.warning("Aggregated statistics might contain errors due to the lack of information about sizes of aggregated batches")
+        stat_agg[self.key_f1score] = f1scores_avg
+        stat_agg[self.key_f1score+'_std'] = math.sqrt(f1scores_var)

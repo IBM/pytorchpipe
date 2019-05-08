@@ -146,10 +146,15 @@ class StatisticsAggregator(StatisticsCollector):
 
         # Iterate through keys and concatenate them.
         for key in self.aggregators.keys():
-            header_str += key + ","
+            # If formatting is set to '' - ignore this key.
+            if self.formatting.get(key) is not None:
+                header_str += key + ","
 
-        # Remove last coma and add \n.
-        header_str = header_str[:-1] + '\n'
+        # Remove last coma.
+        if len(header_str) > 0:
+            header_str = header_str[:-1]
+        #  Add \n.
+        header_str = header_str + '\n'
 
         # Open file for writing.
         self.csv_file = open(log_dir + filename, 'w', 1)
@@ -175,15 +180,19 @@ class StatisticsAggregator(StatisticsCollector):
 
         # Iterate through values and concatenate them.
         for key, value in self.aggregators.items():
+            # If formatting is set to None - ignore this key.
+            if self.formatting.get(key) is not None:
+                # Get formatting - using '{}' as default.
+                format_str = self.formatting.get(key, '{}')
 
-            # Get formatting - using '{}' as default.
-            format_str = self.formatting.get(key, '{}')
+                # Add value to string using formatting.
+                values_str += format_str.format(value) + ","
 
-            # Add value to string using formatting.
-            values_str += format_str.format(value) + ","
-
-        # Remove last coma and add \n.
-        values_str = values_str[:-1] + '\n'
+        # Remove last coma.
+        if len(values_str) > 1:
+            values_str = values_str[:-1]
+        # Add last \n.
+        values_str = values_str + '\n'
 
         csv_file.write(values_str)
 
@@ -196,12 +205,13 @@ class StatisticsAggregator(StatisticsCollector):
 
         # Iterate through key, values and format them.
         for key, value in self.aggregators.items():
+            # If formatting is set to None - ignore this key.
+            if self.formatting.get(key) is not None:
+                # Get formatting - using '{}' as default.
+                format_str = self.formatting.get(key, '{}')
 
-            # Get formatting - using '{}' as default.
-            format_str = self.formatting.get(key, '{}')
-
-            # Add to dict.
-            chkpt[key] = format_str.format(value)
+                # Add to dict.
+                chkpt[key] = format_str.format(value)
 
         return chkpt        
 
@@ -221,15 +231,20 @@ class StatisticsAggregator(StatisticsCollector):
 
         # Iterate through keys and values and concatenate them.
         for key, value in self.aggregators.items():
+            # If formatting is set to None - ignore this key.
+            if self.formatting.get(key) is not None:
+                stat_str += key + ' '
+                # Get formatting - using '{}' as default.
+                format_str = self.formatting.get(key, '{}')
+                # Add value to string using formatting.
+                stat_str += format_str.format(value) + "; "
 
-            stat_str += key + ' '
-            # Get formatting - using '{}' as default.
-            format_str = self.formatting.get(key, '{}')
-            # Add value to string using formatting.
-            stat_str += format_str.format(value) + "; "
-
-        # Remove last two elements and add additional tag
-        stat_str = stat_str[:-2] + " " + additional_tag
+        # Remove last two elements.
+        if len(stat_str) > 2:
+            stat_str = stat_str[:-2]
+        
+        # Add addtional tag.
+        stat_str = stat_str + " " + additional_tag
 
         return stat_str
 
@@ -255,7 +270,9 @@ class StatisticsAggregator(StatisticsCollector):
             # Skip episode.
             if key == 'episode':
                 continue
-            tb_writer.add_scalar(key, value, episode)
+            # If formatting is set to None - ignore this key.
+            if self.formatting.get(key) is not None:
+                tb_writer.add_scalar(key, value, episode)
 
 
 if __name__ == "__main__":
@@ -265,8 +282,9 @@ if __name__ == "__main__":
 
 
     # Add default statistics with formatting.
-    stat_col.add_statistic('loss', '{:12.10f}')
-    stat_col.add_statistic('episode', '{:06d}')
+    stat_col.add_statistics('loss', '{:12.10f}')
+    stat_col.add_statistics('episode', '{:06d}')
+    stat_col.add_statistics('batch_size', None)
 
     import random
     # create some random values
@@ -275,6 +293,7 @@ if __name__ == "__main__":
     for episode, loss in enumerate(loss_values):
         stat_col['episode'] = episode
         stat_col['loss'] = loss
+        stat_col['batch_size'] = 1
         # print(stat_col.export_statistics_to_string())
 
     print(stat_agg.export_to_string())
@@ -287,6 +306,8 @@ if __name__ == "__main__":
     # Number of aggregated episodes.
     #stat_agg.add_aggregator('episodes_aggregated', '{:06d}')
     stat_agg.add_aggregator('acc_mean', '{:2.5f}')
-    stat_agg['acc_mean'] = np.mean(random.sample(range(100), 100))
+    collected_loss_values  = stat_col['loss']
+    batch_sizes = stat_col['batch_size']
+    stat_agg['acc_mean'] = np.mean(collected_loss_values) / np.sum(batch_sizes)
 
     print(stat_agg.export_to_string('[Epoch 1]'))
