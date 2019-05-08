@@ -54,7 +54,6 @@ training:
 
 # Validation parameters:
 validation:
-  partial_validation_interval: 100
   problem:
     batch_size: *batch_size
     categories: C1,C2,C3
