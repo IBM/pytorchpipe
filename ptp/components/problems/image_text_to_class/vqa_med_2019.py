@@ -369,6 +369,8 @@ class VQAMED2019(Problem):
         """
         # 0. Create "answers dataset" object for faster computations.
         answers_dataset = []
+        for i in range(len(self.dataset)):
+            sample 
         for sample in self.dataset:
             if ('tokenize' in self.answer_preprocessing):
                 # Need to create one string.
@@ -403,6 +405,9 @@ class VQAMED2019(Problem):
         #print(sample_weights)
         #print(len(sample_weights))
         
+        # Reorder weights accodring to ix.
+        sample_weights_ix = [sample_weights[self.ix[i]] for i in range(len(sample_weights))]
+        
         # Process filename.
         (path, name) = os.path.split(filename)
         if path == '':
@@ -411,9 +416,9 @@ class VQAMED2019(Problem):
         else:
             path = os.path.expanduser(path)
 
-        # Export weights to file.
-        save_nparray_to_csv_file(path, name, sample_weights)
-        self.logger.info("Generated weights for {} samples and exported them to {}".format(len(sample_weights), os.path.join(path, name)))
+        # Export "reordered weights" to file.
+        save_nparray_to_csv_file(path, name, sample_weights_ix)
+        self.logger.info("Generated weights for {} samples and exported them to {}".format(len(sample_weights_ix), os.path.join(path, name)))
 
 
     def preprocess_text(self, text, lowercase = False, remove_punctuation = False, tokenize = False, remove_stop_words = False):
