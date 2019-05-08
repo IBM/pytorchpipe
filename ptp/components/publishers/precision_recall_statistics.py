@@ -309,23 +309,33 @@ class PrecisionRecallStatistics(Component):
         f1score_sums = stat_col[self.key_f1score]
         supports = stat_col[self.key_f1score+'_support']
 
-        # Calculate weighted precision.
-        precisions_avg = np.average(precision_sums, weights=supports)
-        precisions_var = np.average((precision_sums-precisions_avg)**2, weights=supports)
-        
-        stat_agg[self.key_precision] = precisions_avg
-        stat_agg[self.key_precision+'_std'] = math.sqrt(precisions_var)
+        # Special case - no samples!
+        if sum(supports) == 0:
+            stat_agg[self.key_precision] = 0
+            stat_agg[self.key_precision+'_std'] = 0
+            stat_agg[self.key_recall] = 0
+            stat_agg[self.key_recall+'_std'] = 0
+            stat_agg[self.key_f1score] = 0
+            stat_agg[self.key_f1score+'_std'] = 0
 
-        # Calculate weighted recall.
-        recalls_avg = np.average(recall_sums, weights=supports)
-        recalls_var = np.average((recall_sums-recalls_avg)**2, weights=supports)
+        else: 
+            # Else: calculate weighted precision.
+            precisions_avg = np.average(precision_sums, weights=supports)
+            precisions_var = np.average((precision_sums-precisions_avg)**2, weights=supports)
+            
+            stat_agg[self.key_precision] = precisions_avg
+            stat_agg[self.key_precision+'_std'] = math.sqrt(precisions_var)
 
-        stat_agg[self.key_recall] = recalls_avg
-        stat_agg[self.key_recall+'_std'] = math.sqrt(recalls_var)
+            # Calculate weighted recall.
+            recalls_avg = np.average(recall_sums, weights=supports)
+            recalls_var = np.average((recall_sums-recalls_avg)**2, weights=supports)
 
-        # Calculate weighted f1 score.
-        f1scores_avg = np.average(f1score_sums, weights=supports)
-        f1scores_var = np.average((f1score_sums-f1scores_avg)**2, weights=supports)
+            stat_agg[self.key_recall] = recalls_avg
+            stat_agg[self.key_recall+'_std'] = math.sqrt(recalls_var)
 
-        stat_agg[self.key_f1score] = f1scores_avg
-        stat_agg[self.key_f1score+'_std'] = math.sqrt(f1scores_var)
+            # Calculate weighted f1 score.
+            f1scores_avg = np.average(f1score_sums, weights=supports)
+            f1scores_var = np.average((f1score_sums-f1scores_avg)**2, weights=supports)
+
+            stat_agg[self.key_f1score] = f1scores_avg
+            stat_agg[self.key_f1score+'_std'] = math.sqrt(f1scores_var)
