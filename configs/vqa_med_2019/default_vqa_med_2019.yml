@@ -32,7 +32,7 @@ training:
 
 # Validation parameters:
 validation:
-  partial_validation_interval: 100
+  partial_validation_interval: 10
   problem:
     type: *p_type
     data_folder: *data_folder

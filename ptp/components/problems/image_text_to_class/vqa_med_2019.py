@@ -404,7 +404,7 @@ class VQAMED2019(Problem):
         #print(len(sample_weights))
         
         # Reorder weights accodring to ix.
-        sample_weights_ix = [sample_weights[self.ix[i]] for i in range(len(sample_weights))]
+        sample_weights_ix = np.array([sample_weights[self.ix[i]] for i in range(len(sample_weights))])
         
         # Process filename.
         (path, name) = os.path.split(filename)
