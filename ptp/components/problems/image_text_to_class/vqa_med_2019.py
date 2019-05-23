@@ -54,10 +54,13 @@ class VQAMED2019(Problem):
 
     Please see the readme file of the crowdAI dataset section for more detailed information.
     For more details please refer to the associated _website or _crowdai websites for more details.
+    Test set with answers can be downloaded from a separate repository _repo.
 
     .. _crowdai: https://www.crowdai.org/challenges/imageclef-2019-vqa-med
 
     .. _website: https://www.imageclef.org/2019/medical/vqa/
+
+    .._repo: https://github.com/abachaa/VQA-Med-2019
     """
     def __init__(self, name, config):
         """
@@ -154,7 +157,7 @@ class VQAMED2019(Problem):
         self.data_folder = os.path.expanduser(self.config['data_folder'])
 
         # Get split.
-        split = get_value_from_dictionary('split', self.config, "training,validation,training_validation,test".split(","))
+        split = get_value_from_dictionary('split', self.config, "training,validation,training_validation,test_answers,test".split(","))
 
         # Set split-dependent data.
         if split == 'training':
@@ -249,14 +252,23 @@ class VQAMED2019(Problem):
             # Load dataset.
             self.dataset = self.load_dataset(source_files, source_image_folders, source_categories)
 
-        else:
-            # Test set.
+        elif split == 'test_answers':
+            # Test set WITH ANSWERS.
+            split_folder = os.path.join(self.data_folder, "ImageClef-2019-VQA-Med-Test")
+            # Set source file.
+            source_file = os.path.join(split_folder,"VQAMed2019_Test_Questions_w_Ref_Answers.txt")
+            # Set image folder.
+            source_image_folder = os.path.join(split_folder, 'VQAMed2019_Test_Images')
+            self.dataset = self.load_testset_with_answers(source_file, source_image_folder)
+
+        else: # "test"
+            # Test set WITHOUT ANSWERS.
             split_folder = os.path.join(self.data_folder, "ImageClef-2019-VQA-Med-Test")
             # Set source file.
             source_file = os.path.join(split_folder,"VQAMed2019_Test_Questions.txt")
             # Set image folder.
             source_image_folder = os.path.join(split_folder, 'VQAMed2019_Test_Images')
-            self.dataset = self.load_testset(source_file, source_image_folder)
+            self.dataset = self.load_testset_without_answers(source_file, source_image_folder)
 
         # Ok, now we got the whole dataset (for given "split").
         self.ix = np.arange(len(self.dataset))
@@ -598,9 +610,84 @@ class VQAMED2019(Problem):
         return dataset
 
 
-    def load_testset(self, data_file, image_folder):
+    def load_testset_with_answers(self, data_file, image_folder):
         """
-        Loads the test set.
+        Loads the test set with answers.
+
+        :param data_file: Source file.
+
+        :param image_folder: Folder containing image files.
+
+        """
+        # Set containing list of tuples.
+        dataset = []
+        category_mapping = {'modality': 0, 'plane': 1, 'organ': 2, 'abnormality': 3}
+
+        # Set absolute path to file.
+        self.logger.info('Loading test set from {}...'.format(data_file))
+        # Load file content using '|' separator.
+        df = pd.read_csv(filepath_or_buffer=data_file, sep='|',header=None,
+                names=[self.key_image_ids,"category",self.key_questions,self.key_answers])
+
+        # Add tdqm bar.
+        t = tqdm.tqdm(total=len(df.index))
+        for _, row in df.iterrows():
+            # Retrieve question and answer.
+            question = row[self.key_questions]
+            answer = row[self.key_answers]
+
+            # Process question - if required.
+            preprocessed_question = self.preprocess_text(
+                question,
+                'lowercase' in self.question_preprocessing,
+                'remove_punctuation' in self.question_preprocessing,
+                'tokenize' in self.question_preprocessing,
+                'remove_stop_words' in self.question_preprocessing
+                )
+
+            # Process answer - if required.
+            preprocessed_answer = self.preprocess_text(
+                answer,
+                'lowercase' in self.answer_preprocessing,
+                'remove_punctuation' in self.answer_preprocessing,
+                'tokenize' in self.answer_preprocessing,
+                False
+                )
+
+            # Get category id.
+            category_id = category_mapping[row["category"]]
+
+            # Create item "dictionary".
+            item = {
+                # Image name and path leading to it.
+                self.key_image_ids: row[self.key_image_ids],
+                "image_folder": image_folder,
+                self.key_questions: preprocessed_question,
+                self.key_answers: preprocessed_answer,
+                # Add category.
+                self.key_category_ids: category_id
+                }
+
+            # Preload image.
+            if self.preload_images and self.stream_images:
+                img, img_size = self.get_image(row[self.key_image_ids], image_folder)
+                item[self.key_images] = img
+                item[self.key_image_sizes] = img_size
+
+            # Add item to dataset.
+            dataset.append(item)
+
+            t.update()
+        t.close()
+
+        self.logger.info("Loaded dataset consisting of {} samples".format(len(dataset)))
+        # Return the created list.
+        return dataset
+
+
+    def load_testset_without_answers(self, data_file, image_folder):
+        """
+        Loads the test set without answers.
 
         :param data_file: Source file.
 
@@ -621,7 +708,7 @@ class VQAMED2019(Problem):
         # Add tdqm bar.
         t = tqdm.tqdm(total=len(df.index))
         for _, row in df.iterrows():
-            # Retrieve question and answer.
+            # Retrieve question.
             question = row[self.key_questions]
 
             # Process question - if required.

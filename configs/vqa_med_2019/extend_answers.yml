@@ -43,7 +43,7 @@ test_answers:
   problem:
     type: *p_type 
     data_folder: *data_folder
-    split: test
+    split: test_answers
     resize_image: *resize_image     
     batch_size: 64
     # Appy all preprocessing/data augmentations.
