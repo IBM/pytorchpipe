@@ -45,7 +45,7 @@ However, PTP provides several ready to use, out of the box components, from ones
   * LeNet-5 (classical baseline)
   * Recurrent Neural Network (different kernels with activation functions and dropout, a single model can work both as encoder or decoder, general usage)
   * Seq2Seq (Sequence to Sequence model, classical baseline)
-  * Attention Decoder (RNN-based decoder implementing Banadau-style attention, classical baseline)
+  * Attention Decoder (RNN-based decoder implementing Bahdanau-style attention, classical baseline)
   * Sencence Embeddings (encodes words using embedding layer, general usage)
 
 Currently PTP offers the following models useful for multi-modal fusion and reasoning:
@@ -83,14 +83,14 @@ It is easily installable via conda_, or you can compile it from source to optimi
 
 PTP is not (yet) available as a [pip](https://pip.pypa.io/en/stable/quickstart/) package, or on [conda](https://anaconda.org/pytorch/pytorch).
 However, we provide the `setup.py` script and recommend to use it for installation.
-First please clone the project repository::
+First please clone the project repository:
 
 ```console
 git clone git@github.com:IBM/pytorchpipe.git
 cd pytorchpipe/
 ```
 
-Then, install the dependencies by running::
+Next, install the dependencies by running:
 
 ```console
   python setup.py develop
