@@ -119,10 +119,11 @@ class StatisticsCollector(Mapping):
         for key in self.statistics.keys():
             del self.statistics[key][:]
 
-    def initialize_csv_file(self, log_dir, filename):
+
+    def __initialize_csv_file(self, log_dir, filename, keys):
         """
-        Method creates new csv file and initializes it with a header produced
-        on the base of statistics names.
+        This method creates a new `csv` file and initializes it with a header produced \
+        on the base of the statistical aggregators names.
 
         :param log_dir: Path to file.
         :type log_dir: str
@@ -130,13 +131,15 @@ class StatisticsCollector(Mapping):
         :param filename: Filename to be created.
         :type filename: str
 
+        :param keys: Names of keys that will be used as header of columns in csv file.
+
         :return: File stream opened for writing.
 
         """
         header_str = ''
 
         # Iterate through keys and concatenate them.
-        for key in self.statistics.keys():
+        for key in keys:
             # If formatting is set to '' - ignore this key.
             if self.formatting.get(key) is not None:
                 header_str += key + ","
@@ -151,7 +154,25 @@ class StatisticsCollector(Mapping):
         self.csv_file = open(log_dir + filename, 'w', 1)
         self.csv_file.write(header_str)
 
-        return self.csv_file
+        return self.csv_file        
+
+
+    def initialize_csv_file(self, log_dir, filename):
+        """
+        This method creates a new `csv` file and initializes it with a header produced \
+        on the base of the statistical aggregators names.
+
+        :param log_dir: Path to file.
+        :type log_dir: str
+
+        :param filename: Filename to be created.
+        :type filename: str
+
+        :return: File stream opened for writing.
+
+        """
+        return self.__initialize_csv_file(log_dir, filename, self.statistics.keys())
+
 
     def export_to_csv(self, csv_file=None):
         """

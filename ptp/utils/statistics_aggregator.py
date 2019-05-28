@@ -128,6 +128,7 @@ class StatisticsAggregator(StatisticsCollector):
         """
         return self.aggregators.__iter__()
 
+
     def initialize_csv_file(self, log_dir, filename):
         """
         This method creates a new `csv` file and initializes it with a header produced \
@@ -142,25 +143,8 @@ class StatisticsAggregator(StatisticsCollector):
         :return: File stream opened for writing.
 
         """
-        header_str = ''
+        return self.__initialize_csv_file(log_dir, filename, self.aggregators.keys())
 
-        # Iterate through keys and concatenate them.
-        for key in self.aggregators.keys():
-            # If formatting is set to '' - ignore this key.
-            if self.formatting.get(key) is not None:
-                header_str += key + ","
-
-        # Remove last coma.
-        if len(header_str) > 0:
-            header_str = header_str[:-1]
-        #  Add \n.
-        header_str = header_str + '\n'
-
-        # Open file for writing.
-        self.csv_file = open(log_dir + filename, 'w', 1)
-        self.csv_file.write(header_str)
-
-        return self.csv_file
 
     def export_to_csv(self, csv_file=None):
         """
