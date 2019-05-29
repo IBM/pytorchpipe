@@ -12,7 +12,7 @@ training:
 
   # Default sampler during training.
   sampler:
-    name: kFoldWeightedRandomSampler
+    type: kFoldWeightedRandomSampler
     folds: 20
     epochs_per_fold: 1000 # NEVER CHANGE FOLD!
   # Use four workers for loading images.
@@ -21,7 +21,7 @@ training:
 
   # Optimizer parameters:
   optimizer:
-    name: Adam
+    type: Adam
     lr: 0.0001
 
   # Terminal conditions:
@@ -44,7 +44,7 @@ validation:
 
   # Default sampler during validation.
   sampler:
-    name: kFoldRandomSampler
+    type: kFoldRandomSampler
     folds: 20
     epochs_per_fold: 1000 # NEVER CHANGE FOLD!
   # Use four workers for loading images.

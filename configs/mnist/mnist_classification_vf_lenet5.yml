@@ -18,7 +18,7 @@ testing:
 
 # Definition of the pipeline.
 pipeline:
-  name: mnist_variational_flow_lenet5
+
   # Disable components for "default" flow.
   disable: nllloss, precision_recall
 

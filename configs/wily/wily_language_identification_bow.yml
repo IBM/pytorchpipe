@@ -10,12 +10,12 @@ training:
 
   # Use sampler that operates on a subset.
   sampler:
-    name: SubsetRandomSampler
+    type: SubsetRandomSampler
     indices: [0, 117000]
 
   # optimizer parameters:
   optimizer:
-    name: Adam
+    type: Adam
     lr: 0.1
 
   # settings parameters
@@ -35,7 +35,7 @@ validation:
 
   # Use sampler that operates on a subset.
   sampler:
-    name: SubsetRandomSampler
+    type: SubsetRandomSampler
     indices: [117000, 117500]
 
 # Testing parameters:
@@ -48,7 +48,7 @@ testing:
     streams: *p_streams
 
 pipeline:
-  name: language_classifier
+
   #load: /users/tomaszkornuta/experiments/dummylanguageidentification/language_classifier/20190301_145416/checkpoints/language_classifier_best.pt
   #freeze: True
   #disable: prediction_decoder,accuracy

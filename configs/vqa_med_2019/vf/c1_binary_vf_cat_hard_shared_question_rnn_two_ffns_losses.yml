@@ -7,7 +7,7 @@ training:
     categories: C1
     export_sample_weights: ~/data/vqa-med/answers.c1.weights.csv
   sampler:
-    name: kFoldWeightedRandomSampler
+    type: kFoldWeightedRandomSampler
     weights: ~/data/vqa-med/answers.c1.weights.csv
     folds: 5
   dataloader:
@@ -18,14 +18,13 @@ validation:
   problem:
     categories: C1
   sampler:
-    name: kFoldRandomSampler
+    type: kFoldRandomSampler
     folds: 5
   dataloader:
     num_workers: 4
 
 
 pipeline:
-  name: c1_binary_vf_cat_hard_shared_question_rnn_two_ffns_losses
   
   ################# PIPE 0: SHARED #################
 

@@ -84,12 +84,6 @@ class SamplerFactory(object):
         # Initialize logger.
         logger = logging.initialize_logger('SamplerFactory')
 
-
-        # Check if sampler is required, i.e. 'sampler' section is empty.
-        if not config:
-            logger.info("The sampler configuration section is not present, using default 'random' sampling")
-            return None
-
         try: 
             # Check presence of the name attribute.
             if 'name' not in config:

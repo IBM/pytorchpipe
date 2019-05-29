@@ -7,7 +7,7 @@ training:
     #resize_image: [32, 32]
     batch_size: 64
   #optimizer:
-  #  #name: Adam
+  #  #type: Adam
   #  lr: 0.001
   #terminal_conditions:
   #  loss_stop: 0.08
@@ -25,7 +25,7 @@ training:
 
 # Definition of the pipeline.
 pipeline:
-  name: mnist_variational_flow_shared_convnet_2softmaxes
+
   # Disable components for "default" flow.
   disable: nllloss, precision_recall
 

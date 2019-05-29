@@ -18,7 +18,6 @@ testing:
 
 # Definition of the pipeline.
 pipeline:
-  name: mnist_lenet5_classifier
 
   # Image classifier.
   image_classifier:

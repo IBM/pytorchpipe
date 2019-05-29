@@ -16,7 +16,6 @@ validation:
 
 
 pipeline:
-  name: c1_binary_vf_cat_rnn_shared_question_rnn_two_ffns_losses
   
   ################# PIPE 0: SHARED #################
 

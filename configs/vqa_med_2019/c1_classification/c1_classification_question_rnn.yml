@@ -2,7 +2,6 @@
 default_configs: vqa_med_2019/c1_classification/default_c1_classification.yml
 
 pipeline:
-  name: c1_classification_question_rnn
   
   # Questions encoding.
   question_tokenizer:

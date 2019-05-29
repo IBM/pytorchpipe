@@ -2,7 +2,6 @@
 default_configs: vqa_med_2019/c3_classification/default_c3_classification.yml
 
 pipeline:
-  name: vqa_med_c3_classification_image_vgg16_softmax
 
   # Image encoder.
   image_encoder:

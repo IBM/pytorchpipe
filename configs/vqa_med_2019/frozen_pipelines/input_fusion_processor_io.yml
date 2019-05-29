@@ -31,7 +31,6 @@ hyperparams:
 
 # Add component for exporting answers to files.
 pipeline:
-  name: input_fusion_processor_io
 
   ################# PIPE 6: C1 + C2 + C3 questions #################
 

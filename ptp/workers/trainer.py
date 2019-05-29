@@ -139,30 +139,57 @@ class Trainer(Worker):
         conf_str += '='*80 + '\n'
         print(conf_str)
 
-        # Get training problem name.
+        # Get training section.
         try:
-            training_problem_type = self.config['training']['problem']['type']
+            tsn = "training"
+            tsn = self.config["training_section_name"]
+            self.config_training = self.config[tsn]
+        except KeyError:
+            print("Error: Couldn't retrieve the training section '{}' from the loaded configuration".format(tsn))
+            exit(-1)
+
+        # Get training problem type.
+        try:
+            training_problem_type = self.config_training['problem']['type']
         except KeyError:
             print("Error: Couldn't retrieve the problem 'type' from the 'training' section in the loaded configuration")
             exit(-1)
 
-        # Get validation problem name
+        # Get validation section.
         try:
-            _ = self.config['validation']['problem']['type']
+            vsn = "validation"
+            vsn = self.config["validation_section_name"]
+            self.config_validation = self.config[vsn]
+        except KeyError:
+            print("Error: Couldn't retrieve the validation section '{}' from the loaded configuration".format(vsn))
+            exit(-1)
+
+        # Get validation problem type.
+        try:
+            _ = self.config_validation['problem']['type']
         except KeyError:
             print("Error: Couldn't retrieve the problem 'type' from the 'validation' section in the loaded configuration")
             exit(-1)
 
+        # Get pipeline section.
+        try:
+            psn = "pipeline"
+            psn = self.config["pipeline_section_name"]
+            self.config_pipeline = self.config[psn]
+        except KeyError:
+            print("Error: Couldn't retrieve the pipeline section '{}' from the loaded configuration".format(psn))
+            exit(-1)
+
         # Get pipeline name.
         try:
-            pipeline_name = self.config['pipeline']['name']
+            pipeline_name = self.config_pipeline['name']
         except KeyError:
             # Using name of the first configuration file from command line.
             basename = path.basename(root_configs[0])
             # Take config filename without extension.
             pipeline_name = path.splitext(basename)[0] 
             # Set pipeline name, so processor can use it afterwards.
-            self.config['pipeline'].add_config_params({'name': pipeline_name})
+            self.config_pipeline.add_config_params({'name': pipeline_name})
 
         # Prepare the output path for logging
         while True:  # Dirty fix: if log_dir already exists, wait for 1 second and try again
@@ -195,7 +222,7 @@ class Trainer(Worker):
         makedirs(self.checkpoint_dir, exist_ok=False)
 
         # Set random seeds in the training section.
-        self.set_random_seeds('training', self.config['training'])
+        self.set_random_seeds('training', self.config_training)
 
         # Total number of detected errors.
         errors =0
@@ -203,19 +230,19 @@ class Trainer(Worker):
         ################# TRAINING PROBLEM ################# 
 
         # Build training problem manager.
-        self.training = ProblemManager('training', self.config['training']) 
+        self.training = ProblemManager('training', self.config_training) 
         errors += self.training.build()
         
         # parse the curriculum learning section in the loaded configuration.
-        if 'curriculum_learning' in self.config['training']:
+        if 'curriculum_learning' in self.config_training:
 
             # Initialize curriculum learning - with values from loaded configuration.
-            self.training.problem.curriculum_learning_initialize(self.config['training']['curriculum_learning'])
+            self.training.problem.curriculum_learning_initialize(self.config_training['curriculum_learning'])
 
             # If the 'must_finish' key is not present in config then then it will be finished by default
-            self.config['training']['curriculum_learning'].add_default_params({'must_finish': True})
+            self.config_training['curriculum_learning'].add_default_params({'must_finish': True})
 
-            self.must_finish_curriculum = self.config['training']['curriculum_learning']['must_finish']
+            self.must_finish_curriculum = self.config_training['curriculum_learning']['must_finish']
             self.logger.info("Curriculum Learning activated")
 
         else:
@@ -226,13 +253,13 @@ class Trainer(Worker):
         ################# VALIDATION PROBLEM ################# 
         
         # Build validation problem manager.
-        self.validation = ProblemManager('validation', self.config['validation'])
+        self.validation = ProblemManager('validation', self.config_validation)
         errors += self.validation.build()
 
         ###################### PIPELINE ######################
         
         # Build the pipeline using the loaded configuration.
-        self.pipeline = PipelineManager(pipeline_name, self.config['pipeline'])
+        self.pipeline = PipelineManager(pipeline_name, self.config_pipeline)
         errors += self.pipeline.build()
 
         # Check errors.
@@ -269,8 +296,8 @@ class Trainer(Worker):
             if self.app_state.args.load_checkpoint != "":
                 pipeline_name = self.app_state.args.load_checkpoint
                 msg = "command line (--load)"
-            elif "load" in self.config['pipeline']:
-                pipeline_name = self.config['pipeline']['load']
+            elif "load" in self.config_pipeline:
+                pipeline_name = self.config_pipeline['load']
                 msg = "'pipeline' section of the configuration file"
             else:
                 pipeline_name = ""
@@ -309,9 +336,9 @@ class Trainer(Worker):
         ################# OPTIMIZER ################# 
 
         # Set the optimizer.
-        optimizer_conf = dict(self.config['training']['optimizer'])
-        optimizer_name = optimizer_conf['name']
-        del optimizer_conf['name']
+        optimizer_conf = dict(self.config_training['optimizer'])
+        optimizer_type = optimizer_conf['type']
+        del optimizer_conf['type']
 
         # Check if there are any models in the pipeline.
         if len(list(filter(lambda p: p.requires_grad, self.pipeline.parameters()))) == 0:
@@ -319,11 +346,11 @@ class Trainer(Worker):
             exit(-7)
 
         # Instantiate the optimizer and filter the model parameters based on if they require gradients.
-        self.optimizer = getattr(torch.optim, optimizer_name)(
+        self.optimizer = getattr(torch.optim, optimizer_type)(
             filter(lambda p: p.requires_grad, self.pipeline.parameters()), **optimizer_conf)
 
         log_str = 'Optimizer:\n' + '='*80 + "\n"
-        log_str += "  Name: " + optimizer_name + "\n"
+        log_str += "  Type: " + optimizer_type + "\n"
         log_str += "  Params: {}".format(optimizer_conf)
 
         self.logger.info(log_str)

@@ -10,11 +10,11 @@ training:
     #resize: [32, 32]
   # Use k-fold cross-validation random sampler.
   sampler:
-    name: kFoldRandomSampler
+    type: kFoldRandomSampler
     folds: 7 # Each with size of 6000
   # optimizer parameters:
   optimizer:
-    name: Adam
+    type: Adam
     lr: 0.0001
   # settings parameters
   terminal_conditions:
@@ -32,11 +32,10 @@ validation:
     #resize: [32, 32]
   # Use k-fold cross-validation random sampler.
   sampler:
-    name: kFoldRandomSampler
+    type: kFoldRandomSampler
     folds: 7 # Each with size of 6000
 
 pipeline:
-  name: mnist_softmax_classifier
 
   # Reshapes tensors.
   reshaper:

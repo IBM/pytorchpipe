@@ -2,7 +2,6 @@
 default_configs: mnist/default_mnist.yml
 
 pipeline:
-  name: mnist_softmax_classifier
 
   # Reshapes tensors.
   reshaper:

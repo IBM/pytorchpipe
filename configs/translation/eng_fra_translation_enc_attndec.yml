@@ -14,7 +14,7 @@ training:
 
   # optimizer parameters:
   optimizer:
-    name: Adam
+    type: Adam
     lr: 1.0e-3
 
   # settings parameters
@@ -45,7 +45,6 @@ testing:
     batch_size: 64
 
 pipeline:
-  name: eng_fra_translation_enc_attndec
 
   # Source encoding - model 1.
   source_sentence_embedding:

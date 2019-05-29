@@ -69,11 +69,11 @@ class OnlineTrainer(Trainer):
         log_str = 'Terminal conditions:\n' + '='*80 + "\n"
 
         # Terminal condition I: loss. 
-        self.loss_stop = self.config['training']['terminal_conditions']['loss_stop']
+        self.loss_stop = self.config_training['terminal_conditions']['loss_stop']
         log_str += "  Setting Loss Stop threshold to {}\n".format(self.loss_stop)
 
         # Terminal condition II: max epochs. Optional.
-        self.epoch_limit = self.config["training"]["terminal_conditions"]["epoch_limit"]
+        self.epoch_limit = self.config_training["terminal_conditions"]["epoch_limit"]
         if self.epoch_limit <= 0:
             log_str += "  Termination based on Epoch Limit is disabled\n"
             # Set to infinity.
@@ -86,7 +86,7 @@ class OnlineTrainer(Trainer):
         log_str += "  Epoch size in terms of training episodes: {}\n".format(self.epoch_size)
 
         # Terminal condition III: max episodes. Mandatory.
-        self.episode_limit = self.config['training']['terminal_conditions']['episode_limit']
+        self.episode_limit = self.config_training['terminal_conditions']['episode_limit']
         if self.episode_limit <= 0:
             self.logger.error("OnLine Trainer relies on episodes, thus 'episode_limit' must be a positive number!")
             exit(-5)
@@ -194,7 +194,7 @@ class OnlineTrainer(Trainer):
                     # Check the presence of the 'gradient_clipping'  parameter.
                     try:
                         # if present - clip gradients to a range (-gradient_clipping, gradient_clipping)
-                        val = self.config['training']['gradient_clipping']
+                        val = self.config_training['gradient_clipping']
                         torch.nn.utils.clip_grad_value_(self.pipeline.parameters(), val)
                     except KeyError:
                         # Else - do nothing.
@@ -344,11 +344,17 @@ def main():
     """
     Entry point function for the ``OnlineTrainer``.
     """
-    trainer = OnlineTrainer()
-    # parse args, load configuration and create all required objects.
-    trainer.setup_experiment()
-    # GO!
-    trainer.run_experiment()
+    try:
+        # Create trainer.
+        trainer = OnlineTrainer()
+        # Parse args, load configuration and create all required objects.
+        trainer.setup_experiment()
+        # GO!
+        trainer.run_experiment()
+    except KeyError as e:
+        print("Error: {}".format(e))
+        exit(-1)
+
 
 if __name__ == '__main__':
     main()
