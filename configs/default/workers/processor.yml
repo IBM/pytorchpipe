@@ -1,0 +1,8 @@
+# Default name of section used - we assume it will be test
+# One can change this, but must remember to define all the required parameters in the new section.
+# Note: this can also be changed by setting command line argument (--set)
+section_name: test
+
+# Section defining all the default values of parameters used during testing.
+test:
+

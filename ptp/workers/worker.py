@@ -25,7 +25,9 @@ from abc import abstractmethod
 
 import ptp.utils.logger as logging
 from ptp.utils.app_state import AppState
+
 from ptp.configuration.config_interface import ConfigInterface
+from ptp.configuration.config_parsing import load_class_default_config_file
 
 
 class Worker(object):
@@ -34,22 +36,19 @@ class Worker(object):
     All base workers should subclass it and override the relevant methods.
     """
 
-    def __init__(self, name, add_default_parser_args = True):
+    def __init__(self, name, class_type, add_default_parser_args = True):
         """
         Base constructor for all workers:
 
-            - Initializes the AppState singleton:
-
-                >>> self.app_state = AppState()
-
-            - Initializes the Configuration Registry:
-
-                >>> self.config = ConfigInterface()
-
-            - Creates parser and adds default worker command line arguments.
+            - Initializes the AppState singleton
+            - Initializes the Configuration Registry
+            - Loads default parameters
+            - Creates parser and adds default worker command line arguments
 
         :param name: Name of the worker.
         :type name: str
+
+        :param class_type: Class type of the component.
 
         :param add_default_parser_args: If set, adds default parser arguments (DEFAULT: True).
         :type add_default_parser_args: bool
@@ -66,6 +65,11 @@ class Worker(object):
 
         # Initialize parameter interface/registry.
         self.config = ConfigInterface()
+
+        # Load default configuration.
+        if class_type is not None:
+            self.config.add_default_params(load_class_default_config_file(class_type))
+
 
         # Create parser with a list of runtime arguments.
         self.parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)

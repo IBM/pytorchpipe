@@ -121,12 +121,12 @@ def load_class_default_config_file(class_type):
     # Extract path to default config.
     module = class_type.__module__.replace(".","/")
     rel_path = module[module.find("ptp")+4:]
-    # Build the abs path to the default config file of a given component.
+    # Build the abs path to the default config file of a given component/worker.
     abs_default_config = os.path.join(AppState().absolute_config_path, "default", rel_path) + ".yml"
 
     # Check if file exists.
     if not os.path.isfile(abs_default_config):
-        print("ERROR: The default configuration file '{}' for '{}' component does not exist".format(abs_default_config, class_type.__module__))
+        print("ERROR: The default configuration file '{}' for '{}' does not exist".format(abs_default_config, class_type.__module__))
         exit(-1)
 
     try:

@@ -39,16 +39,12 @@ class OnlineTrainer(Trainer):
 
     """
 
-    def __init__(self, name="OnlineTrainer"):
+    def __init__(self):
         """
-        Only calls the ``Trainer`` constructor as the initialization phase is identical to the ``Trainer``.
-
-       :param name: Name of the worker (DEFAULT: "OnlineTrainer").
-       :type name: str
-
+        Constructor. It on calls the ``Trainer`` constructor as the initialization phase is identical to the one from ``Trainer``.
         """ 
         # Call base constructor to set up app state, registry and add default config.
-        super(OnlineTrainer, self).__init__(name)
+        super(OnlineTrainer, self).__init__("OnlineTrainer", OnlineTrainer)
 
     def setup_experiment(self):
         """

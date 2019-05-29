@@ -1,0 +1,19 @@
+# Default name of section used for training.
+# One can change this, but must remember to define all the required parameters in the new section.
+training_section_name: training
+
+# Default name of section used for validation.
+# One can change this, but must remember to define all the required parameters in the new section.
+validation_section_name: validation
+
+# Section defining all the default values of parameters used during training.
+training:
+
+  # Terminal conditions that will be used during training.
+  # They can (and ofter should) be overwritten.
+  terminal_conditions:
+
+
+
+# Section defining all the default values of parameters used during training.
+validation:

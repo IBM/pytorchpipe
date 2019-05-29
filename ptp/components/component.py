@@ -30,23 +30,14 @@ from ptp.configuration.config_parsing import load_class_default_config_file
 class Component(abc.ABC):
     def __init__(self, name, class_type, config):
         """
-        Initializes the component.
+        Initializes the component. This constructor:
 
-        This constructor:
-
-        - stores a pointer to ``config``:
-
-            >>> self.config = config
-
-        - sets a problem name:
-
-            >>> self.name = name
-
-        - initializes the logger.
-
-        - sets the access to ``AppState``: for dtype, visualization flag etc.
-
-            >>> self.app_state = AppState()
+            - sets the access to ``AppState`` (for dtypes, settings, globals etc.)
+            - stores the component name and type
+            - stores reference to the passed configuration registry section
+            - loads default component parameters
+            - initializes the logger
+            - initializes mapping facilities and facades
 
         :param name: Name of the component.
 

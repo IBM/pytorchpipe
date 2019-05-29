@@ -42,16 +42,12 @@ class Processor(Worker):
 
     """
 
-    def __init__(self, name="Processor"):
+    def __init__(self):
         """
         Calls the ``Worker`` constructor, adds some additional arguments to parser.
-
-       :param name: Name of the worker (DEFAULT: "Processor").
-       :type name: str
-
         """ 
         # Call base constructor to set up app state, registry and add default params.
-        super(Processor, self).__init__(name)
+        super(Processor, self).__init__("Processor", Processor)
 
         self.parser.add_argument(
             '--set',

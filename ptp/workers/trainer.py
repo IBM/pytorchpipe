@@ -45,18 +45,20 @@ class Trainer(Worker):
 
     """
 
-    def __init__(self, name="Trainer"):
+    def __init__(self, name, class_type):
         """
         Base constructor for all trainers:
 
             - Adds default trainer command line arguments
 
-        :param name: Name of the worker (DEFAULT: "Trainer").
+        :param name: Name of the worker
         :type name: str
+
+        :param class_type: Class type of the component.
 
         """ 
         # Call base constructor to set up app state, registry and add default arguments.
-        super(Trainer, self).__init__(name)
+        super(Trainer, self).__init__(name, class_type)
 
         # Add arguments to the specific parser.
         # These arguments will be shared by all basic trainers.
