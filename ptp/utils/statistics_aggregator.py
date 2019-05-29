@@ -17,7 +17,6 @@
 
 __author__ = "Vincent Marois, Tomasz Kornuta"
 
-import numpy as np
 from ptp.utils.statistics_collector import StatisticsCollector
 
 
