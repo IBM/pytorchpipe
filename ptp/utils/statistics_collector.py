@@ -120,7 +120,7 @@ class StatisticsCollector(Mapping):
             del self.statistics[key][:]
 
 
-    def __initialize_csv_file(self, log_dir, filename, keys):
+    def base_initialize_csv_file(self, log_dir, filename, keys):
         """
         This method creates a new `csv` file and initializes it with a header produced \
         on the base of the statistical aggregators names.
@@ -171,7 +171,7 @@ class StatisticsCollector(Mapping):
         :return: File stream opened for writing.
 
         """
-        return self.__initialize_csv_file(log_dir, filename, self.statistics.keys())
+        return self.base_initialize_csv_file(log_dir, filename, self.statistics.keys())
 
 
     def export_to_csv(self, csv_file=None):

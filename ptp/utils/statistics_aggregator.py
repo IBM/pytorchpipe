@@ -143,7 +143,7 @@ class StatisticsAggregator(StatisticsCollector):
         :return: File stream opened for writing.
 
         """
-        return self.__initialize_csv_file(log_dir, filename, self.aggregators.keys())
+        return super().base_initialize_csv_file(log_dir, filename, self.aggregators.keys())
 
 
     def export_to_csv(self, csv_file=None):
