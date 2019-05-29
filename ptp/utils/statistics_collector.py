@@ -197,7 +197,9 @@ class StatisticsCollector(Mapping):
                 format_str = self.formatting.get(key, '{}')
 
                 # Add value to string using formatting.
-                values_str += format_str.format(value[-1]) + ","
+                if len(value) > 0:
+                    values_str += format_str.format(value[-1])
+                values_str += ","
 
         # Remove last coma.
         if len(values_str) > 1:
@@ -222,7 +224,8 @@ class StatisticsCollector(Mapping):
                 format_str = self.formatting.get(key, '{}')
 
                 # Add to dict.
-                chkpt[key]  = format_str.format(value[-1])
+                if len(value) > 0:
+                    chkpt[key]  = format_str.format(value[-1])
 
         return chkpt
 
@@ -247,7 +250,9 @@ class StatisticsCollector(Mapping):
                 # Get formatting - using '{}' as default.
                 format_str = self.formatting.get(key, '{}')
                 # Add value to string using formatting.
-                stat_str += format_str.format(value[-1]) + "; "
+                if len(value) > 0:
+                    stat_str += format_str.format(value[-1])
+                stat_str += "; "
 
         # Remove last two elements.
         if len(stat_str) > 2:
@@ -289,36 +294,3 @@ class StatisticsCollector(Mapping):
             # If formatting is set to None - ignore this key.
             if self.formatting.get(key) is not None:
                 tb_writer.add_scalar(key, value[-1], episode)
-
-
-if __name__ == "__main__":
-
-    stat_col = StatisticsCollector()
-    stat_col.add_statistics('loss', '{:12.10f}')
-    stat_col.add_statistics('episode', '{:06d}')
-    stat_col.add_statistics('acc', '{:2.3f}')
-    stat_col.add_statistics('acc_help', None)
-
-    stat_col['episode'] = 0
-    stat_col['loss'] = 0.7
-    stat_col['acc'] = 100
-    stat_col['acc_help'] = 121
-
-    csv_file = stat_col.initialize_csv_file('./', 'collector_test.csv')
-    stat_col.export_to_csv(csv_file)
-    print(stat_col.export_to_string())
-
-    stat_col['episode'] = 1
-    stat_col['loss'] = 0.7
-    stat_col['acc'] = 99.3
-
-    stat_col.add_statistics('seq_length', '{:2.0f}')
-    stat_col['seq_length'] = 5
-
-    stat_col.export_to_csv(csv_file)
-    print(stat_col.export_to_string('[Validation]'))
-
-    stat_col.empty()
-
-    for k in stat_col:
-        print('key: {} - value {}:'.format(k, stat_col[k]))
