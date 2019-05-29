@@ -119,5 +119,5 @@ class TestPipeline(unittest.TestCase):
         self.assertEqual(pipe[1].name, 'bow_encoder2')
 
 
-if __name__ == "__main__":
-    unittest.main()
+#if __name__ == "__main__":
+#    unittest.main()

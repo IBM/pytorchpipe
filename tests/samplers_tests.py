@@ -166,5 +166,5 @@ class TestkFoldWeightedRandomSampler(unittest.TestCase):
             self.assertIn(ix, [4,7])
 
 
-if __name__ == "__main__":
-    unittest.main()
+#if __name__ == "__main__":
+#    unittest.main()

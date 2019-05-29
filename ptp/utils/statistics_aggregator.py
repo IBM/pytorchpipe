@@ -17,7 +17,6 @@
 
 __author__ = "Vincent Marois, Tomasz Kornuta"
 
-import numpy as np
 from ptp.utils.statistics_collector import StatisticsCollector
 
 
@@ -128,6 +127,7 @@ class StatisticsAggregator(StatisticsCollector):
         """
         return self.aggregators.__iter__()
 
+
     def initialize_csv_file(self, log_dir, filename):
         """
         This method creates a new `csv` file and initializes it with a header produced \
@@ -142,25 +142,8 @@ class StatisticsAggregator(StatisticsCollector):
         :return: File stream opened for writing.
 
         """
-        header_str = ''
+        return super().base_initialize_csv_file(log_dir, filename, self.aggregators.keys())
 
-        # Iterate through keys and concatenate them.
-        for key in self.aggregators.keys():
-            # If formatting is set to '' - ignore this key.
-            if self.formatting.get(key) is not None:
-                header_str += key + ","
-
-        # Remove last coma.
-        if len(header_str) > 0:
-            header_str = header_str[:-1]
-        #  Add \n.
-        header_str = header_str + '\n'
-
-        # Open file for writing.
-        self.csv_file = open(log_dir + filename, 'w', 1)
-        self.csv_file.write(header_str)
-
-        return self.csv_file
 
     def export_to_csv(self, csv_file=None):
         """
@@ -273,41 +256,3 @@ class StatisticsAggregator(StatisticsCollector):
             # If formatting is set to None - ignore this key.
             if self.formatting.get(key) is not None:
                 tb_writer.add_scalar(key, value, episode)
-
-
-if __name__ == "__main__":
-
-    stat_col = StatisticsCollector()
-    stat_agg = StatisticsAggregator()
-
-
-    # Add default statistics with formatting.
-    stat_col.add_statistics('loss', '{:12.10f}')
-    stat_col.add_statistics('episode', '{:06d}')
-    stat_col.add_statistics('batch_size', None)
-
-    import random
-    # create some random values
-    loss_values = random.sample(range(100), 100)
-    # "Collect" basic statistics.
-    for episode, loss in enumerate(loss_values):
-        stat_col['episode'] = episode
-        stat_col['loss'] = loss
-        stat_col['batch_size'] = 1
-        # print(stat_col.export_statistics_to_string())
-
-    print(stat_agg.export_to_string())
-
-    # Add new aggregator (a simulation of "additional statistics collected by model")
-    # Add default statistical aggregators for the loss (indicating a formatting).
-    #stat_agg.add_aggregator('loss', '{:12.10f}')  
-    # add 'aggregators' for the episode.
-    #stat_agg.add_aggregator('episode', '{:06d}')
-    # Number of aggregated episodes.
-    #stat_agg.add_aggregator('episodes_aggregated', '{:06d}')
-    stat_agg.add_aggregator('acc_mean', '{:2.5f}')
-    collected_loss_values  = stat_col['loss']
-    batch_sizes = stat_col['batch_size']
-    stat_agg['acc_mean'] = np.mean(collected_loss_values) / np.sum(batch_sizes)
-
-    print(stat_agg.export_to_string('[Epoch 1]'))
