@@ -173,11 +173,6 @@ class Worker(object):
         # For now do not add file handler, as path to logfile is not known yet.
         self.logger = logging.initialize_logger(self.name, False)
 
-        # add empty sections
-        self.config.add_default_params({"training": {'terminal_conditions': {}}})
-        self.config.add_default_params({"validation": {}})
-        self.config.add_default_params({"testing": {}})
-
 
     def add_statistics(self, stat_col):
         """
@@ -304,7 +299,6 @@ class Worker(object):
 
         """
         # Set the random seeds: either from the loaded configuration or a default randomly selected one.
-        config.add_default_params({"seed_numpy": -1})
         if config["seed_numpy"] == -1:
             seed = randrange(0, 2 ** 32)
             # Overwrite the config param!
@@ -313,7 +307,6 @@ class Worker(object):
         self.logger.info("Setting numpy random seed in {} to: {}".format(section_name, config["seed_numpy"]))
         np.random.seed(config["seed_numpy"])
 
-        config.add_default_params({"seed_torch": -1})
         if config["seed_torch"] == -1:
             seed = randrange(0, 2 ** 32)
             # Overwrite the config param!

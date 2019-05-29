@@ -9,11 +9,41 @@ validation_section_name: validation
 # Section defining all the default values of parameters used during training.
 training:
 
+  # Set the random seeds: -1 means that they will be picked randomly.
+  # Note: their final values will be stored in the final training_configuration.yml saved to log dir.
+  seed_numpy: -1
+  seed_torch: -1
+
+  # Definition of the problem (Mandatory!)
+  # problem:
+  #  The rest of the content of that section is problem specific.
+  
+  # Section describing curriculum learning (Optional)
+  #curriculum_learning: 
+  #  # Flag indicating whether curriculum learning has to finish before (eventual) termination of the training.
+  #  must_finish: True
+  #  The rest of the content of that section is problem specific.
+
+
   # Terminal conditions that will be used during training.
   # They can (and ofter should) be overwritten.
   terminal_conditions:
-
+    # Terminal condition I: loss threshold, going below will terminate the training.
+    loss_stop': 0.00001 # 1e-5
+    # Terminal condition II: maximal number of epochs (optional, -1 means that this condition is disabled)
+    epoch_limit: -1
+    # Terminal condition III: maximal number of episodes (Mandatory for this trainer! Must be > 0)
+    episode_limit: 100000
 
 
 # Section defining all the default values of parameters used during training.
 validation:
+
+  # Defines how often the partial validation will be performed.
+  # In this trainer Partial Validation is mandatory, hence interval must be > 0.
+  partial_validation_interval: 100
+
+  # Definition of the problem (mandatory!)
+  # problem:
+  #  The rest of the content of that section is problem specific.
+

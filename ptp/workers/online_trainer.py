@@ -57,25 +57,22 @@ class OnlineTrainer(Trainer):
         # Call base method to parse all command line arguments, load configuration, create problems and model etc.
         super(OnlineTrainer, self).setup_experiment()
 
-        ################# TERMINAL CONDITIONS ################# 
-        log_str = 'Terminal conditions:\n' + '='*80 + "\n"
-
-        # Terminal condition I: loss. 
-        self.config['training']['terminal_conditions'].add_default_params({'loss_stop': 1e-5})
-        self.loss_stop = self.config['training']['terminal_conditions']['loss_stop']
-        log_str += "  Setting Loss Stop threshold to {}\n".format(self.loss_stop)
-
         # In this trainer Partial Validation is mandatory, hence interval must be > 0.
-        self.config['validation'].add_default_params({'partial_validation_interval': 100})
         self.partial_validation_interval = self.config['validation']['partial_validation_interval']
         if self.partial_validation_interval <= 0:
             self.logger.error("Episodic Trainer relies on Partial Validation, thus 'partial_validation_interval' must be a positive number!")
             exit(-4)
         else:
-            log_str += "  Partial Validation activated with interval equal to {} episodes\n".format(self.partial_validation_interval)
+            self.logger.info("Partial Validation activated with interval equal to {} episodes\n".format(self.partial_validation_interval))
+
+        ################# TERMINAL CONDITIONS ################# 
+        log_str = 'Terminal conditions:\n' + '='*80 + "\n"
+
+        # Terminal condition I: loss. 
+        self.loss_stop = self.config['training']['terminal_conditions']['loss_stop']
+        log_str += "  Setting Loss Stop threshold to {}\n".format(self.loss_stop)
 
         # Terminal condition II: max epochs. Optional.
-        self.config["training"]["terminal_conditions"].add_default_params({'epoch_limit': -1})
         self.epoch_limit = self.config["training"]["terminal_conditions"]["epoch_limit"]
         if self.epoch_limit <= 0:
             log_str += "  Termination based on Epoch Limit is disabled\n"
@@ -89,7 +86,6 @@ class OnlineTrainer(Trainer):
         log_str += "  Epoch size in terms of training episodes: {}\n".format(self.epoch_size)
 
         # Terminal condition III: max episodes. Mandatory.
-        self.config["training"]["terminal_conditions"].add_default_params({'episode_limit': 100000})
         self.episode_limit = self.config['training']['terminal_conditions']['episode_limit']
         if self.episode_limit <= 0:
             self.logger.error("OnLine Trainer relies on episodes, thus 'episode_limit' must be a positive number!")
