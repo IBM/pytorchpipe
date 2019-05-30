@@ -351,6 +351,7 @@ def main():
         trainer.setup_experiment()
         # GO!
         trainer.run_experiment()
+
     except KeyError as e:
         print("Error: {}".format(e))
         exit(-1)
