@@ -10,7 +10,7 @@ training:
 
   # optimizer parameters:
   optimizer:
-    name: SGD
+    type: SGD
     lr: 0.1
 
   # settings parameters
@@ -29,7 +29,7 @@ validation:
     streams: *p_streams
 
 # Testing parameters:
-testing:
+test:
   problem:
     type: *p_type 
     batch_size:  2
@@ -37,7 +37,6 @@ testing:
     streams: *p_streams
 
 pipeline:
-  name: language_classifier
   #load: /users/tomaszkornuta/experiments/dummylanguageidentification/language_classifier/20190301_145416/checkpoints/language_classifier_best.pt
   #freeze: True
   #disable: prediction_decoder,accuracy

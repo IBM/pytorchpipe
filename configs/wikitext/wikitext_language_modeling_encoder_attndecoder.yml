@@ -16,7 +16,7 @@ training:
 
   # optimizer parameters:
   optimizer:
-    name: SGD
+    type: SGD
     lr: 1.0e-2
 
   # settings parameters
@@ -37,7 +37,7 @@ validation:
     batch_size:  64
 
 # Testing parameters:
-testing:
+test:
   problem:
     type: *p_type 
     data_folder: *data_folder
@@ -47,7 +47,6 @@ testing:
     batch_size: 64
 
 pipeline:
-  name: wikitext_language_modeling_seq2seq
 
   # Source encoding - model 1.
   source_sentence_embedding:

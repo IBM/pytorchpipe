@@ -12,13 +12,13 @@ validation:
     resize_image: [32, 32]
 
 # Testing parameters - overwrite defaults:
-testing:
+test:
   problem:
     resize_image: [32, 32]
 
 # Definition of the pipeline.
 pipeline:
-  name: mnist_variational_flow_2lenet5
+
   # Disable components for "default" flow.
   disable: nllloss, precision_recall
 

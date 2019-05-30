@@ -2,7 +2,6 @@
 default_configs: vqa_med_2019/question_categorization/default_question_categorization.yml
 
 pipeline:
-  name: vqa_med_question_categorization_onehot_rnn
 
   # Questions encoding.
   question_tokenizer:

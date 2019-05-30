@@ -30,7 +30,6 @@ validation:
     num_workers: 2
 
 pipeline:
-  name: c4_dec_attndecoder
 
   # Question embeddings
   question_embeddings:

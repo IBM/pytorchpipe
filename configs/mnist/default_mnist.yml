@@ -7,11 +7,11 @@ training:
     #resize: [32, 32]
   # Use sampler that operates on a subset.
   #sampler:
-  #  name: SubsetRandomSampler
+  #  type: SubsetRandomSampler
   #  indices: [0, 55000]
   # optimizer parameters:
   optimizer:
-    name: Adam
+    type: Adam
     lr: 0.0001
   # settings parameters
   terminal_conditions:
@@ -29,11 +29,11 @@ validation:
     #resize: [32, 32]
   # Use sampler that operates on a subset.
   #sampler:
-  #  name: SubsetRandomSampler
+  #  type: SubsetRandomSampler
   #  indices: [55000, 60000]
 
 # Testing parameters:
-testing:
+test:
   problem:
     type: MNIST
     batch_size: *b

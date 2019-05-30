@@ -65,7 +65,7 @@ training:
 
   # Optimizer parameters:
   optimizer:
-    name: Adam
+    type: Adam
     lr: 0.0001
 
   # Terminal conditions:

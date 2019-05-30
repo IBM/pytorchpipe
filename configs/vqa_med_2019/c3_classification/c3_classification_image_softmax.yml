@@ -11,7 +11,6 @@ validation:
 
 
 pipeline:
-  name: vqa_med_c3_classification_image_softmax
 
   # Reshape inputs
   reshaper:

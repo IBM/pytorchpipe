@@ -2,7 +2,6 @@
 default_configs: vqa_med_2019/c4_classification/default_c4_classification.yml
 
 pipeline:
-  name: c4_classification_all_rnn_vgg16_ewm_size
 
   global_publisher:
     priority: 0

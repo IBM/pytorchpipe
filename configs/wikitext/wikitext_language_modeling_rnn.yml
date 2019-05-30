@@ -10,7 +10,7 @@ training:
 
   # optimizer parameters:
   optimizer:
-    name: Adam
+    type: Adam
     lr: 0.1
 
   # settings parameters
@@ -31,7 +31,7 @@ validation:
     batch_size:  64
 
 # Testing parameters:
-testing:
+test:
   problem:
     type: *p_type 
     data_folder: *data_folder
@@ -41,7 +41,6 @@ testing:
     batch_size: 64
 
 pipeline:
-  name: wikitext_language_modeling_rnn
 
   # Source encoding - model 1.
   source_sentence_embedding:

@@ -42,23 +42,19 @@ class Processor(Worker):
 
     """
 
-    def __init__(self, name="Processor"):
+    def __init__(self):
         """
         Calls the ``Worker`` constructor, adds some additional arguments to parser.
-
-       :param name: Name of the worker (DEFAULT: "Processor").
-       :type name: str
-
         """ 
         # Call base constructor to set up app state, registry and add default params.
-        super(Processor, self).__init__(name)
+        super(Processor, self).__init__("Processor", Processor)
 
         self.parser.add_argument(
-            '--set',
-            dest='set',
+            '--section',
+            dest='section_name',
             type=str,
-            default="testing",
-            help='Name of the specific set (section containing problem) to be processed (DEFAULT: testing)')
+            default="test",
+            help='Name of the section defining the specific set to be processed (DEFAULT: test)')
 
     def setup_global_experiment(self):
         """
@@ -77,9 +73,8 @@ class Processor(Worker):
         # Call base method to parse all command line arguments and add default sections.
         super(Processor, self).setup_experiment()
         
-        # Retrieve checkpoint file and section
+        # Retrieve checkpoint file.
         chkpt_file = self.app_state.args.load_checkpoint
-        self.set = self.app_state.args.set
 
         # Check the presence of the CUDA-compatible devices.
         if self.app_state.args.use_gpu and (torch.cuda.device_count() == 0):
@@ -151,16 +146,36 @@ class Processor(Worker):
 
         """
 
+        # Get test section.
+        try:
+            self.tsn = self.app_state.args.section_name       
+            self.config_test = self.config[self.tsn]
+            if self.config_test is None:
+                raise KeyError()
+        except KeyError:
+            print("Error: Couldn't retrieve the section '{}' from the loaded configuration".format(self.tsn))
+            exit(-1)
+
         # Get testing problem type.
         try:
-            _ = self.config[self.set]['problem']['type']
+            _ = self.config_test['problem']['type']
         except KeyError:
-            print("Error: Couldn't retrieve the problem 'type' from the '{}' section in the loaded configuration".format(self.set))
+            print("Error: Couldn't retrieve the problem 'type' from the '{}' section in the loaded configuration".format(self.tsn))
             exit(-5)
+
+        # Get pipeline section.
+        try:
+            psn = self.app_state.args.pipeline_section_name
+            self.config_pipeline = self.config[psn]
+            if self.config_pipeline is None:
+                raise KeyError()
+        except KeyError:
+            print("Error: Couldn't retrieve the pipeline section '{}' from the loaded configuration".format(psn))
+            exit(-1)
 
         # Get pipeline name.
         try:
-            pipeline_name = self.config['pipeline']['name']
+            pipeline_name = self.config_pipeline['name']
         except KeyError:
             print("Error: Couldn't retrieve the pipeline 'name' from the loaded configuration")
             exit(-6)
@@ -169,9 +184,9 @@ class Processor(Worker):
         while True:
             # Dirty fix: if log_dir already exists, wait for 1 second and try again
             try:
-                time_str = self.set+'_{0:%Y%m%d_%H%M%S}'.format(datetime.now())
-                if self.app_state.args.savetag != '':
-                    time_str = time_str + "_" + self.app_state.args.savetag
+                time_str = self.tsn+'_{0:%Y%m%d_%H%M%S}'.format(datetime.now())
+                if self.app_state.args.exptag != '':
+                    time_str = time_str + "_" + self.app_state.args.exptag
                 self.app_state.log_dir = self.abs_path + '/' + time_str + '/'
                 # Lowercase dir.
                 self.app_state.log_dir = self.app_state.log_dir.lower()
@@ -193,7 +208,7 @@ class Processor(Worker):
         self.app_state.set_types()
 
         # Set random seeds in the testing section.
-        self.set_random_seeds(self.set, self.config[self.set])
+        self.set_random_seeds(self.tsn, self.config_test)
 
         # Total number of detected errors.
         errors =0
@@ -201,7 +216,7 @@ class Processor(Worker):
         ################# TESTING PROBLEM ################# 
 
         # Build the used problem manager.
-        self.pm = ProblemManager(self.set, self.config[self.set]) 
+        self.pm = ProblemManager(self.tsn, self.config_test) 
         errors += self.pm.build()
 
 
@@ -210,28 +225,28 @@ class Processor(Worker):
         # So that by default, we loop over the test set once.
         max_test_episodes = len(self.pm)
 
-        self.config[self.set]['problem'].add_default_params({'max_test_episodes': max_test_episodes})
-        if self.config[self.set]["problem"]["max_test_episodes"] == -1:
+        self.config_test['problem'].add_default_params({'max_test_episodes': max_test_episodes})
+        if self.config_test["problem"]["max_test_episodes"] == -1:
             # Overwrite the config value!
-            self.config[self.set]['problem'].add_config_params({'max_test_episodes': max_test_episodes})
+            self.config_test['problem'].add_config_params({'max_test_episodes': max_test_episodes})
 
         # Warn if indicated number of episodes is larger than an epoch size:
-        if self.config[self.set]["problem"]["max_test_episodes"] > max_test_episodes:
+        if self.config_test["problem"]["max_test_episodes"] > max_test_episodes:
             self.logger.warning('Indicated maximum number of episodes is larger than one epoch, reducing it.')
-            self.config[self.set]['problem'].add_config_params({'max_test_episodes': max_test_episodes})
+            self.config_test['problem'].add_config_params({'max_test_episodes': max_test_episodes})
 
         self.logger.info("Setting the max number of episodes to: {}".format(
-            self.config[self.set]["problem"]["max_test_episodes"]))
+            self.config_test["problem"]["max_test_episodes"]))
 
         ###################### PIPELINE ######################
         
         # Build the pipeline using the loaded configuration and global variables.
-        self.pipeline = PipelineManager(pipeline_name, self.config['pipeline'])
+        self.pipeline = PipelineManager(pipeline_name, self.config_pipeline)
         errors += self.pipeline.build()
 
         # Show pipeline.
         summary_str = self.pipeline.summarize_all_components_header()
-        summary_str += self.pm.problem.summarize_io(self.set)
+        summary_str += self.pm.problem.summarize_io(self.tsn)
         summary_str += self.pipeline.summarize_all_components()
         self.logger.info(summary_str)
 
@@ -262,8 +277,8 @@ class Processor(Worker):
             if self.app_state.args.load_checkpoint != "":
                 pipeline_name = self.app_state.args.load_checkpoint
                 msg = "command line (--load)"
-            elif "load" in self.config['pipeline']:
-                pipeline_name = self.config['pipeline']['load']
+            elif "load" in self.config_pipeline:
+                pipeline_name = self.config_pipeline['load']
                 msg = "'pipeline' section of the configuration file"
             else:
                 pipeline_name = ""
@@ -316,7 +331,7 @@ class Processor(Worker):
         self.pm.problem.add_statistics(self.stat_col)
         self.pipeline.add_statistics(self.stat_col)
         # Create the csv file to store the statistics.
-        self.pm_batch_stats_file = self.stat_col.initialize_csv_file(self.app_state.log_dir, self.set+'_statistics.csv')
+        self.pm_batch_stats_file = self.stat_col.initialize_csv_file(self.app_state.log_dir, self.tsn+'_statistics.csv')
 
         # Create statistics aggregator.
         self.stat_agg = StatisticsAggregator()
@@ -325,7 +340,7 @@ class Processor(Worker):
         self.pipeline.add_aggregators(self.stat_agg)
         # Create the csv file to store the statistic aggregations.
         # Will contain a single row with aggregated statistics.
-        self.pm_set_stats_file = self.stat_agg.initialize_csv_file(self.app_state.log_dir, self.set+'_set_agg_statistics.csv')
+        self.pm_set_stats_file = self.stat_agg.initialize_csv_file(self.app_state.log_dir, self.tsn+'_set_agg_statistics.csv')
 
     def finalize_statistics_collection(self):
         """
@@ -346,7 +361,6 @@ class Processor(Worker):
             - Forwards pass of the model,
             - Logs statistics & accumulates loss,
             - Activate visualization if set.
-
 
         """
         # Initialize tensorboard and statistics collection.
@@ -370,7 +384,7 @@ class Processor(Worker):
                     # Increment counter.
                     self.app_state.episode += 1
                     # Terminal condition 0: max test episodes reached.
-                    if self.app_state.episode == self.config[self.set]["problem"]["max_test_episodes"]:
+                    if self.app_state.episode == self.config_test["problem"]["max_test_episodes"]:
                         break
 
                     # Forward pass.
@@ -419,15 +433,18 @@ def main():
     Entry point function for the ``Processor``.
 
     """
-    processor = Processor()
-    # parse args, load configuration and create all required objects.
-    processor.setup_global_experiment()
+    try:
+        processor = Processor()
+        # parse args, load configuration and create all required objects.
+        processor.setup_global_experiment()
+        # finalize the experiment setup
+        processor.setup_individual_experiment()
+        # run the experiment
+        processor.run_experiment()
 
-    # finalize the experiment setup
-    processor.setup_individual_experiment()
-
-    # run the experiment
-    processor.run_experiment()
+    except KeyError as e:
+        print("Error: {}".format(e))
+        exit(-1)
 
 
 if __name__ == '__main__':

@@ -39,16 +39,12 @@ class OnlineTrainer(Trainer):
 
     """
 
-    def __init__(self, name="OnlineTrainer"):
+    def __init__(self):
         """
-        Only calls the ``Trainer`` constructor as the initialization phase is identical to the ``Trainer``.
-
-       :param name: Name of the worker (DEFAULT: "OnlineTrainer").
-       :type name: str
-
+        Constructor. It on calls the ``Trainer`` constructor as the initialization phase is identical to the one from ``Trainer``.
         """ 
         # Call base constructor to set up app state, registry and add default config.
-        super(OnlineTrainer, self).__init__(name)
+        super(OnlineTrainer, self).__init__("OnlineTrainer", OnlineTrainer)
 
     def setup_experiment(self):
         """
@@ -61,26 +57,23 @@ class OnlineTrainer(Trainer):
         # Call base method to parse all command line arguments, load configuration, create problems and model etc.
         super(OnlineTrainer, self).setup_experiment()
 
-        ################# TERMINAL CONDITIONS ################# 
-        log_str = 'Terminal conditions:\n' + '='*80 + "\n"
-
-        # Terminal condition I: loss. 
-        self.config['training']['terminal_conditions'].add_default_params({'loss_stop': 1e-5})
-        self.loss_stop = self.config['training']['terminal_conditions']['loss_stop']
-        log_str += "  Setting Loss Stop threshold to {}\n".format(self.loss_stop)
-
         # In this trainer Partial Validation is mandatory, hence interval must be > 0.
-        self.config['validation'].add_default_params({'partial_validation_interval': 100})
         self.partial_validation_interval = self.config['validation']['partial_validation_interval']
         if self.partial_validation_interval <= 0:
             self.logger.error("Episodic Trainer relies on Partial Validation, thus 'partial_validation_interval' must be a positive number!")
             exit(-4)
         else:
-            log_str += "  Partial Validation activated with interval equal to {} episodes\n".format(self.partial_validation_interval)
+            self.logger.info("Partial Validation activated with interval equal to {} episodes\n".format(self.partial_validation_interval))
+
+        ################# TERMINAL CONDITIONS ################# 
+        log_str = 'Terminal conditions:\n' + '='*80 + "\n"
+
+        # Terminal condition I: loss. 
+        self.loss_stop = self.config_training['terminal_conditions']['loss_stop']
+        log_str += "  Setting Loss Stop threshold to {}\n".format(self.loss_stop)
 
         # Terminal condition II: max epochs. Optional.
-        self.config["training"]["terminal_conditions"].add_default_params({'epoch_limit': -1})
-        self.epoch_limit = self.config["training"]["terminal_conditions"]["epoch_limit"]
+        self.epoch_limit = self.config_training["terminal_conditions"]["epoch_limit"]
         if self.epoch_limit <= 0:
             log_str += "  Termination based on Epoch Limit is disabled\n"
             # Set to infinity.
@@ -93,8 +86,7 @@ class OnlineTrainer(Trainer):
         log_str += "  Epoch size in terms of training episodes: {}\n".format(self.epoch_size)
 
         # Terminal condition III: max episodes. Mandatory.
-        self.config["training"]["terminal_conditions"].add_default_params({'episode_limit': 100000})
-        self.episode_limit = self.config['training']['terminal_conditions']['episode_limit']
+        self.episode_limit = self.config_training['terminal_conditions']['episode_limit']
         if self.episode_limit <= 0:
             self.logger.error("OnLine Trainer relies on episodes, thus 'episode_limit' must be a positive number!")
             exit(-5)
@@ -202,7 +194,7 @@ class OnlineTrainer(Trainer):
                     # Check the presence of the 'gradient_clipping'  parameter.
                     try:
                         # if present - clip gradients to a range (-gradient_clipping, gradient_clipping)
-                        val = self.config['training']['gradient_clipping']
+                        val = self.config_training['gradient_clipping']
                         torch.nn.utils.clip_grad_value_(self.pipeline.parameters(), val)
                     except KeyError:
                         # Else - do nothing.
@@ -352,11 +344,18 @@ def main():
     """
     Entry point function for the ``OnlineTrainer``.
     """
-    trainer = OnlineTrainer()
-    # parse args, load configuration and create all required objects.
-    trainer.setup_experiment()
-    # GO!
-    trainer.run_experiment()
+    try:
+        # Create trainer.
+        trainer = OnlineTrainer()
+        # Parse args, load configuration and create all required objects.
+        trainer.setup_experiment()
+        # GO!
+        trainer.run_experiment()
+
+    except KeyError as e:
+        print("Error: {}".format(e))
+        exit(-1)
+
 
 if __name__ == '__main__':
     main()

@@ -58,29 +58,11 @@ class ProblemManager(object):
         # Single batch that will be used for validation (for validation problem manager).
         self.batch = None
 
-        # Set a default configuration section for data loader.
-        dataloader_config = {
-            'problem' : {
-                'batch_size': 64, # Default batch size.
-            },
-            'dataloader': {
-                'shuffle': True,  # shuffle set by default.
-                'batch_sampler': None,
-                'num_workers': 0,  # Do not use multiprocessing by default - for now.
-                'pin_memory': False,
-                'drop_last': False,
-                'timeout': 0
-                },
-            'sampler': {},  # not using sampler by default
-            }
-
-        self.config.add_default_params(dataloader_config)
-
 
     def worker_init_fn(self, worker_id):
         """
         Function to be called by :py:class:`torch.utils.data.DataLoader` on each worker subprocess, \
-        after seeding and before data loading. (default: ``None``).
+        after seeding and before data loading.
 
         .. note::
 
@@ -91,7 +73,6 @@ class ProblemManager(object):
         :param worker_id: the worker id (in [0, :py:class:`torch.utils.data.DataLoader`.num_workers - 1])
         :type worker_id: int
 
-        :return: ``None`` by default
         """
         # Set random seed of a worker.
         np.random.seed(seed=np.random.get_state()[1][0] + worker_id)
@@ -121,9 +102,13 @@ class ProblemManager(object):
             self.problem = component
 
             # Try to build the sampler.
-            self.sampler = SamplerFactory.build(self.problem, self.config["sampler"], self.name)
-
-            if self.sampler is not None:
+            # Check if sampler is required, i.e. 'sampler' section is empty.
+            if "sampler" not in self.config:
+                self.logger.info("The sampler configuration section is not present, using default 'random' sampling")
+                # Set sampler to none.
+                self.sampler = None
+            else:
+                self.sampler = SamplerFactory.build(self.problem, self.config["sampler"], self.name)
                 # Set shuffle to False - REQUIRED as those two are exclusive.
                 self.config['dataloader'].add_config_params({'shuffle': False})
 
@@ -132,7 +117,7 @@ class ProblemManager(object):
                     batch_size=self.config['problem']['batch_size'],
                     shuffle=self.config['dataloader']['shuffle'],
                     sampler=self.sampler,
-                    batch_sampler=self.config['dataloader']['batch_sampler'],
+                    batch_sampler= None,
                     num_workers=self.config['dataloader']['num_workers'],
                     collate_fn=self.problem.collate_fn,
                     pin_memory=self.config['dataloader']['pin_memory'],

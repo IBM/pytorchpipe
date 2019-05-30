@@ -25,7 +25,9 @@ from abc import abstractmethod
 
 import ptp.utils.logger as logging
 from ptp.utils.app_state import AppState
+
 from ptp.configuration.config_interface import ConfigInterface
+from ptp.configuration.config_parsing import load_class_default_config_file
 
 
 class Worker(object):
@@ -34,22 +36,19 @@ class Worker(object):
     All base workers should subclass it and override the relevant methods.
     """
 
-    def __init__(self, name, add_default_parser_args = True):
+    def __init__(self, name, class_type, add_default_parser_args = True):
         """
         Base constructor for all workers:
 
-            - Initializes the AppState singleton:
-
-                >>> self.app_state = AppState()
-
-            - Initializes the Configuration Registry:
-
-                >>> self.config = ConfigInterface()
-
-            - Creates parser and adds default worker command line arguments.
+            - Initializes the AppState singleton
+            - Initializes the Configuration Registry
+            - Loads default parameters
+            - Creates parser and adds default worker command line arguments
 
         :param name: Name of the worker.
         :type name: str
+
+        :param class_type: Class type of the component.
 
         :param add_default_parser_args: If set, adds default parser arguments (DEFAULT: True).
         :type add_default_parser_args: bool
@@ -66,6 +65,11 @@ class Worker(object):
 
         # Initialize parameter interface/registry.
         self.config = ConfigInterface()
+
+        # Load default configuration.
+        if class_type is not None:
+            self.config.add_default_params(load_class_default_config_file(class_type))
+
 
         # Create parser with a list of runtime arguments.
         self.parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
@@ -112,11 +116,11 @@ class Worker(object):
                     ' (DEFAULT: ~/experiments)')
 
             self.parser.add_argument(
-                '--savetag',
-                dest='savetag',
+                '--exptag',
+                dest='exptag',
                 type=str,
                 default='',
-                help='Tag for the save directory.')
+                help="Additional tag that will be added to the output folder name (DEFAULT: '').")
 
             self.parser.add_argument(
                 '--logger',
@@ -143,6 +147,14 @@ class Worker(object):
                 help='Request user confirmation just after loading the settings, '
                     'before starting the experiment. (DEFAULT: False)')
 
+            self.parser.add_argument(
+                '--pipeline',
+                dest='pipeline_section_name',
+                type=str,
+                default="pipeline",
+                help='Name of the section defining the pipeline (DEFAULT: pipeline)')
+
+
     def setup_experiment(self):
         """
         Setups a specific experiment.
@@ -168,11 +180,6 @@ class Worker(object):
         # Initialize logger using the configuration.
         # For now do not add file handler, as path to logfile is not known yet.
         self.logger = logging.initialize_logger(self.name, False)
-
-        # add empty sections
-        self.config.add_default_params({"training": {'terminal_conditions': {}}})
-        self.config.add_default_params({"validation": {}})
-        self.config.add_default_params({"testing": {}})
 
 
     def add_statistics(self, stat_col):
@@ -300,7 +307,6 @@ class Worker(object):
 
         """
         # Set the random seeds: either from the loaded configuration or a default randomly selected one.
-        config.add_default_params({"seed_numpy": -1})
         if config["seed_numpy"] == -1:
             seed = randrange(0, 2 ** 32)
             # Overwrite the config param!
@@ -309,7 +315,6 @@ class Worker(object):
         self.logger.info("Setting numpy random seed in {} to: {}".format(section_name, config["seed_numpy"]))
         np.random.seed(config["seed_numpy"])
 
-        config.add_default_params({"seed_torch": -1})
         if config["seed_torch"] == -1:
             seed = randrange(0, 2 ** 32)
             # Overwrite the config param!
