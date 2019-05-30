@@ -18,7 +18,7 @@ Each such a stream can consist of several components, including one problem inst
 
 As a result, the training & testing procedures are no longer pinned to a specific problem or model, and built-in mechanisms for compatibility checking (handshaking), configuration and global variables management & statistics collection facilitate rapid development of complex pipelines and running diverse experiments.
 
-In its core, to _accelerate the computations_ on their own, PTP relies on PyTorch and extensively uses its mechanisms for distribution of computations on CPUs/GPUs, including multi-threaded data loaders and multi-GPU data parallelism.
+In its core, to _accelerate the computations_ on their own, PTP relies on PyTorch and extensively uses its mechanisms for distribution of computations on CPUs/GPUs, including multi-process data loaders and multi-GPU data parallelism.
 The models are _agnostic_ to those operations and one indicates whether to use them in configuration files (data loaders) or by passing adequate run-time arguments (--gpu).
 
 **Datasets:**
@@ -33,7 +33,7 @@ PTP focuses on multi-modal reasoning combining vision and language. Currently it
 Aside of providing batches of samples, the Problem class will automatically download the files associated with a given dataset (as long as the dataset is publicly available).
 The diversity of those problems (and associated models) proves the flexibility of the framework, we are working on incorporation of new ones into PTP.
 
-**Pipelines**
+**Pipelines:**
 What people typically define as a _model_ in PTP is framed as a _pipeline_, consisting of many inter-connected components, with one or more _Models_ containing trainable elements.
 Those components are loosely coupled and care only about the _input streams_ they retrieve and _output streams_ they produce.
 The framework offers full flexibility and it is up to the programmer to choose the _granularity_ of his/her components/models/pipelines.
