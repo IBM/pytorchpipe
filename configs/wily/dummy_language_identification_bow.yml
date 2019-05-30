@@ -29,7 +29,7 @@ validation:
     streams: *p_streams
 
 # Testing parameters:
-testing:
+test:
   problem:
     type: *p_type 
     batch_size:  2

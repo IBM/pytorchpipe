@@ -33,7 +33,7 @@ validation:
   #  indices: [55000, 60000]
 
 # Testing parameters:
-testing:
+test:
   problem:
     type: MNIST
     batch_size: *b

@@ -74,10 +74,24 @@ class Trainer(Worker):
                 "(Warning: Even slower).")
 
         self.parser.add_argument(
-            '--save',
+            '--saveall',
             dest='save_intermediate',
             action='store_true',
             help='Setting to true results in saving intermediate models during training (DEFAULT: False)')
+
+        self.parser.add_argument(
+            '--training',
+            dest='training_section_name',
+            type=str,
+            default="training",
+            help='Name of the section defining the training procedure (DEFAULT: training)')
+
+        self.parser.add_argument(
+            '--validation',
+            dest='validation_section_name',
+            type=str,
+            default="validation",
+            help='Name of the section defining the validation procedure (DEFAULT: validation)')
 
 
     def setup_experiment(self):
@@ -141,9 +155,11 @@ class Trainer(Worker):
 
         # Get training section.
         try:
-            tsn = "training"
-            tsn = self.config["training_section_name"]
+            tsn = self.app_state.args.training_section_name
             self.config_training = self.config[tsn]
+            # We must additionally check if it is None - weird behvaiour when using default value.
+            if self.config_training is None:
+                raise KeyError()
         except KeyError:
             print("Error: Couldn't retrieve the training section '{}' from the loaded configuration".format(tsn))
             exit(-1)
@@ -152,14 +168,15 @@ class Trainer(Worker):
         try:
             training_problem_type = self.config_training['problem']['type']
         except KeyError:
-            print("Error: Couldn't retrieve the problem 'type' from the 'training' section in the loaded configuration")
+            print("Error: Couldn't retrieve the problem 'type' from the training section '{}' in the loaded configuration".format(tsn))
             exit(-1)
 
         # Get validation section.
         try:
-            vsn = "validation"
-            vsn = self.config["validation_section_name"]
+            vsn = self.app_state.args.validation_section_name
             self.config_validation = self.config[vsn]
+            if self.config_validation is None:
+                raise KeyError()
         except KeyError:
             print("Error: Couldn't retrieve the validation section '{}' from the loaded configuration".format(vsn))
             exit(-1)
@@ -168,14 +185,15 @@ class Trainer(Worker):
         try:
             _ = self.config_validation['problem']['type']
         except KeyError:
-            print("Error: Couldn't retrieve the problem 'type' from the 'validation' section in the loaded configuration")
+            print("Error: Couldn't retrieve the problem 'type' from the validation section '{}' in the loaded configuration".format(vsn))
             exit(-1)
 
         # Get pipeline section.
         try:
-            psn = "pipeline"
-            psn = self.config["pipeline_section_name"]
+            psn = self.app_state.args.pipeline_section_name
             self.config_pipeline = self.config[psn]
+            if self.config_pipeline is None:
+                raise KeyError()
         except KeyError:
             print("Error: Couldn't retrieve the pipeline section '{}' from the loaded configuration".format(psn))
             exit(-1)
@@ -195,8 +213,8 @@ class Trainer(Worker):
         while True:  # Dirty fix: if log_dir already exists, wait for 1 second and try again
             try:
                 time_str = '{0:%Y%m%d_%H%M%S}'.format(datetime.now())
-                if self.app_state.args.savetag != '':
-                    time_str = time_str + "_" + self.app_state.args.savetag
+                if self.app_state.args.exptag != '':
+                    time_str = time_str + "_" + self.app_state.args.exptag
                 self.app_state.log_dir = path.expanduser(self.app_state.args.expdir) + '/' + training_problem_type + '/' + pipeline_name + '/' + time_str + '/'
                 # Lowercase dir.
                 self.app_state.log_dir = self.app_state.log_dir.lower()

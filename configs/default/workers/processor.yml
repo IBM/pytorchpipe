@@ -1,8 +1,51 @@
-# Default name of section used - we assume it will be test
-# One can change this, but must remember to define all the required parameters in the new section.
-# Note: this can also be changed by setting command line argument (--set)
-section_name: test
-
+####################################################################
 # Section defining all the default values of parameters used during testing.
+# If you want to use different section for training pass its name as command line argument '--section_name' to trainer (DEFAULT: test)
+# Note: in such a case remember to define all the required parameters in the new section.
 test:
+  # Set the random seeds: -1 means that they will be picked randomly.
+  # Note: their final values will be stored in the final training_configuration.yml saved to log dir.
+  seed_numpy: -1
+  seed_torch: -1
 
+  # Default batch size.
+  batch_size: 64
+
+  # Definition of the problem (Mandatory!)
+  #problem:
+  #  One must define its type (Mandatory!)
+  #  type: ?
+  #  The rest of the content of that section is problem-specific...
+
+  # Set a default configuration section for data loader.
+  dataloader:
+    # Shuffle set by default.
+    shuffle: True 
+    batch_sampler: None
+     # Do not use multiprocessing by default.
+    num_workers: 0
+    pin_memory: False
+    # Do not drop last frame by default.
+    drop_last: False
+    timeout: 0
+
+  # Definition of sampler (Optional)
+  # When this section will not be present, worker will use "standard" sampling (please refer to shuffle in dataloader)
+  #sampler:
+  #  # Type - generally all samplers from PyTorch (plus some new onses) are allowed (Mandatory!)
+  #  # Options: 
+  #  type: RandomSmpler
+  #  The rest of the content of that section is optimizer-specific...
+
+
+####################################################################
+# Section defining all the default values of parameters used during training.
+# If you want to use different section for validation pass its name as command line argument '--pipeline_section_name' to trainer (DEFAULT: pipeline)
+pipeline: 
+  # Pipeline must contain at least one component.
+  #name_1:
+  #   Each component must have defined its priority... (Mandatory!)
+  #   priority: 0.1 # Can be float. Smaller means higher priority, up to zero.
+  #   # ... and type (Mandatory!)
+  #   type: ?
+  #   The rest of the content of that section is component-specific...

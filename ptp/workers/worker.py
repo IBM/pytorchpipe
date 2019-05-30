@@ -116,11 +116,11 @@ class Worker(object):
                     ' (DEFAULT: ~/experiments)')
 
             self.parser.add_argument(
-                '--savetag',
-                dest='savetag',
+                '--exptag',
+                dest='exptag',
                 type=str,
                 default='',
-                help='Tag for the save directory.')
+                help="Additional tag that will be added to the output folder name (DEFAULT: '').")
 
             self.parser.add_argument(
                 '--logger',
@@ -146,6 +146,14 @@ class Worker(object):
                 action='store_true',
                 help='Request user confirmation just after loading the settings, '
                     'before starting the experiment. (DEFAULT: False)')
+
+            self.parser.add_argument(
+                '--pipeline',
+                dest='pipeline_section_name',
+                type=str,
+                default="pipeline",
+                help='Name of the section defining the pipeline (DEFAULT: pipeline)')
+
 
     def setup_experiment(self):
         """

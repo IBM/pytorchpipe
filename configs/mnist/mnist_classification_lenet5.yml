@@ -12,7 +12,7 @@ validation:
     resize_image: [32, 32]
 
 # Testing parameters - overwrite defaults:
-testing:
+test:
   problem:
     resize_image: [32, 32]
 

@@ -39,7 +39,7 @@ validation:
     indices: [117000, 117500]
 
 # Testing parameters:
-testing:
+test:
   problem:
     type: *p_type 
     data_folder: *data_folder
