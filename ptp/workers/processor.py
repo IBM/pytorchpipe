@@ -362,7 +362,6 @@ class Processor(Worker):
             - Logs statistics & accumulates loss,
             - Activate visualization if set.
 
-
         """
         # Initialize tensorboard and statistics collection.
         self.initialize_statistics_collection()
@@ -442,7 +441,7 @@ def main():
         processor.setup_individual_experiment()
         # run the experiment
         processor.run_experiment()
-        
+
     except KeyError as e:
         print("Error: {}".format(e))
         exit(-1)

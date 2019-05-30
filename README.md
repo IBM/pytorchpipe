@@ -16,7 +16,7 @@ PyTorchPipe (PTP) is a component-oriented framework that facilitates development
 PTP frames training and testing procedures as _pipelines_ consisting of many components communicating through data streams.
 Each such a stream can consist of several components, including one problem instance (providing batches of data), any number of trainable components (models) and additional components providing required transformations and computations.
 
-As a result, the training & testing procedures are no longer pinned to a specific problem or model, and built-in mechanisms for compatibility checking (handshaking), configuration management & statistics collection facilitate running diverse experiments.
+As a result, the training & testing procedures are no longer pinned to a specific problem or model, and built-in mechanisms for compatibility checking (handshaking), configuration and global variables management & statistics collection facilitate rapid development of complex pipelines and running diverse experiments.
 
 In its core, to _accelerate the computations_ on their own, PTP relies on PyTorch and extensively uses its mechanisms for distribution of computations on CPUs/GPUs, including multi-threaded data loaders and multi-GPU data parallelism.
 The models are _agnostic_ to those operations and one indicates whether to use them in configuration files (data loaders) or by passing adequate run-time arguments (--gpu).
@@ -31,13 +31,16 @@ PTP focuses on multi-modal reasoning combining vision and language. Currently it
   * ANKI (Machine Translation)
 
 Aside of providing batches of samples, the Problem class will automatically download the files associated with a given dataset (as long as the dataset is publicly available).
-The diversity of those problems proves the flexibility of the framework, we are working on incorporation of new ones into PTP.
+The diversity of those problems (and associated models) proves the flexibility of the framework, we are working on incorporation of new ones into PTP.
 
-**Model Zoo:**
-What people typically define as _model_ in PTP is decomposed into components, with _Model_ being a defived class that contains trainable elements.
-Those components are loosely coupled and care only about the inputs they retrieve and outputs they produce.
-The framework offers full flexibility and it is up to the programer to choose the _granularity_ of his/her components/models.
-However, PTP provides several ready to use, out of the box components, from ones of general usage to very specialized ones:
+**Pipelines**
+What people typically define as a _model_ in PTP is framed as a _pipeline_, consisting of many inter-connected components, with one or more _Models_ containing trainable elements.
+Those components are loosely coupled and care only about the _input streams_ they retrieve and _output streams_ they produce.
+The framework offers full flexibility and it is up to the programmer to choose the _granularity_ of his/her components/models/pipelines.
+Such a decomposition enables one to easily combine many components and models into pipelines, whereas the framework supports loading of pretrained models, freezing during training, saving them to checkpoints etc.
+
+**Model/Component Zoo:**
+PTP provides several ready to use, out of the box components, from ones of general usage to very specialized ones:
 
   * Feed Forward Network (Fully Connected layers with activation functions and dropout, variable number of hidden layers, general usage)
   * Torch Vision Wrapper (wrapping several models from Torch Vision, e.g. VGG-16, ResNet-50, ResNet-152, DenseNet-121, general usage)
