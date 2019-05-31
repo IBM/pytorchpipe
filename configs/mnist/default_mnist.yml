@@ -6,9 +6,9 @@ training:
     use_train_data: True
     #resize: [32, 32]
   # Use sampler that operates on a subset.
-  #sampler:
-  #  type: SubsetRandomSampler
-  #  indices: [0, 55000]
+  sampler:
+    type: SubsetRandomSampler
+    indices: [0, 55000]
   # optimizer parameters:
   optimizer:
     type: Adam
@@ -29,9 +29,9 @@ validation:
     use_train_data: True  # True because we are splitting the training set to: validation and training
     #resize: [32, 32]
   # Use sampler that operates on a subset.
-  #sampler:
-  #  type: SubsetRandomSampler
-  #  indices: [55000, 60000]
+  sampler:
+    type: SubsetRandomSampler
+    indices: [55000, 60000]
 
 # Testing parameters:
 test:
