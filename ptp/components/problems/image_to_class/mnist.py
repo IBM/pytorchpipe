@@ -57,7 +57,10 @@ class MNIST(ImageToClassProblem):
         # Call base class constructors.
         super(MNIST, self).__init__(name, MNIST, config)
 
-        # Channel returning targets as words.
+        # Get default key mappings.
+        self.key_inputs = self.stream_keys["inputs"]
+        self.key_targets = self.stream_keys["targets"]
+        # Stream returning targets as words.
         self.key_labels = self.stream_keys["labels"]
 
         # Get absolute path.

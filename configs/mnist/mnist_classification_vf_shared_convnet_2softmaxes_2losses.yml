@@ -27,7 +27,7 @@ training:
 pipeline:
 
   # Disable components for "default" flow.
-  disable: nllloss, precision_recall
+  disable: nllloss, accuracy, precision_recall
 
   ################# SHARED #################
 
@@ -57,33 +57,41 @@ pipeline:
       output_size: reshaped_maps_size
 
   ################# Flow 1 #################
-  flow1_string_to_mask:
-    type: StringToMask
-    priority: 1.1
-    globals:
-      word_mappings: word_to_ix1
-    streams:
-      strings: labels
-      string_indices: flow1_targets
-      masks: flow1_masks
-
   # Classifier.
   flow1_classifier:
     type: FeedForwardNetwork 
-    priority: 1.2
+    priority: 1.1
     streams:
     globals:
       input_size: reshaped_maps_size
       prediction_size: num_classes1
     streams:
       inputs: reshaped_maps
-      targets: flow1_targets
       predictions: flow1_predictions
       
+  flow1_label_to_mask1:
+    type: StringToMask
+    priority: 1.2
+    globals:
+      word_mappings: word_to_ix1
+    streams:
+      strings: labels
+      masks: flow1_masks
+
+  flow1_label_to_target1:
+    type: LabelIndexer
+    priority: 1.3
+    import_word_mappings_from_globals: True
+    globals:
+      word_mappings: word_to_ix1
+    streams:
+      inputs: labels
+      outputs: flow1_targets
+
   # Masked loss.
   flow1_nllloss:
     type: NLLLoss
-    priority: 1.31
+    priority: 1.4
     use_masking: True
     streams:
       targets: flow1_targets
@@ -92,9 +100,20 @@ pipeline:
       loss: flow1_loss
 
   # Statistics.
+  flow1_accuracy:
+    type: AccuracyStatistics
+    priority: 1.51
+    use_masking: True
+    streams:
+      predictions: flow1_predictions
+      targets: flow1_targets
+      masks: flow1_masks
+    statistics:
+      accuracy: flow1_accuracy
+
   flow1_precision_recall:
     type: PrecisionRecallStatistics
-    priority: 1.33
+    priority: 1.52
     use_word_mappings: True
     show_class_scores: True
     show_confusion_matrix: True
@@ -112,33 +131,41 @@ pipeline:
       f1score: flow1_f1score
 
   ################# Flow 2 #################
-  flow2_string_to_mask:
-    type: StringToMask
-    priority: 2.1
-    globals:
-      word_mappings: word_to_ix2
-    streams:
-      strings: labels
-      string_indices: flow2_targets
-      masks: flow2_masks
-
   # Classifier.
   flow2_classifier:
     type: FeedForwardNetwork 
-    priority: 2.2
+    priority: 2.1
     streams:
     globals:
       input_size: reshaped_maps_size
       prediction_size: num_classes2
     streams:
       inputs: reshaped_maps
-      targets: flow2_targets
       predictions: flow2_predictions
       
+  flow2_label_to_mask2:
+    type: StringToMask
+    priority: 2.2
+    globals:
+      word_mappings: word_to_ix2
+    streams:
+      strings: labels
+      masks: flow2_masks
+
+  flow2_label_to_target2:
+    type: LabelIndexer
+    priority: 2.3
+    import_word_mappings_from_globals: True
+    globals:
+      word_mappings: word_to_ix2
+    streams:
+      inputs: labels
+      outputs: flow2_targets
+
   # Masked loss.
   flow2_nllloss:
     type: NLLLoss
-    priority: 2.31
+    priority: 2.4
     use_masking: True
     streams:
       targets: flow2_targets
@@ -147,9 +174,20 @@ pipeline:
       loss: flow2_loss
 
   # Statistics.
+  flow2_accuracy:
+    type: AccuracyStatistics
+    priority: 2.41
+    use_masking: True
+    streams:
+      targets: flow2_targets
+      predictions: flow2_predictions
+      masks: flow2_masks
+    statistics:
+      accuracy: flow2_accuracy
+
   flow2_precision_recall:
     type: PrecisionRecallStatistics
-    priority: 2.33
+    priority: 2.42
     use_word_mappings: True
     show_class_scores: True
     show_confusion_matrix: True

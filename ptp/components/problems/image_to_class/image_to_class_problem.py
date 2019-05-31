@@ -46,11 +46,6 @@ class ImageToClassProblem(Problem):
         # Call base class constructors.
         super(ImageToClassProblem, self).__init__(name, class_type, config)
 
-        # Get default key mappings.
-        self.key_inputs = self.stream_keys["inputs"]
-        self.key_targets = self.stream_keys["targets"]
-
-
     def show_sample(self, data_dict, sample_number=0):
         """
         Shows a sample from the batch.

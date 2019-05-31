@@ -706,7 +706,6 @@ class PipelineManager(object):
         if self.show_total_loss:
             stat_col["total_loss"] = self.get_loss(data_dict)
             stat_col["total_loss_support"] = data_dict["indices"].shape[0] # batch size
-            print(data_dict["indices"].shape[0])
 
 
     def add_aggregators(self, stat_agg):

@@ -87,7 +87,7 @@ class StringToMask(Component):
 
         # Process samples 1 by 1.
         for i,sample in enumerate(strings):
-            assert not isinstance(sample, (list,)), 'This encoder requires input sample to contain a single word'
+            assert not isinstance(sample, (list,)), "This masking component requires input 'string' to contain a single word"
             # Process single token.
             if sample in self.word_to_ix.keys():
                 masks[i] = 1
