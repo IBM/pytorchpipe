@@ -65,6 +65,9 @@ class PipelineManager(object):
         # Initialization of best loss - as INF.
         self.best_loss = inf
         self.best_status = "Unknown"
+        # Indicates the last time when the validation loss went down.
+        # 0 means currntly, 1 means during previous validation etc.
+        self.validation_loss_down_counter = 0
 
 
     def build(self, use_logger=True):
@@ -246,6 +249,8 @@ class PipelineManager(object):
             log_str = "Exporting pipeline '{}' parameters to checkpoint:\n {}\n".format(self.name, filename)
             log_str += model_str
             self.logger.info(log_str)
+            # Ok, loss went down, reset the counter.
+            self.validation_loss_down_counter = 0
             return True
         elif self.best_status != training_status:
             filename = chkpt_dir + self.name + '_best.pt'
@@ -258,6 +263,8 @@ class PipelineManager(object):
             torch.save(chkpt_loaded, filename)
             self.logger.info("Updated training status in checkpoint:\n {}".format(filename))
         # Else: that was not the best "model".
+        # Loss didn't went down, increment the counter.
+        self.validation_loss_down_counter += 1
         return False
 
     def load(self, checkpoint_file):

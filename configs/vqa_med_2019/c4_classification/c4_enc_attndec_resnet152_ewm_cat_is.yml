@@ -15,7 +15,7 @@ training:
     num_workers: 4
   # Termination.
   terminal_conditions:
-    loss_stop: 1.0e-2
+    loss_stop_threshold: 1.0e-2
     episode_limit: 1000000
     epoch_limit: -1
 

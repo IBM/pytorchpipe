@@ -10,7 +10,7 @@ training:
   #  #type: Adam
   #  lr: 0.001
   #terminal_conditions:
-  #  loss_stop: 0.08
+  #  loss_stop_threshold: 0.08
 
 # Validation parameters - overwrite defaults:
 #validation:

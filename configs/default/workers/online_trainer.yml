@@ -55,8 +55,10 @@ training:
   # They can (and ofter should) be overwritten.
   terminal_conditions:
     # Terminal condition I: loss threshold, going below will terminate the training.
-    loss_stop: 0.00001 # 1e-5
-    # Terminal condition II: maximal number of epochs (optional, -1 means that this condition is disabled)
+    loss_stop_threshold: 0.00001 # 1e-5
+    # Early stopping monitor validation loss, if it didn't down during last n validations, training will be terminated (Optional, negative means that this condition is disabled)
+    early_stop_validations: 10
+    # Terminal condition II: maximal number of epochs ()ptional, -1 (negative) means that this condition is disabled)
     epoch_limit: -1
     # Terminal condition III: maximal number of episodes (Mandatory for this trainer! Must be > 0)
     episode_limit: 100000

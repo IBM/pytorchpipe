@@ -69,10 +69,19 @@ class OnlineTrainer(Trainer):
         log_str = 'Terminal conditions:\n' + '='*80 + "\n"
 
         # Terminal condition I: loss. 
-        self.loss_stop = self.config_training['terminal_conditions']['loss_stop']
-        log_str += "  Setting Loss Stop threshold to {}\n".format(self.loss_stop)
+        self.loss_stop_threshold = self.config_training['terminal_conditions']['loss_stop_threshold']
+        log_str += "  Setting Loss Stop Threshold to {}\n".format(self.loss_stop_threshold)
 
-        # Terminal condition II: max epochs. Optional.
+        # Terminal condition I: early stopping. 
+        self.early_stop_validations = self.config_training['terminal_conditions']['early_stop_validations']
+        if self.early_stop_validations <= 0:
+            log_str += "  Termination based on Early Stopping is disabled\n"
+            # Set to infinity.
+            self.early_stop_validations = np.Inf
+        else:
+            log_str += "  Setting the Number of Validations in Early Stopping to: {}\n".format(self.early_stop_validations)
+
+        # Terminal condition II: max epochs (Optional for this trainer)
         self.epoch_limit = self.config_training["terminal_conditions"]["epoch_limit"]
         if self.epoch_limit <= 0:
             log_str += "  Termination based on Epoch Limit is disabled\n"
@@ -113,8 +122,8 @@ class OnlineTrainer(Trainer):
             The terminal conditions are as follows:
 
                 - I. The loss is below the specified threshold (using the partial validation loss),
-                - TODO: II. Early stopping is set and the full validation loss did not change by delta \
-                    for the indicated number of epochs,
+                - II. Early stopping is set and the full validation loss did went down \
+                    for the indicated number of validation steps,
                 - III. The maximum number of episodes has been met,
                 - IV. The maximum number of epochs has been met (OPTIONAL).
             
@@ -255,7 +264,7 @@ class OnlineTrainer(Trainer):
                         if self.curric_done or not self.must_finish_curriculum:
 
                             # Check the Partial Validation loss.
-                            if (validation_loss < self.loss_stop):
+                            if (validation_loss < self.loss_stop_threshold):
                                 # Change the status.
                                 training_status = "Converged (Partial Validation Loss went below " \
                                     "Loss Stop threshold)"
@@ -266,8 +275,9 @@ class OnlineTrainer(Trainer):
                                 raise TerminationCondition(training_status)
 
                         # II. Early stopping is set and loss hasn't improved by delta in n epochs.
-                        # early_stopping(index=epoch, avg_valid_loss). (TODO)
-                        # training_status = 'Early Stopping.'
+                        if self.pipeline.validation_loss_down_counter >= self.early_stop_validations:
+                            training_status = "Not converged: reached limit of validations without improvement (Early Stopping)"
+                            raise TerminationCondition(training_status)
 
                     # III. The episodes number limit has been reached.
                     if self.app_state.episode+1 >= self.episode_limit:
