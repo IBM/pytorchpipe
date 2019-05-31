@@ -41,9 +41,10 @@ pipeline:
       inputs: inputs
       predictions: predictions
 
+  # Replace origihan PR statistics.
   all_precision_recall:
     type: PrecisionRecallStatistics
-    priority: 100.1
+    priority: 100.2
     use_word_mappings: True
     show_class_scores: True
     streams:

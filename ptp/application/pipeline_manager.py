@@ -20,7 +20,7 @@ __author__ = "Tomasz Kornuta"
 import os
 import torch
 from datetime import datetime
-from numpy import inf
+from numpy import inf,average
 
 import ptp.components
 
@@ -631,14 +631,9 @@ class PipelineManager(object):
         if (len(self.losses) == 0):
             raise ConfigurationError("Cannot train using backpropagation as there are no 'Loss' components")
         loss_sum = 0
-        num_losses = 0
         for loss in self.losses:
             for key in loss.loss_keys():
                 loss_sum += data_dict[key].cpu().item()
-                num_losses +=1
-        # Display additional information for multi-loss pipelines.
-        if num_losses > 1:
-            self.logger.info("Total loss: {}".format(loss_sum))
         return loss_sum
 
 
@@ -683,6 +678,15 @@ class PipelineManager(object):
         for prio in self.__priorities:
             comp = self.__components[prio]
             comp.add_statistics(stat_col)
+        # If there are more than 1 losses - show total loss.
+        num_losses = 0
+        for loss in self.losses:
+            num_losses += len(loss.loss_keys())
+        # Display additional "total loss" for multi-loss pipelines.
+        self.show_total_loss = (num_losses > 1)
+        if self.show_total_loss:
+            stat_col.add_statistics("total_loss", '{:12.10f}')
+            stat_col.add_statistics("total_loss_support", None)
 
 
     def collect_statistics(self, stat_col, data_dict):
@@ -698,6 +702,11 @@ class PipelineManager(object):
         for prio in self.__priorities:
             comp = self.__components[prio]
             comp.collect_statistics(stat_col, data_dict)
+        # Display additional "total loss" for multi-loss pipelines.
+        if self.show_total_loss:
+            stat_col["total_loss"] = self.get_loss(data_dict)
+            stat_col["total_loss_support"] = data_dict["indices"].shape[0] # batch size
+            print(data_dict["indices"].shape[0])
 
 
     def add_aggregators(self, stat_agg):
@@ -710,6 +719,9 @@ class PipelineManager(object):
         for prio in self.__priorities:
             comp = self.__components[prio]
             comp.add_aggregators(stat_agg)
+        # Display additional "total loss" for multi-loss pipelines.
+        if self.show_total_loss:
+            stat_agg.add_aggregator("total_loss", '{:12.10f}')  
 
 
     def aggregate_statistics(self, stat_col, stat_agg):
@@ -724,3 +736,14 @@ class PipelineManager(object):
         for prio in self.__priorities:
             comp = self.__components[prio]
             comp.aggregate_statistics(stat_col, stat_agg)
+        # Display additional "total loss" for multi-loss pipelines.
+        if self.show_total_loss:
+            total_losses = stat_col["total_loss"]
+            supports = stat_col["total_loss_support"]
+
+            # Special case - no samples!
+            if sum(supports) == 0:
+                stat_agg.aggregators["total_loss"] = 0
+            else: 
+                # Calculate default aggregate - weighted mean.
+                stat_agg.aggregators["total_loss"] = average(total_losses, weights=supports)

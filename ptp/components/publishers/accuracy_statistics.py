@@ -155,7 +155,7 @@ class AccuracyStatistics(Component):
 
     def collect_statistics(self, stat_col, data_dict):
         """
-        Collects statistics (batch_size) for given episode.
+        Collects statistics (accuracy and support set size) for given episode.
 
         :param stat_col: ``StatisticsCollector``.
 
@@ -188,13 +188,19 @@ class AccuracyStatistics(Component):
 
         """
         accuracies = stat_col[self.key_accuracy]
-        batch_sizes = stat_col[self.key_accuracy+'_support']
+        supports = stat_col[self.key_accuracy+'_support']
 
-        # Calculate weighted precision.
-        accuracies_avg = np.average(accuracies, weights=batch_sizes)
-        accuracies_var = np.average((accuracies-accuracies_avg)**2, weights=batch_sizes)
+        # Special case - no samples!
+        if sum(supports) == 0:
+            stat_agg[self.key_accuracy] = 0
+            stat_agg[self.key_accuracy+'_std'] = 0
 
-        stat_agg[self.key_accuracy] = accuracies_avg
-        #stat_agg[self.key_accuracy+'_min'] = np.min(accuracies)
-        #stat_agg[self.key_accuracy+'_max'] = np.max(accuracies)
-        stat_agg[self.key_accuracy+'_std'] = math.sqrt(accuracies_var)
+        else: 
+            # Calculate weighted precision.
+            accuracies_avg = np.average(accuracies, weights=supports)
+            accuracies_var = np.average((accuracies-accuracies_avg)**2, weights=supports)
+
+            stat_agg[self.key_accuracy] = accuracies_avg
+            #stat_agg[self.key_accuracy+'_min'] = np.min(accuracies)
+            #stat_agg[self.key_accuracy+'_max'] = np.max(accuracies)
+            stat_agg[self.key_accuracy+'_std'] = math.sqrt(accuracies_var)

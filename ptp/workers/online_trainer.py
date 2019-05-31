@@ -354,18 +354,12 @@ def main():
     """
     Entry point function for the ``OnlineTrainer``.
     """
-    try:
-        # Create trainer.
-        trainer = OnlineTrainer()
-        # Parse args, load configuration and create all required objects.
-        trainer.setup_experiment()
-        # GO!
-        trainer.run_experiment()
-
-    except KeyError as e:
-        print("Error: {}".format(e))
-        exit(-1)
-
+    # Create trainer.
+    trainer = OnlineTrainer()
+    # Parse args, load configuration and create all required objects.
+    trainer.setup_experiment()
+    # GO!
+    trainer.run_experiment()
 
 if __name__ == '__main__':
     main()

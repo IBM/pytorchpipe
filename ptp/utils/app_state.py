@@ -76,6 +76,7 @@ class AppState(metaclass=SingletonMetaClass):
         self.epoch = None # Processor is not using the notion of epoch.
         self.episode = 0
 
+
     def set_types(self):
         """
         Enables computations on CUDA if GPU is available.
