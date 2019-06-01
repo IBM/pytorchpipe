@@ -25,16 +25,17 @@ from pathlib import Path
 import pickle
 
 
-def load_pickle(logger, filename):
+def load_pickle(logger, filename, encoding="ASCII"):
     """
     Loads picke from file.
 
     :param logger: Logger object.
     :param filename: Absolute path along with the name of the file to be loaded.
+    :param encoding: file encoding (DEFAULT: "ASCII")
     """
     try:
         with open(str(filename), 'rb') as f:
-            obj = pickle.load(f)
+            obj = pickle.load(f, encoding=encoding)
         logger.info('Loaded: %s', filename)
 
     except EOFError:
