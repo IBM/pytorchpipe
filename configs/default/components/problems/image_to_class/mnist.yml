@@ -30,6 +30,9 @@ streams:
   # Stream containing targets (label ids) (OUTPUT)
   targets: targets
 
+  # Stream containing labels (words) (OUTPUT)
+  labels: labels
+
 globals:
   ####################################################################
   # 3. Keymappings of variables that will be RETRIEVED from GLOBALS.

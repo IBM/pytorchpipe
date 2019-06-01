@@ -105,11 +105,11 @@ class MNIST(Problem):
 
         # Class names.
         labels = 'Zero One Two Three Four Five Six Seven Eight Nine'.split(' ')
+        # Export to globals.
         word_to_ix = {labels[i]: i for i in range(10)}
+        self.globals["label_word_mappings"] = word_to_ix
         # Reverse mapping - for labels.
         self.ix_to_word = {value: key for (key, value) in word_to_ix.items()}
-        # Export to globals.
-        self.globals["label_word_mappings"] = word_to_ix
 
     def __len__(self):
         """

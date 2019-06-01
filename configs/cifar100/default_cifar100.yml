@@ -1,14 +1,15 @@
 # Training parameters:
 training:
   problem: 
-    type: MNIST
-    batch_size: &b 64
+    type: CIFAR100
+    batch_size: &b 1
     use_train_data: True
-    #resize: [32, 32]
   # Use sampler that operates on a subset.
-  sampler:
-    type: SubsetRandomSampler
-    indices: [0, 55000]
+  dataloader:
+    shuffle: False
+  #sampler:
+  #  type: SubsetRandomSampler
+  #  indices: [0, 55000]
   # optimizer parameters:
   optimizer:
     type: Adam
@@ -24,14 +25,14 @@ training:
 validation:
   #partial_validation_interval: 100
   problem:
-    type: MNIST
+    type: CIFAR100
     batch_size: *b
     use_train_data: True  # True because we are splitting the training set to: validation and training
     #resize: [32, 32]
   # Use sampler that operates on a subset.
-  sampler:
-    type: SubsetRandomSampler
-    indices: [55000, 60000]
+  #sampler:
+  #  type: SubsetRandomSampler
+  #  indices: [55000, 60000]
 
 # Testing parameters:
 test:
@@ -42,37 +43,45 @@ test:
     #resize: [32, 32]
 
 pipeline:
-  disable: image_viewer
+  #disable: image_viewer
 
   # Loss
   nllloss:
     type: NLLLoss
     priority: 10.0
+    streams:
+      targets: fine_targets
 
   # Statistics.
   batch_size:
     priority: 100.0
     type: BatchSizeStatistics
+    streams:
+      targets: fine_targets
 
   accuracy:
     priority: 100.1
     type: AccuracyStatistics
+    streams:
+      targets: fine_targets
 
 
   precision_recall:
     priority: 100.2
     type: PrecisionRecallStatistics
     use_word_mappings: True
-    show_class_scores: True
+    #show_class_scores: True
     globals:
-      word_mappings: label_word_mappings
+      word_mappings: fine_label_word_mappings
+    streams:
+      targets: fine_targets
 
   answer_decoder:
     priority: 100.3
     type: WordDecoder
     import_word_mappings_from_globals: True
     globals:
-      word_mappings: label_word_mappings
+      word_mappings: fine_label_word_mappings
     streams:
       inputs: predictions
       outputs: answers
@@ -80,13 +89,13 @@ pipeline:
   stream_viewer:
     priority: 100.4
     type: StreamViewer
-    input_streams: labels, answers
+    input_streams: coarse_targets, coarse_labels, fine_targets, fine_labels, answers
 
   image_viewer:
     priority: 100.5
     type: ImageToClassViewer
     streams:
       images: inputs
-      labels: labels
-      answers: answers
+      labels: fine_labels
+      answers: coarse_labels  
 
