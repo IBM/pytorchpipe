@@ -42,6 +42,7 @@ test:
     #resize: [32, 32]
 
 pipeline:
+  disable: image_viewer
 
   # Loss
   nllloss:
@@ -83,3 +84,9 @@ pipeline:
       images: inputs
       label: labels
       answers: answers
+
+  stream_viewer:
+    priority: 100.5
+    type: StreamViewer
+    input_streams: labels, answers
+
