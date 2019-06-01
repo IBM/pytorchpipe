@@ -22,7 +22,7 @@ training:
 
 # Validation parameters:
 validation:
-  partial_validation_interval: 100
+  #partial_validation_interval: 100
   problem:
     type: MNIST
     batch_size: *b

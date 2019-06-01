@@ -620,7 +620,7 @@ class PipelineManager(object):
                     data_dict[key].backward(retain_graph=True)
 
 
-    def get_loss(self, data_dict):
+    def return_loss_on_batch(self, stat_col):
         """
         Sums all losses and returns a single value that can be used e.g. in terminal condition or model(s) saving.
 
@@ -628,13 +628,19 @@ class PipelineManager(object):
 
         :return: Loss (scalar value).
         """
-        if (len(self.losses) == 0):
-            raise ConfigurationError("Cannot train using backpropagation as there are no 'Loss' components")
-        loss_sum = 0
-        for loss in self.losses:
-            for key in loss.loss_keys():
-                loss_sum += data_dict[key].cpu().item()
-        return loss_sum
+        return stat_col["total_loss"][-1]
+
+
+    def return_loss_on_set(self, stat_agg):
+        """
+        Sums all losses and returns a single value that can be used e.g. in terminal condition or model(s) saving.
+
+        :param data_dict: :py:class:`ptp.utils.DataDict` object containing both input data to be processed and that will be extended by the results.
+
+        :return: Loss (scalar value).
+        """
+
+        return stat_agg["total_loss"]
 
 
     def parameters(self, recurse=True):
@@ -678,15 +684,20 @@ class PipelineManager(object):
         for prio in self.__priorities:
             comp = self.__components[prio]
             comp.add_statistics(stat_col)
-        # If there are more than 1 losses - show total loss.
+
+        # Check number of losses in the pipeline.
         num_losses = 0
         for loss in self.losses:
             num_losses += len(loss.loss_keys())
-        # Display additional "total loss" for multi-loss pipelines.
         self.show_total_loss = (num_losses > 1)
+
+        # Additional "total loss" (for single- and multi-loss pipelines).
+        # Collect it always, but show it only for multi-loss pipelines.
         if self.show_total_loss:
             stat_col.add_statistics("total_loss", '{:12.10f}')
-            stat_col.add_statistics("total_loss_support", None)
+        else:
+            stat_col.add_statistics("total_loss", None)
+        stat_col.add_statistics("total_loss_support", None)
 
 
     def collect_statistics(self, stat_col, data_dict):
@@ -702,10 +713,14 @@ class PipelineManager(object):
         for prio in self.__priorities:
             comp = self.__components[prio]
             comp.collect_statistics(stat_col, data_dict)
-        # Display additional "total loss" for multi-loss pipelines.
-        if self.show_total_loss:
-            stat_col["total_loss"] = self.get_loss(data_dict)
-            stat_col["total_loss_support"] = data_dict["indices"].shape[0] # batch size
+
+        # Additional "total loss" (for single- and multi-loss pipelines).
+        loss_sum = 0
+        for loss in self.losses:
+            for key in loss.loss_keys():
+                loss_sum += data_dict[key].cpu().item()
+        stat_col["total_loss"] = loss_sum
+        stat_col["total_loss_support"] = data_dict["indices"].shape[0] # batch size
 
 
     def add_aggregators(self, stat_agg):
@@ -718,9 +733,13 @@ class PipelineManager(object):
         for prio in self.__priorities:
             comp = self.__components[prio]
             comp.add_aggregators(stat_agg)
-        # Display additional "total loss" for multi-loss pipelines.
+
+        # Additional "total loss" (for single- and multi-loss pipelines).
+        # Collect it always, but show it only for multi-loss pipelines.
         if self.show_total_loss:
             stat_agg.add_aggregator("total_loss", '{:12.10f}')  
+        else:
+            stat_agg.add_aggregator("total_loss", None)  
 
 
     def aggregate_statistics(self, stat_col, stat_agg):
@@ -735,14 +754,14 @@ class PipelineManager(object):
         for prio in self.__priorities:
             comp = self.__components[prio]
             comp.aggregate_statistics(stat_col, stat_agg)
-        # Display additional "total loss" for multi-loss pipelines.
-        if self.show_total_loss:
-            total_losses = stat_col["total_loss"]
-            supports = stat_col["total_loss_support"]
 
-            # Special case - no samples!
-            if sum(supports) == 0:
-                stat_agg.aggregators["total_loss"] = 0
-            else: 
-                # Calculate default aggregate - weighted mean.
-                stat_agg.aggregators["total_loss"] = average(total_losses, weights=supports)
+        # Additional "total loss" (for single- and multi-loss pipelines).
+        total_losses = stat_col["total_loss"]
+        supports = stat_col["total_loss_support"]
+
+        # Special case - no samples!
+        if sum(supports) == 0:
+            stat_agg.aggregators["total_loss"] = 0
+        else: 
+            # Calculate default aggregate - weighted mean.
+            stat_agg.aggregators["total_loss"] = average(total_losses, weights=supports)

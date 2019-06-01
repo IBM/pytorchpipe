@@ -212,6 +212,7 @@ setup(
     entry_points={  # Optional
          'console_scripts': [
              'ptp-online-trainer=ptp.workers.online_trainer:main',
+             'ptp-offline-trainer=ptp.workers.offline_trainer:main',
              'ptp-processor=ptp.workers.processor:main',
          ]
      },
