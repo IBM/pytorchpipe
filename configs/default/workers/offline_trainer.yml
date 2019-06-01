@@ -1,5 +1,5 @@
 ####################################################################
-# Section defining all the default values of parameters used during training when using ptp-online-trainer.
+# Section defining all the default values of parameters used during training when using ptp-offline-trainer.
 
 # If you want to use different section for training pass its name as command line argument '--training_section_name' to trainer (DEFAULT: training)
 # Note: in such a case remember to define all the required parameters in the new section.
@@ -59,10 +59,10 @@ training:
     loss_stop_threshold: 0.00001 # 1e-5
     # Terminal condition II: Early stopping monitor validation loss, if it didn't down during last n validations, training will be terminated (Optional, negative means that this condition is disabled)
     early_stop_validations: 10
-    # Terminal condition III: maximal number of epochs (Optional, -1 (negative) means that this condition is disabled)
-    epoch_limit: -1
-    # Terminal condition IV: maximal number of episodes (Mandatory for this trainer! Must be > 0)
-    episode_limit: 100000
+    # Terminal condition III: maximal number of epochs (Mandatory for this trainer! Must be > 0)
+    epoch_limit: 10
+    # Terminal condition IV: maximal number of episodes (Optional, -1 (negative) means that this condition is disabled)
+    episode_limit: -1
 
 
 
@@ -72,8 +72,8 @@ training:
 # Note: in such a case remember to define all the required parameters in the new section.
 validation:
   # Defines how often the partial validation will be performed.
-  # In this trainer Partial Validation is mandatory, hence interval must be > 0.
-  partial_validation_interval: 100
+  # In this trainer Partial Validation is optional (negative value means it is disabled)
+  partial_validation_interval: -1
 
   # Definition of the problem (mandatory!)
   #problem:

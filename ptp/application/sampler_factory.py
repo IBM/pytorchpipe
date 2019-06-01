@@ -85,19 +85,19 @@ class SamplerFactory(object):
         logger = logging.initialize_logger('SamplerFactory')
 
         try: 
-            # Check presence of the name attribute.
-            if 'name' not in config:
-                raise ConfigurationError("The sampler configuration section does not contain the key 'name'")
+            # Check presence of the typename attribute.
+            if 'type' not in config:
+                raise ConfigurationError("The sampler configuration section does not contain the key 'type'")
 
-            # Get the class name.
-            name = config['name']
-            logger.info('Trying to instantiate the {} sampler object'.format(name))
+            # Get the class typename.
+            typename = config['type']
+            logger.info('Trying to instantiate the {} sampler object'.format(typename))
 
             ###########################################################################
             # Handle first special case: SubsetRandomSampler.
-            if name == 'SubsetRandomSampler':
+            if typename == 'SubsetRandomSampler':
 
-                # Check presence of the name attribute.
+                # Check presence of the typename attribute.
                 if 'indices' not in config:
                     raise ConfigurationError("The sampler configuration section does not contain the key 'indices' "
                                     "required by SubsetRandomSampler")
@@ -145,7 +145,7 @@ class SamplerFactory(object):
 
             ###########################################################################
             # Handle second special case: WeightedRandomSampler.
-            elif name == 'WeightedRandomSampler':
+            elif typename == 'WeightedRandomSampler':
 
                 # Check presence of the attribute.
                 if 'weights' not in config:
@@ -160,7 +160,7 @@ class SamplerFactory(object):
 
             ###########################################################################
             # Handle third special case: kFoldRandomSampler.
-            elif name == 'kFoldRandomSampler':
+            elif typename == 'kFoldRandomSampler':
 
                 # Check presence of the attribute.
                 if 'folds' not in config:
@@ -179,7 +179,7 @@ class SamplerFactory(object):
 
             ###########################################################################
             # Handle fourd special case: kFoldWeightedRandomSampler.
-            elif name == 'kFoldWeightedRandomSampler':
+            elif typename == 'kFoldWeightedRandomSampler':
 
                 # Check presence of the attribute.
                 if 'weights' not in config:
@@ -204,17 +204,17 @@ class SamplerFactory(object):
                 # Create the sampler object.
                 sampler = ptp_samplers.kFoldWeightedRandomSampler(weights, len(problem), folds, epochs_per_fold, problem_subset_name == 'training')
 
-            elif name in ['BatchSampler', 'DistributedSampler']:
+            elif typename in ['BatchSampler', 'DistributedSampler']:
                 # Sorry, don't support those. Yet;)
                 raise ConfigurationError("Sampler Factory currently does not support the '{}' sampler. Please pick one of the others "
-                             "or use defaults random sampling".format(name))
+                             "or use defaults random sampling".format(typename))
             else:
                 # Verify that the specified class is in the samplers package.
-                if name not in dir(pt_samplers):
-                    raise ConfigurationError("Could not find the specified class '{}' in the samplers package".format(name))
+                if typename not in dir(pt_samplers):
+                    raise ConfigurationError("Could not find the specified class '{}' in the samplers package".format(typename))
 
                 # Get the sampler class.
-                sampler_class = getattr(pt_samplers, name)
+                sampler_class = getattr(pt_samplers, typename)
                 # Create "regular" sampler.
                 sampler = sampler_class(problem)
 

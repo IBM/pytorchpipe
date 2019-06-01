@@ -11,7 +11,7 @@ training:
   sampler:
     weights: ~/data/vqa-med/answers.all.weights.csv
   terminal_conditions:
-    loss_stop: 1.0e-3
+    loss_stop_threshold: 1.0e-3
 
 validation:
   problem:

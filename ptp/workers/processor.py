@@ -433,19 +433,13 @@ def main():
     Entry point function for the ``Processor``.
 
     """
-    try:
-        processor = Processor()
-        # parse args, load configuration and create all required objects.
-        processor.setup_global_experiment()
-        # finalize the experiment setup
-        processor.setup_individual_experiment()
-        # run the experiment
-        processor.run_experiment()
-
-    except KeyError as e:
-        print("Error: {}".format(e))
-        exit(-1)
-
+    processor = Processor()
+    # parse args, load configuration and create all required objects.
+    processor.setup_global_experiment()
+    # finalize the experiment setup
+    processor.setup_individual_experiment()
+    # run the experiment
+    processor.run_experiment()
 
 if __name__ == '__main__':
     main()

@@ -7,18 +7,17 @@ training:
     type: MNIST
     batch_size: &b 64
     use_train_data: True
-    #resize: [32, 32]
   # Use k-fold cross-validation random sampler.
   sampler:
     type: kFoldRandomSampler
-    folds: 7 # Each with size of 6000
+    folds: 10 # Each with size of 6000
   # optimizer parameters:
   optimizer:
     type: Adam
     lr: 0.0001
   # settings parameters
   terminal_conditions:
-    loss_stop: 0.5
+    loss_stop_threshold: 0.5
     episode_limit: 10000
     epoch_limit: 5
 
@@ -29,11 +28,10 @@ validation:
     type: MNIST
     batch_size: *b
     use_train_data: True  # True because we are splitting the training set to: validation and training
-    #resize: [32, 32]
   # Use k-fold cross-validation random sampler.
   sampler:
     type: kFoldRandomSampler
-    folds: 7 # Each with size of 6000
+    folds: 10 # Each with size of 6000
 
 pipeline:
 

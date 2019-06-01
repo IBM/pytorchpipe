@@ -24,18 +24,16 @@ import ptp.configuration.config_parsing as config_parsing
 from ptp.configuration.configuration_error import ConfigurationError
 from ptp.utils.termination_condition import TerminationCondition
 
-class OnlineTrainer(Trainer):
+class OfflineTrainer(Trainer):
     """
-    Implementation for the episode-based ``OnlineTrainer``.
+    Implementation for the epoch-based ``OfflineTrainer``.
 
-    ..note ::
+    ..note::
 
-        The ``OfflineTrainer`` is based on epochs. While an epoch can be defined for all finite-size datasets, \
-        it makes less sense for problems which have a very large, almost infinite, dataset (like algorithmic \
-        tasks, which generate random data on-the-fly). \
-         
-        This is why this OnlineTrainer was implemented. Despite the fact it has the notion of epoch, it is more \
-        flexible and operates on episodes (we call an iteration on a single batch an episode). \
+        The default ``OfflineTrainer`` is based on epochs. \
+        An epoch is defined as passing through all samples of a finite-size dataset.\
+        The ``OfflineTrainer`` allows to loop over all samples from the training set many times i.e. in many epochs. \
+        When an epochs finishes, it performs a similar step for the validation set and collects the statistics.
 
     """
 
@@ -44,7 +42,7 @@ class OnlineTrainer(Trainer):
         Constructor. It on calls the ``Trainer`` constructor as the initialization phase is identical to the one from ``Trainer``.
         """ 
         # Call base constructor to set up app state, registry and add default config.
-        super(OnlineTrainer, self).__init__("OnlineTrainer", OnlineTrainer)
+        super(OfflineTrainer, self).__init__("OfflineTrainer", OfflineTrainer)
 
     def setup_experiment(self):
         """
@@ -55,15 +53,14 @@ class OnlineTrainer(Trainer):
 
         """
         # Call base method to parse all command line arguments, load configuration, create problems and model etc.
-        super(OnlineTrainer, self).setup_experiment()
+        super(OfflineTrainer, self).setup_experiment()
 
         # In this trainer Partial Validation is mandatory, hence interval must be > 0.
         self.partial_validation_interval = self.config['validation']['partial_validation_interval']
         if self.partial_validation_interval <= 0:
-            self.logger.error("Online Trainer relies on Partial Validation, thus 'partial_validation_interval' must be a positive number!")
-            exit(-4)
+            self.logger.info("Partial Validation deactivated")
         else:
-            self.logger.info("Partial Validation activated with interval equal to {} episodes\n".format(self.partial_validation_interval))
+            self.logger.info("Partial Validation activated with interval equal to {} episodes".format(self.partial_validation_interval))
 
         ################# TERMINAL CONDITIONS ################# 
         log_str = 'Terminal conditions:\n' + '='*80 + "\n"
@@ -81,12 +78,11 @@ class OnlineTrainer(Trainer):
         else:
             log_str += "   II: Setting the Number of Validations in Early Stopping to: {}\n".format(self.early_stop_validations)
 
-        # Terminal condition III: max epochs (Optional for this trainer)
+        # Terminal condition III: max epochs. Mandatory.
         self.epoch_limit = self.config_training["terminal_conditions"]["epoch_limit"]
         if self.epoch_limit <= 0:
-            log_str += "  III: Termination based on Epoch Limit is disabled\n"
-            # Set to infinity.
-            self.epoch_limit = np.Inf
+            self.logger.error("OffLine Trainer relies on epochs, thus Epoch Limit must be a positive number!")
+            exit(-5)
         else:
             log_str += "  III: Setting the Epoch Limit to: {}\n".format(self.epoch_limit)
 
@@ -94,13 +90,15 @@ class OnlineTrainer(Trainer):
         self.epoch_size = self.training.get_epoch_size()
         log_str += "       Epoch size in terms of training episodes: {}\n".format(self.epoch_size)
 
-        # Terminal condition IV: max episodes. Mandatory.
+        # Terminal condition IV: max episodes. Optional.
         self.episode_limit = self.config_training['terminal_conditions']['episode_limit']
-        if self.episode_limit <= 0:
-            self.logger.error("OnLine Trainer relies on episodes, thus 'episode_limit' must be a positive number!")
-            exit(-5)
+        if self.episode_limit < 0:
+            log_str += "   IV: Termination based on Episode Limit is disabled\n"
+            # Set to infinity.
+            self.episode_limit = np.Inf
         else:
             log_str += "   IV: Setting the Episode Limit to: {}\n".format(self.episode_limit)
+
         # Ok, finally print it.
         log_str += '='*80          
         self.logger.info(log_str)
@@ -112,7 +110,7 @@ class OnlineTrainer(Trainer):
 
     def run_experiment(self):
         """
-        Main function of the ``OnlineTrainer``, runs the experiment.
+        Main function of the ``OfflineTrainer``, runs the experiment.
 
         Iterates over the (cycled) DataLoader (one iteration = one episode).
 
@@ -124,8 +122,8 @@ class OnlineTrainer(Trainer):
                 - I. The loss is below the specified threshold (using the partial validation loss),
                 - II. Early stopping is set and the full validation loss did went down \
                     for the indicated number of validation steps,
-                - III. The maximum number of episodes has been met,
-                - IV. The maximum number of epochs has been met (OPTIONAL).
+                - III. The maximum number of episodes has been met (OPTIONAL),
+                - IV. The maximum number of epochs has been met.
             
             Additionally, experiment can be stopped by the user by pressing 'Stop experiment' \
             during visualization.
@@ -246,41 +244,15 @@ class OnlineTrainer(Trainer):
                         self.logger.info(self.training_stat_col.export_to_string())
 
                     #  6. Validate and (optionally) save the model.
-                    if (self.app_state.episode % self.partial_validation_interval) == 0:
-
+                    if self.partial_validation_interval > 0 and (self.app_state.episode % self.partial_validation_interval) == 0:
                         # Clear the validation batch from all items aside of the ones originally returned by the problem.
                         self.validation.batch.reinitialize(self.validation.problem.output_data_definitions())
                         # Perform validation.
                         self.validate_on_batch(self.validation.batch)
-                        # Get loss.
-                        validation_batch_loss = self.pipeline.return_loss_on_batch(self.validation_stat_col)
-
-                        # Save the pipeline using the latest validation statistics.
-                        self.pipeline.save(self.checkpoint_dir, training_status, validation_batch_loss)
-
-                        # Terminal conditions.
-                        # I. The loss is < threshold (only when curriculum learning is finished if set).
-                        # We check that condition only in validation step!
-                        if self.curric_done or not self.must_finish_curriculum:
-
-                            # Check the Partial Validation loss.
-                            if (validation_batch_loss < self.loss_stop_threshold):
-                                # Change the status.
-                                training_status = "Converged (Partial Validation Loss went below " \
-                                    "Loss Stop threshold {})".format(self.loss_stop_threshold)
-
-                                # Save the pipeline (update its statistics).
-                                self.pipeline.save(self.checkpoint_dir, training_status, validation_batch_loss)
-                                # And leave both loops.
-                                raise TerminationCondition(training_status)
-
-                        # II. Early stopping is set and loss hasn't improved by delta in n epochs.
-                        if self.pipeline.validation_loss_down_counter >= self.early_stop_validations:
-                            training_status = "Not converged: reached limit of validations without improvement (Early Stopping)"
-                            raise TerminationCondition(training_status)
+                        # Do not save the model: OfflineTrainer uses the full set to determine whether to save or not.
 
                     # III. The episodes number limit has been reached.
-                    if self.app_state.episode+1 >= self.episode_limit:
+                    if self.app_state.episode+1 >= self.episode_limit: # = np.Inf when inactive.
                         # If we reach this condition, then it is possible that the model didn't converge correctly
                         # but it currently might get better since last validation.
                         training_status = "Not converged: Episode Limit reached"
@@ -292,17 +264,49 @@ class OnlineTrainer(Trainer):
 
                 # Epoch just ended!
                 self.logger.info('End of epoch: {}\n{}'.format(self.app_state.epoch, '='*80))
-                
-                # Inform the problem managers that the epoch has ended.
-                self.training.finalize_epoch()
-                self.validation.finalize_epoch()
 
                 # Aggregate training statistics for the epoch.
                 self.aggregate_all_statistics(self.training, self.pipeline, self.training_stat_col, self.training_stat_agg)
                 self.export_all_statistics( self.training_stat_agg,  '[Full Training]')
 
+                # Inform the training problem manager that the epoch has ended.
+                self.training.finalize_epoch()
+
+                # Validate over the entire validation set.
+                self.validate_on_set()
+
+                # Get loss.
+                validation_set_loss = self.pipeline.return_loss_on_set(self.validation_stat_agg)
+
+                # Save the pipeline using the latest validation statistics.
+                self.pipeline.save(self.checkpoint_dir, training_status, validation_set_loss)
+
+                # Inform the validation problem manager that the epoch has ended.
+                self.validation.finalize_epoch()
+
+                # Terminal conditions.
+                # I. The loss is < threshold (only when curriculum learning is finished if set).
+                # We check that condition only in validation step!
+                if self.curric_done or not self.must_finish_curriculum:
+
+                    # Check the Partial Validation loss.
+                    if (validation_set_loss < self.loss_stop_threshold):
+                        # Change the status.
+                        training_status = "Converged (Full Validation Loss went below " \
+                            "Loss Stop threshold of {})".format(self.loss_stop_threshold)
+
+                        # Save the pipeline (update its statistics).
+                        self.pipeline.save(self.checkpoint_dir, training_status, validation_set_loss)
+                        # And leave both loops.
+                        raise TerminationCondition(training_status)
+
+                # II. Early stopping is set and loss hasn't improved by delta in n epochs.
+                if self.pipeline.validation_loss_down_counter >= self.early_stop_validations:
+                    training_status = "Not converged: reached limit of validations without improvement (Early Stopping)"
+                    raise TerminationCondition(training_status)
+
                 # IV. Epoch limit has been reached.
-                if self.app_state.epoch+1 >= self.epoch_limit: # = np.Inf when inactive.
+                if self.app_state.epoch+1 >= self.epoch_limit:
                     training_status = "Not converged: Epoch Limit reached"
                     # "Finish" the training.
                     raise TerminationCondition(training_status)
@@ -313,26 +317,19 @@ class OnlineTrainer(Trainer):
 
         except TerminationCondition as e:
             # End of main training and validation loop. Perform final full validation.
-            # Eventually perform "last" validation on batch.
-            if self.validation_stat_col["episode"][-1] != self.app_state.episode:
-                # We still must validate and try to save the model as it may performed better during this episode.
-
-                # Clear the validation batch from all items aside of the ones originally returned by the problem.
-                self.validation.batch.reinitialize(self.validation.problem.output_data_definitions())
-                # Perform validation.
-                self.validate_on_batch(self.validation.batch)
-                # Get loss.
-                validation_batch_loss = self.pipeline.return_loss_on_batch(self.validation_stat_col)
-
-                # Try to save the model using the latest validation statistics.
-                self.pipeline.save(self.checkpoint_dir, training_status, validation_batch_loss)
 
             self.logger.info('\n' + '='*80)
             self.logger.info('Training finished because {}'.format(training_status))
 
-            # Validate over the entire validation set.
-            self.validate_on_set()
-            # Do not save the model, as we tried it already on "last" validation batch.
+            # If episode limit was reached - perform last validation on the full set.
+            if training_status == "Not converged: Episode Limit reached":
+                # Validate over the entire validation set.
+                self.validate_on_set()
+                # Get loss.
+                validation_set_loss = self.pipeline.return_loss_on_set(self.validation_stat_agg)
+                # Save the pipeline using the latest validation statistics.
+                self.pipeline.save(self.checkpoint_dir, training_status, validation_set_loss)
+
 
             self.logger.info('Experiment finished!')
 
@@ -354,10 +351,10 @@ class OnlineTrainer(Trainer):
 
 def main():
     """
-    Entry point function for the ``OnlineTrainer``.
+    Entry point function for the ``OfflineTrainer``.
     """
     # Create trainer.
-    trainer = OnlineTrainer()
+    trainer = OfflineTrainer()
     # Parse args, load configuration and create all required objects.
     trainer.setup_experiment()
     # GO!

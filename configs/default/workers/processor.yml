@@ -34,7 +34,7 @@ test:
   #sampler:
   #  # Type - generally all samplers from PyTorch (plus some new onses) are allowed (Mandatory!)
   #  # Options: 
-  #  type: RandomSmpler
+  #  type: RandomSampler
   #  The rest of the content of that section is optimizer-specific...
 
 

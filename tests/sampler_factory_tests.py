@@ -39,7 +39,7 @@ class TestSamplerFactory(unittest.TestCase):
 
         indices = range(20)
         config = ConfigInterface()
-        config.add_default_params({'name': 'SubsetRandomSampler',
+        config.add_default_params({'type': 'SubsetRandomSampler',
                                 'indices': indices})
         # Create the sampler.
         sampler = SamplerFactory.build(TestProblemMockup(), config, "training")
@@ -52,7 +52,7 @@ class TestSamplerFactory(unittest.TestCase):
 
         range_str = '0, 20'
         config = ConfigInterface()
-        config.add_default_params({'name': 'SubsetRandomSampler',
+        config.add_default_params({'type': 'SubsetRandomSampler',
                                 'indices': range_str})
         # Create the sampler.
         sampler = SamplerFactory.build(TestProblemMockup(), config, "training")
@@ -66,7 +66,7 @@ class TestSamplerFactory(unittest.TestCase):
 
         yaml_list = yaml.load('[0, 2, 5, 10]')
         config = ConfigInterface()
-        config.add_default_params({'name': 'SubsetRandomSampler',
+        config.add_default_params({'type': 'SubsetRandomSampler',
                                 'indices': yaml_list})
         # Create the sampler.
         sampler = SamplerFactory.build(TestProblemMockup(), config, "training")
@@ -85,7 +85,7 @@ class TestSamplerFactory(unittest.TestCase):
         indices.tofile(filename, sep=',', format="%s")
 
         config = ConfigInterface()
-        config.add_default_params({'name': 'SubsetRandomSampler',
+        config.add_default_params({'type': 'SubsetRandomSampler',
                                 'indices': filename})
         # Create the sampler.
         sampler = SamplerFactory.build(TestProblemMockup(), config, "training")

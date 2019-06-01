@@ -2,35 +2,36 @@
 training:
   problem: 
     type: MNIST
-    batch_size: &b 6400
+    batch_size: &b 64
     use_train_data: True
     #resize: [32, 32]
   # Use sampler that operates on a subset.
-  #sampler:
-  #  type: SubsetRandomSampler
-  #  indices: [0, 55000]
+  sampler:
+    type: SubsetRandomSampler
+    indices: [0, 55000]
   # optimizer parameters:
   optimizer:
     type: Adam
     lr: 0.0001
   # settings parameters
   terminal_conditions:
-    loss_stop: 0.05
+    loss_stop_threshold: 0.05
+    early_stop_validations: 10
     episode_limit: 10000
     epoch_limit: 10
 
 # Validation parameters:
 validation:
-  partial_validation_interval: 500
+  #partial_validation_interval: 100
   problem:
     type: MNIST
     batch_size: *b
     use_train_data: True  # True because we are splitting the training set to: validation and training
     #resize: [32, 32]
   # Use sampler that operates on a subset.
-  #sampler:
-  #  type: SubsetRandomSampler
-  #  indices: [55000, 60000]
+  sampler:
+    type: SubsetRandomSampler
+    indices: [55000, 60000]
 
 # Testing parameters:
 test:
