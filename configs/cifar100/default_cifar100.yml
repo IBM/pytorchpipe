@@ -2,18 +2,18 @@
 training:
   problem: 
     type: CIFAR100
-    batch_size: &b 1
+    batch_size: &b 128
     use_train_data: True
   # Use sampler that operates on a subset.
-  dataloader:
-    shuffle: False
-  #sampler:
-  #  type: SubsetRandomSampler
-  #  indices: [0, 55000]
+  #dataloader:
+  #  shuffle: False
+  sampler:
+    type: SubsetRandomSampler
+    indices: [0, 45000]
   # optimizer parameters:
   optimizer:
     type: Adam
-    lr: 0.0001
+    lr: 0.001
   # settings parameters
   terminal_conditions:
     loss_stop_threshold: 0.05
@@ -30,9 +30,9 @@ validation:
     use_train_data: True  # True because we are splitting the training set to: validation and training
     #resize: [32, 32]
   # Use sampler that operates on a subset.
-  #sampler:
-  #  type: SubsetRandomSampler
-  #  indices: [55000, 60000]
+  sampler:
+    type: SubsetRandomSampler
+    indices: [45000, 50000]
 
 # Testing parameters:
 test:
@@ -43,7 +43,7 @@ test:
     #resize: [32, 32]
 
 pipeline:
-  #disable: image_viewer
+  disable: image_viewer
 
   # Loss
   nllloss:

@@ -96,42 +96,6 @@ class CIFAR100(Problem):
 
         # Load the dataset. (PROBLEM WITH COARSE-TO-FINE LABEL MAPPING!)
         self.dataset = datasets.CIFAR100(root=data_folder, train=self.use_train_data, download=True, transform=transform)
-        self.my_dataset = {}
-        fine_categories = set()
-        for image, fine_target in self.dataset:
-            fine_categories.add(fine_target)
-            #if fine_target == 26:
-            self.my_dataset[len(self.my_dataset)] = [image, fine_target]
-
-        print(len(fine_categories))
-
-        fine_label_names = "apple aquarium_fish baby bear beaver bed bee beetle bicycle bottle \
-bowl boy bridge bus butterfly camel can castle caterpillar cattle chairq \
-chimpanzee clock cloud cockroach couch crab crocodileq cup dinosaur dolphin elephant flatfish forest fox girl hamster house kangaroo keyboard lamp \
-lawn_mower leopard lion lizard lobster man maple_treeq motorcycle mountainq mouse mushroom oak_tree \
-orange orchid otter palm_tree pear pickup_truck pine_tree plain plate poppy porcupineq possum rabbit raccoon ray road rocketq rose sea seal shark shrew skunk \
-skyscraper snail snake spider squirrel streetcar sunflower sweet_pepper table tank telephone \
-television tiger tractor train trout tulip turtle wardrobe whale willow_tree wolf woman worm".split(" ")
-        print(len(fine_label_names))
-
-
-        fine_labels_from_file = "apple aquarium_fish baby bear beaver bed bee bow boy bridge bus \
-butterfly camel can castle caterpillar cattle chair chimpanzee clock cloud \
-cockroach couch crab crocodile cup dinosaur dolphin elephant flatfish forest \
-fox girl hamster house kangaroo keyboard lamp lawn_mower leopard lion \
-lizard lobster man maple_tree motorcycle mountain mouse mushroom oak_tree orange \
-orchid otter palm_tree pear pickup_truck pine_tree plain plate poppy porcupine \
-possum rabbit raccoon ray road rocket rose sea seal shark \
-shrew skunk skyscraper snail snake spider squirrel streetcar sunflower sweet_pepper \
-table tank telephone \
-actor train trout tulip turtle wardrobe whale willow_tree wolf woman worm".split(" ")
-        print(len(fine_labels_from_file))
-
-        coarse_labels_from_file = "aquatic_mammals fish flowers food_containers fruit_and_vegetables household_electrical_devices household_furniture insects \
-large_carnivores large_man-made_outdoor_things large_natural_outdoor_scenes large_omnivores_and_herbivores medium_mammal non-insect_invertebrates people reptiles small_mammals trees vehicles_1 vehicles_2".split(" ")
-        print(len(coarse_labels_from_file))
-        for label in coarse_labels_from_file:
-            print(label)
 
         # Process labels.
         all_labels = {"aquatic_mammals": "beaver, dolphin, otter, seal, whale".split(", "),
@@ -169,7 +133,6 @@ large_carnivores large_man-made_outdoor_things large_natural_outdoor_scenes larg
 
         # Sort fine labels.
         fine_labels = sorted(fine_labels)
-        print(len(fine_labels))
 
         # Generate fine word mappings.
         fine_word_to_ix = {fine_labels[i]: i for i in range(len(fine_labels))}
@@ -187,7 +150,7 @@ large_carnivores large_man-made_outdoor_things large_natural_outdoor_scenes larg
         self.fine_to_coarse_id_mapping = {}
         for fine_label, fine_id in fine_word_to_ix.items():
             self.fine_to_coarse_id_mapping[fine_id] = fine_to_coarse_mapping[fine_label]
-            print(" {} ({}) : {} ".format(fine_label, fine_id, self.coarse_ix_to_word[fine_to_coarse_mapping[fine_label]]))
+            #print(" {} ({}) : {} ".format(fine_label, fine_id, self.coarse_ix_to_word[fine_to_coarse_mapping[fine_label]]))
 
         # Set global variables - all dimensions ASIDE OF BATCH.
         self.globals["num_coarse_classes"] = len(coarse_word_to_ix)
@@ -202,8 +165,7 @@ large_carnivores large_man-made_outdoor_things large_natural_outdoor_scenes larg
 
         :return: The size of the problem.
         """
-        #return len(self.dataset)
-        return len(self.my_dataset)
+        return len(self.dataset)
 
     def output_data_definitions(self):
         """ 
@@ -234,8 +196,7 @@ large_carnivores large_man-made_outdoor_things large_natural_outdoor_scenes larg
             - targets: Index of the target class
         """
         # Get image and fine label id.
-        #image, fine_target = self.dataset.__getitem__(index)
-        image, fine_target = self.my_dataset[index]
+        image, fine_target = self.dataset.__getitem__(index)
 
         # Return data_dict.
         data_dict = self.create_data_dict(index)
