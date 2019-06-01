@@ -21,10 +21,10 @@ import os
 import torch
 from torchvision import datasets, transforms
 
-from ptp.components.problems.image_to_class.image_to_class_problem import ImageToClassProblem
+from ptp.components.problems.problem import Problem
 from ptp.data_types.data_definition import DataDefinition
 
-class MNIST(ImageToClassProblem):
+class MNIST(Problem):
     """
     Classic MNIST digit classification problem.
 

@@ -36,7 +36,7 @@ streams:
   # Stream containing input tensor (INPUT)
   inputs: inputs
 
-  # Stream containing output tensor (OUTPUT)
+  # Stream containing output words (OUTPUT)
   outputs: outputs
 
 globals: 

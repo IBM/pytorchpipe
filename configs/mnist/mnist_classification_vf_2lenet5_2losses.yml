@@ -218,5 +218,9 @@ pipeline:
       recall: joined_recall
       f1score: joined_f1score
 
+  # "Fix" (overwrite) stream name in viewer.
+  image_viewer:
+    streams:
+      answers: merged_predictions
 
 #: pipeline

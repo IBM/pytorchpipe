@@ -50,20 +50,36 @@ pipeline:
 
   # Statistics.
   batch_size:
-    type: BatchSizeStatistics
     priority: 100.0
+    type: BatchSizeStatistics
 
   accuracy:
-    type: AccuracyStatistics
     priority: 100.1
+    type: AccuracyStatistics
 
 
   precision_recall:
-    type: PrecisionRecallStatistics
     priority: 100.2
+    type: PrecisionRecallStatistics
     use_word_mappings: True
     show_class_scores: True
     globals:
       word_mappings: label_word_mappings
-        
 
+  answer_decoder:
+    priority: 100.3
+    type: WordDecoder
+    import_word_mappings_from_globals: True
+    globals:
+      word_mappings: label_word_mappings
+    streams:
+      inputs: predictions
+      outputs: answers
+
+  image_viewer:
+    priority: 100.4
+    type: ImageToClassViewer
+    streams:
+      images: inputs
+      label: labels
+      answers: answers
