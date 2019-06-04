@@ -223,20 +223,20 @@ class Processor(Worker):
         # check if the maximum number of episodes is specified, if not put a
         # default equal to the size of the dataset (divided by the batch size)
         # So that by default, we loop over the test set once.
-        max_test_episodes = len(self.pm)
+        problem_size_in_episodes = len(self.pm)
 
-        self.config_test['problem'].add_default_params({'max_test_episodes': max_test_episodes})
-        if self.config_test["problem"]["max_test_episodes"] == -1:
+        if self.config_test["terminal_conditions"]["episode_limit"] == -1:
             # Overwrite the config value!
-            self.config_test['problem'].add_config_params({'max_test_episodes': max_test_episodes})
+            self.config_test['terminal_conditions'].add_config_params({'episode_limit': problem_size_in_episodes})
 
         # Warn if indicated number of episodes is larger than an epoch size:
-        if self.config_test["problem"]["max_test_episodes"] > max_test_episodes:
-            self.logger.warning('Indicated maximum number of episodes is larger than one epoch, reducing it.')
-            self.config_test['problem'].add_config_params({'max_test_episodes': max_test_episodes})
+        if self.config_test["terminal_conditions"]["episode_limit"] > problem_size_in_episodes:
+            self.logger.warning('Indicated limit of number of episodes is larger than one epoch, reducing it.')
+            # Overwrite the config value!
+            self.config_test['terminal_conditions'].add_config_params({'episode_limit': problem_size_in_episodes})
 
-        self.logger.info("Setting the max number of episodes to: {}".format(
-            self.config_test["problem"]["max_test_episodes"]))
+        self.logger.info("Limiting the number of episodes to: {}".format(
+            self.config_test["terminal_conditions"]["episode_limit"]))
 
         ###################### PIPELINE ######################
         
@@ -384,7 +384,7 @@ class Processor(Worker):
                     # Increment counter.
                     self.app_state.episode += 1
                     # Terminal condition 0: max test episodes reached.
-                    if self.app_state.episode == self.config_test["problem"]["max_test_episodes"]:
+                    if self.app_state.episode == self.config_test["terminal_conditions"]["episode_limit"]:
                         break
 
                     # Forward pass.

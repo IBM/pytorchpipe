@@ -37,6 +37,11 @@ test:
   #  type: RandomSampler
   #  The rest of the content of that section is optimizer-specific...
 
+ # Terminal condition that will be used during processing.
+  terminal_conditions:
+    # Terminal condition : maximal number of episodes (Optional, -1 means that processor will perform one pass over the whole dataset/split)
+    episode_limit: -1
+
 
 ####################################################################
 # Section defining all the default values of parameters used during training.
