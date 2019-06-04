@@ -17,16 +17,16 @@
 __author__ = "Tomasz Kornuta"
 
 import numpy as np
+import torch
+import matplotlib.pyplot as plt
 
-from ptp.configuration.config_parsing import get_value_list_from_dictionary
 from ptp.components.component import Component
 from ptp.data_types.data_definition import DataDefinition
 
 
-class StreamViewer(Component):
+class ImageToClassViewer(Component):
     """
-    Utility for displaying contents of streams of a single sample from the batch.
-
+    Utility for displaying contents image along with label and prediction (a single sample from the batch).
     """
 
     def __init__(self, name, config):
@@ -41,14 +41,14 @@ class StreamViewer(Component):
 
         """
         # Call constructors of parent classes.
-        Component.__init__(self, name, StreamViewer, config)
+        Component.__init__(self, name, ImageToClassViewer, config)
 
-        # Get key mappings for indices.
+        # Get default key mappings.
         self.key_indices = self.stream_keys["indices"]
+        self.key_images = self.stream_keys["images"]
+        self.key_labels = self.stream_keys["labels"]
+        self.key_answers = self.stream_keys["answers"]
 
-        # Load list of streams names (keys).
-        self.input_stream_keys = get_value_list_from_dictionary("input_streams", self.config)
-        
         # Get sample number.
         self.sample_number = self.config["sample_number"]
         
@@ -61,6 +61,9 @@ class StreamViewer(Component):
         """
         return {
             self.key_indices: DataDefinition([-1, 1], [list, int], "Batch of sample indices [BATCH_SIZE] x [1]"),
+            self.key_images: DataDefinition([-1, -1, -1, -1], [torch.Tensor], "Batch of images [BATCH_SIZE x IMAGE_DEPTH x IMAGE_HEIGHT x IMAGE_WIDTH]"),
+            self.key_labels: DataDefinition([-1, 1], [list, str], "Batch of target labels, each being a single word [BATCH_SIZE] x [STRING]"),
+            self.key_answers: DataDefinition([-1, 1], [list, str], "Batch of predicted labels, each being a single word [BATCH_SIZE] x [STRING]")
             }
 
     def output_data_definitions(self):
@@ -74,35 +77,46 @@ class StreamViewer(Component):
 
     def __call__(self, data_dict):
         """
-        Encodes batch, or, in fact, only one field of batch ("inputs").
-        Stores result in "outputs" field of data_dict.
+        Shows a sample from the batch.
 
-        :param data_dict: :py:class:`ptp.utils.DataDict` object containing (among others) "indices".
+        :param data_dict: :py:class:`ptp.utils.DataDict` object.
 
         """
         # Use worker interval.
         if self.app_state.episode % self.app_state.args.logging_interval == 0:
 
-            # Get indices.
+            # Get inputs
             indices = data_dict[self.key_indices]
+            images = data_dict[self.key_images]
+            labels = data_dict[self.key_labels]
+            answers = data_dict[self.key_answers]
 
             # Get sample number.
             if self.sample_number == -1:
-                # Random
-                sample_number = np.random.randint(0, len(indices))
+                # Random.
+                sample_number = np.random.randint(0, len(images))
             else:
                 sample_number = self.sample_number
 
-            # Generate displayed string.
-            absent_streams = []
-            disp_str = "Showing selected streams for sample {} (index: {}):\n".format(sample_number, indices[sample_number])
-            for stream_key in self.input_stream_keys:
-                if stream_key in data_dict.keys():
-                    disp_str += " '{}': {}\n".format(stream_key, data_dict[stream_key][sample_number])
-                else:
-                    absent_streams.append(stream_key)
+            # Get "sample".
+            image = images[sample_number].cpu().data.numpy()
+            label = labels[sample_number]
+            answer = answers[sample_number]
 
-            # Log values and inform about missing streams.
-            self.logger.info(disp_str)
-            if len(absent_streams) > 0:
-                self.logger.warning("Could not display the following (absent) streams: {}".format(absent_streams))
+            # Reshape image.
+            if image.shape[0] == 1:
+                # This is a single channel image - get rid of this dimension
+                image = np.squeeze(image, axis=0)
+            else:
+                # More channels - move channels to axis2, according to matplotilb documentation.
+                # (X : array_like, shape (n, m) or (n, m, 3) or (n, m, 4))
+                image = image.transpose(1, 2, 0)
+
+            # Show data.
+            plt.title('Sample: {} (index: {})\nPrediction: {}  | Target: {}'.format(sample_number, indices[sample_number], answer, label))
+            plt.imshow(image, interpolation='nearest', aspect='auto')
+
+            # Plot!
+            plt.show()
+
+

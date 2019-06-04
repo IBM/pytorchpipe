@@ -22,10 +22,10 @@ In its core, to _accelerate the computations_ on their own, PTP relies on PyTorc
 The models are _agnostic_ to those operations and one indicates whether to use them in configuration files (data loaders) or by passing adequate run-time arguments (--gpu).
 
 **Datasets:**
-PTP focuses on multi-modal reasoning combining vision and language. Currently it offers the following _Problems_ from both domains:
+PTP focuses on multi-modal reasoning combining vision and language. Currently it offers the following _Problems_ from the following problem domains:
 
   * ImageCLEF VQA-Med 2019 (Visual Question Answering)
-  * MNIST (Image Classification)
+  * MNIST, CIFAR-100 (Image Classification)
   * WiLY (Language Identification)
   * WikiText-2 / WikiText-103 (Language Modelling)
   * ANKI (Machine Translation)

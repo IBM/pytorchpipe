@@ -108,7 +108,7 @@ class JoinMaskedPredictions(Component):
         """
         return {
             self.key_output_indices: DataDefinition([-1], [torch.Tensor], "Batch of merged (output) indices [BATCH_SIZE]"),
-            self.key_output_strings: DataDefinition([-1], [torch.Tensor], "Batch of merged strings, corresponging to indices when using the provided word mappings [BATCH_SIZE]")
+            self.key_output_strings: DataDefinition([-1, 1], [list, str], "Batch of merged strings, corresponging to indices when using the provided word mappings [BATCH_SIZE] x [STRING]")
             }
 
 

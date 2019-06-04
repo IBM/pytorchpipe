@@ -27,7 +27,7 @@ training:
 pipeline:
 
   # Disable components for "default" flow.
-  disable: nllloss, accuracy, precision_recall
+  disable: nllloss, accuracy, precision_recall, answer_decoder, image_viewer
 
   ################# SHARED #################
 
@@ -238,5 +238,12 @@ pipeline:
       recall: joined_recall
       f1score: joined_f1score
 
+  # "Fix" (overwrite) stream names in viewers.
+  image_viewer:
+    streams:
+      answers: merged_predictions
+
+  stream_viewer:
+    input_streams: labels, merged_predictions
 
 #: pipeline

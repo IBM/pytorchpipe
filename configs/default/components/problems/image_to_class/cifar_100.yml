@@ -1,18 +1,18 @@
-# This file defines the default values for the MNIST problem.
+# This file defines the default values for the CIFAR-100 problem.
 
 ####################################################################
 # 1. CONFIGURATION PARAMETERS that will be LOADED by the component.
 ####################################################################
 
 # Folder where problem will store data (LOADED)
-data_folder: '~/data/mnist'
+data_folder: '~/data/cifar-100'
 
 # Defines the set that will be used used (LOADED)
 # True: training set | False: test set.
 use_train_data: True
 
 # Optional parameter (LOADED)
-# When present, resizes the MNIST images from [28,28] to [width, height]
+# When present, resizes the CIFAR images from [32,32] to [width, height]
 #resize_image: [height, width]
 
 streams:
@@ -25,13 +25,15 @@ streams:
   indices: indices
 
   # Stream containing batch of images (OUTPUT)
-  inputs: inputs
+  images: images
 
-  # Stream containing targets (label ids) (OUTPUT)
-  targets: targets
+  # Streams containing targets (label ids) (OUTPUT)
+  coarse_targets: coarse_targets
+  fine_targets: fine_targets
 
-  # Stream containing labels (words) (OUTPUT)
-  labels: labels
+  # Streams containing labels (words) (OUTPUT)
+  coarse_labels: coarse_labels
+  fine_labels: fine_labels
 
 globals:
   ####################################################################
@@ -49,10 +51,13 @@ globals:
   # Depth of the image (SET)
   input_depth: image_depth
   
-  # Number of output classes: 10 (SET)
-  num_classes: num_classes
-  # Label (word-idx) mappings (SET)
-  label_word_mappings: label_word_mappings
+  # Numbers of output classes (SET)
+  coarse_num_classes: coarse_num_classes
+  fine_num_classes: fine_num_classes
+
+  # Labels (word-idx) mappings (SET)
+  coarse_label_word_mappings: coarse_label_word_mappings
+  fine_label_word_mappings: fine_label_word_mappings
 
   ####################################################################
   # 5. Keymappings associated with statistics that will be ADDED.
