@@ -1,0 +1,72 @@
+# This file defines the default values for the CLEVR problem.
+
+####################################################################
+# 1. CONFIGURATION PARAMETERS that will be LOADED by the component.
+####################################################################
+
+# Folder where problem will store data (LOADED)
+data_folder: '~/data/CLEVR_v1.0'
+
+# Defines the set (split) that will be used (LOADED)
+# Options: training | validation | test | cogent_a_training | cogent_a_validation | cogent_b_validation
+split: training
+
+# Defines the categoriees that will be used (LOADED)
+# Options: all | c1 | c2 | c3 | c4 (or any combination of the latter 4)
+#categories: all
+
+# Flag indicating whether the problem will load and return images (LOADED)
+stream_images: True
+
+streams:
+  ####################################################################
+  # 2. Keymappings associated with INPUT and OUTPUT streams.
+  ####################################################################
+
+  # Stream containing batch of indices (OUTPUT)
+  # Every problem MUST return that stream.
+  indices: indices
+
+  # Stream containing batch of images (OUTPUT)
+  images: images
+
+  # Stream containing batch of image names (OUTPUT)
+  image_ids: image_ids
+
+  # Stream containing batch of questions (OUTPUT)
+  questions: questions
+
+  # Stream containing targets - answers (OUTPUT)
+  answers: answers
+
+  # Stream containing scene descriptions (OUTPUT)
+  answers: scene_graphs
+
+  # Stream containing batch with question type - indices (OUTPUT)
+  category_ids: question_type_id
+
+  # Stream containing batch with question type - names (OUTPUT)
+  category_names: question_type_name
+
+globals:
+  ####################################################################
+  # 3. Keymappings of variables that will be RETRIEVED from GLOBALS.
+  ####################################################################
+
+  ####################################################################
+  # 4. Keymappings associated with GLOBAL variables that will be SET.
+  ####################################################################
+
+  # Width of the image (SET)
+  input_width: image_width
+  # Height of the image (SET)
+  input_height: image_height
+  # Depth of the image (SET)
+  input_depth: image_depth
+
+  # Question type (word-idx) mappings (SET)
+  question_type_word_mappings: question_type_word_mappings
+
+  ####################################################################
+  # 5. Keymappings associated with statistics that will be ADDED.
+  ####################################################################

@@ -1,0 +1,62 @@
+# Training parameters:
+training:
+  problem: 
+    type: CLEVR
+    batch_size: &b 64
+    split: training
+    #resize: [32, 32]
+  # optimizer parameters:
+  optimizer:
+    type: Adam
+    lr: 0.0001
+  # settings parameters
+  terminal_conditions:
+    loss_stop_threshold: 0.05
+    early_stop_validations: -1
+    episode_limit: 10000
+    epoch_limit: 10
+
+# Validation parameters:
+validation:
+  #partial_validation_interval: 100
+  problem:
+    type: CLEVR
+    batch_size: *b
+    split: validation
+    #resize: [32, 32]
+
+# Testing parameters:
+test:
+  problem:
+    type: CLEVR
+    batch_size: *b
+    split: test
+    #resize: [32, 32]
+
+pipeline:
+  name: default
+  disable: image_viewer
+
+  # Loss
+  nllloss:
+    type: NLLLoss
+    priority: 10.0
+
+  # Statistics.
+  batch_size:
+    priority: 100.0
+    type: BatchSizeStatistics
+
+  stream_viewer:
+    priority: 100.4
+    type: StreamViewer
+    input_streams: index, question
+
+  #image_viewer:
+  #  priority: 100.5
+  #  type: ImageToClassViewer
+  #  streams:
+  #    images: inputs
+  #    labels: labels
+  #    answers: answers
+
