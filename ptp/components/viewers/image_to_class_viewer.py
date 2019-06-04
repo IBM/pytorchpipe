@@ -20,7 +20,6 @@ import numpy as np
 import torch
 import matplotlib.pyplot as plt
 
-from ptp.configuration.config_parsing import get_value_list_from_dictionary
 from ptp.components.component import Component
 from ptp.data_types.data_definition import DataDefinition
 

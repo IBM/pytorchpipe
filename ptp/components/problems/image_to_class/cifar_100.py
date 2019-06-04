@@ -18,15 +18,11 @@
 __author__ = "Tomasz Kornuta"
 
 import os
-import numpy as np
-import gzip
 import torch
 from torchvision import datasets, transforms
 
 from ptp.components.problems.problem import Problem
 from ptp.data_types.data_definition import DataDefinition
-
-from ptp.components.utils.io import download, load_pickle
 
 class CIFAR100(Problem):
     """
