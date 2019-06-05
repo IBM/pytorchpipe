@@ -124,6 +124,15 @@ class Trainer(Worker):
         # Call base method to parse all command line arguments and add default sections.
         super(Trainer, self).setup_experiment()
 
+        # "Pass" configuration parameters from the "default_training" section to training section indicated by the section_name.
+        self.config.add_default_params({ self.app_state.args.training_section_name :  self.config['default_training'].to_dict()} )
+        self.config.del_default_params('default_training')
+        
+        # "Pass" configuration parameters from the "default_validation" section to validation section indicated by the section_name.
+        self.config.add_default_params({ self.app_state.args.validation_section_name:  self.config['default_validation'].to_dict()} )
+        self.config.del_default_params('default_validation')
+
+
         # Check the presence of the CUDA-compatible devices.
         if self.app_state.args.use_gpu and (torch.cuda.device_count() == 0):
             self.logger.error("Cannot use GPU as there are no CUDA-compatible devices present in the system!")
