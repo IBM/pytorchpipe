@@ -42,6 +42,14 @@ class TestConfigInterface(unittest.TestCase):
         with self.assertRaises(KeyError):
             _ = config['default_0']['default_2']
 
+        # Add 3rd parameter under 0.
+        config['default_0'].add_default_params({'default_3': 'str'})
+
+        # Remove the main section.
+        config.del_default_params('default_0')
+        with self.assertRaises(KeyError):
+            _ = config['default_0']
+
 
     def test_config_params(self):
         config = ConfigInterface()
