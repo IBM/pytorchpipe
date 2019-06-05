@@ -720,7 +720,7 @@ class PipelineManager(object):
             for key in loss.loss_keys():
                 loss_sum += data_dict[key].cpu().item()
         stat_col["total_loss"] = loss_sum
-        stat_col["total_loss_support"] = data_dict["indices"].shape[0] # batch size
+        stat_col["total_loss_support"] = len(data_dict["indices"]) # batch size
 
 
     def add_aggregators(self, stat_agg):
