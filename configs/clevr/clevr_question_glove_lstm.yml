@@ -1,7 +1,7 @@
 # Load config defining CLEVR problems for training, validation and testing.
 default_configs: clevr/default_clevr.yml
 
-# Stop streaming images - in all sets.
+# This is unimodal (questino-based) baseline, thus stop streaming images - in all sets.
 training:
   problem: 
     stream_images: False

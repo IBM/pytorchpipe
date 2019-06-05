@@ -23,7 +23,7 @@ stream_images: True
 # Use one (or more) of the affine transformations:
 # none | normalize | all
 # Accepted formats: a,b,c or [a,b,c]
-image_preprocessing: normalize
+image_preprocessing: none
 
 streams:
   ####################################################################

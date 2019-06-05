@@ -109,6 +109,7 @@ class CLEVR(Problem):
             self.width = 320 
             self.depth = 3
             resize = False
+        self.logger.info("Setting image size to [D  x H x W]: {} x {} x {}".format(self.depth,  self.height, self.width))
 
         # Set global variables - all dimensions ASIDE OF BATCH.
         self.globals["image_height"] = self.height
@@ -120,17 +121,14 @@ class CLEVR(Problem):
             "image_preprocessing", self.config,
             'none | normalize | all'.split(" | ")
             )
+        if 'none' in self.image_preprocessing:
+            self.image_preprocessing = []
+        if 'all' in self.image_preprocessing:
+            self.image_preprocessing = ['normalize']
+
         if resize:
             # Add resize as transformation.
-            if 'none' in self.image_preprocessing:
-                self.image_preprocessing = ["resize"]
-            if 'all' in self.image_preprocessing:
-                self.image_preprocessing = ["resize", 'normalize']
-        else:
-            if 'none' in self.image_preprocessing:
-                self.image_preprocessing = []
-            if 'all' in self.image_preprocessing:
-                self.image_preprocessing = ['normalize']
+                self.image_preprocessing = ["resize"] + self.image_preprocessing
         self.logger.info("Applied image preprocessing: {}".format(self.image_preprocessing))
 
         # Mapping of question subtypes to types (not used, but keeping it just in case).

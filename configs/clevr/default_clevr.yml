@@ -4,7 +4,7 @@ training:
     type: CLEVR
     batch_size: &b 64
     split: training
-    #resize: [224, 224]
+    #resize_image: [224, 224]
   # optimizer parameters:
   optimizer:
     type: Adam
@@ -22,7 +22,7 @@ validation:
     type: CLEVR
     batch_size: *b
     split: validation
-    #resize: [224, 224]
+    #resize_image: [224, 224]
 
 # Testing parameters:
 test:
@@ -30,7 +30,7 @@ test:
     type: CLEVR
     batch_size: *b
     split: test
-    #resize: [224, 224]
+    #resize_image: [224, 224]
 
 pipeline:
   disable: image_viewer
