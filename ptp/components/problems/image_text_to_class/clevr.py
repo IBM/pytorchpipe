@@ -288,7 +288,7 @@ class CLEVR(Problem):
         """
 
         # Load the image.
-        img = Image.open(os.path.join(self.split_image_folder, img_id))
+        img = Image.open(os.path.join(self.split_image_folder, img_id)).convert('RGB')
 
         image_transformations_list = []
 
