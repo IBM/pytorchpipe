@@ -11,12 +11,19 @@ data_folder: '~/data/CLEVR_v1.0'
 # Options: training | validation | test | cogent_a_training | cogent_a_validation | cogent_b_validation
 split: training
 
-# Defines the categoriees that will be used (LOADED)
-# Options: all | c1 | c2 | c3 | c4 (or any combination of the latter 4)
-#categories: all
-
 # Flag indicating whether the problem will load and return images (LOADED)
 stream_images: True
+
+# Resize parameter (LOADED)
+# When present, resizes the images from original size to [height, width]
+# Depth remains set to 3.
+#resize_image: [height, width]
+
+# Select applied image preprocessing/augmentations (LOADED)
+# Use one (or more) of the affine transformations:
+# none | normalize | all
+# Accepted formats: a,b,c or [a,b,c]
+image_preprocessing: normalize
 
 streams:
   ####################################################################
@@ -40,13 +47,13 @@ streams:
   answers: answers
 
   # Stream containing scene descriptions (OUTPUT)
-  answers: scene_graphs
+  #answers: scene_graphs
 
   # Stream containing batch with question type - indices (OUTPUT)
-  category_ids: question_type_id
+  category_ids: question_type_ids
 
   # Stream containing batch with question type - names (OUTPUT)
-  category_names: question_type_name
+  category_names: question_type_names
 
 globals:
   ####################################################################

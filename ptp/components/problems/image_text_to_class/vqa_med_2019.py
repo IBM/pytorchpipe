@@ -287,7 +287,7 @@ class VQAMED2019(Problem):
                 self.logger.info("Exported indices to '{}'".format(os.path.join(self.app_state.log_dir, self.config["export_indices"])))
 
         # Display exemplary sample.
-        self.logger.info("Exemplary sample 0 ({}):\n [ category: {}\t image_ids: {}\t question: {}\t answer: {} ]".format(
+        self.logger.info("Exemplary sample 0 ({}):\n  category: {}\n  image_ids: {}\n  question: {}\n  answer: {}".format(
             self.ix[0],
             self.category_idx_to_word[self.dataset[self.ix[0]][self.key_category_ids]],
             self.dataset[self.ix[0]][self.key_image_ids],

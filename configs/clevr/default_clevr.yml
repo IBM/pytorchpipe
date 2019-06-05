@@ -4,7 +4,7 @@ training:
     type: CLEVR
     batch_size: &b 64
     split: training
-    #resize: [32, 32]
+    #resize: [224, 224]
   # optimizer parameters:
   optimizer:
     type: Adam
@@ -18,12 +18,11 @@ training:
 
 # Validation parameters:
 validation:
-  #partial_validation_interval: 100
   problem:
     type: CLEVR
     batch_size: *b
     split: validation
-    #resize: [32, 32]
+    #resize: [224, 224]
 
 # Testing parameters:
 test:
@@ -31,16 +30,28 @@ test:
     type: CLEVR
     batch_size: *b
     split: test
-    #resize: [32, 32]
+    #resize: [224, 224]
 
 pipeline:
-  name: default
   disable: image_viewer
+
+  label_to_target:
+    type: LabelIndexer
+    priority: 0.1
+    # Load word mappings for answers.
+    data_folder: '~/data/CLEVR_v1.0'
+    word_mappings_file: 'answers.all.csv'
+    export_word_mappings_to_globals: True
+    globals:
+      vocabulary_size: num_answers
+    streams:
+      inputs: answers 
+      outputs: targets
 
   # Loss
   nllloss:
     type: NLLLoss
-    priority: 10.0
+    priority: 10.1
 
   # Statistics.
   batch_size:
