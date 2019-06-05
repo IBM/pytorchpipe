@@ -18,13 +18,8 @@
 __author__ = "Tomasz Kornuta"
 
 import os
-#import string
 import json
-import tqdm
-
 from PIL import Image
-#import numpy as np
-#import nltk
 
 import torch
 from torchvision import transforms
