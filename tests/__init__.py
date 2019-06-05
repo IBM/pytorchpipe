@@ -1,6 +1,7 @@
 from .application.pipeline_tests import TestPipeline
 
 from .components.component_tests import TestComponent
+from .components.clevr_tests import TestCLEVR
 from .components.problem_tests import TestProblem
 
 from .configuration.config_interface_tests import TestConfigInterface
@@ -20,6 +21,7 @@ __all__ = [
     'TestPipeline',
     # Components
     'TestComponent',
+    'TestCLEVR',
     'TestProblem',
     # Configuration
     'TestConfigRegistry',
