@@ -33,6 +33,7 @@ test:
     #resize_image: [224, 224]
 
 pipeline:
+  name: tmp
   disable: image_viewer
 
   label_to_target:
