@@ -204,13 +204,23 @@ class CLEVR(Problem):
         
         # Display exemplary sample.
         i = 0
+        sample = self.dataset[i]
+        # Check if this is a test set.
+        if "answer" not in sample.keys():
+            sample["answer"] = "<UNK>"
+            sample[self.key_question_type_ids] = -1
+            sample[self.key_question_type_names] = "<UNK>"
+        else:
+            sample[self.key_question_type_ids] = self.question_family_id_to_subtype_id_mapping[sample["question_family_index"]]
+            sample[self.key_question_type_names] = self.question_family_id_to_subtype_mapping[sample["question_family_index"]]
+
         self.logger.info("Exemplary sample {} ({}):\n  question_type: {} ({})\n  image_ids: {}\n  question: {}\n  answer: {}".format(
-            i, self.dataset[i]["question_index"],
-            self.question_family_id_to_subtype_mapping[self.dataset[i]["question_family_index"]],
-            self.question_family_id_to_subtype_id_mapping[self.dataset[i]["question_family_index"]],
-            self.dataset[i]["image_filename"],
-            self.dataset[i]["question"],
-            self.dataset[i]["answer"]
+            i, sample["question_index"],
+            sample[self.key_question_type_ids],
+            sample[self.key_question_type_names],
+            sample["image_filename"],
+            sample["question"],
+            sample["answer"]
             ))
 
 
@@ -334,11 +344,18 @@ class CLEVR(Problem):
         data_dict[self.key_questions] = item["question"]
 
         # Return answer. 
-        data_dict[self.key_answers] = item["answer"]
+        if "answer" in item.keys():
+            data_dict[self.key_answers] = item["answer"]
+        else:
+            data_dict[self.key_answers] = "<UNK>"
 
         # Question type related variables.
-        data_dict[self.key_question_type_ids] = self.question_family_id_to_subtype_id_mapping[item["question_family_index"]]
-        data_dict[self.key_question_type_names] = self.question_family_id_to_subtype_mapping[item["question_family_index"]]
+        if "question_family_index" in item.keys():
+            data_dict[self.key_question_type_ids] = self.question_family_id_to_subtype_id_mapping[item["question_family_index"]]
+            data_dict[self.key_question_type_names] = self.question_family_id_to_subtype_mapping[item["question_family_index"]]
+        else:
+            data_dict[self.key_question_type_ids] = -1
+            data_dict[self.key_question_type_names] = "<UNK>"
 
         # Return sample.
         return data_dict

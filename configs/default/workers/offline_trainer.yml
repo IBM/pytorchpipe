@@ -1,6 +1,5 @@
 ####################################################################
 # Section defining all the default values of parameters used during training when using ptp-offline-trainer.
-
 # If you want to use different section for "training" pass its name as command line argument '--training_section_name' to trainer (DEFAULT: training)
 # Note: the following parameters will be (anyway) used as default values.
 default_training:
