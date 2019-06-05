@@ -43,25 +43,55 @@ pipeline:
     word_mappings_file: 'answers.all.csv'
     export_word_mappings_to_globals: True
     globals:
+      word_mappings: answer_word_mappings
       vocabulary_size: num_answers
     streams:
       inputs: answers 
-      outputs: targets
+      outputs: target_answers
+
 
   # Loss
   nllloss:
     type: NLLLoss
     priority: 10.1
+    streams:
+      targets: target_answers
 
   # Statistics.
   batch_size:
     priority: 100.0
     type: BatchSizeStatistics
 
+  accuracy:
+    priority: 100.1
+    type: AccuracyStatistics
+    streams:
+      targets: target_answers
+
+  precision_recall:
+    priority: 100.2
+    type: PrecisionRecallStatistics
+    use_word_mappings: True
+    show_class_scores: True
+    globals:
+      word_mappings: answer_word_mappings
+    streams:
+      targets: target_answers
+
+  answer_decoder:
+    priority: 100.3
+    type: WordDecoder
+    import_word_mappings_from_globals: True
+    globals:
+      word_mappings: answer_word_mappings
+    streams:
+      inputs: predictions
+      outputs: predicted_answers
+
   stream_viewer:
     priority: 100.4
     type: StreamViewer
-    input_streams: index, question
+    input_streams: indices, questions, target_answers, predicted_answers
 
   #image_viewer:
   #  priority: 100.5
