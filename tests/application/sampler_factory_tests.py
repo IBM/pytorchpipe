@@ -64,7 +64,7 @@ class TestSamplerFactory(unittest.TestCase):
     def test_create_subset_random_sampler_list_of_indices(self):
         """ Tests whther SubsetRandomSampler accepts 'indices' with the option 3: list of indices. """
 
-        yaml_list = yaml.load('[0, 2, 5, 10]')
+        yaml_list = yaml.safe_load('[0, 2, 5, 10]')
         config = ConfigInterface()
         config.add_default_params({'type': 'SubsetRandomSampler',
                                 'indices': yaml_list})
