@@ -39,8 +39,8 @@ pipeline:
     type: LabelIndexer
     priority: 0.1
     # Load word mappings for answers.
-    data_folder: '~/data/CLEVR_v1.0'
-    word_mappings_file: 'answers.all.csv'
+    data_folder: ~/data/CLEVR_v1.0
+    word_mappings_file: answers.all.word.mappings.csv
     export_word_mappings_to_globals: True
     globals:
       word_mappings: answer_word_mappings
