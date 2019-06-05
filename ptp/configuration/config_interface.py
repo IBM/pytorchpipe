@@ -265,7 +265,11 @@ class ConfigInterface(Mapping):
         :type key: str
 
         """
-        self._config_registry.del_default_params(self._keys_path + [key])
+        if type(key) is list:
+            keypath = self._keys_path + key
+        else:
+            keypath = self._keys_path + [key]
+        self._config_registry.del_default_params(keypath)
 
     def del_config_params(self, key):
         """
@@ -277,7 +281,11 @@ class ConfigInterface(Mapping):
         :type key: str
 
         """
-        self._config_registry.del_config_params(self._keys_path + [key])
+        if type(key) is list:
+            keypath = self._keys_path + key
+        else:
+            keypath = self._keys_path + [key]
+        self._config_registry.del_config_params(keypath)
 
     def add_config_params_from_yaml(self, yaml_path: str):
         """
@@ -296,50 +304,3 @@ class ConfigInterface(Mapping):
 
         # add config param
         self.add_config_params(params_from_yaml)
-
-
-if __name__ == '__main__':
-    # Test code
-    pi0 = ConfigInterface()
-    pi1 = ConfigInterface('level0', 'level1')
-
-    pi0.add_default_params({
-        'param0': "0_from_code",
-        'param1': "1_from_code"
-    })
-
-    print('pi0', pi0.to_dict())
-
-    pi0.add_config_params({
-        'param1': "-1_from_config_file"
-    })
-
-    print('pi0', pi0.to_dict())
-
-    pi1.add_default_params({
-        'param2': 2,
-        'param3': 3
-    })
-
-    print('pi0', pi0.to_dict())
-    print('pi1', pi1.to_dict())
-
-    pi1.add_config_params({
-        'param2': -2
-    })
-
-    print('pi0', pi0.to_dict())
-    print('pi1', pi1.to_dict())
-
-    pi2 = pi0['level0']
-    print('pi2', pi2.to_dict())
-
-    pi1.add_config_params({
-        'param2': -3
-    })
-
-    print('pi2', pi2.to_dict())
-
-    pi3 = pi0['level0']['level1']
-
-    print('pi3', pi3.to_dict())

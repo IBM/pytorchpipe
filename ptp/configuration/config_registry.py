@@ -246,7 +246,7 @@ class ConfigRegistry(Mapping, metaclass=MetaSingletonABC):
             return dic[key]
 
         lookup_keys = keypath[:-1]  # We keep the last key for use with `del`
-        if len(keypath) > 0:
+        if len(lookup_keys) > 0:
             r = lookup_recursion(current_dict, *lookup_keys)
             del r[keypath[-1]]
         else:

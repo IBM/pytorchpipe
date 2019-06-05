@@ -18,25 +18,41 @@ __author__ = "Tomasz Kornuta"
 
 import unittest
 
-from ptp.configuration.config_registry import ConfigRegistry
+from ptp.configuration.config_interface import ConfigInterface
 
-class TestConfigRegistry(unittest.TestCase):
+class TestConfigInterface(unittest.TestCase):
 
     def test_default_params(self):
-        config = ConfigRegistry()
-        # Add params.
+        config = ConfigInterface()
+        # Add params - first method.
         config.add_default_params({'default_0': {'default_1': 'str'}})
         self.assertNotEqual(config['default_0'], None)
         self.assertEqual(config['default_0']['default_1'], 'str')
 
-        # Remove params.
+        # Remove params - first method.
         config.del_default_params(['default_0', 'default_1'])
         with self.assertRaises(KeyError):
             _ = config['default_0']['default_1']
 
+        # Add params - second method.
+        config['default_0'].add_default_params({'default_2': 'str'})
+
+        # Remove params - second method.
+        config['default_0'].del_default_params('default_2')
+        with self.assertRaises(KeyError):
+            _ = config['default_0']['default_2']
+
+        # Add 3rd parameter under 0.
+        config['default_0'].add_default_params({'default_3': 'str'})
+
+        # Remove the main section.
+        config.del_default_params('default_0')
+        with self.assertRaises(KeyError):
+            _ = config['default_0']
+
 
     def test_config_params(self):
-        config = ConfigRegistry()
+        config = ConfigInterface()
         # Add params.
         config.add_config_params({'config_0': {'config_1': 'int'}})
         self.assertNotEqual(config['config_0'], None)
@@ -47,13 +63,11 @@ class TestConfigRegistry(unittest.TestCase):
         with self.assertRaises(KeyError):
             _ = config['config_0']['config_1']
 
-
     def test_overwrite_params(self):
-        config = ConfigRegistry()
+        config = ConfigInterface()
         config.add_config_params({'under': True})
         config.add_default_params({'under': False})
         self.assertEqual(config['under'], True)
-
 
 #if __name__ == "__main__":
 #    unittest.main()

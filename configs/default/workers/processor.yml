@@ -1,10 +1,9 @@
 ####################################################################
 # Section defining all the default values of parameters used during testing.
-# If you want to use different section for training pass its name as command line argument '--section_name' to trainer (DEFAULT: test)
-# Note: in such a case remember to define all the required parameters in the new section.
-test:
+# If you want to use different section during "processing" pass its name as command line argument '--section_name' to trainer (DEFAULT: test)
+# Note: the following parameters will be (anyway) used as default values.
+default_test:
   # Set the random seeds: -1 means that they will be picked randomly.
-  # Note: their final values will be stored in the final training_configuration.yml saved to log dir.
   seed_numpy: -1
   seed_torch: -1
 

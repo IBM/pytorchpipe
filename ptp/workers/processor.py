@@ -72,6 +72,10 @@ class Processor(Worker):
         """
         # Call base method to parse all command line arguments and add default sections.
         super(Processor, self).setup_experiment()
+
+        # "Pass" configuration parameters from the default_test section to section indicated by the section_name.
+        self.config.add_default_params({ self.app_state.args.section_name:  self.config['default_test'].to_dict()} )
+        self.config.del_default_params('default_test')
         
         # Retrieve checkpoint file.
         chkpt_file = self.app_state.args.load_checkpoint
