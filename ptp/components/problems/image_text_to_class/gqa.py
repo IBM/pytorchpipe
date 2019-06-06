@@ -106,7 +106,7 @@ class GQA(Problem):
         self.data_folder = os.path.expanduser(self.config['data_folder'])
 
         # Get split.
-        split = get_value_from_dictionary('split', self.config, "training | validation | test".split(" | "))
+        split = get_value_from_dictionary('split', self.config, "training | validation | test_dev | test".split(" | "))
         self.split_image_folder = os.path.join(self.data_folder, "images")
 
         # Set split-dependent data.
@@ -120,6 +120,10 @@ class GQA(Problem):
             # Validation split folder and file with data question.
             data_files = [ os.path.join(self.data_folder, "questions1.2", "val_all_questions.json") ]
             self.logger.warning("Please use test_dev set for validation!")
+
+        elif split == 'test_dev':
+            # Validation split folder and file with data question.
+            data_files = [ os.path.join(self.data_folder, "questions1.2", "testdev_all_questions.json") ]
 
         elif split == 'test':
             # Test split folder and file with data question.
@@ -204,7 +208,6 @@ class GQA(Problem):
                     # New sample.
                     sample = {}
                     sample[self.key_sample_ids] = key
-                    print("key = ",key)
                     sample[self.key_image_ids] = value["imageId"]
                     sample[self.key_questions] = value["question"]
 
