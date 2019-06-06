@@ -27,15 +27,6 @@ from ptp.configuration.config_interface import ConfigInterface
 
 class TestCLEVR(unittest.TestCase):
 
-    def __init__(self, *args, **kwargs):
-        super(TestCLEVR, self).__init__(*args, **kwargs)
-
-        # Check the existence of training set.
-        self.unittest_training_set = False # check_file_existence(path.expanduser('~/data/CLEVR_v1.0/questions'),'CLEVR_train_questions.json')
-        # Check the existence of validation set.
-        self.unittest_validation_set = False # check_file_existence(path.expanduser('~/data/CLEVR_v1.0/questions'),'CLEVR_val_questions.json')
-        
-
     def test_training_set(self):
         """
             Tests the CLEVR training split.
@@ -43,18 +34,40 @@ class TestCLEVR(unittest.TestCase):
             ..note:
                 Test is performed only if json file '~/data/CLEVR_v1.0/questions/CLEVR_train_questions.json' is found.
         """
-        if not self.unittest_training_set:
-            return
         # Empty config.
         config = ConfigInterface()
         config.add_config_params({"split": "training"})
-        clevr = CLEVR("CLEVR", config)
 
-        # Check dataset size.
-        self.assertEqual(len(clevr), 699989)
+        # Check the existence of test set.
+        if check_file_existence(path.expanduser('~/data/CLEVR_v1.0/questions'),'CLEVR_train_questions.json'):
+
+            # Create object.
+            clevr = CLEVR("CLEVR", config)
+            
+            # Check dataset size.
+            self.assertEqual(len(clevr), 699989)
+
+            # Get sample.
+            sample = clevr[0]
+
+        else: 
+            dataset_content = [{'image_index': 0, 'program': [{'inputs': [], 'function': 'scene', 'value_inputs': []}, {'inputs': [0], 'function': 'filter_size', 'value_inputs': ['large']}, 
+            {'inputs': [1], 'function': 'filter_color', 'value_inputs': ['green']}, {'inputs': [2], 'function': 'count', 'value_inputs': []}, 
+            {'inputs': [], 'function': 'scene', 'value_inputs': []}, {'inputs': [4], 'function': 'filter_size', 'value_inputs': ['large']}, 
+            {'inputs': [5], 'function': 'filter_color', 'value_inputs': ['purple']}, {'inputs': [6], 'function': 'filter_material', 'value_inputs': ['metal']}, 
+            {'inputs': [7], 'function': 'filter_shape', 'value_inputs': ['cube']}, {'inputs': [8], 'function': 'count', 'value_inputs': []}, 
+            {'inputs': [3, 9], 'function': 'greater_than', 'value_inputs': []}], 'question_index': 0, 'image_filename': 'CLEVR_train_000000.png', 'question_family_index': 2,
+            'split': 'train', 'answer': 'yes', 'question': 'Are there more big green things than large purple shiny cubes?'}]
+
+            # Mock up the load_dataset method.
+            with patch( "ptp.components.problems.image_text_to_class.clevr.CLEVR.load_dataset", MagicMock( side_effect = [ dataset_content ] )):
+                clevr = CLEVR("CLEVR", config)
+
+            # Mock up the get_image method.
+            with patch( "ptp.components.problems.image_text_to_class.clevr.CLEVR.get_image", MagicMock( side_effect = [ "0" ] )):
+                sample = clevr[0]
 
         # Check sample.
-        sample = clevr[0]
         self.assertEqual(sample['indices'], 0)
         self.assertEqual(sample['image_ids'], 'CLEVR_train_000000.png')
         self.assertEqual(sample['question_type_ids'], 4)
@@ -68,20 +81,39 @@ class TestCLEVR(unittest.TestCase):
             Tests the CLEVR validation split.
 
             ..note:
-                Test is performed only if json file '~/data/CLEVR_v1.0/questions/CLEVR_val_questions.json' is found.
+                Test on real data is performed only if json file '~/data/CLEVR_v1.0/questions/CLEVR_val_questions.json' is found.
         """
-        if not self.unittest_validation_set:
-            return
         # Empty config.
         config = ConfigInterface()
         config.add_config_params({"split": "validation"})
-        clevr = CLEVR("CLEVR", config)
 
-        # Check dataset size.
-        self.assertEqual(len(clevr), 149991)
+        # Check the existence of test set.
+        if check_file_existence(path.expanduser('~/data/CLEVR_v1.0/questions'),'CLEVR_test_questions.json'):
+
+            # Create object.
+            clevr = CLEVR("CLEVR", config)
+            
+            # Check dataset size.
+            self.assertEqual(len(clevr), 149991)
+
+            # Get sample.
+            sample = clevr[0]
+
+        else: 
+            dataset_content = [{'image_index': 0, 'program': [{'inputs': [], 'function': 'scene', 'value_inputs': []}, {'inputs': [0], 'function': 'filter_size', 'value_inputs': ['large']}, 
+                {'inputs': [1], 'function': 'filter_material', 'value_inputs': ['metal']}, {'inputs': [2], 'function': 'unique', 'value_inputs': []}, 
+                {'inputs': [3], 'function': 'same_shape', 'value_inputs': []}, {'inputs': [4], 'function': 'exist', 'value_inputs': []}], 
+                'question_index': 0, 'image_filename': 'CLEVR_val_000000.png', 'question_family_index': 39, 'split': 'val', 'answer': 'no', 'question': 'Are there any other things that are the same shape as the big metallic object?'}]
+
+            # Mock up the load_dataset method.
+            with patch( "ptp.components.problems.image_text_to_class.clevr.CLEVR.load_dataset", MagicMock( side_effect = [ dataset_content ] )):
+                clevr = CLEVR("CLEVR", config)
+
+            # Mock up the get_image method.
+            with patch( "ptp.components.problems.image_text_to_class.clevr.CLEVR.get_image", MagicMock( side_effect = [ "0" ] )):
+                sample = clevr[0]
 
         # Check sample.
-        sample = clevr[0]
         self.assertEqual(sample['indices'], 0)
         self.assertEqual(sample['image_ids'], 'CLEVR_val_000000.png')
         self.assertEqual(sample['question_type_ids'], 10)
@@ -102,7 +134,7 @@ class TestCLEVR(unittest.TestCase):
         config.add_config_params({"split": "test"})
     
         # Check the existence of test set.
-        if False: # check_file_existence(path.expanduser('~/data/CLEVR_v1.0/questions'),'CLEVR_test_questions.json'):
+        if check_file_existence(path.expanduser('~/data/CLEVR_v1.0/questions'),'CLEVR_test_questions.json'):
 
             # Create object.
             clevr = CLEVR("CLEVR", config)
@@ -114,10 +146,10 @@ class TestCLEVR(unittest.TestCase):
             sample = clevr[0]
 
         else: 
-            test_content = [{'image_index': 0, 'split': 'test', 'image_filename': 'CLEVR_test_000000.png', 'question_index': 0, 'question': 'Is there anything else that is the same shape as the small brown matte object?'}]
+            dataset_content = [{'image_index': 0, 'split': 'test', 'image_filename': 'CLEVR_test_000000.png', 'question_index': 0, 'question': 'Is there anything else that is the same shape as the small brown matte object?'}]
 
             # Mock up the load_dataset method.
-            with patch( "ptp.components.problems.image_text_to_class.clevr.CLEVR.load_dataset", MagicMock( side_effect = [ test_content ] )):
+            with patch( "ptp.components.problems.image_text_to_class.clevr.CLEVR.load_dataset", MagicMock( side_effect = [ dataset_content ] )):
                 clevr = CLEVR("CLEVR", config)
 
             # Mock up the get_image method.
