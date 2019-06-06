@@ -52,7 +52,6 @@ class CLEVR(Problem):
         - Integer comparison (Equal, Less, More)
 
     For more details please refer to the associated _website or _paper for more details.
-    Test set with answers can be downloaded from a separate repository _repo.
 
     .. _website: https://cs.stanford.edu/people/jcjohns/clevr/
 
