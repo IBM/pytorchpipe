@@ -24,7 +24,7 @@ The models are _agnostic_ to those operations and one indicates whether to use t
 **Datasets:**
 PTP focuses on multi-modal reasoning combining vision and language. Currently it offers the following _Problems_ from the following problem domains:
 
-  * ImageCLEF VQA-Med 2019 (Visual Question Answering)
+  * CLEVR, GQA, ImageCLEF VQA-Med 2019 (Visual Question Answering)
   * MNIST, CIFAR-100 (Image Classification)
   * WiLY (Language Identification)
   * WikiText-2 / WikiText-103 (Language Modelling)
