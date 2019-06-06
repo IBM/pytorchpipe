@@ -267,7 +267,7 @@ class CLEVR(Problem):
         dataset = []
 
         with open(source_data_file) as f:
-            self.logger.info('Loading samples from {} ...'.format(source_data_file))
+            self.logger.info("Loading samples from '{}'...".format(source_data_file))
             dataset = json.load(f)['questions']
 
         self.logger.info("Loaded dataset consisting of {} samples".format(len(dataset)))

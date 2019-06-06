@@ -106,7 +106,7 @@ class GQA(Problem):
         self.data_folder = os.path.expanduser(self.config['data_folder'])
 
         # Get split.
-        split = get_value_from_dictionary('split', self.config, "training | validation | test_dev | test".split(" | "))
+        split = get_value_from_dictionary('split', self.config, "training_0 | training | validation | test_dev | test".split(" | "))
         self.split_image_folder = os.path.join(self.data_folder, "images")
 
         # Set split-dependent data.
@@ -114,12 +114,17 @@ class GQA(Problem):
             # Training split folder and file with data question.
             data_files = []
             for i in range(10):
-                data_files.append(os.path.join(self.data_folder, "questions1.2", "train_all_questions_{}.json".format(i)))
+                data_files.append(os.path.join(self.data_folder, "questions1.2", "train_all_questions", "train_all_questions_{}.json".format(i)))
+
+        elif split == 'training_0':
+            # Validation split folder and file with data question.
+            data_files = [ os.path.join(self.data_folder, "questions1.2", "train_all_questions", "train_all_questions_0.json") ]
+            self.logger.warning("Please remember that this split constitutes only 10 percent of the whole training set!")
 
         elif split == 'validation':
             # Validation split folder and file with data question.
             data_files = [ os.path.join(self.data_folder, "questions1.2", "val_all_questions.json") ]
-            self.logger.warning("Please use test_dev set for validation!")
+            self.logger.warning("Please use 'test_dev' split for validation!")
 
         elif split == 'test_dev':
             # Validation split folder and file with data question.
@@ -198,7 +203,7 @@ class GQA(Problem):
         # Load and process files, one by one.
         for source_file in source_files:
             with open(source_file) as f:
-                self.logger.info('Loading samples from {} ...'.format(source_file))
+                self.logger.info("Loading samples from '{}'...".format(source_file))
                 json_dataset = json.load(f)
                 # Process samples.
 

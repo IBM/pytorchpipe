@@ -8,9 +8,9 @@
 data_folder: '~/data/gqa'
 
 # Defines the set (split) that will be used (LOADED)
-# Options: training | validation | test_dev | test | challenge | submission (?)
+# Options: training_0 | training | validation | test_dev | test | challenge | submission (?)
 # Note: test_dev should be used for validation.
-split: training
+split: training_0
 
 # Flag indicating whether the problem will load and return images (LOADED)
 stream_images: True
