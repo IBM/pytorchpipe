@@ -4,7 +4,7 @@ from .application.samplers_tests import TestkFoldRandomSampler, TestkFoldWeighte
 
 from .components.component_tests import TestComponent
 from .components.problems.clevr_tests import TestCLEVR
-#from .components.problems.gqa_tests import TestGQA
+from .components.problems.gqa_tests import TestGQA
 from .components.problems.problem_tests import TestProblem
 
 from .configuration.config_interface_tests import TestConfigInterface
@@ -25,7 +25,7 @@ __all__ = [
     'TestkFoldWeightedRandomSampler',
     # Components
     'TestComponent',
-    #'TestGQA',
+    'TestGQA',
     'TestProblem',
     # Configuration
     'TestConfigRegistry',

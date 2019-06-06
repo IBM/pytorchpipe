@@ -71,10 +71,6 @@ class CLEVR(Problem):
         # Call constructors of parent classes.
         Problem.__init__(self, name, CLEVR, config)
 
-        # (Eventually) download required packages.
-        #nltk.download('punkt')
-        #nltk.download('stopwords')
-
         # Get key mappings of all output streams.
         self.key_images = self.stream_keys["images"]
         self.key_image_ids = self.stream_keys["image_ids"]
@@ -246,7 +242,7 @@ class CLEVR(Problem):
         d[self.key_questions] = DataDefinition([-1, 1], [list, str], "Batch of questions, each being a string consisting of many words [BATCH_SIZE] x [STRING]")
 
         # Add stream with answers.
-        d[self.key_answers]= DataDefinition([-1, 1], [list, str], "Batch of target answers, each being a string consisting of many words [BATCH_SIZE] x [STRING]")
+        d[self.key_answers]= DataDefinition([-1, 1], [list, str], "Batch of target answers, each being a string consisting of sinlge word (label) [BATCH_SIZE] x [STRING]")
 
         return d
 
@@ -271,7 +267,7 @@ class CLEVR(Problem):
         dataset = []
 
         with open(source_data_file) as f:
-            self.logger.info('Loading samples from {} ...'.format(source_data_file))
+            self.logger.info("Loading samples from '{}'...".format(source_data_file))
             dataset = json.load(f)['questions']
 
         self.logger.info("Loaded dataset consisting of {} samples".format(len(dataset)))
