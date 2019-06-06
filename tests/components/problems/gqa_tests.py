@@ -37,13 +37,13 @@ class TestGQA(unittest.TestCase):
         """
         # Empty config.
         config = ConfigInterface()
-        config.add_config_params({"split": "training_0"})
+        config.add_config_params({"gqa_training_0": {"split": "training_0", "globals": {"image_height": "gqa_image_height", "image_width": "gqa_image_width"}}})
     
         # Check the existence of test set.
         if False: #check_file_existence(path.expanduser('~/data/gqa/questions1.2/train_all_questions'),'train_all_questions_0.json'):
 
             # Create object.
-            problem = GQA("GQA", config)
+            problem = GQA("gqa_training_0", config["gqa_training_0"])
             
             # Check dataset size.
             self.assertEqual(len(problem), 1430536)
@@ -56,13 +56,12 @@ class TestGQA(unittest.TestCase):
 
             # Mock up the load_dataset method.
             with patch( "ptp.components.problems.image_text_to_class.gqa.GQA.load_dataset", MagicMock( side_effect = [ processed_dataset_content ] )):
-                problem = GQA("GQA", config)
+                problem = GQA("gqa_training_0", config["gqa_training_0"])
 
             # Mock up the get_image method.
             with patch( "ptp.components.problems.image_text_to_class.gqa.GQA.get_image", MagicMock( side_effect = [ "0" ] )):
                 sample = problem[0]
 
-        print(sample)
         # Check sample.
         self.assertEqual(sample['indices'], 0)
         self.assertEqual(sample['sample_ids'], '07333408')
@@ -81,13 +80,13 @@ class TestGQA(unittest.TestCase):
         """
         # Empty config.
         config = ConfigInterface()
-        config.add_config_params({"split": "validation"})
+        config.add_config_params({"gqa_validation": {"split": "validation", "globals": {"image_height": "gqa_image_height", "image_width": "gqa_image_width"}}})
     
         # Check the existence of test set.
         if False: #check_file_existence(path.expanduser('~/data/gqa/questions1.2'),'val_all_questions.json'):
 
             # Create object.
-            problem = GQA("GQA", config)
+            problem = GQA("gqa_validation", config["gqa_validation"])
             
             # Check dataset size.
             self.assertEqual(len(problem), 2011853)
@@ -100,7 +99,7 @@ class TestGQA(unittest.TestCase):
 
             # Mock up the load_dataset method.
             with patch( "ptp.components.problems.image_text_to_class.gqa.GQA.load_dataset", MagicMock( side_effect = [ processed_dataset_content ] )):
-                problem = GQA("GQA", config)
+                problem = GQA("gqa_validation", config["gqa_validation"])
 
             # Mock up the get_image method.
             with patch( "ptp.components.problems.image_text_to_class.gqa.GQA.get_image", MagicMock( side_effect = [ "0" ] )):
@@ -115,7 +114,7 @@ class TestGQA(unittest.TestCase):
         self.assertEqual(sample['full_answers'], 'No, there is a towel under the cat.')
 
 
-    def test_dev_split(self):
+    def test_test_dev_split(self):
         """
             Tests the test_dev split.
 
@@ -124,13 +123,13 @@ class TestGQA(unittest.TestCase):
         """
         # Empty config.
         config = ConfigInterface()
-        config.add_config_params({"split": "test_dev"})
+        config.add_config_params({"gqa_testdev": {"split": "test_dev", "globals": {"image_height": "gqa_image_height", "image_width": "gqa_image_width"}}})
     
         # Check the existence of test set.
         if False: #check_file_existence(path.expanduser('~/data/gqa/questions1.2'),'testdev_all_questions.json'):
 
             # Create object.
-            problem = GQA("GQA", config)
+            problem = GQA("gqa_testdev", config["gqa_testdev"])
             
             # Check dataset size.
             self.assertEqual(len(problem), 172174)
@@ -143,7 +142,7 @@ class TestGQA(unittest.TestCase):
 
             # Mock up the load_dataset method.
             with patch( "ptp.components.problems.image_text_to_class.gqa.GQA.load_dataset", MagicMock( side_effect = [ processed_dataset_content ] )):
-                problem = GQA("GQA", config)
+                problem = GQA("gqa_testdev", config["gqa_testdev"])
 
             # Mock up the get_image method.
             with patch( "ptp.components.problems.image_text_to_class.gqa.GQA.get_image", MagicMock( side_effect = [ "0" ] )):
@@ -167,13 +166,13 @@ class TestGQA(unittest.TestCase):
         """
         # Empty config.
         config = ConfigInterface()
-        config.add_config_params({"split": "test"})
+        config.add_config_params({"gqa_test": {"split": "test", "globals": {"image_height": "gqa_image_height", "image_width": "gqa_image_width"}}})
     
         # Check the existence of test set.
         if False: #check_file_existence(path.expanduser('~/data/gqa/questions1.2'),'test_all_questions.json'):
 
             # Create object.
-            problem = GQA("GQA", config)
+            problem = GQA("gqa_test", config["gqa_test"])
             
             # Check dataset size.
             self.assertEqual(len(problem), 1340048)
@@ -186,7 +185,7 @@ class TestGQA(unittest.TestCase):
 
             # Mock up the load_dataset method.
             with patch( "ptp.components.problems.image_text_to_class.gqa.GQA.load_dataset", MagicMock( side_effect = [ processed_dataset_content ] )):
-                problem = GQA("GQA", config)
+                problem = GQA("gqa_test", config["gqa_test"])
 
             # Mock up the get_image method.
             with patch( "ptp.components.problems.image_text_to_class.gqa.GQA.get_image", MagicMock( side_effect = [ "0" ] )):
@@ -201,5 +200,5 @@ class TestGQA(unittest.TestCase):
         self.assertEqual(sample['full_answers'], '<UNK>')
         
 
-if __name__ == "__main__":
-    unittest.main()
+#if __name__ == "__main__":
+#    unittest.main()

@@ -35,14 +35,14 @@ class TestCLEVR(unittest.TestCase):
                 Test on real data is performed only if json file '~/data/CLEVR_v1.0/questions/CLEVR_train_questions.json' is found.
         """
         # Empty config.
-        config = ConfigInterface()
-        config.add_config_params({"split": "training"})
+        config = ConfigInterface("CLEVR")
+        config.add_config_params({"clevr_training": {"split": "training", "globals": {"image_height": "clevr_image_height", "image_width": "clevr_image_width"}}})
 
         # Check the existence of test set.
-        if check_file_existence(path.expanduser('~/data/CLEVR_v1.0/questions'),'CLEVR_train_questions.json'):
+        if False: #check_file_existence(path.expanduser('~/data/CLEVR_v1.0/questions'),'CLEVR_train_questions.json'):
 
             # Create object.
-            clevr = CLEVR("CLEVR", config)
+            clevr = CLEVR("clevr_training", config["clevr_training"])
             
             # Check dataset size.
             self.assertEqual(len(clevr), 699989)
@@ -61,7 +61,7 @@ class TestCLEVR(unittest.TestCase):
 
             # Mock up the load_dataset method.
             with patch( "ptp.components.problems.image_text_to_class.clevr.CLEVR.load_dataset", MagicMock( side_effect = [ dataset_content ] )):
-                clevr = CLEVR("CLEVR", config)
+                clevr = CLEVR("clevr_training", config["clevr_training"])
 
             # Mock up the get_image method.
             with patch( "ptp.components.problems.image_text_to_class.clevr.CLEVR.get_image", MagicMock( side_effect = [ "0" ] )):
@@ -85,13 +85,13 @@ class TestCLEVR(unittest.TestCase):
         """
         # Empty config.
         config = ConfigInterface()
-        config.add_config_params({"split": "validation"})
+        config.add_config_params({"clevr_validation": {"split": "validation", "globals": {"image_height": "clevr_image_height", "image_width": "clevr_image_width"}}})
 
         # Check the existence of test set.
-        if check_file_existence(path.expanduser('~/data/CLEVR_v1.0/questions'),'CLEVR_test_questions.json'):
+        if False: #check_file_existence(path.expanduser('~/data/CLEVR_v1.0/questions'),'CLEVR_test_questions.json'):
 
             # Create object.
-            clevr = CLEVR("CLEVR", config)
+            clevr = CLEVR("clevr_validation", config["clevr_validation"])
             
             # Check dataset size.
             self.assertEqual(len(clevr), 149991)
@@ -107,7 +107,7 @@ class TestCLEVR(unittest.TestCase):
 
             # Mock up the load_dataset method.
             with patch( "ptp.components.problems.image_text_to_class.clevr.CLEVR.load_dataset", MagicMock( side_effect = [ dataset_content ] )):
-                clevr = CLEVR("CLEVR", config)
+                clevr = CLEVR("clevr_validation", config["clevr_validation"])
 
             # Mock up the get_image method.
             with patch( "ptp.components.problems.image_text_to_class.clevr.CLEVR.get_image", MagicMock( side_effect = [ "0" ] )):
@@ -131,13 +131,13 @@ class TestCLEVR(unittest.TestCase):
         """
         # Empty config.
         config = ConfigInterface()
-        config.add_config_params({"split": "test"})
+        config.add_config_params({"clevr_test": {"split": "test", "globals": {"image_height": "clevr_image_height", "image_width": "clevr_image_width"}}})
     
         # Check the existence of test set.
-        if check_file_existence(path.expanduser('~/data/CLEVR_v1.0/questions'),'CLEVR_test_questions.json'):
+        if False: #check_file_existence(path.expanduser('~/data/CLEVR_v1.0/questions'),'CLEVR_test_questions.json'):
 
             # Create object.
-            clevr = CLEVR("CLEVR", config)
+            clevr = CLEVR("clevr_test", config["clevr_test"])
             
             # Check dataset size.
             self.assertEqual(len(clevr), 149988)
@@ -150,7 +150,7 @@ class TestCLEVR(unittest.TestCase):
 
             # Mock up the load_dataset method.
             with patch( "ptp.components.problems.image_text_to_class.clevr.CLEVR.load_dataset", MagicMock( side_effect = [ dataset_content ] )):
-                clevr = CLEVR("CLEVR", config)
+                clevr = CLEVR("clevr_test", config["clevr_test"])
 
             # Mock up the get_image method.
             with patch( "ptp.components.problems.image_text_to_class.clevr.CLEVR.get_image", MagicMock( side_effect = [ "0" ] )):
