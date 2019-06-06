@@ -17,11 +17,11 @@
 __author__ = "Tomasz Kornuta"
 
 import unittest
+from unittest.mock import MagicMock, patch
 from os import path
 
 from ptp.components.utils.io import check_file_existence
 from ptp.components.problems.image_text_to_class.clevr import CLEVR
-from ptp.data_types.data_definition import DataDefinition
 from ptp.configuration.config_interface import ConfigInterface
 
 
@@ -33,9 +33,7 @@ class TestCLEVR(unittest.TestCase):
         # Check the existence of training set.
         self.unittest_training_set = False # check_file_existence(path.expanduser('~/data/CLEVR_v1.0/questions'),'CLEVR_train_questions.json')
         # Check the existence of validation set.
-        self.unittest_validation_set = check_file_existence(path.expanduser('~/data/CLEVR_v1.0/questions'),'CLEVR_val_questions.json')
-        # Check the existence of test set.
-        self.unittest_test_set = check_file_existence(path.expanduser('~/data/CLEVR_v1.0/questions'),'CLEVR_test_questions.json')
+        self.unittest_validation_set = False # check_file_existence(path.expanduser('~/data/CLEVR_v1.0/questions'),'CLEVR_val_questions.json')
         
 
     def test_training_set(self):
@@ -97,20 +95,36 @@ class TestCLEVR(unittest.TestCase):
             Tests the CLEVR test split.
 
             ..note:
-                Test is performed only if json file '~/data/CLEVR_v1.0/questions/CLEVR_test_questions.json' is found.
+                Test on real data is performed only if json file '~/data/CLEVR_v1.0/questions/CLEVR_test_questions.json' is found.
         """
-        if not self.unittest_test_set:
-            return
         # Empty config.
         config = ConfigInterface()
         config.add_config_params({"split": "test"})
-        clevr = CLEVR("CLEVR", config)
+    
+        # Check the existence of test set.
+        if False: # check_file_existence(path.expanduser('~/data/CLEVR_v1.0/questions'),'CLEVR_test_questions.json'):
 
-        # Check dataset size.
-        self.assertEqual(len(clevr), 149988)
+            # Create object.
+            clevr = CLEVR("CLEVR", config)
+            
+            # Check dataset size.
+            self.assertEqual(len(clevr), 149988)
+
+            # Get sample.
+            sample = clevr[0]
+
+        else: 
+            test_content = [{'image_index': 0, 'split': 'test', 'image_filename': 'CLEVR_test_000000.png', 'question_index': 0, 'question': 'Is there anything else that is the same shape as the small brown matte object?'}]
+
+            # Mock up the load_dataset method.
+            with patch( "ptp.components.problems.image_text_to_class.clevr.CLEVR.load_dataset", MagicMock( side_effect = [ test_content ] )):
+                clevr = CLEVR("CLEVR", config)
+
+            # Mock up the get_image method.
+            with patch( "ptp.components.problems.image_text_to_class.clevr.CLEVR.get_image", MagicMock( side_effect = [ "0" ] )):
+                sample = clevr[0]
 
         # Check sample.
-        sample = clevr[0]
         self.assertEqual(sample['indices'], 0)
         self.assertEqual(sample['image_ids'], 'CLEVR_test_000000.png')
         self.assertEqual(sample['question_type_ids'], -1)
@@ -121,5 +135,5 @@ class TestCLEVR(unittest.TestCase):
 
 
 
-#if __name__ == "__main__":
-#    unittest.main()
+if __name__ == "__main__":
+    unittest.main()
