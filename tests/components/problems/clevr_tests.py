@@ -29,10 +29,10 @@ class TestCLEVR(unittest.TestCase):
 
     def test_training_set(self):
         """
-            Tests the CLEVR training split.
+            Tests the training split.
 
             ..note:
-                Test is performed only if json file '~/data/CLEVR_v1.0/questions/CLEVR_train_questions.json' is found.
+                Test on real data is performed only if json file '~/data/CLEVR_v1.0/questions/CLEVR_train_questions.json' is found.
         """
         # Empty config.
         config = ConfigInterface()
@@ -78,7 +78,7 @@ class TestCLEVR(unittest.TestCase):
     
     def test_validation_set(self):
         """
-            Tests the CLEVR validation split.
+            Tests the validation split.
 
             ..note:
                 Test on real data is performed only if json file '~/data/CLEVR_v1.0/questions/CLEVR_val_questions.json' is found.
@@ -124,7 +124,7 @@ class TestCLEVR(unittest.TestCase):
 
     def test_test_set(self):
         """
-            Tests the CLEVR test split.
+            Tests the test split.
 
             ..note:
                 Test on real data is performed only if json file '~/data/CLEVR_v1.0/questions/CLEVR_test_questions.json' is found.
