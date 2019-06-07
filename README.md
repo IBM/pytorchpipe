@@ -72,7 +72,7 @@ and several general-purpose components, from tensor transformations (List to Ten
 
 **Workers:**
 PTP workers are python scripts that are _agnostic_ to the problems/models/pipelines that they are supposed to work with.
-Currently framework offers two main workers:
+Currently framework offers three workers:
   
   * ptp-offline-trainer (a trainer relying on classical methodology interlacing training and validation at the end of every epoch, creates separate instances of training and validation problems and trains the models by feeding the created pipeline with batches of data, relying on the notion of an _epoch_)
   
