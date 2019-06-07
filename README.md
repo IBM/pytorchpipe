@@ -74,8 +74,11 @@ and several general-purpose components, from tensor transformations (List to Ten
 PTP workers are python scripts that are _agnostic_ to the problems/models/pipelines that they are supposed to work with.
 Currently framework offers two main workers:
   
-  * ptp-online-trainer (a flexible trainer creating separate instances of training and validation problems and training the models by feeding the created pipeline with batches of data depending, relying on the notion of an _episode_)
-  * ptp-processor (performing one pass over the samples returned by a given problem instance, useful for collecting scores on test set, answers for submissions to competitions etc.)
+  * ptp-offline-trainer (a trainer relying on classical methodology interlacing training and validation at the end of every epoch, creates separate instances of training and validation problems and trains the models by feeding the created pipeline with batches of data, relying on the notion of an _epoch_)
+  
+  * ptp-online-trainer (a flexible trainer creating separate instances of training and validation problems and training the models by feeding the created pipeline with batches of data, relying on the notion of an _episode_)
+  
+  * ptp-processor (performing one pass over the all samples returned by a given problem instance, useful for collecting scores on test set, answers for submissions to competitions etc.)
 
 
 ## Installation
