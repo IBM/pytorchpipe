@@ -8,6 +8,7 @@
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/IBM/pytorchpipe.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/IBM/pytorchpipe/context:python)
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/IBM/pytorchpipe.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/IBM/pytorchpipe/alerts/)
 [![Coverage Status](https://coveralls.io/repos/github/IBM/pytorchpipe/badge.svg?branch=develop)](https://coveralls.io/github/IBM/pytorchpipe?branch=develop)
+[![Maintainability](https://api.codeclimate.com/v1/badges/e8d37123b856ee5bb10b/maintainability)](https://codeclimate.com/github/IBM/pytorchpipe/maintainability)
 
 ## Description
 
@@ -24,7 +25,7 @@ The models are _agnostic_ to those operations and one indicates whether to use t
 **Datasets:**
 PTP focuses on multi-modal reasoning combining vision and language. Currently it offers the following _Problems_ from the following problem domains:
 
-  * ImageCLEF VQA-Med 2019 (Visual Question Answering)
+  * CLEVR, GQA, ImageCLEF VQA-Med 2019 (Visual Question Answering)
   * MNIST, CIFAR-100 (Image Classification)
   * WiLY (Language Identification)
   * WikiText-2 / WikiText-103 (Language Modelling)
@@ -72,10 +73,13 @@ and several general-purpose components, from tensor transformations (List to Ten
 
 **Workers:**
 PTP workers are python scripts that are _agnostic_ to the problems/models/pipelines that they are supposed to work with.
-Currently framework offers two main workers:
+Currently framework offers three workers:
   
-  * ptp-online-trainer (a flexible trainer creating separate instances of training and validation problems and training the models by feeding the created pipeline with batches of data depending, relying on the notion of an _episode_)
-  * ptp-processor (performing one pass over the samples returned by a given problem instance, useful for collecting scores on test set, answers for submissions to competitions etc.)
+  * ptp-offline-trainer (a trainer relying on classical methodology interlacing training and validation at the end of every epoch, creates separate instances of training and validation problems and trains the models by feeding the created pipeline with batches of data, relying on the notion of an _epoch_)
+  
+  * ptp-online-trainer (a flexible trainer creating separate instances of training and validation problems and training the models by feeding the created pipeline with batches of data, relying on the notion of an _episode_)
+  
+  * ptp-processor (performing one pass over the all samples returned by a given problem instance, useful for collecting scores on test set, answers for submissions to competitions etc.)
 
 
 ## Installation
