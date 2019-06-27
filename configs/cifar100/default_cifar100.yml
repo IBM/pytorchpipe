@@ -2,10 +2,11 @@
 training:
   problem: 
     type: CIFAR100
-    batch_size: &b 128
+    batch_size: &b 1024
     use_train_data: True
   # Use sampler that operates on a subset.
-  #dataloader:
+  dataloader:
+    num_workers: 10
   #  shuffle: False
   sampler:
     type: SubsetRandomSampler

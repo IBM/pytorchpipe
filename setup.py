@@ -168,7 +168,7 @@ setup(
         'pillow',
         'torchtext==0.3.1',
         'torchvision==0.2.1',
-        'torch==1.0.1',
+        'torch>=1.0.1',
         'PyYAML',
         'matplotlib',
         'requests'
