@@ -1,6 +1,6 @@
   # Training parameters:
 training:
-  problem:
+  task:
     type: &p_type WiLYLanguageIdentification
     data_folder: &data_folder '~/data/language_identification/wily'
     batch_size:  64
@@ -27,7 +27,7 @@ training:
 # Validation parameters:
 validation:
   partial_validation_interval: 10
-  problem:
+  task:
     type: *p_type
     data_folder: *data_folder
     batch_size:  64
@@ -40,7 +40,7 @@ validation:
 
 # Testing parameters:
 test:
-  problem:
+  task:
     type: *p_type 
     data_folder: *data_folder
     batch_size: 64

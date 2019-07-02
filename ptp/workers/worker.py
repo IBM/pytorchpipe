@@ -219,14 +219,14 @@ class Worker(object):
         """
 
 
-    def collect_all_statistics(self, problem_mgr, pipeline_mgr, data_streams, stat_col):
+    def collect_all_statistics(self, task_mgr, pipeline_mgr, data_streams, stat_col):
         """
         Function that collects statistics
 
-        :param pipeline: Pipeline containing both problem and list of components.
+        :param pipeline: Pipeline containing both task and list of components.
         :type pipeline: ``configuration.pipeline.Pipeline``
 
-        :param problem_mgr: Problem manager.
+        :param task_mgr: Task manager.
 
         :param data_streams: contains the batch of samples to pass through the pipeline.
         :type data_streams: ``DataStreams``
@@ -241,20 +241,20 @@ class Worker(object):
             stat_col['epoch'] = self.app_state.epoch
 
         # Collect rest of statistics.
-        problem_mgr.problem.collect_statistics(stat_col, data_streams)
+        task_mgr.task.collect_statistics(stat_col, data_streams)
         pipeline_mgr.collect_statistics(stat_col, data_streams)
 
         
 
-    def aggregate_all_statistics(self, problem_mgr, pipeline_mgr, stat_col, stat_agg):
+    def aggregate_all_statistics(self, task_mgr, pipeline_mgr, stat_col, stat_agg):
         """
         Aggregates the collected statistics. Exports the aggregations to logger, csv and TB. \
         Empties statistics collector for the next episode.
 
-        :param pipeline: Pipeline containing both problem and list of components.
+        :param pipeline: Pipeline containing both task and list of components.
         :type pipeline: ``configuration.pipeline.Pipeline``
 
-        :param problem_mgr: Problem manager.
+        :param task_mgr: Task manager.
 
         :param stat_col: ``StatisticsCollector`` object.
 
@@ -266,7 +266,7 @@ class Worker(object):
         stat_agg.aggregators['episode'] = self.app_state.episode
         stat_agg.aggregators['episodes_aggregated'] = len(stat_col['episode'])
         # Aggregate rest of statistics.
-        problem_mgr.problem.aggregate_statistics(stat_col, stat_agg)
+        task_mgr.task.aggregate_statistics(stat_col, stat_agg)
         pipeline_mgr.aggregate_statistics(stat_col, stat_agg)
     
 

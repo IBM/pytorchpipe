@@ -1,4 +1,4 @@
-# Load config defining problems for training, validation and testing.
+# Load config defining tasks for training, validation and testing.
 default_configs:
   vqa_med_2019/default_vqa_med_2019.yml,
   vqa_med_2019/frozen_pipelines/frozen_input_fusion_glove_lstm_vgg_att_is_cat.yml,
@@ -24,7 +24,7 @@ c123_hyperparameters:
 
 # Training parameters:
 training:
-  problem:
+  task:
     batch_size: *batch_size
     categories: C1,C2,C3
     export_sample_weights: ~/data/vqa-med/answers.c1_c2_c3_binary_yn.weights.csv
@@ -54,7 +54,7 @@ training:
 
 # Validation parameters:
 validation:
-  problem:
+  task:
     batch_size: *batch_size
     categories: C1,C2,C3
     # Appy all preprocessing/data augmentations.

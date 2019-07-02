@@ -1,19 +1,19 @@
-# Load config defining MNIST problems for training, validation and testing.
+# Load config defining MNIST tasks for training, validation and testing.
 default_configs: mnist/default_mnist.yml
 
 # Training parameters - overwrite defaults:
 training:
-  problem: 
+  task: 
     resize_image: [32, 32]
 
 # Validation parameters - overwrite defaults:
 validation:
-  problem:
+  task:
     resize_image: [32, 32]
 
 # Testing parameters - overwrite defaults:
 test:
-  problem:
+  task:
     resize_image: [32, 32]
 
 # Definition of the pipeline.
@@ -182,7 +182,7 @@ pipeline:
     input_mask_streams: [flow1_masks, flow2_masks]
     input_word_mappings: [word_to_ix1, word_to_ix2]
     globals:
-      output_word_mappings: label_word_mappings # from MNIST problem.
+      output_word_mappings: label_word_mappings # from MNIST task.
     streams:
       output_strings: merged_predictions
       output_indices: merged_indices

@@ -10,11 +10,11 @@ default_test:
   # Default batch size.
   batch_size: 64
 
-  # Definition of the problem (Mandatory!)
-  #problem:
+  # Definition of the task (Mandatory!)
+  #task:
   #  One must define its type (Mandatory!)
   #  type: ?
-  #  The rest of the content of that section is problem-specific...
+  #  The rest of the content of that section is task-specific...
 
   # Set a default configuration section for data loader.
   dataloader:

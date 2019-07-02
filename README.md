@@ -15,15 +15,15 @@
 PyTorchPipe (PTP) is a component-oriented framework that facilitates development of computational _multi-modal pipelines_ and comparison of diverse neural network-based models. 
 
 PTP frames training and testing procedures as _pipelines_ consisting of many components communicating through data streams.
-Each such a stream can consist of several components, including one problem instance (providing batches of data), any number of trainable components (models) and additional components providing required transformations and computations.
+Each such a stream can consist of several components, including one task instance (providing batches of data), any number of trainable components (models) and additional components providing required transformations and computations.
 
-As a result, the training & testing procedures are no longer pinned to a specific problem or model, and built-in mechanisms for compatibility checking (handshaking), configuration and global variables management & statistics collection facilitate rapid development of complex pipelines and running diverse experiments.
+As a result, the training & testing procedures are no longer pinned to a specific task or model, and built-in mechanisms for compatibility checking (handshaking), configuration and global variables management & statistics collection facilitate rapid development of complex pipelines and running diverse experiments.
 
 In its core, to _accelerate the computations_ on their own, PTP relies on PyTorch and extensively uses its mechanisms for distribution of computations on CPUs/GPUs, including multi-process data loaders and multi-GPU data parallelism.
 The models are _agnostic_ to those operations and one indicates whether to use them in configuration files (data loaders) or by passing adequate run-time arguments (--gpu).
 
 **Datasets:**
-PTP focuses on multi-modal reasoning combining vision and language. Currently it offers the following _Problems_ from the following problem domains:
+PTP focuses on multi-modal reasoning combining vision and language. Currently it offers the following _Tasks_ from the following task domains:
 
   * CLEVR, GQA, ImageCLEF VQA-Med 2019 (Visual Question Answering)
   * MNIST, CIFAR-100 (Image Classification)
@@ -31,8 +31,8 @@ PTP focuses on multi-modal reasoning combining vision and language. Currently it
   * WikiText-2 / WikiText-103 (Language Modelling)
   * ANKI (Machine Translation)
 
-Aside of providing batches of samples, the Problem class will automatically download the files associated with a given dataset (as long as the dataset is publicly available).
-The diversity of those problems (and associated models) proves the flexibility of the framework, we are working on incorporation of new ones into PTP.
+Aside of providing batches of samples, the Task class will automatically download the files associated with a given dataset (as long as the dataset is publicly available).
+The diversity of those tasks (and associated models) proves the flexibility of the framework, we are working on incorporation of new ones into PTP.
 
 **Pipelines:**
 What people typically define as a _model_ in PTP is framed as a _pipeline_, consisting of many inter-connected components, with one or more _Models_ containing trainable elements.
@@ -72,14 +72,14 @@ The framework also offers several components useful when working with text:
 and several general-purpose components, from tensor transformations (List to Tensor, Reshape Tensor, Reduce Tensor, Concatenate Tensor), to components calculating losses (NLL Loss) and statistics (Accuracy Statistics, Precision/Recall Statistics, BLEU Statistics etc.) to viewers (Stream Viewer, Stream File Exporter etc.).
 
 **Workers:**
-PTP workers are python scripts that are _agnostic_ to the problems/models/pipelines that they are supposed to work with.
+PTP workers are python scripts that are _agnostic_ to the tasks/models/pipelines that they are supposed to work with.
 Currently framework offers three workers:
   
-  * ptp-offline-trainer (a trainer relying on classical methodology interlacing training and validation at the end of every epoch, creates separate instances of training and validation problems and trains the models by feeding the created pipeline with batches of data, relying on the notion of an _epoch_)
+  * ptp-offline-trainer (a trainer relying on classical methodology interlacing training and validation at the end of every epoch, creates separate instances of training and validation tasks and trains the models by feeding the created pipeline with batches of data, relying on the notion of an _epoch_)
   
-  * ptp-online-trainer (a flexible trainer creating separate instances of training and validation problems and training the models by feeding the created pipeline with batches of data, relying on the notion of an _episode_)
+  * ptp-online-trainer (a flexible trainer creating separate instances of training and validation tasks and training the models by feeding the created pipeline with batches of data, relying on the notion of an _episode_)
   
-  * ptp-processor (performing one pass over the all samples returned by a given problem instance, useful for collecting scores on test set, answers for submissions to competitions etc.)
+  * ptp-processor (performing one pass over the all samples returned by a given task instance, useful for collecting scores on test set, answers for submissions to competitions etc.)
 
 
 ## Installation

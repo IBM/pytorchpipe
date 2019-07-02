@@ -1,6 +1,6 @@
 # Training parameters:
 training:
-  problem:
+  task:
     type: &p_type DummyLanguageIdentification
     batch_size:  2
     use_train_data: True
@@ -22,7 +22,7 @@ training:
 # Validation parameters:
 validation:
   partial_validation_interval: 10
-  problem:
+  task:
     type: *p_type
     batch_size:  2
     use_train_data: True
@@ -30,7 +30,7 @@ validation:
 
 # Testing parameters:
 test:
-  problem:
+  task:
     type: *p_type 
     batch_size:  2
     use_train_data: False

@@ -1,4 +1,4 @@
-# Load config defining CIFAR100 problems for training, validation and testing.
+# Load config defining CIFAR100 tasks for training, validation and testing.
 default_configs: cifar100/default_cifar100.yml
 
 # Definition of the pipeline.

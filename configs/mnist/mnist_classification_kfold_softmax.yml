@@ -1,9 +1,9 @@
-# Load config defining MNIST problems for training, validation and testing.
+# Load config defining MNIST tasks for training, validation and testing.
 default_configs: mnist/default_mnist.yml
 
 # Training parameters:
 training:
-  problem: 
+  task: 
     type: MNIST
     batch_size: &b 64
     use_train_data: True
@@ -24,7 +24,7 @@ training:
 # Validation parameters:
 validation:
   partial_validation_interval: 500
-  problem:
+  task:
     type: MNIST
     batch_size: *b
     use_train_data: True  # True because we are splitting the training set to: validation and training

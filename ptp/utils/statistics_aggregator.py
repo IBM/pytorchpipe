@@ -58,7 +58,7 @@ class StatisticsAggregator(StatisticsCollector):
          should be based on an existing statistics collected by the :py:class:`ptp.utils.StatisticsCollector` \
          (e.g. added by :py:func:`StatisticsCollector.add_statistics()` and collected by \
          :py:func:`ptp.models.Model.collect_statistics()` or \
-         :py:func:`ptp.models.Problem.collect_statistics()`.
+         :py:func:`ptp.models.Task.collect_statistics()`.
         :type key: str
 
         :param formatting: Formatting that will be used when logging and exporting to CSV.

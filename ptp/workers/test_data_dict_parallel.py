@@ -5,7 +5,7 @@ from torch.utils.data import Dataset, DataLoader
 
 import time
 
-from ptp.components.problems.problem import Problem
+from ptp.components.tasks.task import Task
 from ptp.components.models.model import Model
 
 from ptp.data_types.data_streams import DataStreams
@@ -13,7 +13,7 @@ from ptp.data_types.data_definition import DataDefinition
 from ptp.utils.data_streams_parallel import DataStreamsParallel
 
 
-class RandomDataset(Problem):
+class RandomDataset(Task):
 
     def __init__(self, size, length):
         self.len = length

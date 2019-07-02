@@ -74,7 +74,7 @@ class PipelineManager(object):
         """
         Method creating the pipeline, consisting of:
             - a list components ordered by the priority (dictionary).
-            - problem (as a separate "link" to object in the list of components, instance of a class derrived from Problem class)
+            - task (as a separate "link" to object in the list of components, instance of a class derrived from Task class)
             - models (separate list with link to objects in components dict)
             - losses (selarate list with links to objects in components dict)
 
@@ -162,10 +162,10 @@ class PipelineManager(object):
                 # Create component.
                 component, class_obj = ComponentFactory.build(c_key, c_config)
 
-                # Check if class is derived (even indirectly) from Problem.
-                if ComponentFactory.check_inheritance(class_obj, ptp.Problem.__name__):
+                # Check if class is derived (even indirectly) from Task.
+                if ComponentFactory.check_inheritance(class_obj, ptp.Task.__name__):
                     raise ConfigurationError("Object '{}' cannot be instantiated as part of pipeline, \
-                        as its class type '{}' is derived from Problem class!".format(c_key, class_obj.__name__))
+                        as its class type '{}' is derived from Task class!".format(c_key, class_obj.__name__))
 
                 # Add it to dict.
                 self.__components[c_priority] = component
@@ -414,7 +414,7 @@ class PipelineManager(object):
 
     def __len__(self):
         """
-        Returns the number of objects in the pipeline (excluding problems)
+        Returns the number of objects in the pipeline (excluding tasks)
         :return: Length of the :py:class:`Pipeline`.
 
         """
@@ -442,7 +442,7 @@ class PipelineManager(object):
 
     def summarize_all_components(self):
         """
-        Summarizes the pipeline by showing all its components (excluding problem).
+        Summarizes the pipeline by showing all its components (excluding task).
 
         :return: Summary as a str.
         """
@@ -475,7 +475,7 @@ class PipelineManager(object):
 
     def summarize_models(self):
         """
-        Summarizes the pipeline by showing all its components (excluding problem).
+        Summarizes the pipeline by showing all its components (excluding task).
 
         :return: Summary as a str.
         """
@@ -489,7 +489,7 @@ class PipelineManager(object):
         """
         Performs handshaking of inputs and outputs definitions of all components in the pipeline.
 
-        :param data_streams: Initial datadict returned by the problem.
+        :param data_streams: Initial datadict returned by the task.
 
         :param log: Logs the detected errors and info (DEFAULT: True)
 

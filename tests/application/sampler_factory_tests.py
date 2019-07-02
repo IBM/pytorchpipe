@@ -24,8 +24,8 @@ import numpy as np
 from ptp.configuration.config_interface import ConfigInterface
 from ptp.application.sampler_factory import SamplerFactory
 
-# Problem.
-class TestProblemMockup(object):
+# Task.
+class TestTaskMockup(object):
     def __len__(self):
         return 50
 
@@ -42,7 +42,7 @@ class TestSamplerFactory(unittest.TestCase):
         config.add_default_params({'type': 'SubsetRandomSampler',
                                 'indices': indices})
         # Create the sampler.
-        sampler = SamplerFactory.build(TestProblemMockup(), config, "training")
+        sampler = SamplerFactory.build(TestTaskMockup(), config, "training")
 
         # Check number of samples.
         self.assertEqual(len(sampler), 20)
@@ -55,7 +55,7 @@ class TestSamplerFactory(unittest.TestCase):
         config.add_default_params({'type': 'SubsetRandomSampler',
                                 'indices': range_str})
         # Create the sampler.
-        sampler = SamplerFactory.build(TestProblemMockup(), config, "training")
+        sampler = SamplerFactory.build(TestTaskMockup(), config, "training")
 
         # Check number of samples.
         self.assertEqual(len(sampler), 20)
@@ -69,7 +69,7 @@ class TestSamplerFactory(unittest.TestCase):
         config.add_default_params({'type': 'SubsetRandomSampler',
                                 'indices': yaml_list})
         # Create the sampler.
-        sampler = SamplerFactory.build(TestProblemMockup(), config, "training")
+        sampler = SamplerFactory.build(TestTaskMockup(), config, "training")
 
         # Check number of samples.
         self.assertEqual(len(sampler), 4)
@@ -88,7 +88,7 @@ class TestSamplerFactory(unittest.TestCase):
         config.add_default_params({'type': 'SubsetRandomSampler',
                                 'indices': filename})
         # Create the sampler.
-        sampler = SamplerFactory.build(TestProblemMockup(), config, "training")
+        sampler = SamplerFactory.build(TestTaskMockup(), config, "training")
 
         # Check number of samples.
         self.assertEqual(len(sampler), 5)

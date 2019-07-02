@@ -223,7 +223,7 @@ class ConfigInterface(Mapping):
         .. note::
 
             This method should be used by the objects necessitating default values \
-            (problems, models, workers etc.).
+            (tasks, models, workers etc.).
 
         :param default_params: Dictionary containing `default` values.
         :type default_params: dict

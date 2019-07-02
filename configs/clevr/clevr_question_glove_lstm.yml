@@ -1,17 +1,17 @@
-# Load config defining CLEVR problems for training, validation and testing.
+# Load config defining CLEVR tasks for training, validation and testing.
 default_configs: clevr/default_clevr.yml
 
 # This is unimodal (questino-based) baseline, thus stop streaming images - in all sets.
 training:
-  problem: 
+  task: 
     stream_images: False
 
 validation:
-  problem: 
+  task: 
     stream_images: False
 
 test:
-  problem: 
+  task: 
     stream_images: False
 
 # Definition of the pipeline.

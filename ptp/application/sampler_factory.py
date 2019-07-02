@@ -34,18 +34,18 @@ class SamplerFactory(object):
     """
 
     @staticmethod
-    def build(problem, config, problem_subset_name):
+    def build(task, config, task_subset_name):
         """
         Static method returning particular sampler, depending on the name \
-        provided in the list of parameters & the specified problem class.
+        provided in the list of parameters & the specified task class.
 
-        :param problem: Instance of an object derived from the Problem class.
-        :type problem: ``problems.Problem``
+        :param task: Instance of an object derived from the Task class.
+        :type task: ``tasks.Task``
 
         :param config: Parameters used to instantiate the sampler.
         :type config: :py:class:`ptp.configuration.ConfigInterface`
 
-        :param problem_subset_name: Name of problem subset (and associated ProblemManager object)
+        :param task_subset_name: Name of task subset (and associated TaskManager object)
 
         ..note::
 
@@ -135,10 +135,10 @@ class SamplerFactory(object):
                 # Else: use them as they are, including single index.
 
                 # Check if indices are within range.
-                if max(indices) >= len(problem):
+                if max(indices) >= len(task):
                     raise ConfigurationError("SubsetRandomSampler cannot work properly when indices are out of range ({}) "
-                        "considering that there are {} samples in the problem".format(
-                            max(indices), len(problem)))
+                        "considering that there are {} samples in the task".format(
+                            max(indices), len(task)))
 
                 # Create the sampler object.
                 sampler = pt_samplers.SubsetRandomSampler(indices)
@@ -156,7 +156,7 @@ class SamplerFactory(object):
                 weights = np.fromfile(os.path.expanduser(config['weights']), dtype=float, count=-1, sep=',')
 
                 # Create sampler class.
-                sampler = pt_samplers.WeightedRandomSampler(weights, len(problem), replacement=True)
+                sampler = pt_samplers.WeightedRandomSampler(weights, len(task), replacement=True)
 
             ###########################################################################
             # Handle third special case: kFoldRandomSampler.
@@ -175,7 +175,7 @@ class SamplerFactory(object):
                 epochs_per_fold = config.get("epochs_per_fold", 1)
 
                 # Create the sampler object.
-                sampler = ptp_samplers.kFoldRandomSampler(len(problem), folds, epochs_per_fold, problem_subset_name == 'training')
+                sampler = ptp_samplers.kFoldRandomSampler(len(task), folds, epochs_per_fold, task_subset_name == 'training')
 
             ###########################################################################
             # Handle fourd special case: kFoldWeightedRandomSampler.
@@ -202,7 +202,7 @@ class SamplerFactory(object):
                 epochs_per_fold = config.get("epochs_per_fold", 1)
 
                 # Create the sampler object.
-                sampler = ptp_samplers.kFoldWeightedRandomSampler(weights, len(problem), folds, epochs_per_fold, problem_subset_name == 'training')
+                sampler = ptp_samplers.kFoldWeightedRandomSampler(weights, len(task), folds, epochs_per_fold, task_subset_name == 'training')
 
             elif typename in ['BatchSampler', 'DistributedSampler']:
                 # Sorry, don't support those. Yet;)
@@ -216,7 +216,7 @@ class SamplerFactory(object):
                 # Get the sampler class.
                 sampler_class = getattr(pt_samplers, typename)
                 # Create "regular" sampler.
-                sampler = sampler_class(problem)
+                sampler = sampler_class(task)
 
             # Return sampler.
             return sampler

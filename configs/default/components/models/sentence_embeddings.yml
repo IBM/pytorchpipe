@@ -4,7 +4,7 @@
 # 1. CONFIGURATION PARAMETERS that will be LOADED by the component.
 ####################################################################
 
-# Folder where problem will store data (LOADED)
+# Folder where task will store data (LOADED)
 data_folder: '~/data/'
 
 # Source files that will be used to create the vocabulary  (LOADED)

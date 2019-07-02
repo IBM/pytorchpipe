@@ -27,9 +27,9 @@ class DataStreams(collections.abc.MutableMapping):
 
     - Mutable objects can change their value but keep their id() -> ease modifying existing keys' value.
 
-    DataStreams: Dict used for storing batches of data by problems.
+    DataStreams: Dict used for storing batches of data by tasks.
 
-    **This is the main object class used to share data between all components through a worker, starting from problem to loss and visualization.**
+    **This is the main object class used to share data between all components through a worker, starting from task to loss and visualization.**
     """
 
     def __init__(self, *args, **kwargs):

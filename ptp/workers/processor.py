@@ -27,7 +27,7 @@ import ptp.utils.logger as logging
 
 from ptp.workers.worker import Worker
 
-from ptp.application.problem_manager import ProblemManager
+from ptp.application.task_manager import TaskManager
 from ptp.application.pipeline_manager import PipelineManager
 
 from ptp.utils.statistics_collector import StatisticsCollector
@@ -144,7 +144,7 @@ class Processor(Worker):
 
         - Creates the pipeline consisting of many components
 
-        - Creates testing problem manager
+        - Creates testing task manager
 
         - Performs testing of compatibility of testing pipeline
 
@@ -160,11 +160,11 @@ class Processor(Worker):
             print("Error: Couldn't retrieve the section '{}' from the loaded configuration".format(self.tsn))
             exit(-1)
 
-        # Get testing problem type.
+        # Get testing task type.
         try:
-            _ = self.config_test['problem']['type']
+            _ = self.config_test['task']['type']
         except KeyError:
-            print("Error: Couldn't retrieve the problem 'type' from the '{}' section in the loaded configuration".format(self.tsn))
+            print("Error: Couldn't retrieve the task 'type' from the '{}' section in the loaded configuration".format(self.tsn))
             exit(-5)
 
         # Get pipeline section.
@@ -219,25 +219,25 @@ class Processor(Worker):
 
         ################# TESTING PROBLEM ################# 
 
-        # Build the used problem manager.
-        self.pm = ProblemManager(self.tsn, self.config_test) 
+        # Build the used task manager.
+        self.pm = TaskManager(self.tsn, self.config_test) 
         errors += self.pm.build()
 
 
         # check if the maximum number of episodes is specified, if not put a
         # default equal to the size of the dataset (divided by the batch size)
         # So that by default, we loop over the test set once.
-        problem_size_in_episodes = len(self.pm)
+        task_size_in_episodes = len(self.pm)
 
         if self.config_test["terminal_conditions"]["episode_limit"] == -1:
             # Overwrite the config value!
-            self.config_test['terminal_conditions'].add_config_params({'episode_limit': problem_size_in_episodes})
+            self.config_test['terminal_conditions'].add_config_params({'episode_limit': task_size_in_episodes})
 
         # Warn if indicated number of episodes is larger than an epoch size:
-        if self.config_test["terminal_conditions"]["episode_limit"] > problem_size_in_episodes:
+        if self.config_test["terminal_conditions"]["episode_limit"] > task_size_in_episodes:
             self.logger.warning('Indicated limit of number of episodes is larger than one epoch, reducing it.')
             # Overwrite the config value!
-            self.config_test['terminal_conditions'].add_config_params({'episode_limit': problem_size_in_episodes})
+            self.config_test['terminal_conditions'].add_config_params({'episode_limit': task_size_in_episodes})
 
         self.logger.info("Limiting the number of episodes to: {}".format(
             self.config_test["terminal_conditions"]["episode_limit"]))
@@ -250,7 +250,7 @@ class Processor(Worker):
 
         # Show pipeline.
         summary_str = self.pipeline.summarize_all_components_header()
-        summary_str += self.pm.problem.summarize_io(self.tsn)
+        summary_str += self.pm.task.summarize_io(self.tsn)
         summary_str += self.pipeline.summarize_all_components()
         self.logger.info(summary_str)
 
@@ -261,7 +261,7 @@ class Processor(Worker):
 
         # Handshake definitions.
         self.logger.info("Handshaking testing pipeline")
-        defs_testing = self.pm.problem.output_data_definitions()
+        defs_testing = self.pm.task.output_data_definitions()
         errors += self.pipeline.handshake(defs_testing)
 
         # Check errors.
@@ -332,7 +332,7 @@ class Processor(Worker):
         # Create statistics collector.
         self.stat_col = StatisticsCollector()
         self.add_statistics(self.stat_col)
-        self.pm.problem.add_statistics(self.stat_col)
+        self.pm.task.add_statistics(self.stat_col)
         self.pipeline.add_statistics(self.stat_col)
         # Create the csv file to store the statistics.
         self.pm_batch_stats_file = self.stat_col.initialize_csv_file(self.app_state.log_dir, self.tsn+'_statistics.csv')
@@ -340,7 +340,7 @@ class Processor(Worker):
         # Create statistics aggregator.
         self.stat_agg = StatisticsAggregator()
         self.add_aggregators(self.stat_agg)
-        self.pm.problem.add_aggregators(self.stat_agg)
+        self.pm.task.add_aggregators(self.stat_agg)
         self.pipeline.add_aggregators(self.stat_agg)
         # Create the csv file to store the statistic aggregations.
         # Will contain a single row with aggregated statistics.
@@ -381,7 +381,7 @@ class Processor(Worker):
                 # Reset the counter.
                 self.app_state.episode = -1
 
-                # Inform the problem manager that epoch has started.
+                # Inform the task manager that epoch has started.
                 self.pm.initialize_epoch()
 
                 for batch in self.pm.dataloader:
@@ -407,7 +407,7 @@ class Processor(Worker):
                     self.app_state.episode += 1
 
                 # End for.
-                # Inform the problem managers that the epoch has ended.
+                # Inform the task managers that the epoch has ended.
                 self.pm.finalize_epoch()
 
                 self.logger.info('\n' + '='*80)

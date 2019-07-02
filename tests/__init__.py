@@ -3,9 +3,9 @@ from .application.sampler_factory_tests import TestSamplerFactory
 from .application.samplers_tests import TestkFoldRandomSampler, TestkFoldWeightedRandomSampler
 
 from .components.component_tests import TestComponent
-from .components.problems.clevr_tests import TestCLEVR
-from .components.problems.gqa_tests import TestGQA
-from .components.problems.problem_tests import TestProblem
+from .components.tasks.clevr_tests import TestCLEVR
+from .components.tasks.gqa_tests import TestGQA
+from .components.tasks.task_tests import TestTask
 
 from .configuration.config_interface_tests import TestConfigInterface
 from .configuration.config_registry_tests import TestConfigRegistry
@@ -26,7 +26,7 @@ __all__ = [
     # Components
     'TestComponent',
     'TestGQA',
-    'TestProblem',
+    'TestTask',
     # Configuration
     'TestConfigRegistry',
     'TestConfigInterface',
