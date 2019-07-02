@@ -173,7 +173,7 @@ pipeline:
 
   # Image encoder.
   image_encoder:
-    type: TorchVisionWrapper
+    type: GenericImageEncoder
     priority: 2.1
     streams:
       inputs: images
@@ -197,10 +197,10 @@ pipeline:
   ################# PIPE 4: SHARED CONCAT #################
 
   concat:
-    type: Concatenation
+    type: ConcatenateTensor
     priority: 4.1
     input_streams: [questions_activations,image_activations,image_size_activations]
-    # Concatenation 
+    # ConcatenateTensor 
     dim: 1 # default
     input_dims: [[-1,100],[-1,100],[-1,10]]
     output_dims: [-1,210]

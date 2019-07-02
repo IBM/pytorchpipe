@@ -67,7 +67,7 @@ pipeline:
   # Image encoder.
   image_encoder:
     priority: 3.1
-    type: TorchVisionWrapper
+    type: GenericImageEncoder
     model_type: resnet50
     return_feature_maps: True
     streams:
@@ -116,9 +116,9 @@ pipeline:
   # 6th subpipeline: concatenation + FF.
   concat:
     priority: 5.2
-    type: Concatenation
+    type: ConcatenateTensor
     input_streams: [rn_activation,image_size_activations]
-    # Concatenation 
+    # ConcatenateTensor 
     dim: 1 # default
     input_dims: [[-1,100],[-1,10]]
     output_dims: [-1,110]

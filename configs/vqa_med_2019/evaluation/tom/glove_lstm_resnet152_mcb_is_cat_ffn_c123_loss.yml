@@ -26,8 +26,8 @@ hyperparameters:
   question_encoder_output_size_val: &question_encoder_output_size_val 100
   
   # Fusion I: image + question
-  question_image_fusion_type_val: &question_image_fusion_type MultimodalCompactBilinearPooling
-  # Options: ElementWiseMultiplication | MultimodalCompactBilinearPooling | VQA_Attention
+  question_image_fusion_type_val: &question_image_fusion_type CompactBilinearPooling
+  # Options: LowRankBilinearPooling | CompactBilinearPooling | QuestionDrivenAttention
   question_image_fusion_size_val: &question_image_fusion_size_val 100
 
   # Image size encoder.
@@ -159,7 +159,7 @@ pipeline:
   # Image encoder.
   image_encoder:
     priority: 2.1
-    type: TorchVisionWrapper
+    type: GenericImageEncoder
     model: *image_encoder_model
     streams:
       inputs: images
@@ -214,9 +214,9 @@ pipeline:
   # 5th subpipeline: concatenation 
   concat:
     priority: 5.1
-    type: Concatenation
+    type: ConcatenateTensor
     input_streams: [question_image_activations,image_size_activations]
-    # Concatenation 
+    # ConcatenateTensor 
     dim: 1 # default
     input_dims: [[-1,*question_image_fusion_size_val],[-1,*image_size_encoder_output_size_val]]
     output_dims: [-1,*question_image_size_fusion_size_val]

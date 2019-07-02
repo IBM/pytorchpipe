@@ -21,9 +21,9 @@ checkpoint: &checkpoint ~/image-clef-2019/experiments/c4_encoders/20190504_20244
 # ~/image-clef-2019/experiments/c4_encoders/20190504_202441/checkpoints/glove_lstm_vgg16_att_is_cat_ffn_c123_loss_best.pt
 #  + Model 'pipe1_question_embeddings' [SentenceEmbeddings] params saved 
 #  + Model 'pipe1_lstm' [RecurrentNeuralNetwork] params saved 
-#  + Model 'image_encoder' [TorchVisionWrapper] params saved 
+#  + Model 'image_encoder' [GenericImageEncoder] params saved 
 #  + Model 'image_size_encoder' [FeedForwardNetwork] params saved 
-#  + Model 'question_image_fusion' [VQA_Attention] params saved 
+#  + Model 'question_image_fusion' [QuestionDrivenAttention] params saved 
 #  + Model 'question_image_ffn' [FeedForwardNetwork] params saved 
 
 # This one will be skipped, as this is C123 classifier!
@@ -43,7 +43,7 @@ pipe_if0_hyperparameters:
   question_encoder_output_size_val: &question_encoder_output_size_val 100
   
   # Fusion I: image + question
-  question_image_fusion_type_val: &question_image_fusion_type VQA_Attention
+  question_image_fusion_type_val: &question_image_fusion_type QuestionDrivenAttention
 
   # Image size encoder.
   image_size_encoder_output_size_val: &image_size_encoder_output_size_val 10
@@ -118,7 +118,7 @@ pipeline:
   # Image encoder.
   pipe_if2_image_encoder:
     priority: 2.1
-    type: TorchVisionWrapper
+    type: GenericImageEncoder
     model: *image_encoder_model
     return_feature_maps: True
     # LOAD AND FREEZE #
@@ -198,9 +198,9 @@ pipeline:
   # 5th subpipeline: concatenation 
   pipe_if5_concat:
     priority: 5.1
-    type: Concatenation
+    type: ConcatenateTensor
     input_streams: [question_image_activations,image_size_activations]
-    # Concatenation 
+    # ConcatenateTensor 
     dim: 1 # default
     input_dims: [[-1,1124],[-1,*image_size_encoder_output_size_val]]
     output_dims: [-1,*question_image_size_fusion_size_val]

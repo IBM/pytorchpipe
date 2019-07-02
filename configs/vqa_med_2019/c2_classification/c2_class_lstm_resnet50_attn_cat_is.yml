@@ -64,7 +64,7 @@ pipeline:
   # Image encoder.
   image_encoder:
     priority: 3.1
-    type: TorchVisionWrapper
+    type: GenericImageEncoder
     model_type: resnet50
     return_feature_maps: True
     streams:
@@ -75,7 +75,7 @@ pipeline:
   # Attention + FF.
   question_image_fusion:
     priority: 4.1
-    type: VQA_Attention
+    type: QuestionDrivenAttention
     dropout_rate: 0.5
     latent_size: 100
     num_attention_heads: 2

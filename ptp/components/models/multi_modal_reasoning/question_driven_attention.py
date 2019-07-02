@@ -24,7 +24,7 @@ from ptp.components.models.model import Model
 from ptp.data_types.data_definition import DataDefinition
 
 
-class VQA_Attention(Model):
+class QuestionDrivenAttention(Model):
     """
     Element of one of the classical baselines for Visual Question Answering.
     Attention-weighted image maps are computed based on the question.
@@ -43,7 +43,7 @@ class VQA_Attention(Model):
         :type config: ``ptp.configuration.ConfigInterface``
 
         """
-        super(VQA_Attention, self).__init__(name, VQA_Attention, config)
+        super(QuestionDrivenAttention, self).__init__(name, QuestionDrivenAttention, config)
 
         # Get key mappings.
         self.key_feature_maps = self.stream_keys["feature_maps"]

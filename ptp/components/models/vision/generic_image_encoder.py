@@ -27,7 +27,7 @@ from ptp.components.models.model import Model
 from ptp.data_types.data_definition import DataDefinition
 
 
-class TorchVisionWrapper(Model):
+class GenericImageEncoder(Model):
     """
     Class
     """
@@ -41,7 +41,7 @@ class TorchVisionWrapper(Model):
         :type config: ``ptp.configuration.ConfigInterface``
 
         """
-        super(TorchVisionWrapper, self).__init__(name, TorchVisionWrapper, config)
+        super(GenericImageEncoder, self).__init__(name, GenericImageEncoder, config)
 
         # Get key mappings.
         self.key_inputs = self.stream_keys["inputs"]

@@ -442,9 +442,9 @@ pipeline:
   # Concatenate input fused activatons with three supporting streams.
   activation_support_concat:
     priority: 11.1
-    type: Concatenation
+    type: ConcatenateTensor
     input_streams: [concatenated_activations,c1_support,c2_support,c3_support]
-    # Concatenation 
+    # ConcatenateTensor 
     dim: 1 # default
     input_dims: [[-1,*activation_size_val],[-1,*c123_support_output_size_val],[-1,*c123_support_output_size_val],[-1,*c123_support_output_size_val]]
     output_dims: [-1,*activation_support_size_val]

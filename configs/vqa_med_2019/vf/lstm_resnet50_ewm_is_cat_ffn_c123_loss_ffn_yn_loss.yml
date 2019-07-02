@@ -170,7 +170,7 @@ pipeline:
   # Image encoder.
   image_encoder:
     priority: 2.1
-    type: TorchVisionWrapper
+    type: GenericImageEncoder
     model: resnet50
     streams:
       inputs: images
@@ -196,7 +196,7 @@ pipeline:
   # Element wise multiplication + FF.
   question_image_fusion:
     priority: 4.1
-    type: ElementWiseMultiplication
+    type: LowRankBilinearPooling
     dropout_rate: 0.5
     streams:
       image_encodings: image_activations
@@ -225,9 +225,9 @@ pipeline:
   # 5th subpipeline: concatenation 
   concat:
     priority: 5.1
-    type: Concatenation
+    type: ConcatenateTensor
     input_streams: [question_image_activations,image_size_activations]
-    # Concatenation 
+    # ConcatenateTensor 
     dim: 1 # default
     input_dims: [[-1,100],[-1,10]]
     output_dims: [-1,110]

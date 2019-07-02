@@ -29,8 +29,8 @@ hyperparameters:
   question_attention_output_size_val: &question_attention_output_size_val 800
 
   # Fusion I: image + question
-  question_image_fusion_type_val: &question_image_fusion_type MultimodalFactorizedBilinearPooling
-  # Options: ElementWiseMultiplication | MultimodalFactorizedBilinearPooling (component: question_image_fusion)
+  question_image_fusion_type_val: &question_image_fusion_type FactorizedBilinearPooling
+  # Options: LowRankBilinearPooling | FactorizedBilinearPooling (component: question_image_fusion)
   question_image_fusion_size_val: &question_image_fusion_size_val 512
 
   # Image size encoder.
@@ -165,7 +165,7 @@ pipeline:
   # Image encoder.
   image_encoder:
     priority: 2.1
-    type: TorchVisionWrapper
+    type: GenericImageEncoder
     model_type: *image_encoder_model
     return_feature_maps: True
     streams:
@@ -175,7 +175,7 @@ pipeline:
 
   image_attention:
     priority: 2.2
-    type: VQA_Attention
+    type: QuestionDrivenAttention
     dropout_rate: 0.3
     latent_size: 256
     output_mode: 'Image'
@@ -224,9 +224,9 @@ pipeline:
   # 5th subpipeline: concatenation
   concat:
     priority: 5.1
-    type: Concatenation
+    type: ConcatenateTensor
     input_streams: [fused_activations,image_size_activations]
-    # Concatenation
+    # ConcatenateTensor
     dim: 1 # default
     input_dims: [[-1,*question_image_fusion_size_val],[-1,*image_size_encoder_output_size_val]]
     output_dims: [-1,*question_image_size_fusion_size_val]

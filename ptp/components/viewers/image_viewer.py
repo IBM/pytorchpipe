@@ -24,7 +24,7 @@ from ptp.components.component import Component
 from ptp.data_types.data_definition import DataDefinition
 
 
-class ImageToClassViewer(Component):
+class ImageViewer(Component):
     """
     Utility for displaying contents image along with label and prediction (a single sample from the batch).
     """
@@ -41,7 +41,7 @@ class ImageToClassViewer(Component):
 
         """
         # Call constructors of parent classes.
-        Component.__init__(self, name, ImageToClassViewer, config)
+        Component.__init__(self, name, ImageViewer, config)
 
         # Get default key mappings.
         self.key_indices = self.stream_keys["indices"]

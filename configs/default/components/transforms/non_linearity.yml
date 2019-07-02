@@ -1,4 +1,4 @@
-# This file defines the default values for the Tensor Reshaper.
+# This file defines the default values for the NonLinearity.
 
 ####################################################################
 # 1. CONFIGURATION PARAMETERS that will be LOADED by the component.

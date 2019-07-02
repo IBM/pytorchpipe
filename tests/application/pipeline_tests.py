@@ -40,7 +40,7 @@ class TestPipeline(unittest.TestCase):
         config.add_default_params({
             'bow_encoder' : 
                 {
-                    'type': 'ptp.components.text.bow_encoder.BOWEncoder',
+                    'type': 'ptp.components.language.bow_encoder.BOWEncoder',
                     'priority': 1.1
                 }
             })

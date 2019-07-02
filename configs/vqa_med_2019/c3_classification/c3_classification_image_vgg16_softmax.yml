@@ -5,7 +5,7 @@ pipeline:
 
   # Image encoder.
   image_encoder:
-    type: TorchVisionWrapper
+    type: GenericImageEncoder
     priority: 1.1
     streams:
       inputs: images

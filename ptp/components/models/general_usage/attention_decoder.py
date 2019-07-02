@@ -21,7 +21,7 @@ from ptp.components.models.model import Model
 from ptp.data_types.data_definition import DataDefinition
 
 
-class Attn_Decoder_RNN(Model): 
+class AttentionDecoder(Model): 
     """
     Single layer GRU decoder with attention:
     Bahdanau, D., Cho, K., & Bengio, Y. (2014). Neural machine translation by jointly learning to align and translate. arXiv preprint arXiv:1409.0473.
@@ -38,7 +38,7 @@ class Attn_Decoder_RNN(Model):
         :type config: ``ptp.configuration.ConfigInterface``
         """
         # Call constructors of parent classes.
-        Model.__init__(self, name, Attn_Decoder_RNN, config)
+        Model.__init__(self, name, AttentionDecoder, config)
 
         # Get input/output mode
         self.output_last_state = self.config["output_last_state"]

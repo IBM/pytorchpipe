@@ -21,7 +21,7 @@ from ptp.components.models.model import Model
 from ptp.data_types.data_definition import DataDefinition
 
 
-class Seq2Seq_RNN(Model): 
+class Seq2Seq(Model): 
     """
     Simple Classifier consisting of fully connected layer with log softmax non-linearity.
     """
@@ -33,7 +33,7 @@ class Seq2Seq_RNN(Model):
         :type config: ``ptp.configuration.ConfigInterface``
         """
         # Call constructors of parent classes.
-        Model.__init__(self, name, Seq2Seq_RNN, config)
+        Model.__init__(self, name, Seq2Seq, config)
 
         # Get input/output mode
         self.input_mode = self.config["input_mode"]

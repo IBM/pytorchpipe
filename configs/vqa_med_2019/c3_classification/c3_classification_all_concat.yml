@@ -95,10 +95,10 @@ pipeline:
 
   # 4th subpipeline: concatenation + FF.
   concat:
-    type: Concatenation
+    type: ConcatenateTensor
     priority: 4.1
     input_streams: [question_activations,image_size_activations,image_activations]
-    # Concatenation 
+    # ConcatenateTensor 
     dim: 1 # default
     input_dims: [[-1,100],[-1,100],[-1,100]]
     output_dims: [-1,300]

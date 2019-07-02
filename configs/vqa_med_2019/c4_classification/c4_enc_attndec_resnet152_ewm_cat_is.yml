@@ -75,7 +75,7 @@ pipeline:
   # Image encoder.
   image_encoder:
     priority: 2.0
-    type: TorchVisionWrapper
+    type: GenericImageEncoder
     model_type: resnet152
     streams:
       inputs: images
@@ -118,7 +118,7 @@ pipeline:
   # Element wise multiplication + FF.
   question_image_fusion:
     priority: 3.1
-    type: ElementWiseMultiplication
+    type: LowRankBilinearPooling
     dropout_rate: 0.5
     streams:
       image_encodings: image_activations
@@ -154,7 +154,7 @@ pipeline:
 
   # Single layer GRU Decoder with attention
   decoder:
-    type: Attn_Decoder_RNN
+    type: AttentionDecoder
     priority: 4
     hidden_size: 100
     use_logsoftmax: False

@@ -25,7 +25,7 @@ from ptp.components.models.model import Model
 from ptp.data_types.data_definition import DataDefinition
 
 
-class MultimodalCompactBilinearPooling(Model):
+class CompactBilinearPooling(Model):
     """
     Element of one of classical baselines for Visual Question Answering.
 
@@ -48,7 +48,7 @@ class MultimodalCompactBilinearPooling(Model):
         :type config: ``ptp.configuration.ConfigInterface``
 
         """
-        super(MultimodalCompactBilinearPooling, self).__init__(name, MultimodalCompactBilinearPooling, config)
+        super(CompactBilinearPooling, self).__init__(name, CompactBilinearPooling, config)
 
         # Get key mappings.
         self.key_image_encodings = self.stream_keys["image_encodings"]

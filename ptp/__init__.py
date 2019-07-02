@@ -5,6 +5,8 @@ from .application import *
 # Components.
 from .components.component import Component
 
+from .components.language import *
+
 from .components.losses import *
 
 from .components.masking import *
@@ -19,9 +21,9 @@ from .components.tasks.text_to_text import *
 
 from .components.publishers import *
 
-from .components.text import *
-
 from .components.transforms import *
+
+from .components.statistics import *
 
 from .components.viewers import *
 

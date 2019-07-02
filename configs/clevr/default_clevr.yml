@@ -96,7 +96,7 @@ pipeline:
 
   #image_viewer:
   #  priority: 100.5
-  #  type: ImageToClassViewer
+  #  type: ImageViewer
   #  streams:
   #    images: inputs
   #    labels: labels

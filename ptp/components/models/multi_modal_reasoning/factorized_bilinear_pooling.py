@@ -15,22 +15,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__author__ = "Tomasz Kornuta"
+__author__ = "Deepta Rajan"
 
 
 import torch
 
 from ptp.components.models.model import Model
 from ptp.data_types.data_definition import DataDefinition
+import torch.nn.functional as F
 
-
-class ElementWiseMultiplication(Model):
+class FactorizedBilinearPooling(Model):
     """
-    Element of one of classical baselines for Visual Question Answering.
-    The model inputs (question and image encodings) are fused via element-wise multiplication and returned (for subsequent classification, done in a separate component e.g. ffn).
+    Element of one of the classical baselines for Visual Question Answering.
+    The multi-modal data is fused via sum-pooling of the element-wise multiplied high-dimensional representations and returned (for subsequent classification, done in a separate component e.g. ffn).
 
-    On the basis of: Jiasen Lu and Xiao Lin and Dhruv Batra and Devi Parikh. "Deeper LSTM and normalized CNN visual question answering model" (2015).
-    """ 
+    On the basis of: Zhou Yu, Jun Yu. "Beyond Bilinear: Generalized Multi-modal Factorized High-order Pooling for Visual Question Answering" (2015).
+    Code: https://github.com/Cadene/block.bootstrap.pytorch/blob/master/block/models/networks/fusions/fusions.py
+    """
     def __init__(self, name, config):
         """
         Initializes the model, creates the required layers.
@@ -41,7 +42,7 @@ class ElementWiseMultiplication(Model):
         :type config: ``ptp.configuration.ConfigInterface``
 
         """
-        super(ElementWiseMultiplication, self).__init__(name, ElementWiseMultiplication, config)
+        super(FactorizedBilinearPooling, self).__init__(name, FactorizedBilinearPooling, config)
 
         # Get key mappings.
         self.key_image_encodings = self.stream_keys["image_encodings"]
@@ -51,11 +52,19 @@ class ElementWiseMultiplication(Model):
         # Retrieve input/output sizes from globals.
         self.image_encoding_size = self.globals["image_encoding_size"]
         self.question_encoding_size = self.globals["question_encoding_size"]
-        self.output_size = self.globals["output_size"]
 
-        # Create the model.
-        self.image_encodings_ff = torch.nn.Linear(self.image_encoding_size, self.output_size)
-        self.question_encodings_ff = torch.nn.Linear(self.question_encoding_size, self.output_size)
+        # Get size of latent space and number of heads from config.
+        self.latent_size = self.config["latent_size"]
+        self.factor = self.config["pool_factor"]
+        # Output feature size
+        self.output_size = self.latent_size
+
+        # Export to globals.
+        self.globals["output_size"] = self.output_size
+
+        # Map image and question encodings to a common latent space of dimension 'latent_size'.
+        self.image_encodings_ff = torch.nn.Linear(self.image_encoding_size, self.latent_size*self.factor)
+        self.question_encodings_ff = torch.nn.Linear(self.question_encoding_size, self.latent_size*self.factor)
 
         # Create activation layer.
         self.activation = torch.nn.ReLU()
@@ -67,10 +76,8 @@ class ElementWiseMultiplication(Model):
         self.dropout = torch.nn.Dropout(dropout_rate)
 
 
-        
-
     def input_data_definitions(self):
-        """ 
+        """
         Function returns a dictionary with definitions of input data that are required by the component.
 
         :return: dictionary containing input data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
@@ -82,7 +89,7 @@ class ElementWiseMultiplication(Model):
 
 
     def output_data_definitions(self):
-        """ 
+        """
         Function returns a dictionary with definitions of output data produced the component.
 
         :return: dictionary containing output data definitions (each of type :py:class:`ptp.utils.DataDefinition`).
@@ -100,23 +107,24 @@ class ElementWiseMultiplication(Model):
         """
 
         # Unpack DataStreams.
-        enc_img = data_streams[self.key_image_encodings]
-        enc_q = data_streams[self.key_question_encodings]
+        enc_img = data_streams[self.key_image_encodings] #[48, 2048]
+        enc_q = data_streams[self.key_question_encodings] #[48, 100]
 
-        # Apply nonlinearities and dropout on images.
-        enc_img = self.activation(enc_img)
-        enc_img = self.dropout(enc_img)
+        # Map image and question encodings to high-dimensional space using FF
+        latent_img = self.dropout(self.image_encodings_ff(enc_img)) # [48, 512]
+        latent_q =  self.dropout(self.question_encodings_ff(enc_q)) # [48, 512]
 
-        # Apply nonlinearities and dropout on questions.
-        enc_q = self.activation(enc_q)
-        enc_q = self.dropout(enc_q)
+        # Element-wise mutliplication of image and question encodings
+        enc_z = latent_img * latent_q # [48, 512]
 
-        # Pass inputs layers mapping them to the same "latent space".
-        latent_img = self.image_encodings_ff(enc_img)
-        latent_q = self.question_encodings_ff(enc_q)
-        
-        # Element wise multiplication.
-        outputs = latent_img * latent_q
+        # Dropout regularization
+        enc_z = self.dropout(enc_z)
+        enc_z = enc_z.view(enc_z.size(0), self.latent_size, self.factor) # [48, 256, 2]
+        # Sum pooling
+        enc_z = enc_z.sum(2) # [48, 256]
+        # Power and L2 normalization
+        enc_z = torch.sqrt(self.activation(enc_z)) - torch.sqrt(self.activation(-enc_z))
+        outputs = F.normalize(enc_z, p=2, dim=1) # [48, 256]
 
         # Add predictions to datadict.
         data_streams.publish({self.key_outputs: outputs})

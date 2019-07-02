@@ -64,7 +64,7 @@ pipeline:
   # Image encoder.
   image_encoder:
     priority: 3.1
-    type: TorchVisionWrapper
+    type: GenericImageEncoder
     streams:
       inputs: images
       outputs: image_activations
@@ -74,9 +74,9 @@ pipeline:
   # 4th subpipeline: concatenation + FF.
   concat:
     priority: 4.1
-    type: Concatenation
+    type: ConcatenateTensor
     input_streams: [question_activations,image_size_activations,image_activations]
-    # Concatenation 
+    # ConcatenateTensor 
     dim: 1 # default
     input_dims: [[-1,100],[-1,10],[-1,100]]
     output_dims: [-1,210]

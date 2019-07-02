@@ -22,7 +22,7 @@ from ptp.components.component import Component
 from ptp.data_types.data_definition import DataDefinition
 
 
-class Concatenation(Component):
+class ConcatenateTensor(Component):
     """
     Class responsible for concatenation of list of input tensors into a single tensor.
 
@@ -40,7 +40,7 @@ class Concatenation(Component):
 
         """
         # Call constructors of parent classes.
-        Component.__init__(self, name, Concatenation, config)
+        Component.__init__(self, name, ConcatenateTensor, config)
 
         # Get key mappings.
         self.key_outputs = self.stream_keys["outputs"]
