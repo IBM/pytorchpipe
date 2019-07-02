@@ -15,29 +15,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__author__ = "Vincent Marois, Tomasz Kornuta"
+__author__ = "Tomasz Kornuta, Vincent Marois"
 
 import torch
 import collections
 
-class DataDict(collections.abc.MutableMapping):
+class DataStreams(collections.abc.MutableMapping):
     """
     - Mapping: A container object that supports arbitrary key lookups and implements the methods ``__getitem__``, \
     ``__iter__`` and ``__len__``.
 
     - Mutable objects can change their value but keep their id() -> ease modifying existing keys' value.
 
-    DataDict: Dict used for storing batches of data by problems.
+    DataStreams: Dict used for storing batches of data by problems.
 
     **This is the main object class used to share data between all components through a worker, starting from problem to loss and visualization.**
     """
 
     def __init__(self, *args, **kwargs):
         """
-        DataDict constructor. Can be initialized in different ways:
+        DataStreams constructor. Can be initialized in different ways:
 
-            >>> data_dict = DataDict()
-            >>> data_dict = DataDict({'inputs': torch.tensor(), 'targets': numpy.ndarray()})
+            >>> data_streams = DataStreams()
+            >>> data_streams = DataStreams({'inputs': torch.tensor(), 'targets': numpy.ndarray()})
             >>> # etc.
 
         :param args: Used to pass a non-keyworded, variable-length argument list.
@@ -62,41 +62,41 @@ class DataDict(collections.abc.MutableMapping):
         .. warning::
 
             `addkey` is set to ``False`` by default as setting it to ``True`` removes the constraints of the\
-            ``DataDict`` and enables it to become mutable.
+            ``DataStreams`` and enables it to become mutable.
         """
         if not addkey and key not in self.keys():
-            msg = 'Cannot modify a non-existing key "{}" in DataDict'.format(key)
+            msg = 'Cannot modify a non-existing key "{}" in DataStreams'.format(key)
             raise KeyError(msg)
         else:
             self.__dict__[key] = value
 
 
-    def extend(self, dict_to_add):
+    def publish(self, dict_to_add):
         """
-        Extends a :py:class:`ptp.utils.DataDict` object by adding (keys,values) from data_definitions.
+        Publishes a new data streams - extends data stream object by adding (keys,values) from data_definitions.
 
         .. warning::
             This is in-place operation, i.e. extends existing object, does not return a new one.
 
-        :param data_dict: :py:class:`ptp.utils.DataDict` object to be extended.
+        :param data_streams: :py:class:`ptp.utils.DataStreams` object to be extended.
 
         :param data_definitions: key-value pairs.
 
         """
         for (key,value) in dict_to_add.items():
             if key in self.keys():
-                msg = "Cannot extend DataDict, as {} already present in its keys".format(key)
+                msg = "Cannot extend DataStreams, as {} already present in its keys".format(key)
                 raise KeyError(msg)
             # Call setitem with "additional argument".
             self.__setitem__(key, value, addkey=True)
 
 
-    def reinitialize(self, dict_to_leave):
+    def reinitialize(self, streams_to_leave):
         """
-        Removes all keys (and associated values) from DatDict EXCEPT the ones passed in ``dict_to_leave``.
+        Removes all streams (keys and associated values) from DataStreams EXCEPT the ones passed in ``streams_to_leave``.
         """
         # Keys to remove.
-        rem_keys =  [key for key in self.keys() if key not in dict_to_leave.keys()]
+        rem_keys =  [key for key in self.keys() if key not in streams_to_leave.keys()]
         # Leave index.
         if 'index' in rem_keys:
             rem_keys.remove('index')
@@ -133,7 +133,7 @@ class DataDict(collections.abc.MutableMapping):
 
         """
         if not delkey:
-            msg = 'Cannot delete key "{}" from DataDict'.format(key)
+            msg = 'Cannot delete key "{}" from DataStreams'.format(key)
             raise KeyError(msg)
         else:
             del self.__dict__[key]
@@ -146,7 +146,7 @@ class DataDict(collections.abc.MutableMapping):
 
     def __str__(self):
         """
-        :return: A simple Dict representation of ``DataDict``.
+        :return: A simple Dict representation of ``DataStreams``.
 
         """
         return str(self.__dict__)
@@ -156,7 +156,7 @@ class DataDict(collections.abc.MutableMapping):
         :return: Echoes class, id, & reproducible representation in the Read–Eval–Print Loop.
 
         """
-        return '{}, DataDict({})'.format(super(DataDict, self).__repr__(), self.__dict__)
+        return '{}, DataStreams({})'.format(super(DataStreams, self).__repr__(), self.__dict__)
 
 
     def to(self, device=None, keys_to_move=None, non_blocking=False):

@@ -65,19 +65,19 @@ class SentenceOneHotEncoder(Component, WordMappings):
             self.key_outputs: DataDefinition([-1, -1, len(self.word_to_ix)], [list, list, torch.Tensor], "Batch of sentences, each represented as a list of vectors [BATCH_SIZE] x [SEQ_LENGTH] x [VOCABULARY_SIZE]"),
             }
 
-    def __call__(self, data_dict):
+    def __call__(self, data_streams):
         """
         Encodes "inputs" in the format of list of tokens (for a single sample)
-        Stores result in "encoded_inputs" field of in data_dict.
+        Stores result in "encoded_inputs" field of in data_streams.
 
-        :param data_dict: :py:class:`ptp.utils.DataDict` object containing (among others):
+        :param data_streams: :py:class:`ptp.utils.DataStreams` object containing (among others):
 
             - "inputs": expected input field containing list of words [BATCH_SIZE] x [SEQ_SIZE] x [string]
 
             - "encoded_targets": added output field containing list of indices [BATCH_SIZE] x [SEQ_SIZE] x [VOCABULARY_SIZE1] 
         """
         # Get inputs to be encoded.
-        inputs = data_dict[self.key_inputs]
+        inputs = data_streams[self.key_inputs]
         outputs_list = []
         # Process samples 1 by one.
         for sample in inputs:
@@ -95,4 +95,4 @@ class SentenceOneHotEncoder(Component, WordMappings):
 
             outputs_list.append(output_sample)
         # Create the returned dict.
-        data_dict.extend({self.key_outputs: outputs_list})
+        data_streams.publish({self.key_outputs: outputs_list})

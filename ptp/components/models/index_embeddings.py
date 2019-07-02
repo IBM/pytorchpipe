@@ -81,23 +81,23 @@ class IndexEmbeddings(Model):
             }
 
 
-    def forward(self, data_dict):
+    def forward(self, data_streams):
         """
         Forward pass  - performs embedding.
 
-        :param data_dict: DataDict({'images',**}), where:
+        :param data_streams: DataStreams({'images',**}), where:
 
             - inputs: expected indexed sentences [BATCH_SIZE x SENTENCE_LENGTH]
             - outputs: added embedded sentences [BATCH_SIZE x SENTENCE_LENGTH x EMBEDDING_SIZE]
 
-        :type data_dict: ``miprometheus.utils.DataDict``
+        :type data_streams: ``miprometheus.utils.DataStreams``
         """
 
-        # Unpack DataDict.
-        inputs = data_dict[self.key_inputs]
+        # Unpack DataStreams.
+        inputs = data_streams[self.key_inputs]
 
         # Embedd inputs.
         embeds = self.embeddings(inputs)
 
         # Add embeddings to datadict.
-        data_dict.extend({self.key_outputs: embeds})
+        data_streams.publish({self.key_outputs: embeds})

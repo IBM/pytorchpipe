@@ -88,31 +88,31 @@ class AccuracyStatistics(Component):
         return {}
 
 
-    def __call__(self, data_dict):
+    def __call__(self, data_streams):
         """
         Call method - empty for all statistics.
         """
         pass
 
 
-    def calculate_accuracy(self, data_dict):
+    def calculate_accuracy(self, data_streams):
         """
         Calculates accuracy equal to mean number of correct classification in a given batch.
 
-        :param data_dict: DataDict containing the targets.
-        :type data_dict: DataDict
+        :param data_streams: DataStreams containing the targets.
+        :type data_streams: DataStreams
 
         :return: Accuracy.
 
         """
         # Get targets.
-        targets = data_dict[self.key_targets].data.cpu().numpy()
+        targets = data_streams[self.key_targets].data.cpu().numpy()
 
         if self.use_prediction_distributions:
             # Get indices of the max log-probability.
-            preds = data_dict[self.key_predictions].max(1)[1].data.cpu().numpy()
+            preds = data_streams[self.key_predictions].max(1)[1].data.cpu().numpy()
         else: 
-            preds = data_dict[self.key_predictions].data.cpu().numpy()
+            preds = data_streams[self.key_predictions].data.cpu().numpy()
 
         # Calculate the correct predictinos.
         correct = np.equal(preds, targets)
@@ -121,7 +121,7 @@ class AccuracyStatistics(Component):
 
         if self.use_masking:
             # Get masks from inputs.
-            masks = data_dict[self.key_masks].data.cpu().numpy()
+            masks = data_streams[self.key_masks].data.cpu().numpy()
             correct = correct * masks
             batch_size = masks.sum()       
         else:
@@ -153,14 +153,14 @@ class AccuracyStatistics(Component):
         stat_col.add_statistics(self.key_accuracy, '{:6.4f}')
         stat_col.add_statistics(self.key_accuracy+'_support', None)
 
-    def collect_statistics(self, stat_col, data_dict):
+    def collect_statistics(self, stat_col, data_streams):
         """
         Collects statistics (accuracy and support set size) for given episode.
 
         :param stat_col: ``StatisticsCollector``.
 
         """
-        acc, batch_size = self.calculate_accuracy(data_dict)
+        acc, batch_size = self.calculate_accuracy(data_streams)
         stat_col[self.key_accuracy] = acc
         stat_col[self.key_accuracy+'_support'] = batch_size
         

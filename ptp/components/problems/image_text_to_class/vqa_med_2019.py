@@ -807,17 +807,17 @@ class VQAMED2019(Problem):
         :param index: index of the sample to return.
         :type index: int
 
-        :return: DataDict({'indices', 'images', 'images_ids','questions', 'answers', 'category_ids', 'image_sizes'})
+        :return: DataStreams({'indices', 'images', 'images_ids','questions', 'answers', 'category_ids', 'image_sizes'})
         """
         # Get item.
         item = self.dataset[self.ix[index]]
 
         # Create the resulting sample (data dict).
-        data_dict = self.create_data_dict(index)
+        data_streams = self.create_data_streams(index)
 
         # Load and stream the image ids.
         img_id = item[self.key_image_ids]
-        data_dict[self.key_image_ids] = img_id
+        data_streams[self.key_image_ids] = img_id
 
         # Load the adequate image - only when required.
         if self.stream_images:
@@ -831,10 +831,10 @@ class VQAMED2019(Problem):
                 img, img_size = self.get_image(img_id, item["image_folder"])
 
             # Image related variables.
-            data_dict[self.key_images] = img
+            data_streams[self.key_images] = img
 
             # Scale width and height to range (0,1).
-            data_dict[self.key_image_sizes] = img_size
+            data_streams[self.key_image_sizes] = img_size
 
         # Apply question transformations.
         preprocessed_question = item[self.key_questions]
@@ -846,23 +846,23 @@ class VQAMED2019(Problem):
             if 'random_shuffle_words' in self.question_preprocessing:
                 preprocessed_question = self.random_shuffle_words(preprocessed_question)
         # Return question.
-        data_dict[self.key_questions] = preprocessed_question
+        data_streams[self.key_questions] = preprocessed_question
 
         # Return answer. 
         preprocessed_answer = item[self.key_answers]
-        data_dict[self.key_answers] = preprocessed_answer
+        data_streams[self.key_answers] = preprocessed_answer
 
         # Question category related variables.
         # Check if this is binary question.
         if self.predict_yes_no(item[self.key_questions]):
-            data_dict[self.key_category_ids] = 4 # Binary.
-            data_dict[self.key_category_names] = self.category_idx_to_word[4]
+            data_streams[self.key_category_ids] = 4 # Binary.
+            data_streams[self.key_category_names] = self.category_idx_to_word[4]
         else:
-            data_dict[self.key_category_ids] = item[self.key_category_ids]
-            data_dict[self.key_category_names] = self.category_idx_to_word[item[self.key_category_ids]]
+            data_streams[self.key_category_ids] = item[self.key_category_ids]
+            data_streams[self.key_category_names] = self.category_idx_to_word[item[self.key_category_ids]]
 
         # Return sample.
-        return data_dict
+        return data_streams
 
     def predict_yes_no(self, qtext):
         """
@@ -878,30 +878,30 @@ class VQAMED2019(Problem):
 
     def collate_fn(self, batch):
         """
-        Combines a list of DataDict (retrieved with :py:func:`__getitem__`) into a batch.
+        Combines a list of DataStreams (retrieved with :py:func:`__getitem__`) into a batch.
 
         :param batch: list of individual samples to combine
         :type batch: list
 
-        :return: DataDict({'indices', 'images', 'images_ids','questions', 'answers', 'category_ids', 'image_sizes'})
+        :return: DataStreams({'indices', 'images', 'images_ids','questions', 'answers', 'category_ids', 'image_sizes'})
 
         """
         # Collate indices.
-        data_dict = self.create_data_dict([sample[self.key_indices] for sample in batch])
+        data_streams = self.create_data_streams([sample[self.key_indices] for sample in batch])
 
         # Stack images.
-        data_dict[self.key_image_ids] = [item[self.key_image_ids] for item in batch]
+        data_streams[self.key_image_ids] = [item[self.key_image_ids] for item in batch]
         if self.stream_images:
-            data_dict[self.key_images] = torch.stack([item[self.key_images] for item in batch]).type(torch.FloatTensor)
-            data_dict[self.key_image_sizes] = torch.stack([item[self.key_image_sizes] for item in batch]).type(torch.FloatTensor)
+            data_streams[self.key_images] = torch.stack([item[self.key_images] for item in batch]).type(torch.FloatTensor)
+            data_streams[self.key_image_sizes] = torch.stack([item[self.key_image_sizes] for item in batch]).type(torch.FloatTensor)
 
         # Collate lists/lists of lists.
-        data_dict[self.key_questions] = [item[self.key_questions] for item in batch]
-        data_dict[self.key_answers] = [item[self.key_answers] for item in batch]
+        data_streams[self.key_questions] = [item[self.key_questions] for item in batch]
+        data_streams[self.key_answers] = [item[self.key_answers] for item in batch]
 
         # Stack categories.
-        data_dict[self.key_category_ids] = torch.tensor([item[self.key_category_ids] for item in batch])
-        data_dict[self.key_category_names] = [item[self.key_category_names] for item in batch]
+        data_streams[self.key_category_ids] = torch.tensor([item[self.key_category_ids] for item in batch])
+        data_streams[self.key_category_names] = [item[self.key_category_names] for item in batch]
 
         # Return collated dict.
-        return data_dict
+        return data_streams

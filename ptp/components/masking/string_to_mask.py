@@ -69,19 +69,19 @@ class StringToMask(Component):
             }
 
 
-    def __call__(self, data_dict):
+    def __call__(self, data_streams):
         """
         Encodes "inputs" in the format of a single tensor.
-        Stores reshaped tensor in "outputs" field of in data_dict.
+        Stores reshaped tensor in "outputs" field of in data_streams.
 
-        :param data_dict: :py:class:`ptp.utils.DataDict` object containing (among others):
+        :param data_streams: :py:class:`ptp.utils.DataStreams` object containing (among others):
 
             - "inputs": expected input field containing tensor [BATCH_SIZE x ...]
 
             - "outputs": added output field containing tensor [BATCH_SIZE x ...] 
         """
         # Get inputs strings.
-        strings = data_dict[self.key_strings]
+        strings = data_streams[self.key_strings]
 
         masks = torch.zeros(len(strings), requires_grad=False).type(self.app_state.ByteTensor)
 
@@ -93,7 +93,7 @@ class StringToMask(Component):
                 masks[i] = 1
         
         # Extend the dict by returned stream with masks.
-        data_dict.extend({
+        data_streams.publish({
             self.key_masks: masks
             })
 

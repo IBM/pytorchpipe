@@ -88,16 +88,16 @@ class SelfAttention(Model):
             self.key_outputs: DataDefinition([-1, self.output_size], [torch.Tensor], "Batch of outputs [BATCH_SIZE x OUTPUT_SIZE]")
             }
 
-    def forward(self, data_dict):
+    def forward(self, data_streams):
         """
         Main forward pass of the model.
 
-        :param data_dict: DataDict({'images',**})
-        :type data_dict: ``ptp.dadatypes.DataDict``
+        :param data_streams: DataStreams({'images',**})
+        :type data_streams: ``ptp.dadatypes.DataStreams``
         """
 
-        # Unpack DataDict.
-        input_enc = data_dict[self.key_question_encodings] # [batch, num_words, embed_dim] # Dense prediction from RNN
+        # Unpack DataStreams.
+        input_enc = data_streams[self.key_question_encodings] # [batch, num_words, embed_dim] # Dense prediction from RNN
         batch_size = input_enc.size()[0] # [48, 8, 100]
 
         # Attention computed as two FF layers with ReLU activation and softmax for probabilities ==> softmax(FF(ReLU(FF(input))))
@@ -112,4 +112,4 @@ class SelfAttention(Model):
         # outputs = torch.sum(input_enc_weighted,1)/self.num_attention_heads
 
         # Add predictions to datadict.
-        data_dict.extend({self.key_outputs: outputs})
+        data_streams.publish({self.key_outputs: outputs})

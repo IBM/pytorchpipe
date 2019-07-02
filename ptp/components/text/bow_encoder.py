@@ -68,18 +68,18 @@ class BOWEncoder(Component):
             self.key_outputs: DataDefinition([-1, self.bow_size], [torch.Tensor], "Batch of sentences, each represented as a single vector [BATCH_SIZE x ITEM_SIZE] (agnostic to item size)")
             }
 
-    def __call__(self, data_dict):
+    def __call__(self, data_streams):
         """
         Encodes batch, or, in fact, only one field of batch ("inputs").
-        Stores result in "outputs" field of data_dict.
+        Stores result in "outputs" field of data_streams.
 
-        :param data_dict: :py:class:`ptp.utils.DataDict` object containing (among others):
+        :param data_streams: :py:class:`ptp.utils.DataStreams` object containing (among others):
 
             - "inputs": expected input containing list of (list of tokens) [BATCH SIZE] x [SEQ_LEN] x [ITEM_SIZE]
             - "outputs": added output tensor with encoded words [BATCH_SIZE x ITEM_SIZE]
         """
         # Get inputs to be encoded.
-        inputs = data_dict[self.key_inputs]
+        inputs = data_streams[self.key_inputs]
         outputs_list = []
         # Process samples 1 by one.
         for sample in inputs:
@@ -90,7 +90,7 @@ class BOWEncoder(Component):
         # Concatenate output tensors.
         outputs = torch.cat(outputs_list, dim=0)
         # Add result to the data dict.
-        data_dict.extend({self.key_outputs: outputs})
+        data_streams.publish({self.key_outputs: outputs})
 
     def encode_sample(self, list_of_tokens):
         """

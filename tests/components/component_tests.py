@@ -58,26 +58,26 @@ class TestComponent(unittest.TestCase):
         self.problem = MockupProblem("test_problem", config)
         self.component = MockupComponent("test_component", config)
 
-    def test_create_data_dict_key_present(self):
+    def test_create_data_streams_key_present(self):
         """ Tests whether the created data dict contains required keys. """
-        data_dict = self.problem.create_data_dict(1)
+        data_streams = self.problem.create_data_streams(1)
         # Check presence of index.
-        self.assertEqual(data_dict['indices'], 1) # Even if we didn't explicitly indicated that in definitions!
-        self.assertEqual(data_dict['inputs'], None)
+        self.assertEqual(data_streams['indices'], 1) # Even if we didn't explicitly indicated that in definitions!
+        self.assertEqual(data_streams['inputs'], None)
         # And targets is not present (yet)...
         with self.assertRaises(KeyError):
-            data_dict['targets']
+            data_streams['targets']
 
-    def test_extend_data_dict_key_present(self):
+    def test_extend_data_streams_key_present(self):
         """ Tests whether the created data dict contains required keys. """
-        data_dict = self.problem.create_data_dict(1)
-        # Extend data_dict.
-        data_dict.extend({"targets": 3})
+        data_streams = self.problem.create_data_streams(1)
+        # Extend data_streams.
+        data_streams.publish({"targets": 3})
 
         # Check presence of all "streams".
-        self.assertEqual(data_dict['indices'], 1) # Even if we didn't explicitly indicated that in definitions!
-        self.assertEqual(data_dict['inputs'], None)
-        self.assertEqual(data_dict['targets'], 3)
+        self.assertEqual(data_streams['indices'], 1) # Even if we didn't explicitly indicated that in definitions!
+        self.assertEqual(data_streams['inputs'], None)
+        self.assertEqual(data_streams['targets'], 3)
 
     def test_global_set_get(self):
         """ Tests setting and getting global value. """

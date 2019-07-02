@@ -68,19 +68,19 @@ class WordDecoder(Component, WordMappings):
             self.key_outputs: DataDefinition([-1, 1], [list, str], "Batch of words, each represented as a single string [BATCH_SIZE] x [string]")
             }
 
-    def __call__(self, data_dict):
+    def __call__(self, data_streams):
         """
         Encodes "inputs" in the format of a single word.
-        Stores result in "outputs" field of in data_dict.
+        Stores result in "outputs" field of in data_streams.
 
-        :param data_dict: :py:class:`ptp.utils.DataDict` object containing (among others):
+        :param data_streams: :py:class:`ptp.utils.DataStreams` object containing (among others):
 
             - "inputs": expected input field containing tensor [BATCH_SIZE x ITEM_SIZE]
 
             - "outputs": added output field containing list of words [BATCH_SIZE] x [string] 
         """
         # Get inputs to be encoded.
-        inputs = data_dict[self.key_inputs]
+        inputs = data_streams[self.key_inputs]
         outputs_list = []
         # Process samples 1 by 1.
         for sample in inputs.chunk(inputs.size(0), 0):
@@ -89,5 +89,5 @@ class WordDecoder(Component, WordMappings):
             output_sample = self.ix_to_word[max_index]
             outputs_list.append(output_sample)
         # Create the returned dict.
-        data_dict.extend({self.key_outputs: outputs_list})
+        data_streams.publish({self.key_outputs: outputs_list})
 

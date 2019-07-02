@@ -75,21 +75,21 @@ class ImageToClassViewer(Component):
         return {
             }
 
-    def __call__(self, data_dict):
+    def __call__(self, data_streams):
         """
         Shows a sample from the batch.
 
-        :param data_dict: :py:class:`ptp.utils.DataDict` object.
+        :param data_streams: :py:class:`ptp.utils.DataStreams` object.
 
         """
         # Use worker interval.
         if self.app_state.episode % self.app_state.args.logging_interval == 0:
 
             # Get inputs
-            indices = data_dict[self.key_indices]
-            images = data_dict[self.key_images]
-            labels = data_dict[self.key_labels]
-            answers = data_dict[self.key_answers]
+            indices = data_streams[self.key_indices]
+            images = data_streams[self.key_images]
+            labels = data_streams[self.key_labels]
+            answers = data_streams[self.key_answers]
 
             # Get sample number.
             if self.sample_number == -1:

@@ -91,17 +91,17 @@ class ElementWiseMultiplication(Model):
             self.key_outputs: DataDefinition([-1, self.output_size], [torch.Tensor], "Batch of outputs [BATCH_SIZE x OUTPUT_SIZE]")
             }
 
-    def forward(self, data_dict):
+    def forward(self, data_streams):
         """
         Main forward pass of the model.
 
-        :param data_dict: DataDict({'images',**})
-        :type data_dict: ``ptp.dadatypes.DataDict``
+        :param data_streams: DataStreams({'images',**})
+        :type data_streams: ``ptp.dadatypes.DataStreams``
         """
 
-        # Unpack DataDict.
-        enc_img = data_dict[self.key_image_encodings]
-        enc_q = data_dict[self.key_question_encodings]
+        # Unpack DataStreams.
+        enc_img = data_streams[self.key_image_encodings]
+        enc_q = data_streams[self.key_question_encodings]
 
         # Apply nonlinearities and dropout on images.
         enc_img = self.activation(enc_img)
@@ -119,4 +119,4 @@ class ElementWiseMultiplication(Model):
         outputs = latent_img * latent_q
 
         # Add predictions to datadict.
-        data_dict.extend({self.key_outputs: outputs})
+        data_streams.publish({self.key_outputs: outputs})

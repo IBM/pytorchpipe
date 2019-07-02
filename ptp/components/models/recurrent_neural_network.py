@@ -259,11 +259,11 @@ class RecurrentNeuralNetwork(Model):
 
         return d
 
-    def forward(self, data_dict):
+    def forward(self, data_streams):
         """
         Forward pass of the model.
 
-        :param data_dict: DataDict({'inputs', 'predictions ...}), where:
+        :param data_streams: DataStreams({'inputs', 'predictions ...}), where:
 
             - inputs: expected inputs [BATCH_SIZE x SEQ_LEN x INPUT_SIZE],
             - predictions: returned output with predictions (log_probs) [BATCH_SIZE x SEQ_LEN x PREDICTION_SIZE]
@@ -275,13 +275,13 @@ class RecurrentNeuralNetwork(Model):
         # Get inputs
         if "None" in self.input_mode:
             # Must be in autoregressive mode - retrieve batch_size from initial hidden state from encoder.
-            batch_size = data_dict[self.key_input_state][0].shape[1]
+            batch_size = data_streams[self.key_input_state][0].shape[1]
             # Set zero inputs [BATCH_SIZE x SEQ_LEN x INPUT_SIZE].
             inputs = torch.zeros(batch_size, self.hidden_size, requires_grad=False).type(self.app_state.FloatTensor)
 
         else:
             # Get inputs [BATCH_SIZE x SEQ_LEN x INPUT_SIZE]
-            inputs = data_dict[self.key_inputs]
+            inputs = data_streams[self.key_inputs]
             if inputs.dim() == 2:
                 inputs = inputs.unsqueeze(1)
             batch_size = inputs.shape[0]
@@ -290,7 +290,7 @@ class RecurrentNeuralNetwork(Model):
         # Get initial state, depending on the settings.
         if self.initial_state == "Input":
             # Initialize hidden state from inputs - as last hidden state from external component.
-            hidden = data_dict[self.key_input_state]
+            hidden = data_streams[self.key_input_state]
             # Flip batch and num_layer dims so batch will be third/second!
             if self.cell_type  == 'LSTM':
                 # For LSTM: [BATCH_SIZE x NUM_LAYERS x 2 x HIDDEN_SIZE]  -> [2 x NUM_LAYERS x BATCH_SIZE x HIDDEN_SIZE]
@@ -325,14 +325,14 @@ class RecurrentNeuralNetwork(Model):
                 if self.use_logsoftmax:
                     outputs = self.log_softmax(outputs)
                 # Add predictions to datadict.
-                data_dict.extend({self.key_predictions: outputs})
+                data_streams.publish({self.key_predictions: outputs})
             elif self.prediction_mode == "Last":
                 # Take only the last activations.
                 outputs = activations_partial.squeeze(1)
                 if self.use_logsoftmax:
                     outputs = self.log_softmax(outputs)
                 # Add predictions to datadict.
-                data_dict.extend({self.key_predictions: outputs})
+                data_streams.publish({self.key_predictions: outputs})
 
         else:
             # Normal mode - feed the entire input sequence at once
@@ -347,7 +347,7 @@ class RecurrentNeuralNetwork(Model):
                     outputs = self.log_softmax(outputs)
 
                 # Add predictions to datadict.
-                data_dict.extend({self.key_predictions: outputs})
+                data_streams.publish({self.key_predictions: outputs})
             elif self.prediction_mode == "Last":
                 outputs = self.activation_to_output_pass(activations.contiguous()[:, -1, :].unsqueeze(1))
                 outputs = outputs.squeeze(1)
@@ -357,7 +357,7 @@ class RecurrentNeuralNetwork(Model):
                     outputs = self.log_softmax(outputs)
                     
                 # Add predictions to datadict.
-                data_dict.extend({self.key_predictions: outputs})
+                data_streams.publish({self.key_predictions: outputs})
             elif self.prediction_mode == "None":
                 # Nothing, since we don't want to keep the RNN's outputs
                 pass
@@ -371,4 +371,4 @@ class RecurrentNeuralNetwork(Model):
                 # For others: [NUM_LAYERS x BATCH_SIZE x HIDDEN_SIZE] -> [BATCH_SIZE x NUM_LAYERS x HIDDEN_SIZE] 
                 hidden = hidden.transpose(0,1)
             # Export last hidden state.
-            data_dict.extend({self.key_output_state: hidden})
+            data_streams.publish({self.key_output_state: hidden})

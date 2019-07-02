@@ -48,13 +48,13 @@ class TestProblem(unittest.TestCase):
         config = ConfigInterface()
         self.problem = MockupProblem("test", config)
 
-    def test_crete_data_dict_key_present(self):
+    def test_crete_data_streams_key_present(self):
         """ Tests whether the created data dict contains required keys. """
-        data_dict = self.problem.create_data_dict(1)
+        data_streams = self.problem.create_data_streams(1)
         # Check presence of index.
-        self.assertEqual(data_dict['indices'], 1) # Even if we didn't explicitly indicated that in definitions!
-        self.assertEqual(data_dict['inputs'], None)
-        self.assertEqual(data_dict['targets'], None)
+        self.assertEqual(data_streams['indices'], 1) # Even if we didn't explicitly indicated that in definitions!
+        self.assertEqual(data_streams['inputs'], None)
+        self.assertEqual(data_streams['targets'], None)
 
 #if __name__ == "__main__":
 #    unittest.main()

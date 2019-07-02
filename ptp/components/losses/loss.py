@@ -52,7 +52,7 @@ class Loss(Component):
 
     def loss_keys(self):
         """ 
-        Function returns a list containing keys used to return losses in DataDict.
+        Function returns a list containing keys used to return losses in DataStreams.
         Those keys will be used to find objects that will be roots for backpropagation of gradients.
 
         :return: list of keys associated with losses returned by the component.
@@ -70,14 +70,14 @@ class Loss(Component):
         # Add loss statistics with formatting.
         stat_col.add_statistics(self.key_loss, '{:12.10f}')
 
-    def collect_statistics(self, stat_col, data_dict):
+    def collect_statistics(self, stat_col, data_streams):
         """
         Collects statistics (loss) for given episode.
 
         :param stat_col: ``StatisticsCollector``.
 
         """
-        stat_col[self.key_loss] = data_dict[self.key_loss].item()
+        stat_col[self.key_loss] = data_streams[self.key_loss].item()
 
     def add_aggregators(self, stat_agg):
         """

@@ -165,24 +165,24 @@ class TorchVisionWrapper(Model):
                 self.key_outputs: DataDefinition([-1, self.output_size], [torch.Tensor], "Batch of outputs, each represented as probability distribution over classes [BATCH_SIZE x PREDICTION_SIZE]")
                 }
 
-    def forward(self, data_dict):
+    def forward(self, data_streams):
         """
         Main forward pass of the model.
 
-        :param data_dict: DataDict({'inputs', ....}), where:
+        :param data_streams: DataStreams({'inputs', ....}), where:
 
             - inputs: expected stream containing images [BATCH_SIZE x IMAGE_DEPTH x IMAGE_HEIGHT x IMAGE WIDTH]
             - outpus: added stream containing outputs [BATCH_SIZE x PREDICTION_SIZE]
 
-        :type data_dict: ``ptp.data_types.DataDict``
+        :type data_streams: ``ptp.data_types.DataStreams``
 
         """
-        # Unpack DataDict.
-        img = data_dict[self.key_inputs]
+        # Unpack DataStreams.
+        img = data_streams[self.key_inputs]
 
         #print("{}: input shape: {}, device: {}\n".format(self.name, img.shape, img.device))
 
         outputs = self.model(img)
 
         # Add outputs to datadict.
-        data_dict.extend({self.key_outputs: outputs})
+        data_streams.publish({self.key_outputs: outputs})

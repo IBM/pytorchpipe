@@ -137,12 +137,12 @@ class WiLYNGramLanguageModeling(Problem):
         :param index: index of the sample to return.
         :type index: int
 
-        :return: ``DataDict({'inputs','targets'})``
+        :return: ``DataStreams({'inputs','targets'})``
 
         """
-        # Return data_dict.
-        data_dict = self.create_data_dict(index)
-        data_dict[self.key_inputs] = ' '.join(self.ngrams[index][:self.context])
-        data_dict[self.key_targets] = self.ngrams[index][-1] # Last word
-        #print("problem: context = {} target = {}".format(data_dict[self.key_inputs], data_dict[self.key_targets]))
-        return data_dict
+        # Return data_streams.
+        data_streams = self.create_data_streams(index)
+        data_streams[self.key_inputs] = ' '.join(self.ngrams[index][:self.context])
+        data_streams[self.key_targets] = self.ngrams[index][-1] # Last word
+        #print("problem: context = {} target = {}".format(data_streams[self.key_inputs], data_streams[self.key_targets]))
+        return data_streams

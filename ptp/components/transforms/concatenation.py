@@ -86,19 +86,19 @@ class Concatenation(Component):
             }
 
 
-    def __call__(self, data_dict):
+    def __call__(self, data_streams):
         """
         Encodes "inputs" in the format of a single tensor.
-        Stores reshaped tensor in "outputs" field of in data_dict.
+        Stores reshaped tensor in "outputs" field of in data_streams.
 
-        :param data_dict: :py:class:`ptp.utils.DataDict` object containing (among others):
+        :param data_streams: :py:class:`ptp.utils.DataStreams` object containing (among others):
 
             - "inputs": expected input field containing tensor [BATCH_SIZE x ...]
 
             - "outputs": added output field containing tensor [BATCH_SIZE x ...] 
         """
         # Get inputs to be concatentated.
-        inputs = [data_dict[stream_key] for stream_key in self.input_stream_keys]
+        inputs = [data_streams[stream_key] for stream_key in self.input_stream_keys]
 
         #print("{}: input shape: {}, device: {}\n".format(self.name, [input.shape for input in inputs], [input.device for input in inputs]))
 
@@ -107,5 +107,5 @@ class Concatenation(Component):
         outputs = torch.cat(inputs, dim=self.dim)
 
         # Create the returned dict.
-        data_dict.extend({self.key_outputs: outputs})
+        data_streams.publish({self.key_outputs: outputs})
 

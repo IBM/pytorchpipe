@@ -203,29 +203,29 @@ class TranslationPairs(Problem):
         :param index: index of the sample to return.
         :type index: int
 
-        :return: ``DataDict({'indices', sources','targets'})``
+        :return: ``DataStreams({'indices', sources','targets'})``
 
         """
-        # Return data_dict.
-        data_dict = self.create_data_dict(index)
-        data_dict[self.key_sources] = self.sentences_source[index]
-        data_dict[self.key_targets] = self.sentences_target[index]
-        return data_dict
+        # Return data_streams.
+        data_streams = self.create_data_streams(index)
+        data_streams[self.key_sources] = self.sentences_source[index]
+        data_streams[self.key_targets] = self.sentences_target[index]
+        return data_streams
 
     def collate_fn(self, batch):
         """
         Generates a batch of samples from a list of individuals samples retrieved by :py:func:`__getitem__`.
 
-        :param batch: List of :py:class:`ptp.utils.DataDict` retrieved by :py:func:`__getitem__`
+        :param batch: List of :py:class:`ptp.utils.DataStreams` retrieved by :py:func:`__getitem__`
         :type batch: list
 
-        :return: DataDict containing the created batch.
+        :return: DataStreams containing the created batch.
 
         """
         # Collate indices.
-        data_dict = self.create_data_dict([sample[self.key_indices] for sample in batch])
+        data_streams = self.create_data_streams([sample[self.key_indices] for sample in batch])
         # Collate sources.
-        data_dict[self.key_sources] = [sample[self.key_sources] for sample in batch]
-        data_dict[self.key_targets] = [sample[self.key_targets] for sample in batch]
-        return data_dict
+        data_streams[self.key_sources] = [sample[self.key_sources] for sample in batch]
+        data_streams[self.key_targets] = [sample[self.key_targets] for sample in batch]
+        return data_streams
 

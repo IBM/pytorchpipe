@@ -219,7 +219,7 @@ class Worker(object):
         """
 
 
-    def collect_all_statistics(self, problem_mgr, pipeline_mgr, data_dict, stat_col):
+    def collect_all_statistics(self, problem_mgr, pipeline_mgr, data_streams, stat_col):
         """
         Function that collects statistics
 
@@ -228,8 +228,8 @@ class Worker(object):
 
         :param problem_mgr: Problem manager.
 
-        :param data_dict: contains the batch of samples to pass through the pipeline.
-        :type data_dict: ``DataDict``
+        :param data_streams: contains the batch of samples to pass through the pipeline.
+        :type data_streams: ``DataStreams``
 
         :param stat_col: statistics collector used for logging accuracy etc.
         :type stat_col: ``StatisticsCollector``
@@ -241,8 +241,8 @@ class Worker(object):
             stat_col['epoch'] = self.app_state.epoch
 
         # Collect rest of statistics.
-        problem_mgr.problem.collect_statistics(stat_col, data_dict)
-        pipeline_mgr.collect_statistics(stat_col, data_dict)
+        problem_mgr.problem.collect_statistics(stat_col, data_streams)
+        pipeline_mgr.collect_statistics(stat_col, data_streams)
 
         
 

@@ -23,10 +23,10 @@ from torch.nn.parallel.replicate import replicate
 from torch.nn.parallel.parallel_apply import parallel_apply
 
 
-from ptp.data_types.data_dict import DataDict
+from ptp.data_types.data_streams import DataStreams
 
 
-def datadict_scatter(inputs, target_gpus, dim=0):
+def data_streams_scatter(inputs, target_gpus, dim=0):
     r"""
     Slices tensors into approximately equal chunks and
     distributes them across given GPUs. Duplicates
@@ -41,7 +41,7 @@ def datadict_scatter(inputs, target_gpus, dim=0):
             return list(map(list, zip(*map(scatter_map, obj))))
         if isinstance(obj, dict) and len(obj) > 0:
             return list(map(type(obj), zip(*map(scatter_map, obj.items()))))
-        if isinstance(obj, DataDict) and len(obj) > 0:
+        if isinstance(obj, DataStreams) and len(obj) > 0:
             return list(map(type(obj), zip(*map(scatter_map, obj.items()))))    
         # Return "unscattered" object for all GPUs.
         # This seems to be the cause of the issue for SentenceEmbeddings!
@@ -59,10 +59,10 @@ def datadict_scatter(inputs, target_gpus, dim=0):
         scatter_map = None
 
 
-def datadict_scatter_kwargs(inputs, kwargs, target_gpus, dim=0):
+def data_streams_scatter_kwargs(inputs, kwargs, target_gpus, dim=0):
     r"""Scatter with support for kwargs dictionary"""
-    inputs = datadict_scatter(inputs, target_gpus, dim) if inputs else []
-    kwargs = datadict_scatter(kwargs, target_gpus, dim) if kwargs else []
+    inputs = data_streams_scatter(inputs, target_gpus, dim) if inputs else []
+    kwargs = data_streams_scatter(kwargs, target_gpus, dim) if kwargs else []
     if len(inputs) < len(kwargs):
         inputs.extend([() for _ in range(len(kwargs) - len(inputs))])
     elif len(kwargs) < len(inputs):
@@ -72,7 +72,7 @@ def datadict_scatter_kwargs(inputs, kwargs, target_gpus, dim=0):
     return inputs, kwargs
 
 
-def datadict_gather(outputs, target_device, dim=0):
+def data_streams_gather(outputs, target_device, dim=0):
     r"""
     Gathers tensors from different GPUs on a specified device
       (-1 means the CPU).
@@ -84,7 +84,7 @@ def datadict_gather(outputs, target_device, dim=0):
         if out is None:
             return None
 
-        if isinstance(out, DataDict):
+        if isinstance(out, DataStreams):
             if not all((len(out) == len(d) for d in outputs)):
                 raise ValueError('All dicts must have the same number of keys')
             return type(out)(((k, gather_map([d[k] for d in outputs]))
@@ -106,23 +106,23 @@ def datadict_gather(outputs, target_device, dim=0):
         gather_map = None
 
 
-class DataDictParallel(torch.nn.DataParallel):
+class DataStreamsParallel(torch.nn.DataParallel):
     """
-    Modified DataParallel wrapper enabling operation on DataDicts.
+    Modified DataParallel wrapper enabling operation on DataStreamss.
     
     .. warning:
         Compatible with PyTorch v1.0.1 !!
 
     """
     def __init__(self, module, device_ids=None, output_device=None, dim=0):
-        super(DataDictParallel, self).__init__(module, device_ids, output_device, dim)
+        super(DataStreamsParallel, self).__init__(module, device_ids, output_device, dim)
 
     def forward(self, *inputs, **kwargs):
         """
-        Performs "parallelized forward" pass by scattering batch into several batches, distributing models on different GPUs, performing parallel pass and gathering results into a single (returned) DataDict.
+        Performs "parallelized forward" pass by scattering batch into several batches, distributing models on different GPUs, performing parallel pass and gathering results into a single (returned) DataStreams.
 
         ..warning:
-            As the "external" operations are changing inputs to tuple of DataDicts, extension of main DataDict must be done "outside" of this method.
+            As the "external" operations are changing inputs to tuple of DataStreamss, extension of main DataStreams must be done "outside" of this method.
         """
 
         # Simple processing.
@@ -135,7 +135,7 @@ class DataDictParallel(torch.nn.DataParallel):
         # Preprocessing: get only the inputs important for to the wrapped model (optimization).
         inputs_tuple = []
         for i, item in enumerate(inputs):
-            input_dict = DataDict({key: value for key,value in item.items() if key in self.module.input_data_definitions().keys()})
+            input_dict = DataStreams({key: value for key,value in item.items() if key in self.module.input_data_definitions().keys()})
             inputs_tuple.append(input_dict)
         # Convert to tuple.
         inputs_tuple = tuple(inputs_tuple)
@@ -152,7 +152,7 @@ class DataDictParallel(torch.nn.DataParallel):
         # Gather tuple. This cannot be done "in place"!
         gathered_tuple = self.gather(inputs_tuple, self.output_device)
 
-        # Return 0-th tuple, i.e. a single DataDict on device 0.
+        # Return 0-th tuple, i.e. a single DataStreams on device 0.
         return gathered_tuple[0]
 
 
@@ -160,13 +160,13 @@ class DataDictParallel(torch.nn.DataParallel):
         return replicate(module, device_ids)
 
     def scatter(self, inputs, kwargs, device_ids):
-        return datadict_scatter_kwargs(inputs, kwargs, device_ids, dim=self.dim)
+        return data_streams_scatter_kwargs(inputs, kwargs, device_ids, dim=self.dim)
 
     def parallel_apply(self, replicas, inputs, kwargs):
         return parallel_apply(replicas, inputs, kwargs, self.device_ids[:len(replicas)])
 
     def gather(self, outputs, output_device):
-        return datadict_gather(outputs, output_device, dim=self.dim)
+        return data_streams_gather(outputs, output_device, dim=self.dim)
 
     def add_statistics(self, stat_col):
         """
@@ -177,16 +177,16 @@ class DataDictParallel(torch.nn.DataParallel):
         self.module.add_statistics(stat_col)
 
 
-    def collect_statistics(self, stat_col, data_dict):
+    def collect_statistics(self, stat_col, data_streams):
         """
         Collects statistics for the wrapped model.
 
         :param stat_col: :py:class:`ptp.utils.StatisticsCollector`.
 
-        :param data_dict: ``DataDict`` containing inputs, targets etc.
-        :type data_dict: :py:class:`ptp.core_types.DataDict`
+        :param data_streams: ``DataStreams`` containing inputs, targets etc.
+        :type data_streams: :py:class:`ptp.data_types.DataStreams`
         """
-        self.module.collect_statistics(stat_col, data_dict)
+        self.module.collect_statistics(stat_col, data_streams)
 
 
     def add_aggregators(self, stat_agg):

@@ -124,17 +124,17 @@ class FeedForwardNetwork(Model):
             self.key_predictions: DataDefinition(([-1] * (self.dimensions -1)) + [self.prediction_size], [torch.Tensor], "Batch of predictions, each represented as probability distribution over classes [BATCH_SIZE x ... x PREDICTION_SIZE]")
             }
 
-    def forward(self, data_dict):
+    def forward(self, data_streams):
         """
         Forward pass of the model.
 
-        :param data_dict: DataDict({'inputs', 'predictions ...}), where:
+        :param data_streams: DataStreams({'inputs', 'predictions ...}), where:
 
             - inputs: expected inputs [BATCH_SIZE x ... x INPUT_SIZE],
             - predictions: returned output with predictions (log_probs) [BATCH_SIZE x ... x NUM_CLASSES]
         """
         # Get inputs.
-        x = data_dict[self.key_inputs]
+        x = data_streams[self.key_inputs]
         
         #print("{}: input shape: {}, device: {}\n".format(self.name, x.shape, x.device))
 
@@ -154,4 +154,4 @@ class FeedForwardNetwork(Model):
         x = x.view(*origin_shape[0:self.dimensions-1], -1)
 
         # Add predictions to datadict.
-        data_dict.extend({self.key_predictions: x})
+        data_streams.publish({self.key_predictions: x})

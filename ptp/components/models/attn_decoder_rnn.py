@@ -173,22 +173,22 @@ class Attn_Decoder_RNN(Model):
         
         return d
 
-    def forward(self, data_dict):
+    def forward(self, data_streams):
         """
         Forward pass of the model.
 
-        :param data_dict: DataDict({'inputs', 'predictions ...}), where:
+        :param data_streams: DataStreams({'inputs', 'predictions ...}), where:
 
             - inputs: expected inputs [BATCH_SIZE x SEQ_LEN x INPUT_SIZE],
             - predictions: returned output with predictions (log_probs) [BATCH_SIZE x SEQ_LEN x PREDICTION_SIZE]
         """
         
-        inputs = data_dict[self.key_inputs]
+        inputs = data_streams[self.key_inputs]
         batch_size = inputs.shape[0]
         #print("{}: input shape: {}, device: {}\n".format(self.name, inputs.shape, inputs.device))
 
         # Initialize hidden state from inputs - as last hidden state from external component.
-        hidden = data_dict[self.key_input_state]
+        hidden = data_streams[self.key_input_state]
         # For RNNs (aside of LSTM): [BATCH_SIZE x NUM_LAYERS x HIDDEN_SIZE] -> [NUM_LAYERS x BATCH_SIZE x HIDDEN_SIZE]
         hidden = hidden.transpose(0,1)
         #print("{}: hidden shape: {}, device: {}\n".format(self.name, hidden.shape, hidden.device))
@@ -227,16 +227,16 @@ class Attn_Decoder_RNN(Model):
             if self.use_logsoftmax:
                 outputs = self.log_softmax(outputs)
             # Add predictions to datadict.
-            data_dict.extend({self.key_predictions: outputs})
+            data_streams.publish({self.key_predictions: outputs})
         elif self.prediction_mode == "Last":
             if self.use_logsoftmax:
                 outputs = self.log_softmax(activations_partial.squeeze(1))
             # Add predictions to datadict.
-            data_dict.extend({self.key_predictions: outputs})
+            data_streams.publish({self.key_predictions: outputs})
 
         # Output last hidden state, if requested
         if self.output_last_state:
             # For others: [NUM_LAYERS x BATCH_SIZE x HIDDEN_SIZE] -> [BATCH_SIZE x NUM_LAYERS x HIDDEN_SIZE] 
             hidden = hidden.transpose(0,1)
             # Export last hidden state.
-            data_dict.extend({self.key_output_state: hidden})
+            data_streams.publish({self.key_output_state: hidden})

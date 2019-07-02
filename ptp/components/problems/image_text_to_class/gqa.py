@@ -278,61 +278,61 @@ class GQA(Problem):
         :param index: index of the sample to return.
         :type index: int
 
-        :return: DataDict({'indices', 'sample_ids', images', 'images_ids','questions', 'answers', 'full_answers'})
+        :return: DataStreams({'indices', 'sample_ids', images', 'images_ids','questions', 'answers', 'full_answers'})
         """
         # Get item.
         item = self.dataset[index]
 
         # Create the resulting sample (data dict).
-        data_dict = self.create_data_dict(index)
+        data_streams = self.create_data_streams(index)
 
         # Return sample id.
-        data_dict[self.key_sample_ids] = item[self.key_sample_ids]
+        data_streams[self.key_sample_ids] = item[self.key_sample_ids]
 
         # Load and stream the image ids.
         img_id = item[self.key_image_ids]
-        data_dict[self.key_image_ids] = img_id
+        data_streams[self.key_image_ids] = img_id
 
         # Load the adequate image - only when required.
         if self.stream_images:
-            data_dict[self.key_images] = self.get_image(img_id)
+            data_streams[self.key_images] = self.get_image(img_id)
 
         # Return question.
-        data_dict[self.key_questions] = item[self.key_questions]
+        data_streams[self.key_questions] = item[self.key_questions]
 
         # Return answers.
-        data_dict[self.key_answers] = item[self.key_answers]
-        data_dict[self.key_full_answers] = item[self.key_full_answers]
+        data_streams[self.key_answers] = item[self.key_answers]
+        data_streams[self.key_full_answers] = item[self.key_full_answers]
 
         # Return sample.
-        return data_dict
+        return data_streams
 
 
     def collate_fn(self, batch):
         """
-        Combines a list of DataDict (retrieved with :py:func:`__getitem__`) into a batch.
+        Combines a list of DataStreams (retrieved with :py:func:`__getitem__`) into a batch.
 
         :param batch: list of individual samples to combine
         :type batch: list
 
-        :return: DataDict({'indices', 'images', 'images_ids','questions', 'answers', 'category_ids', 'image_sizes'})
+        :return: DataStreams({'indices', 'images', 'images_ids','questions', 'answers', 'category_ids', 'image_sizes'})
 
         """
         # Collate indices.
-        data_dict = self.create_data_dict([sample[self.key_indices] for sample in batch])
+        data_streams = self.create_data_streams([sample[self.key_indices] for sample in batch])
 
         # Collate sample ids.
-        data_dict[self.key_sample_ids] = [item[self.key_sample_ids] for item in batch]
+        data_streams[self.key_sample_ids] = [item[self.key_sample_ids] for item in batch]
 
         # Stack images.
-        data_dict[self.key_image_ids] = [item[self.key_image_ids] for item in batch]
+        data_streams[self.key_image_ids] = [item[self.key_image_ids] for item in batch]
         if self.stream_images:
-            data_dict[self.key_images] = torch.stack([item[self.key_images] for item in batch]).type(torch.FloatTensor)
+            data_streams[self.key_images] = torch.stack([item[self.key_images] for item in batch]).type(torch.FloatTensor)
 
         # Collate lists/lists of lists.
-        data_dict[self.key_questions] = [item[self.key_questions] for item in batch]
-        data_dict[self.key_answers] = [item[self.key_answers] for item in batch]
-        data_dict[self.key_full_answers] = [item[self.key_full_answers] for item in batch]
+        data_streams[self.key_questions] = [item[self.key_questions] for item in batch]
+        data_streams[self.key_answers] = [item[self.key_answers] for item in batch]
+        data_streams[self.key_full_answers] = [item[self.key_full_answers] for item in batch]
 
         # Return collated dict.
-        return data_dict
+        return data_streams

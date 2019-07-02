@@ -227,18 +227,18 @@ class ConvNetEncoder(Model):
             self.key_feature_maps: DataDefinition([-1, self.out_channels_conv3, self.height_features_maxpool3, self.width_features_maxpool3], [torch.Tensor], "Batch of filter maps [BATCH_SIZE x FEAT_DEPTH x FEAT_HEIGHT x FEAT_WIDTH]")
             }
 
-    def forward(self, data_dict):
+    def forward(self, data_streams):
         """
         forward pass of the ``SimpleConvNet`` model.
 
-        :param data_dict: DataDict({'inputs','outputs'}), where:
+        :param data_streams: DataStreams({'inputs','outputs'}), where:
 
             - inputs: [batch_size, in_depth, in_height, in_width],
             - feature_maps: batch of feature maps [batch_size, out_depth, out_height, out_width]
 
         """
         # get images
-        images = data_dict[self.key_inputs]
+        images = data_streams[self.key_inputs]
 
         # apply Convolutional layer 1
         out_conv1 = self.conv1(images)
@@ -259,4 +259,4 @@ class ConvNetEncoder(Model):
         out_maxpool3 = torch.nn.functional.relu(self.maxpool3(out_conv3))
 
         # Add output to datadict.
-        data_dict.extend({self.key_feature_maps: out_maxpool3})
+        data_streams.publish({self.key_feature_maps: out_maxpool3})

@@ -68,19 +68,19 @@ class LabelIndexer(Component, WordMappings):
             self.key_outputs: DataDefinition([-1], [torch.Tensor], "Batch of labels, each represented as a single index [BATCH_SIZE]")
             }
 
-    def __call__(self, data_dict):
+    def __call__(self, data_streams):
         """
         Encodes "inputs" in the format of a single word.
-        Stores result in "outputs" field of in data_dict.
+        Stores result in "outputs" field of in data_streams.
 
-        :param data_dict: :py:class:`ptp.utils.DataDict` object containing (among others):
+        :param data_streams: :py:class:`ptp.utils.DataStreams` object containing (among others):
 
             - "inputs": expected input field containing list of words [BATCH_SIZE] x x [string]
 
             - "outputs": added output field containing list of indices  [BATCH_SIZE] 
         """
         # Get inputs to be encoded.
-        inputs = data_dict[self.key_inputs]
+        inputs = data_streams[self.key_inputs]
         outputs_list = []
         # Process samples 1 by 1.
         for sample in inputs:
@@ -95,4 +95,4 @@ class LabelIndexer(Component, WordMappings):
         # Transform to tensor.
         output_tensor = torch.tensor(outputs_list)
         # Create the returned dict.
-        data_dict.extend({self.key_outputs: output_tensor})
+        data_streams.publish({self.key_outputs: output_tensor})

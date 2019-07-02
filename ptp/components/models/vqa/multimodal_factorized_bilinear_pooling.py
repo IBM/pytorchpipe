@@ -98,17 +98,17 @@ class MultimodalFactorizedBilinearPooling(Model):
             self.key_outputs: DataDefinition([-1, self.output_size], [torch.Tensor], "Batch of outputs [BATCH_SIZE x OUTPUT_SIZE]")
             }
 
-    def forward(self, data_dict):
+    def forward(self, data_streams):
         """
         Main forward pass of the model.
 
-        :param data_dict: DataDict({'images',**})
-        :type data_dict: ``ptp.dadatypes.DataDict``
+        :param data_streams: DataStreams({'images',**})
+        :type data_streams: ``ptp.dadatypes.DataStreams``
         """
 
-        # Unpack DataDict.
-        enc_img = data_dict[self.key_image_encodings] #[48, 2048]
-        enc_q = data_dict[self.key_question_encodings] #[48, 100]
+        # Unpack DataStreams.
+        enc_img = data_streams[self.key_image_encodings] #[48, 2048]
+        enc_q = data_streams[self.key_question_encodings] #[48, 100]
 
         # Map image and question encodings to high-dimensional space using FF
         latent_img = self.dropout(self.image_encodings_ff(enc_img)) # [48, 512]
@@ -127,4 +127,4 @@ class MultimodalFactorizedBilinearPooling(Model):
         outputs = F.normalize(enc_z, p=2, dim=1) # [48, 256]
 
         # Add predictions to datadict.
-        data_dict.extend({self.key_outputs: outputs})
+        data_streams.publish({self.key_outputs: outputs})

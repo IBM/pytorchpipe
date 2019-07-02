@@ -125,16 +125,16 @@ class RelationalNetwork(Model):
             self.key_outputs: DataDefinition([-1, self.output_size], [torch.Tensor], "Batch of outputs [BATCH_SIZE x OUTPUT_SIZE]")
             }
 
-    def forward(self, data_dict):
+    def forward(self, data_streams):
         """
         Main forward pass of the model.
 
-        :param data_dict: DataDict({'images',**})
-        :type data_dict: ``ptp.dadatypes.DataDict``
+        :param data_streams: DataStreams({'images',**})
+        :type data_streams: ``ptp.dadatypes.DataStreams``
         """
-        # Unpack DataDict.
-        feat_m = data_dict[self.key_feature_maps]
-        enc_q = data_dict[self.key_question_encodings]
+        # Unpack DataStreams.
+        feat_m = data_streams[self.key_feature_maps]
+        enc_q = data_streams[self.key_question_encodings]
 
         # List [FEAT_WIDTH x FEAT_HEIGHT] of tensors [BATCH SIZE x (2 * FEAT_DEPTH + QUESTION_SIZE)]
         relational_inputs = []
@@ -169,4 +169,4 @@ class RelationalNetwork(Model):
         summed_relations = torch.sum(stacked_relations, dim=1)
 
         # Add outputs to datadict.
-        data_dict.extend({self.key_outputs: summed_relations})
+        data_streams.publish({self.key_outputs: summed_relations})

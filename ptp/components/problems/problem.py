@@ -20,7 +20,7 @@ import torch
 from torch.utils.data import Dataset
 
 from ptp.components.component import Component
-from ptp.data_types.data_dict import DataDict
+from ptp.data_types.data_streams import DataStreams
 
 
 class Problem(Component, Dataset):
@@ -91,11 +91,11 @@ class Problem(Component, Dataset):
             summary_str += '        {}: {}, {}, {}\n'.format(key, value.dimensions, value.types, value. description)
         return summary_str
 
-    def __call__(self, data_dict):
+    def __call__(self, data_streams):
         """
         Method responsible for processing the data dict. Empty for all problem-derived classes.
 
-        :param data_dict: :py:class:`ptp.utils.DataDict` object containing both input data to be proces and that will be extended by the results.
+        :param data_streams: :py:class:`ptp.utils.DataStreams` object containing both input data to be proces and that will be extended by the results.
         """
         pass
 
@@ -109,31 +109,31 @@ class Problem(Component, Dataset):
         return {}
 
 
-    def create_data_dict(self, index, data_definitions = None):
+    def create_data_streams(self, index, data_definitions = None):
         """
-        Returns a :py:class:`ptp.utils.DataDict` object with keys created on the \
+        Returns a :py:class:`ptp.utils.DataStreams` object with keys created on the \
         problem data_definitions and empty values (None).
 
         :param data_definitions: Data definitions that will be used (DEFAULT: None, meaninng that self.output_data_definitions() will be used)
 
-        :return: new :py:class:`ptp.utils.DataDict` object.
+        :return: new :py:class:`ptp.utils.DataStreams` object.
         """
         # Use self.output_data_definitions() if required
         data_definitions = data_definitions if data_definitions is not None else self.output_data_definitions()
         # Add index - just in case. This key is required!
         if self.key_indices not in data_definitions:
             data_definitions[self.key_indices] = None
-        data_dict = DataDict({key: None for key in data_definitions.keys()})
+        data_streams = DataStreams({key: None for key in data_definitions.keys()})
         # Set index.
-        data_dict[self.key_indices] = index
-        return data_dict
+        data_streams[self.key_indices] = index
+        return data_streams
 
 
     def collate_fn(self, batch):
         """
         Generates a batch of samples from a list of individuals samples retrieved by :py:func:`__getitem__`.
 
-        The method calls :py:func:`torch.utils.data.dataloader.default_collate` for every item in data_dict !
+        The method calls :py:func:`torch.utils.data.dataloader.default_collate` for every item in data_streams !
         
         .. note::
 
@@ -146,14 +146,14 @@ class Problem(Component, Dataset):
             override this default :py:func:`collate_fn`.
 
 
-        :param batch: List of :py:class:`ptp.utils.DataDict` retrieved by :py:func:`__getitem__`, each containing \
+        :param batch: List of :py:class:`ptp.utils.DataStreams` retrieved by :py:func:`__getitem__`, each containing \
         tensors, numbers, dicts or lists.
         :type batch: list
 
-        :return: DataDict containing the created batch.
+        :return: DataStreams containing the created batch.
 
         """
-        return DataDict({key: torch.utils.data.dataloader.default_collate([sample[key] for sample in batch]) for key in batch[0]})
+        return DataStreams({key: torch.utils.data.dataloader.default_collate([sample[key] for sample in batch]) for key in batch[0]})
 
 
     def initialize_epoch(self, epoch):

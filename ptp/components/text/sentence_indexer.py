@@ -102,37 +102,37 @@ class SentenceIndexer(Component, WordMappings):
                 }
 
 
-    def __call__(self, data_dict):
+    def __call__(self, data_streams):
         """
         Encodes inputs into outputs.
         Depending on the mode (set by 'reverse' config param) calls sentences_to_tensor() (when False) or tensor_to_sentences() (when set to True).
 
-        :param data_dict: :py:class:`ptp.datatypes.DataDict` object.
+        :param data_streams: :py:class:`ptp.datatypes.DataStreams` object.
         """
         if self.mode_reverse:
             if self.use_input_distributions:
                 # Produce list of words.
-                self.tensor_distributions_to_sentences(data_dict)
+                self.tensor_distributions_to_sentences(data_streams)
             else:
                 # Produce list of words.
-                self.tensor_indices_to_sentences(data_dict)
+                self.tensor_indices_to_sentences(data_streams)
         else:
             # Produce indices.
-            self.sentences_to_tensor(data_dict)
+            self.sentences_to_tensor(data_streams)
 
 
-    def sentences_to_tensor(self, data_dict):
+    def sentences_to_tensor(self, data_streams):
         """
         Encodes "inputs" in the format of batch of list of words into a single tensor with corresponding indices.
 
-        :param data_dict: :py:class:`ptp.datatypes.DataDict` object containing (among others):
+        :param data_streams: :py:class:`ptp.datatypes.DataStreams` object containing (among others):
 
             - "inputs": expected input field containing list of lists of words [BATCH_SIZE] x [SEQ_SIZE] x [string]
 
             - "outputs": added output field containing tensor with indices [BATCH_SIZE x SEQ_SIZE] 
         """
         # Get inputs to be encoded.
-        inputs = data_dict[self.key_inputs]
+        inputs = data_streams[self.key_inputs]
 
         # Get index of padding.
         pad_index = self.word_to_ix['<PAD>']
@@ -162,13 +162,13 @@ class SentenceIndexer(Component, WordMappings):
         # output = self.app_state.LongTensor(outputs_list)
         output = torch.nn.utils.rnn.pad_sequence(outputs_list, batch_first=True, padding_value=pad_index)
         # Create the returned dict.
-        data_dict.extend({self.key_outputs: output})
+        data_streams.publish({self.key_outputs: output})
 
-    def tensor_indices_to_sentences(self, data_dict):
+    def tensor_indices_to_sentences(self, data_streams):
         """
         Encodes "inputs" in the format of tensor with indices into a batch of list of words.
 
-        :param data_dict: :py:class:`ptp.datatypes.DataDict` object containing (among others):
+        :param data_streams: :py:class:`ptp.datatypes.DataStreams` object containing (among others):
 
             - "inputs": added output field containing tensor with indices [BATCH_SIZE x SEQ_SIZE] 
 
@@ -176,7 +176,7 @@ class SentenceIndexer(Component, WordMappings):
 
         """
         # Get inputs to be changed to words.
-        inputs = data_dict[self.key_inputs].data.cpu().numpy().tolist()
+        inputs = data_streams[self.key_inputs].data.cpu().numpy().tolist()
 
         outputs_list = []
         # Process samples 1 by 1.
@@ -194,13 +194,13 @@ class SentenceIndexer(Component, WordMappings):
             outputs_list.append(output_sample)
 
         # Create the returned dict.
-        data_dict.extend({self.key_outputs: outputs_list})
+        data_streams.publish({self.key_outputs: outputs_list})
 
-    def tensor_distributions_to_sentences(self, data_dict):
+    def tensor_distributions_to_sentences(self, data_streams):
         """
         Encodes "inputs" in the format of tensor with probability distributions into a batch of list of words.
 
-        :param data_dict: :py:class:`ptp.datatypes.DataDict` object containing (among others):
+        :param data_streams: :py:class:`ptp.datatypes.DataStreams` object containing (among others):
 
             - "inputs": added output field containing tensor with indices [BATCH_SIZE x SEQ_SIZE x ITEM_SIZE] 
 
@@ -208,7 +208,7 @@ class SentenceIndexer(Component, WordMappings):
 
         """
         # Get inputs to be changed to words.
-        inputs = data_dict[self.key_inputs].max(2)[1].data.cpu().numpy().tolist()
+        inputs = data_streams[self.key_inputs].max(2)[1].data.cpu().numpy().tolist()
 
         outputs_list = []
         # Process samples 1 by 1.
@@ -227,4 +227,4 @@ class SentenceIndexer(Component, WordMappings):
             outputs_list.append(output_sample)
 
         # Create the returned dict.
-        data_dict.extend({self.key_outputs: outputs_list})
+        data_streams.publish({self.key_outputs: outputs_list})

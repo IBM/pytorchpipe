@@ -142,14 +142,14 @@ class Component(abc.ABC):
             # Check presence of key.
             if key not in all_definitions.keys():
                 if log_errors:
-                    self.logger.error("Input definition: expected field '{}' not found in DataDict keys ({})".format(key, all_definitions.keys()))
+                    self.logger.error("Input definition: expected field '{}' not found in DataStreams keys ({})".format(key, all_definitions.keys()))
                 errors += 1
                 continue
             # Check number of dimensions.
             dd = all_definitions[key]
             if len(id.dimensions) != len (dd.dimensions):
                 if log_errors:
-                    self.logger.error("Input definition: field '{}' in DataDict has different dimensions from expected (expected {} while received {})".format(key, id.dimensions, dd.dimensions))
+                    self.logger.error("Input definition: field '{}' in DataStreams has different dimensions from expected (expected {} while received {})".format(key, id.dimensions, dd.dimensions))
                 errors += 1
             else: 
                 # Check dimensions one by one.
@@ -157,12 +157,12 @@ class Component(abc.ABC):
                     # -1 means that it can handle different values here.
                     if did != -1 and did != ddd:
                         if log_errors:
-                            self.logger.error("Input definition: field '{}' in DataDict has dimension {} different from expected (expected {} while received {})".format(key,index, id.dimensions, dd.dimensions))
+                            self.logger.error("Input definition: field '{}' in DataStreams has dimension {} different from expected (expected {} while received {})".format(key,index, id.dimensions, dd.dimensions))
                         errors += 1
             # Check number of types.
             if len(id.types) != len (dd.types):
                 if log_errors:
-                    self.logger.error("Input definition: field '{}' in DataDict has number of types different from expected (expected {} while received {})".format(key, id.types, dd.types))
+                    self.logger.error("Input definition: field '{}' in DataStreams has number of types different from expected (expected {} while received {})".format(key, id.types, dd.types))
                 errors += 1
             else: 
                 # Check types one by one.
@@ -170,7 +170,7 @@ class Component(abc.ABC):
                     # -1 means that it can handle different values here.
                     if tid != tdd:
                         if log_errors:
-                            self.logger.error("Input definition: field '{}' in DataDict has type {} different from expected (expected {} while received {})".format(key,index, id.types, dd.types))
+                            self.logger.error("Input definition: field '{}' in DataStreams has type {} different from expected (expected {} while received {})".format(key,index, id.types, dd.types))
                         errors += 1
 
         return errors
@@ -190,7 +190,7 @@ class Component(abc.ABC):
             # Check presence of key.
             if key in all_definitions.keys():
                 if log_errors:
-                    self.logger.error("Output definition error: field '{}' cannot be added to DataDict, as it is already present in its keys ({})".format(key, all_definitions.keys()))
+                    self.logger.error("Output definition error: field '{}' cannot be added to DataStreams, as it is already present in its keys ({})".format(key, all_definitions.keys()))
                 errors += 1
             else:
                 # Add field to definitions.
@@ -200,12 +200,12 @@ class Component(abc.ABC):
 
 
     @abc.abstractmethod
-    def __call__(self, data_dict):
+    def __call__(self, data_streams):
         """
         Method responsible for processing the data dict.
         Abstract, must be implemented by all derived classes.
 
-        :param data_dict: :py:class:`ptp.core_types.DataDict` object containing both input data to be processed and that will be extended by the results.
+        :param data_streams: :py:class:`ptp.data_types.DataStreams` object containing both input data to be processed and that will be extended by the results.
         """
         pass
 
@@ -224,7 +224,7 @@ class Component(abc.ABC):
         pass
 
 
-    def collect_statistics(self, stat_col, data_dict):
+    def collect_statistics(self, stat_col, data_streams):
         """
         Base statistics collection.
 
@@ -236,8 +236,8 @@ class Component(abc.ABC):
 
         :param stat_col: :py:class:`ptp.configuration.StatisticsCollector`.
 
-        :param data_dict: ``DataDict`` containing inputs, targets etc.
-        :type data_dict: :py:class:`ptp.core_types.DataDict`
+        :param data_streams: ``DataStreams`` containing inputs, targets etc.
+        :type data_streams: :py:class:`ptp.data_types.DataStreams`
 
         """
         pass

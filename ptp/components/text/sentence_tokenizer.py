@@ -137,19 +137,19 @@ class SentenceTokenizer(Component):
         """
         return ' '.join([str(x) for x in sample])
 
-    def __call__(self, data_dict):
+    def __call__(self, data_streams):
         """
         Encodes batch, or, in fact, only one field of bach ("inputs").
-        Stores result in "encoded_inputs" field of in data_dict.
+        Stores result in "encoded_inputs" field of in data_streams.
 
-        :param data_dict: :py:class:`ptp.utils.DataDict` object containing (among others):
+        :param data_streams: :py:class:`ptp.utils.DataStreams` object containing (among others):
 
             - "inputs": expected input field containing list of words
 
             - "encoded_targets": added field containing output, tensor with encoded samples [BATCH_SIZE x 1] 
         """
         # Get inputs to be encoded.
-        inputs = data_dict[self.key_inputs]
+        inputs = data_streams[self.key_inputs]
         outputs_list = []
         # Process samples 1 by one.
         for sample in inputs:
@@ -157,4 +157,4 @@ class SentenceTokenizer(Component):
             # Add to outputs.
             outputs_list.append( output )
         # Create the returned dict.
-        data_dict.extend({self.key_outputs: outputs_list})
+        data_streams.publish({self.key_outputs: outputs_list})

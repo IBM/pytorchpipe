@@ -109,19 +109,19 @@ class PrecisionRecallStatistics(Component):
         """
         return {}
 
-    def __call__(self, data_dict):
+    def __call__(self, data_streams):
         """
         Calculates precission recall statistics.
 
-        :param data_dict: DataDict containing the targets.
-        :type data_dict: DataDict
+        :param data_streams: DataStreams containing the targets.
+        :type data_streams: DataStreams
 
         """
         # Use worker interval.
         if self.app_state.episode % self.app_state.args.logging_interval == 0:
 
             # Calculate all four statistics.
-            confusion_matrix, precisions, recalls, f1scores, supports = self.calculate_statistics(data_dict)
+            confusion_matrix, precisions, recalls, f1scores, supports = self.calculate_statistics(data_streams)
 
             if self.show_confusion_matrix:
                 self.logger.info("Confusion matrix:\n{}".format(confusion_matrix))
@@ -150,28 +150,28 @@ class PrecisionRecallStatistics(Component):
                 self.logger.info(log_str)
 
 
-    def calculate_statistics(self, data_dict):
+    def calculate_statistics(self, data_streams):
         """
         Calculates confusion_matrix, precission, recall, f1score and support statistics.
 
-        :param data_dict: DataDict containing the targets.
-        :type data_dict: DataDict
+        :param data_streams: DataStreams containing the targets.
+        :type data_streams: DataStreams
 
         :return: Calculated statistics.
         """
-        targets = data_dict[self.key_targets].data.cpu().numpy()
+        targets = data_streams[self.key_targets].data.cpu().numpy()
         #print("Targets :", targets)
 
         if self.use_prediction_distributions:
             # Get indices of the max log-probability.
-            preds = data_dict[self.key_predictions].max(1)[1].data.cpu().numpy()
+            preds = data_streams[self.key_predictions].max(1)[1].data.cpu().numpy()
         else: 
-            preds = data_dict[self.key_predictions].data.cpu().numpy()
+            preds = data_streams[self.key_predictions].data.cpu().numpy()
         #print("Predictions :", preds)
 
         if self.use_masking:
             # Get masks from inputs.
-            masks = data_dict[self.key_masks].data.cpu().numpy()
+            masks = data_streams[self.key_masks].data.cpu().numpy()
         else:
             # Create vector full of ones.
             masks = np.ones(targets.shape[0])
@@ -245,7 +245,7 @@ class PrecisionRecallStatistics(Component):
         stat_col.add_statistics(self.key_f1score+'_support', None)
 
 
-    def collect_statistics(self, stat_col, data_dict):
+    def collect_statistics(self, stat_col, data_streams):
         """
         Collects statistics (batch_size) for given episode.
 
@@ -253,7 +253,7 @@ class PrecisionRecallStatistics(Component):
 
         """
         # Calculate all four statistics.
-        _, precisions, recalls, f1scores, supports = self.calculate_statistics(data_dict)
+        _, precisions, recalls, f1scores, supports = self.calculate_statistics(data_streams)
 
         # Calculate weighted averages.
         precision_sum = sum([pi*si for (pi,si) in zip(precisions,supports)])

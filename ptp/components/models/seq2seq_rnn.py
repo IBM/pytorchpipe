@@ -162,18 +162,18 @@ class Seq2Seq_RNN(Model):
 
         return d
 
-    def forward(self, data_dict):
+    def forward(self, data_streams):
         """
         Forward pass of the model.
 
-        :param data_dict: DataDict({'inputs', 'predictions ...}), where:
+        :param data_streams: DataStreams({'inputs', 'predictions ...}), where:
 
             - inputs: expected inputs [BATCH_SIZE x SEQ_LEN x INPUT_SIZE],
             - predictions: returned output with predictions (log_probs) [BATCH_SIZE x SEQ_LEN x PREDICTION_SIZE]
         """
         
         # Get inputs [BATCH_SIZE x SEQ_LEN x INPUT_SIZE]
-        inputs = data_dict[self.key_inputs]
+        inputs = data_streams[self.key_inputs]
         if inputs.dim() == 2:
             inputs = inputs.unsqueeze(1)
         batch_size = inputs.shape[0]
@@ -204,5 +204,5 @@ class Seq2Seq_RNN(Model):
             outputs = self.log_softmax(outputs)
 
         # Add predictions to datadict.
-        data_dict.extend({self.key_predictions: outputs})
+        data_streams.publish({self.key_predictions: outputs})
 

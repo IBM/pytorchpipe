@@ -77,15 +77,15 @@ class LeNet5(Model):
             self.key_predictions: DataDefinition([-1, self.prediction_size], [torch.Tensor], "Batch of predictions, each represented as probability distribution over classes [BATCH_SIZE x PREDICTION_SIZE]")
             }
 
-    def forward(self, data_dict):
+    def forward(self, data_streams):
         """
         Main forward pass of the ``LeNet5`` model.
 
-        :param data_dict: DataDict({'images',**}), where:
+        :param data_streams: DataStreams({'images',**}), where:
 
             - images: [batch_size, num_channels, width, height]
 
-        :type data_dict: ``miprometheus.utils.DataDict``
+        :type data_streams: ``miprometheus.utils.DataStreams``
 
         :return: Predictions [batch_size, num_classes]
 
@@ -100,8 +100,8 @@ class LeNet5(Model):
         #        #print (name, param.data)
 
 
-        # Unpack DataDict.
-        img = data_dict[self.key_inputs]
+        # Unpack DataStreams.
+        img = data_streams[self.key_inputs]
 
         # Pass inputs through layers.
         x = self.conv1(img)
@@ -120,4 +120,4 @@ class LeNet5(Model):
         # Log softmax.
         predictions = torch.nn.functional.log_softmax(x, dim=1)
         # Add predictions to datadict.
-        data_dict.extend({self.key_predictions: predictions})
+        data_streams.publish({self.key_predictions: predictions})

@@ -104,35 +104,35 @@ class BLEUStatistics(Component):
         return {}
 
 
-    def __call__(self, data_dict):
+    def __call__(self, data_streams):
         """
         Call method - empty for all statistics.
         """
         pass
 
 
-    def calculate_BLEU(self, data_dict):
+    def calculate_BLEU(self, data_streams):
         """
         Calculates BLEU for predictions of a given batch.
 
-        :param data_dict: DataDict containing the targets and predictions (and optionally masks).
-        :type data_dict: DataDict
+        :param data_streams: DataStreams containing the targets and predictions (and optionally masks).
+        :type data_streams: DataStreams
 
         :return: Accuracy.
 
         """
         # Get targets.
-        targets = data_dict[self.key_targets].data.cpu().numpy().tolist()
+        targets = data_streams[self.key_targets].data.cpu().numpy().tolist()
 
         if self.use_prediction_distributions:
             # Get indices of the max log-probability.
-            preds = data_dict[self.key_predictions].max(-1)[1].data.cpu().numpy().tolist()
+            preds = data_streams[self.key_predictions].max(-1)[1].data.cpu().numpy().tolist()
         else: 
-            preds = data_dict[self.key_predictions].data.cpu().numpy().tolist()
+            preds = data_streams[self.key_predictions].data.cpu().numpy().tolist()
 
         #if self.use_masking:
         #    # Get masks from inputs.
-        #    masks = data_dict[self.key_masks].data.cpu().numpy().tolist()
+        #    masks = data_streams[self.key_masks].data.cpu().numpy().tolist()
         #else:
         #    batch_size = preds.shape[0]       
         
@@ -185,14 +185,14 @@ class BLEUStatistics(Component):
         """
         stat_col.add_statistics(self.key_bleu, '{:6.4f}')
 
-    def collect_statistics(self, stat_col, data_dict):
+    def collect_statistics(self, stat_col, data_streams):
         """
         Collects statistics (batch_size) for given episode.
 
         :param stat_col: ``StatisticsCollector``.
 
         """
-        stat_col[self.key_bleu] = self.calculate_BLEU(data_dict)
+        stat_col[self.key_bleu] = self.calculate_BLEU(data_streams)
 
     def add_aggregators(self, stat_agg):
         """

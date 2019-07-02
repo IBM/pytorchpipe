@@ -140,7 +140,7 @@ class MNIST(Problem):
         :param index: index of the sample to return.
         :type index: int
 
-        :return: ``DataDict({'images','targets'})``, with:
+        :return: ``DataStreams({'images','targets'})``, with:
 
             - images: Image, resized if ``self.resize`` is set,
             - targets: Index of the target class
@@ -148,9 +148,9 @@ class MNIST(Problem):
         # Get image and target.
         img, target = self.dataset.__getitem__(index)
   
-        # Return data_dict.
-        data_dict = self.create_data_dict(index)
-        data_dict[self.key_inputs] = img
-        data_dict[self.key_targets] = target
-        data_dict[self.key_labels] = self.ix_to_word[target.item()]
-        return data_dict
+        # Return data_streams.
+        data_streams = self.create_data_streams(index)
+        data_streams[self.key_inputs] = img
+        data_streams[self.key_targets] = target
+        data_streams[self.key_labels] = self.ix_to_word[target.item()]
+        return data_streams

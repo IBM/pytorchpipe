@@ -62,7 +62,7 @@ class BatchSizeStatistics(Component):
         return {}
 
 
-    def __call__(self, data_dict):
+    def __call__(self, data_streams):
         """
         Call method - empty for all statistics.
         """
@@ -77,14 +77,14 @@ class BatchSizeStatistics(Component):
         """
         stat_col.add_statistics('batch_size', '{:06d}')
 
-    def collect_statistics(self, stat_col, data_dict):
+    def collect_statistics(self, stat_col, data_streams):
         """
         Collects statistics (batch_size) for given episode.
 
         :param stat_col: ``StatisticsCollector``.
 
         """
-        stat_col['batch_size'] = len(data_dict[self.key_indices])
+        stat_col['batch_size'] = len(data_streams[self.key_indices])
 
     def add_aggregators(self, stat_agg):
         """

@@ -87,8 +87,6 @@ pipeline:
   encoder:
     priority: 3
     type: RecurrentNeuralNetwork
-    # Do not wrap that model with DataDictParallel!
-    parallelize: False
     cell_type: GRU
     initial_state: Trainable
     hidden_size: 100

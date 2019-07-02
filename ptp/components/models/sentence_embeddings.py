@@ -100,20 +100,20 @@ class SentenceEmbeddings(Model, WordMappings):
             }
 
 
-    def forward(self, data_dict):
+    def forward(self, data_streams):
         """
         Forward pass  - performs embedding.
 
-        :param data_dict: DataDict({'images',**}), where:
+        :param data_streams: DataStreams({'images',**}), where:
 
             - inputs: expected tokenized sentences [BATCH_SIZE x SENTENCE_LENGTH] x [string]
             - outputs: added embedded sentences [BATCH_SIZE x SENTENCE_LENGTH x EMBEDDING_SIZE]
 
-        :type data_dict: ``miprometheus.utils.DataDict``
+        :type data_streams: ``miprometheus.utils.DataStreams``
         """
 
-        # Unpack DataDict.
-        inputs = data_dict[self.key_inputs]
+        # Unpack DataStreams.
+        inputs = data_streams[self.key_inputs]
         #print("{}: input len: {}, device: {}\n".format(self.name, len(inputs), "-"))
 
         indices_list = []
@@ -145,4 +145,4 @@ class SentenceEmbeddings(Model, WordMappings):
         #print("{}: embedds shape: {}, device: {}\n".format(self.name, embedds.shape, embedds.device))
 
         # Add embeddings to datadict.
-        data_dict.extend({self.key_outputs: embedds})
+        data_streams.publish({self.key_outputs: embedds})

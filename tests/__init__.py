@@ -11,7 +11,7 @@ from .configuration.config_interface_tests import TestConfigInterface
 from .configuration.config_registry_tests import TestConfigRegistry
 from .configuration.handshaking_tests import TestHandshaking
 
-from .data_types.data_dict_tests import TestDataDict
+from .data_types.data_streams_tests import TestDataStreams
 from .data_types.data_definition_tests import TestDataDefinition
 
 from .utils.app_state_tests import TestAppState
@@ -32,7 +32,7 @@ __all__ = [
     'TestConfigInterface',
     'TestHandshaking',
     # DataTypes
-    'TestDataDict',
+    'TestDataStreams',
     'TestDataDefinition',
     # Utils
     'TestAppState',

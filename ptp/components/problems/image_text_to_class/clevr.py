@@ -317,70 +317,70 @@ class CLEVR(Problem):
         :param index: index of the sample to return.
         :type index: int
 
-        :return: DataDict({'indices', 'images', 'images_ids','questions', 'answers', 'question_type_ids', 'question_type_names'})
+        :return: DataStreams({'indices', 'images', 'images_ids','questions', 'answers', 'question_type_ids', 'question_type_names'})
         """
         # Get item.
         item = self.dataset[index]
 
         # Create the resulting sample (data dict).
-        data_dict = self.create_data_dict(index)
+        data_streams = self.create_data_streams(index)
 
         # Load and stream the image ids.
         img_id = item["image_filename"]
-        data_dict[self.key_image_ids] = img_id
+        data_streams[self.key_image_ids] = img_id
 
         # Load the adequate image - only when required.
         if self.stream_images:
             img = self.get_image(img_id)
             # Image related variables.
-            data_dict[self.key_images] = img
+            data_streams[self.key_images] = img
 
         # Return question.
-        data_dict[self.key_questions] = item["question"]
+        data_streams[self.key_questions] = item["question"]
 
         # Return answer. 
         if "answer" in item.keys():
-            data_dict[self.key_answers] = item["answer"]
+            data_streams[self.key_answers] = item["answer"]
         else:
-            data_dict[self.key_answers] = "<UNK>"
+            data_streams[self.key_answers] = "<UNK>"
 
         # Question type related variables.
         if "question_family_index" in item.keys():
-            data_dict[self.key_question_type_ids] = self.question_family_id_to_subtype_id_mapping[item["question_family_index"]]
-            data_dict[self.key_question_type_names] = self.question_family_id_to_subtype_mapping[item["question_family_index"]]
+            data_streams[self.key_question_type_ids] = self.question_family_id_to_subtype_id_mapping[item["question_family_index"]]
+            data_streams[self.key_question_type_names] = self.question_family_id_to_subtype_mapping[item["question_family_index"]]
         else:
-            data_dict[self.key_question_type_ids] = -1
-            data_dict[self.key_question_type_names] = "<UNK>"
+            data_streams[self.key_question_type_ids] = -1
+            data_streams[self.key_question_type_names] = "<UNK>"
 
         # Return sample.
-        return data_dict
+        return data_streams
 
 
     def collate_fn(self, batch):
         """
-        Combines a list of DataDict (retrieved with :py:func:`__getitem__`) into a batch.
+        Combines a list of DataStreams (retrieved with :py:func:`__getitem__`) into a batch.
 
         :param batch: list of individual samples to combine
         :type batch: list
 
-        :return: DataDict({'indices', 'images', 'images_ids','questions', 'answers', 'category_ids', 'image_sizes'})
+        :return: DataStreams({'indices', 'images', 'images_ids','questions', 'answers', 'category_ids', 'image_sizes'})
 
         """
         # Collate indices.
-        data_dict = self.create_data_dict([sample[self.key_indices] for sample in batch])
+        data_streams = self.create_data_streams([sample[self.key_indices] for sample in batch])
 
         # Stack images.
-        data_dict[self.key_image_ids] = [item[self.key_image_ids] for item in batch]
+        data_streams[self.key_image_ids] = [item[self.key_image_ids] for item in batch]
         if self.stream_images:
-            data_dict[self.key_images] = torch.stack([item[self.key_images] for item in batch]).type(torch.FloatTensor)
+            data_streams[self.key_images] = torch.stack([item[self.key_images] for item in batch]).type(torch.FloatTensor)
 
         # Collate lists/lists of lists.
-        data_dict[self.key_questions] = [item[self.key_questions] for item in batch]
-        data_dict[self.key_answers] = [item[self.key_answers] for item in batch]
+        data_streams[self.key_questions] = [item[self.key_questions] for item in batch]
+        data_streams[self.key_answers] = [item[self.key_answers] for item in batch]
 
         # Stack categories.
-        data_dict[self.key_question_type_ids] = torch.tensor([item[self.key_question_type_ids] for item in batch])
-        data_dict[self.key_question_type_names] = [item[self.key_question_type_names] for item in batch]
+        data_streams[self.key_question_type_ids] = torch.tensor([item[self.key_question_type_ids] for item in batch])
+        data_streams[self.key_question_type_names] = [item[self.key_question_type_names] for item in batch]
 
         # Return collated dict.
-        return data_dict
+        return data_streams

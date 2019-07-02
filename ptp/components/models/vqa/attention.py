@@ -113,17 +113,17 @@ class VQA_Attention(Model):
             self.key_outputs: DataDefinition([-1, self.output_size], [torch.Tensor], "Batch of outputs [BATCH_SIZE x OUTPUT_SIZE]")
             }
 
-    def forward(self, data_dict):
+    def forward(self, data_streams):
         """
         Main forward pass of the model.
 
-        :param data_dict: DataDict({'images',**})
-        :type data_dict: ``ptp.dadatypes.DataDict``
+        :param data_streams: DataStreams({'images',**})
+        :type data_streams: ``ptp.dadatypes.DataStreams``
         """
 
-        # Unpack DataDict.
-        enc_img = data_dict[self.key_feature_maps] #[48, 2048, 7, 7]
-        enc_q = data_dict[self.key_question_encodings] #[48, 100]
+        # Unpack DataStreams.
+        enc_img = data_streams[self.key_feature_maps] #[48, 2048, 7, 7]
+        enc_q = data_streams[self.key_question_encodings] #[48, 100]
         # print("im_enc", enc_img.shape)
         # print("enc_q", enc_q.shape)
 
@@ -154,7 +154,7 @@ class VQA_Attention(Model):
             outputs = torch.cat([attention_enc_img, enc_q], dim=1)
         # print("outputs", outputs.shape)
         # Add predictions to datadict.
-        data_dict.extend({self.key_outputs: outputs})
+        data_streams.publish({self.key_outputs: outputs})
 
 
 def tile_2d_over_nd(feature_vector, feature_map):

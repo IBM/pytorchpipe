@@ -112,12 +112,12 @@ class JoinMaskedPredictions(Component):
             }
 
 
-    def __call__(self, data_dict):
+    def __call__(self, data_streams):
         """
         Encodes "inputs" in the format of a single tensor.
-        Stores reshaped tensor in "outputs" field of in data_dict.
+        Stores reshaped tensor in "outputs" field of in data_streams.
 
-        :param data_dict: :py:class:`ptp.utils.DataDict` object containing (among others):
+        :param data_streams: :py:class:`ptp.utils.DataStreams` object containing (among others):
 
             - "inputs": expected input field containing tensor [BATCH_SIZE x ...]
 
@@ -127,7 +127,7 @@ class JoinMaskedPredictions(Component):
         masks = []
         for imsk in self.input_mask_stream_keys:
             # Get mask from stream.
-            mask = data_dict[imsk]
+            mask = data_streams[imsk]
             masks.append(mask.data.cpu().numpy())
         
         # Sum all masks and make sure that they are complementary.
@@ -155,7 +155,7 @@ class JoinMaskedPredictions(Component):
             #print(ix_to_word)
 
             # Get the right sample from the right prediction stream.
-            sample_prediction = data_dict[self.input_prediction_stream_keys[mapping[sample]]][sample]
+            sample_prediction = data_streams[self.input_prediction_stream_keys[mapping[sample]]][sample]
             #print(sample_prediction)
             output_predictions_lst.append(sample_prediction)
 
@@ -171,7 +171,7 @@ class JoinMaskedPredictions(Component):
             output_indices.append(self.output_word_to_ix[word])
 
         #print(output_predictions_lst)
-        #targets = data_dict["targets"].data.cpu().numpy()
+        #targets = data_streams["targets"].data.cpu().numpy()
         #print("targets = \n",targets.tolist())
         #print("joined answers = \n",output_indices)
 
@@ -179,7 +179,7 @@ class JoinMaskedPredictions(Component):
         output_indices_tensor = torch.tensor(output_indices)
 
         # Extend the dict by returned output streams.
-        data_dict.extend({
+        data_streams.publish({
             self.key_output_indices: output_indices_tensor,
             self.key_output_strings: output_answers
             })

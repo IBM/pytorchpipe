@@ -186,7 +186,7 @@ class CIFAR100(Problem):
         :param index: index of the sample to return.
         :type index: int
 
-        :return: ``DataDict({'images','targets'})``, with:
+        :return: ``DataStreams({'images','targets'})``, with:
 
             - images: Image, resized if ``self.resize`` is set,
             - targets: Index of the target class
@@ -194,15 +194,15 @@ class CIFAR100(Problem):
         # Get image and fine label id.
         image, fine_target = self.dataset.__getitem__(index)
 
-        # Return data_dict.
-        data_dict = self.create_data_dict(index)
-        data_dict[self.key_inputs] = image
+        # Return data_streams.
+        data_streams = self.create_data_streams(index)
+        data_streams[self.key_inputs] = image
         # Targets.
-        data_dict[self.key_coarse_targets] = self.fine_to_coarse_id_mapping[fine_target]
-        data_dict[self.key_fine_targets] = fine_target
+        data_streams[self.key_coarse_targets] = self.fine_to_coarse_id_mapping[fine_target]
+        data_streams[self.key_fine_targets] = fine_target
         # Labels.
-        data_dict[self.key_coarse_labels] = self.coarse_ix_to_word[self.fine_to_coarse_id_mapping[fine_target]]
-        data_dict[self.key_fine_labels] = self.fine_ix_to_word[fine_target]
+        data_streams[self.key_coarse_labels] = self.coarse_ix_to_word[self.fine_to_coarse_id_mapping[fine_target]]
+        data_streams[self.key_fine_labels] = self.fine_ix_to_word[fine_target]
 
-        #print(data_dict)
-        return data_dict
+        #print(data_streams)
+        return data_streams
