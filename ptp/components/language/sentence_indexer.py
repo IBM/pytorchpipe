@@ -17,9 +17,8 @@ __author__ = "Tomasz Kornuta"
 import torch
 
 from ptp.components.component import Component
-from ptp.components.mixins.word_mappings import WordMappings
 from ptp.data_types.data_definition import DataDefinition
-from ptp.components.utils.word_mappings import pad_trunc_list
+from ptp.components.mixins.word_mappings import WordMappings, pad_trunc_list
 
 
 class SentenceIndexer(Component, WordMappings):

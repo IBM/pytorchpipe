@@ -32,7 +32,7 @@ from torchvision import transforms
 from ptp.components.tasks.task import Task
 from ptp.data_types.data_definition import DataDefinition
 
-from ptp.components.utils.io import save_nparray_to_csv_file
+from ptp.components.mixins.io import save_nparray_to_csv_file
 from ptp.configuration.config_parsing import get_value_list_from_dictionary, get_value_from_dictionary
 
 

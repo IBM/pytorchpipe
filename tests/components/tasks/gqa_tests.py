@@ -20,7 +20,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 from os import path
 
-from ptp.components.utils.io import check_file_existence
+from ptp.components.mixins.io import check_file_existence
 from ptp.components.tasks.image_text_to_class.gqa import GQA
 from ptp.configuration.config_interface import ConfigInterface
 

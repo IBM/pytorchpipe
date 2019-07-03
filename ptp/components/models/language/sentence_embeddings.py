@@ -21,11 +21,10 @@ __author__ = "Tomasz Kornuta"
 import torch
 
 from ptp.components.models.model import Model
-from ptp.components.mixins.word_mappings import WordMappings
+from ptp.components.mixins.word_mappings import WordMappings, pad_trunc_list
 from ptp.data_types.data_definition import DataDefinition
 
-import ptp.components.utils.embeddings as emb
-from ptp.components.utils.word_mappings import pad_trunc_list
+import ptp.components.mixins.embeddings as emb
 
 
 class SentenceEmbeddings(Model, WordMappings):

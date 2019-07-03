@@ -18,7 +18,7 @@ from .language_identification import LanguageIdentification
 
 import os
 
-import ptp.components.utils.io as io
+import ptp.components.mixins.io as io
 
 
 class DummyLanguageIdentification(LanguageIdentification):

@@ -23,7 +23,7 @@ import tqdm
 
 import torch
 
-import ptp.components.utils.io as io
+import ptp.components.mixins.io as io
 
 
 def load_pretrained_embeddings(logger, folder, embeddings_name, word_to_ix, embeddings_size):

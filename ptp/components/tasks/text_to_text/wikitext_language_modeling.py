@@ -18,7 +18,7 @@ import os
 
 from nltk.tokenize import WhitespaceTokenizer
 
-import ptp.components.utils.io as io
+import ptp.components.mixins.io as io
 from ptp.configuration import ConfigurationError
 from ptp.components.tasks.task import Task
 from ptp.data_types.data_definition import DataDefinition
