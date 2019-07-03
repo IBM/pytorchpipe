@@ -1,6 +1,6 @@
 # Training parameters:
 training:
-  problem: 
+  task: 
     type: CIFAR100
     batch_size: &b 1024
     use_train_data: True
@@ -25,7 +25,7 @@ training:
 # Validation parameters:
 validation:
   #partial_validation_interval: 100
-  problem:
+  task:
     type: CIFAR100
     batch_size: *b
     use_train_data: True  # True because we are splitting the training set to: validation and training
@@ -37,7 +37,7 @@ validation:
 
 # Testing parameters:
 test:
-  problem:
+  task:
     type: MNIST
     batch_size: *b
     use_train_data: False
@@ -94,7 +94,7 @@ pipeline:
 
   image_viewer:
     priority: 100.5
-    type: ImageToClassViewer
+    type: ImageViewer
     streams:
       images: inputs
       labels: fine_labels

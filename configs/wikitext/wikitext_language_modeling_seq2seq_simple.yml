@@ -2,11 +2,11 @@
 # It's been made for test purposes only, as it is doing:
 # [word 0 , ... , word 49] -> [word 1 , ... , word 50] (basically copying most of the input)
 #
-# The seq2seq here is implemented throught the use of a simplified seq2seq component `Seq2Seq_RNN`
+# The seq2seq here is implemented throught the use of a simplified seq2seq component `Seq2Seq`
 
 # Training parameters:
 training:
-  problem:
+  task:
     type: &p_type WikiTextLanguageModeling
     data_folder: &data_folder ~/data/language_modeling/wikitext-2
     dataset: &dataset wikitext-2
@@ -28,7 +28,7 @@ training:
 # Validation parameters:
 validation:
   partial_validation_interval: 100
-  problem:
+  task:
     type: *p_type
     data_folder: *data_folder
     dataset: *dataset
@@ -38,7 +38,7 @@ validation:
 
 # Testing parameters:
 test:
-  problem:
+  task:
     type: *p_type 
     data_folder: *data_folder
     dataset: *dataset
@@ -75,7 +75,7 @@ pipeline:
   
   # LSTM seq2seq
   lstm_encoder:
-    type: Seq2Seq_RNN
+    type: Seq2Seq
     priority: 3
     initial_state: Trainable
     hidden_size: 300

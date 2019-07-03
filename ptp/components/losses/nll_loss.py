@@ -81,11 +81,11 @@ class NLLLoss(Loss):
             }
 
 
-    def __call__(self, data_dict):
+    def __call__(self, data_streams):
         """
         Calculates loss (negative log-likelihood) and adds it to data dict.
 
-        :param data_dict: DataDict containing:
+        :param data_streams: DataStreams containing:
             - "targets": input batch of targets (class indices) [BATCH_SIZE x NUM_CLASSES]
 
             - "predictions": input batch of predictions (log_probs) being outputs of the model [BATCH_SIZE x 1]
@@ -94,8 +94,8 @@ class NLLLoss(Loss):
 
         """
         # Load inputs.
-        targets = data_dict[self.key_targets]
-        predictions = data_dict[self.key_predictions]
+        targets = data_streams[self.key_targets]
+        predictions = data_streams[self.key_predictions]
 
         #print("targets = ",targets)
         #print("predictions = ",predictions)
@@ -107,7 +107,7 @@ class NLLLoss(Loss):
         # Mask predictions if option set.
 
         if self.use_masking:
-            masks = data_dict[self.key_masks]
+            masks = data_streams[self.key_masks]
             targets = targets * masks.type(self.app_state.LongTensor)
             #print("unsqueezed masks = ", masks.unsqueeze(1))
             predictions = predictions * masks.unsqueeze(1).type(self.app_state.FloatTensor)
@@ -123,4 +123,4 @@ class NLLLoss(Loss):
         # Calculate loss.
         loss = self.loss_function(predictions.view(-1, last_dim), targets.view(-1))
         # Add it to datadict.
-        data_dict.extend({self.key_loss: loss})
+        data_streams.publish({self.key_loss: loss})

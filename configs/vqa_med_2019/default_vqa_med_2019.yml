@@ -1,6 +1,6 @@
 # Training parameters:
 training:
-  problem:
+  task:
     type: &p_type VQAMED2019
     data_folder: &data_folder ~/data/vqa-med
     split: training_validation
@@ -33,7 +33,7 @@ training:
 # Validation parameters:
 validation:
   partial_validation_interval: 10
-  problem:
+  task:
     type: *p_type
     data_folder: *data_folder
     split: training_validation

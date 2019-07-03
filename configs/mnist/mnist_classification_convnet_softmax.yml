@@ -1,4 +1,4 @@
-# Load config defining MNIST problems for training, validation and testing.
+# Load config defining MNIST tasks for training, validation and testing.
 default_configs: mnist/default_mnist.yml
 
 pipeline:

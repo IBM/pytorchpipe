@@ -5,15 +5,15 @@ from torch.utils.data import Dataset, DataLoader
 
 import time
 
-from ptp.components.problems.problem import Problem
+from ptp.components.tasks.task import Task
 from ptp.components.models.model import Model
 
-from ptp.data_types.data_dict import DataDict
+from ptp.data_types.data_streams import DataStreams
 from ptp.data_types.data_definition import DataDefinition
-from ptp.utils.data_dict_parallel import DataDictParallel
+from ptp.utils.data_streams_parallel import DataStreamsParallel
 
 
-class RandomDataset(Problem):
+class RandomDataset(Task):
 
     def __init__(self, size, length):
         self.len = length
@@ -21,11 +21,11 @@ class RandomDataset(Problem):
 
     def __getitem__(self, index):
 
-        # Return data_dict.
-        data_dict = DataDict({"index": None})
-        data_dict["index"] = self.data[index]
+        # Return data_streams.
+        data_streams = DataStreams({"index": None})
+        data_streams["index"] = self.data[index]
 
-        return data_dict
+        return data_streams
 
         #return self.data[index]
 
@@ -37,7 +37,7 @@ class RandomDataset(Problem):
 
     def collate_fn(self, batch):
         print("Collate!")
-        return DataDict({key: torch.utils.data.dataloader.default_collate([sample[key] for sample in batch]) for key in batch[0]})
+        return DataStreams({key: torch.utils.data.dataloader.default_collate([sample[key] for sample in batch]) for key in batch[0]})
 
 
 class TestModel1(Model):
@@ -114,8 +114,8 @@ if __name__ == "__main__":
     if torch.cuda.device_count() > 1:
         print("Let's use", torch.cuda.device_count(), "GPUs!")
         # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
-        model1 = DataDictParallel(model1) 
-        model2 = DataDictParallel(model2) 
+        model1 = DataStreamsParallel(model1) 
+        model2 = DataStreamsParallel(model2) 
         use_dataparallel = True
     # Move to desired device.
     model1.to(device)
@@ -123,7 +123,7 @@ if __name__ == "__main__":
     print("DataParallel DONE!!")
     #time.sleep(2)
 
-    #datadict1 = {}#DataDict({"index":None,"output":None})
+    #datadict1 = {}#DataStreams({"index":None,"output":None})
     for datadict in rand_loader:
         print("!!!!!  Got object from loader: {}".format(type(datadict)))
         datadict.to(device)

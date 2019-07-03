@@ -28,7 +28,7 @@ import ptp.utils.logger as logging
 from ptp.utils.app_state import AppState
 from ptp.configuration.configuration_error import ConfigurationError
 from ptp.application.component_factory import ComponentFactory
-from ptp.utils.data_dict_parallel import DataDictParallel
+from ptp.utils.data_streams_parallel import DataStreamsParallel
 
 
 components_to_skip_in_data_parallel = ["SentenceEmbeddings", "IndexEmbeddings"]
@@ -74,7 +74,7 @@ class PipelineManager(object):
         """
         Method creating the pipeline, consisting of:
             - a list components ordered by the priority (dictionary).
-            - problem (as a separate "link" to object in the list of components, instance of a class derrived from Problem class)
+            - task (as a separate "link" to object in the list of components, instance of a class derrived from Task class)
             - models (separate list with link to objects in components dict)
             - losses (selarate list with links to objects in components dict)
 
@@ -162,10 +162,10 @@ class PipelineManager(object):
                 # Create component.
                 component, class_obj = ComponentFactory.build(c_key, c_config)
 
-                # Check if class is derived (even indirectly) from Problem.
-                if ComponentFactory.check_inheritance(class_obj, ptp.Problem.__name__):
+                # Check if class is derived (even indirectly) from Task.
+                if ComponentFactory.check_inheritance(class_obj, ptp.Task.__name__):
                     raise ConfigurationError("Object '{}' cannot be instantiated as part of pipeline, \
-                        as its class type '{}' is derived from Problem class!".format(c_key, class_obj.__name__))
+                        as its class type '{}' is derived from Task class!".format(c_key, class_obj.__name__))
 
                 # Add it to dict.
                 self.__components[c_priority] = component
@@ -222,7 +222,7 @@ class PipelineManager(object):
         # Save state dicts of all models.
         for model in self.models:
             # Check if model is wrapped in dataparallel.
-            if (type(model).__name__ == "DataDictParallel"):
+            if (type(model).__name__ == "DataStreamsParallel"):
                 model.module.save_to_checkpoint(chkpt)
                 model_str += "  + Model '{}' [{}] params saved \n".format(model.module.name, type(model.module).__name__)
             else:
@@ -414,7 +414,7 @@ class PipelineManager(object):
 
     def __len__(self):
         """
-        Returns the number of objects in the pipeline (excluding problems)
+        Returns the number of objects in the pipeline (excluding tasks)
         :return: Length of the :py:class:`Pipeline`.
 
         """
@@ -442,7 +442,7 @@ class PipelineManager(object):
 
     def summarize_all_components(self):
         """
-        Summarizes the pipeline by showing all its components (excluding problem).
+        Summarizes the pipeline by showing all its components (excluding task).
 
         :return: Summary as a str.
         """
@@ -475,7 +475,7 @@ class PipelineManager(object):
 
     def summarize_models(self):
         """
-        Summarizes the pipeline by showing all its components (excluding problem).
+        Summarizes the pipeline by showing all its components (excluding task).
 
         :return: Summary as a str.
         """
@@ -485,11 +485,11 @@ class PipelineManager(object):
         return summary_str
 
 
-    def handshake(self, data_dict, log=True):
+    def handshake(self, data_streams, log=True):
         """
         Performs handshaking of inputs and outputs definitions of all components in the pipeline.
 
-        :param data_dict: Initial datadict returned by the problem.
+        :param data_streams: Initial datadict returned by the task.
 
         :param log: Logs the detected errors and info (DEFAULT: True)
 
@@ -501,15 +501,15 @@ class PipelineManager(object):
             # Get component
             comp = self.__components[prio]
             # Handshake inputs and outputs.
-            errors += comp.handshake_input_definitions(data_dict, log)
-            errors += comp.export_output_definitions(data_dict, log)
+            errors += comp.handshake_input_definitions(data_streams, log)
+            errors += comp.export_output_definitions(data_streams, log)
 
         # Log final definition.
         if errors == 0 and log:
             self.logger.info("Handshake successfull")
-            def_str = "Final definition of DataDict used in pipeline:\n"
+            def_str = "Final definition of DataStreams used in pipeline:\n"
             def_str += '='*80 + '\n'
-            for item in data_dict.items():
+            for item in data_streams.items():
                 def_str += '  {}\n'.format(item)
             def_str += '='*80 + '\n'
             self.logger.info(def_str)
@@ -517,30 +517,30 @@ class PipelineManager(object):
         return errors
 
 
-    def forward(self, data_dict):
+    def forward(self, data_streams):
         """
         Method responsible for processing the data dict, using all components in the components queue.
 
-        :param data_dict: :py:class:`ptp.utils.DataDict` object containing both input data to be processed and that will be extended by the results.
+        :param data_streams: :py:class:`ptp.utils.DataStreams` object containing both input data to be processed and that will be extended by the results.
 
         """
         if self.app_state.args.use_gpu:
-            data_dict.to(device = self.app_state.device)
+            data_streams.to(device = self.app_state.device)
 
         for prio in self.__priorities:
             # Get component
             comp = self.__components[prio]
-            if (type(comp).__name__ == "DataDictParallel"):
-                # Forward of wrapper returns outputs in separate DataDict.
-                outputs = comp(data_dict)
+            if (type(comp).__name__ == "DataStreamsParallel"):
+                # Forward of wrapper returns outputs in separate DataStreams.
+                outputs = comp(data_streams)
                 # Postprocessing: copy only the outputs of the wrapped model.
                 for key in comp.module.output_data_definitions().keys():
-                    data_dict.extend({key: outputs[key]})
+                    data_streams.publish({key: outputs[key]})
             else: 
                 # "Normal" forward step.
-                comp(data_dict)
+                comp(data_streams)
                 # Move data to device.
-                data_dict.to(device = self.app_state.device)
+                data_streams.to(device = self.app_state.device)
 
 
     def eval(self):
@@ -574,10 +574,10 @@ class PipelineManager(object):
             # Check if class is derived (even indirectly) from Model.
             if ComponentFactory.check_inheritance(type(component), ptp.Model.__name__):
                 model = component
-                # Wrap model with DataDictParallel when required.
+                # Wrap model with DataStreamsParallel when required.
                 if self.app_state.use_dataparallel and type(model).__name__ not in components_to_skip_in_data_parallel:
                     print("Moving to GPU", model.name)
-                    model = DataDictParallel(model)
+                    model = DataStreamsParallel(model)
                 # Mode to cuda.
                 model.to(self.app_state.device)
 
@@ -594,12 +594,12 @@ class PipelineManager(object):
             model.zero_grad()
 
 
-    def backward(self, data_dict):
+    def backward(self, data_streams):
         """
         Propagates gradients backwards, starting from losses returned by every loss component in the pipeline.
         If using many losses the components derived from loss must overwrite the ''loss_keys()'' method.
 
-        :param data_dict: :py:class:`ptp.utils.DataDict` object containing both input data to be processed and that will be extended by the results.
+        :param data_streams: :py:class:`ptp.utils.DataStreams` object containing both input data to be processed and that will be extended by the results.
 
         """
         if (len(self.losses) == 0):
@@ -614,17 +614,17 @@ class PipelineManager(object):
                 pass_counter += 1
                 if pass_counter == total_passes:
                     # Last pass.
-                    data_dict[key].backward()
+                    data_streams[key].backward()
                 else:
                     # "Other pass."
-                    data_dict[key].backward(retain_graph=True)
+                    data_streams[key].backward(retain_graph=True)
 
 
     def return_loss_on_batch(self, stat_col):
         """
         Sums all losses and returns a single value that can be used e.g. in terminal condition or model(s) saving.
 
-        :param data_dict: :py:class:`ptp.utils.DataDict` object containing both input data to be processed and that will be extended by the results.
+        :param data_streams: :py:class:`ptp.utils.DataStreams` object containing both input data to be processed and that will be extended by the results.
 
         :return: Loss (scalar value).
         """
@@ -635,7 +635,7 @@ class PipelineManager(object):
         """
         Sums all losses and returns a single value that can be used e.g. in terminal condition or model(s) saving.
 
-        :param data_dict: :py:class:`ptp.utils.DataDict` object containing both input data to be processed and that will be extended by the results.
+        :param data_streams: :py:class:`ptp.utils.DataStreams` object containing both input data to be processed and that will be extended by the results.
 
         :return: Loss (scalar value).
         """
@@ -700,27 +700,27 @@ class PipelineManager(object):
         stat_col.add_statistics("total_loss_support", None)
 
 
-    def collect_statistics(self, stat_col, data_dict):
+    def collect_statistics(self, stat_col, data_streams):
         """
         Collects statistics for every component in the pipeline.
 
         :param stat_col: :py:class:`ptp.utils.StatisticsCollector`.
 
-        :param data_dict: ``DataDict`` containing inputs, targets etc.
-        :type data_dict: :py:class:`ptp.core_types.DataDict`
+        :param data_streams: ``DataStreams`` containing inputs, targets etc.
+        :type data_streams: :py:class:`ptp.data_types.DataStreams`
 
         """
         for prio in self.__priorities:
             comp = self.__components[prio]
-            comp.collect_statistics(stat_col, data_dict)
+            comp.collect_statistics(stat_col, data_streams)
 
         # Additional "total loss" (for single- and multi-loss pipelines).
         loss_sum = 0
         for loss in self.losses:
             for key in loss.loss_keys():
-                loss_sum += data_dict[key].cpu().item()
+                loss_sum += data_streams[key].cpu().item()
         stat_col["total_loss"] = loss_sum
-        stat_col["total_loss_support"] = len(data_dict["indices"]) # batch size
+        stat_col["total_loss_support"] = len(data_streams["indices"]) # batch size
 
 
     def add_aggregators(self, stat_agg):

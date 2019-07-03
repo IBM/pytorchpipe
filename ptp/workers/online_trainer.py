@@ -31,7 +31,7 @@ class OnlineTrainer(Trainer):
     ..note ::
 
         The ``OfflineTrainer`` is based on epochs. While an epoch can be defined for all finite-size datasets, \
-        it makes less sense for problems which have a very large, almost infinite, dataset (like algorithmic \
+        it makes less sense for tasks which have a very large, almost infinite, dataset (like algorithmic \
         tasks, which generate random data on-the-fly). \
          
         This is why this OnlineTrainer was implemented. Despite the fact it has the notion of epoch, it is more \
@@ -54,7 +54,7 @@ class OnlineTrainer(Trainer):
             - Sets up the terminal conditions (loss threshold, episodes & epochs (optional) limits).
 
         """
-        # Call base method to parse all command line arguments, load configuration, create problems and model etc.
+        # Call base method to parse all command line arguments, load configuration, create tasks and model etc.
         super(OnlineTrainer, self).setup_experiment()
 
         # In this trainer Partial Validation is mandatory, hence interval must be > 0.
@@ -165,12 +165,12 @@ class OnlineTrainer(Trainer):
                 self.app_state.epoch += 1
                 self.logger.info('Starting next epoch: {}\n{}'.format(self.app_state.epoch, '='*80))
 
-                # Inform the problem managers that epoch has started.
+                # Inform the task managers that epoch has started.
                 self.training.initialize_epoch()
                 self.validation.initialize_epoch()
 
-                # Apply curriculum learning - change Problem parameters.
-                self.curric_done = self.training.problem.curriculum_learning_update_params(
+                # Apply curriculum learning - change Task parameters.
+                self.curric_done = self.training.task.curriculum_learning_update_params(
                     0 if self.app_state.episode < 0 else self.app_state.episode,
                     self.app_state.epoch)
                     
@@ -248,8 +248,8 @@ class OnlineTrainer(Trainer):
                     #  6. Validate and (optionally) save the model.
                     if (self.app_state.episode % self.partial_validation_interval) == 0:
 
-                        # Clear the validation batch from all items aside of the ones originally returned by the problem.
-                        self.validation.batch.reinitialize(self.validation.problem.output_data_definitions())
+                        # Clear the validation batch from all items aside of the ones originally returned by the task.
+                        self.validation.batch.reinitialize(self.validation.task.output_data_definitions())
                         # Perform validation.
                         self.validate_on_batch(self.validation.batch)
                         # Get loss.
@@ -293,7 +293,7 @@ class OnlineTrainer(Trainer):
                 # Epoch just ended!
                 self.logger.info('End of epoch: {}\n{}'.format(self.app_state.epoch, '='*80))
                 
-                # Inform the problem managers that the epoch has ended.
+                # Inform the task managers that the epoch has ended.
                 self.training.finalize_epoch()
                 self.validation.finalize_epoch()
 
@@ -317,8 +317,8 @@ class OnlineTrainer(Trainer):
             if self.validation_stat_col["episode"][-1] != self.app_state.episode:
                 # We still must validate and try to save the model as it may performed better during this episode.
 
-                # Clear the validation batch from all items aside of the ones originally returned by the problem.
-                self.validation.batch.reinitialize(self.validation.problem.output_data_definitions())
+                # Clear the validation batch from all items aside of the ones originally returned by the task.
+                self.validation.batch.reinitialize(self.validation.task.output_data_definitions())
                 # Perform validation.
                 self.validate_on_batch(self.validation.batch)
                 # Get loss.

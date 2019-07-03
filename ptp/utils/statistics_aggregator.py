@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) IBM Corporation 2018
+# Copyright (C) IBM Corporation 2019
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -58,7 +58,7 @@ class StatisticsAggregator(StatisticsCollector):
          should be based on an existing statistics collected by the :py:class:`ptp.utils.StatisticsCollector` \
          (e.g. added by :py:func:`StatisticsCollector.add_statistics()` and collected by \
          :py:func:`ptp.models.Model.collect_statistics()` or \
-         :py:func:`ptp.models.Problem.collect_statistics()`.
+         :py:func:`ptp.models.Task.collect_statistics()`.
         :type key: str
 
         :param formatting: Formatting that will be used when logging and exporting to CSV.

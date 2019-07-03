@@ -1,4 +1,4 @@
-# Load config defining problems for training, validation and testing.
+# Load config defining tasks for training, validation and testing.
 default_configs:
   vqa_med_2019/default_vqa_med_2019.yml #,vqa_med_2019/frozen_pipelines/frozen_question_categorization_glove_rnn_ffn.yml
 
@@ -27,10 +27,10 @@ hyperparameters:
   question_encoder_output_size_val: &question_encoder_output_size_val 100
   
   # Fusion I: image + question
-  question_image_fusion_type_val: &question_image_fusion_type VQA_Attention
-  # Options: ElementWiseMultiplication | VQA_Attention
+  question_image_fusion_type_val: &question_image_fusion_type QuestionDrivenAttention
+  # Options: LowRankBilinearPooling | QuestionDrivenAttention
   #question_image_fusion_size_val: &question_image_fusion_size_val 1124
-  # INFO: this variable is set by VQA_Attention component!
+  # INFO: this variable is set by QuestionDrivenAttention component!
 
   # Image size encoder.
   image_size_encoder_output_size_val: &image_size_encoder_output_size_val 10
@@ -47,7 +47,7 @@ hyperparameters:
 
 # Training parameters:
 training:
-  problem:
+  task:
     batch_size: *batch_size
     categories: C1,C2,C3
     export_sample_weights: ~/data/vqa-med/answers.c1_c2_c3_binary_yn.weights.csv
@@ -77,7 +77,7 @@ training:
 
 # Validation parameters:
 validation:
-  problem:
+  task:
     batch_size: *batch_size
     categories: C1,C2,C3
     # Appy all preprocessing/data augmentations.
@@ -161,7 +161,7 @@ pipeline:
   # Image encoder.
   image_encoder:
     priority: 2.1
-    type: TorchVisionWrapper
+    type: GenericImageEncoder
     model: *image_encoder_model
     return_feature_maps: True
     streams:
@@ -218,9 +218,9 @@ pipeline:
   # 5th subpipeline: concatenation 
   concat:
     priority: 5.1
-    type: Concatenation
+    type: ConcatenateTensor
     input_streams: [question_image_activations,image_size_activations]
-    # Concatenation 
+    # ConcatenateTensor 
     dim: 1 # default
     input_dims: [[-1,1124],[-1,*image_size_encoder_output_size_val]]
     output_dims: [-1,*question_image_size_fusion_size_val]

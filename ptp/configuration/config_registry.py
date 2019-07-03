@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) IBM Corporation 2018
+# Copyright (C) IBM Corporation 2019
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ class ConfigRegistry(Mapping, metaclass=MetaSingletonABC):
     """
     Registry singleton for the parameters loaded from the configuration files.
 
-    Registers `default` values (coming from workers, models, problems, etc) as well as \
+    Registers `default` values (coming from workers, models, tasks, etc) as well as \
     `config` values loaded by the user for a particular experiment.
 
     Parameters can be read from the registry by indexing.
@@ -102,7 +102,7 @@ class ConfigRegistry(Mapping, metaclass=MetaSingletonABC):
         .. note::
 
             This method should be used by the objects necessitating default values \
-            (problems, models, workers etc.).
+            (tasks, models, workers etc.).
 
         :param default_params: Dictionary containing default values.
         :type default_params: dict

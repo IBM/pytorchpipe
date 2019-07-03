@@ -72,19 +72,19 @@ class StreamViewer(Component):
         return {
             }
 
-    def __call__(self, data_dict):
+    def __call__(self, data_streams):
         """
         Encodes batch, or, in fact, only one field of batch ("inputs").
-        Stores result in "outputs" field of data_dict.
+        Stores result in "outputs" field of data_streams.
 
-        :param data_dict: :py:class:`ptp.utils.DataDict` object containing (among others) "indices".
+        :param data_streams: :py:class:`ptp.utils.DataStreams` object containing (among others) "indices".
 
         """
         # Use worker interval.
         if self.app_state.episode % self.app_state.args.logging_interval == 0:
 
             # Get indices.
-            indices = data_dict[self.key_indices]
+            indices = data_streams[self.key_indices]
 
             # Get sample number.
             if self.sample_number == -1:
@@ -97,8 +97,8 @@ class StreamViewer(Component):
             absent_streams = []
             disp_str = "Showing selected streams for sample {} (index: {}):\n".format(sample_number, indices[sample_number])
             for stream_key in self.input_stream_keys:
-                if stream_key in data_dict.keys():
-                    disp_str += " '{}': {}\n".format(stream_key, data_dict[stream_key][sample_number])
+                if stream_key in data_streams.keys():
+                    disp_str += " '{}': {}\n".format(stream_key, data_streams[stream_key][sample_number])
                 else:
                     absent_streams.append(stream_key)
 

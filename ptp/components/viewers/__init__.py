@@ -1,7 +1,7 @@
-from .image_to_class_viewer import ImageToClassViewer
+from .image_viewer import ImageViewer
 from .stream_viewer import StreamViewer
 
 __all__ = [
-    'ImageToClassViewer',
+    'ImageViewer',
     'StreamViewer',
     ]

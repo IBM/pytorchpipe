@@ -1,0 +1,52 @@
+# This file defines the default values for the FactorizedBilinearPooling model.
+
+####################################################################
+# 1. CONFIGURATION PARAMETERS that will be LOADED by the component.
+####################################################################
+
+# Dropout rate (LOADED)
+# Default: 0 (means that it is turned off)
+dropout_rate: 0
+
+# Size of the latent space (LOADED)
+latent_size: 100
+
+# Factor used for sum pooling (LOADED)
+pool_factor: 2
+
+
+streams:
+  ####################################################################
+  # 2. Keymappings associated with INPUT and OUTPUT streams.
+  ####################################################################
+
+  # Stream containing batch of encoded images (INPUT)
+  image_encodings: image_encodings
+
+  # Stream containing batch of encoded questions (INPUT)
+  question_encodings: question_encodings
+
+  # Stream containing outputs (OUTPUT)
+  outputs: outputs
+
+globals:
+  ####################################################################
+  # 3. Keymappings of variables that will be RETRIEVED from GLOBALS.
+  ####################################################################
+
+  # Size of the image encodings input (RETRIEVED)
+  image_encoding_size: image_encoding_size
+
+  # Size of the question encodings input (RETRIEVED)
+  question_encoding_size: question_encoding_size
+
+  ####################################################################
+  # 4. Keymappings associated with GLOBAL variables that will be SET.
+  ####################################################################
+
+  # Size of the output (SET)
+  output_size: output_size
+
+  ####################################################################
+  # 5. Keymappings associated with statistics that will be ADDED.
+  ####################################################################

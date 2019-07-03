@@ -6,7 +6,7 @@
 
 # Training parameters:
 training:
-  problem:
+  task:
     type: &p_type WikiTextLanguageModeling
     data_folder: &data_folder ~/data/language_modeling/wikitext-2
     dataset: &dataset wikitext-2
@@ -28,7 +28,7 @@ training:
 # Validation parameters:
 validation:
   partial_validation_interval: 100
-  problem:
+  task:
     type: *p_type
     data_folder: *data_folder
     dataset: *dataset
@@ -38,7 +38,7 @@ validation:
 
 # Testing parameters:
 test:
-  problem:
+  task:
     type: *p_type 
     data_folder: *data_folder
     dataset: *dataset
@@ -95,7 +95,7 @@ pipeline:
 
   # LSTM Decoder
   decoder:
-    type: Attn_Decoder_RNN
+    type: AttentionDecoder
     priority: 4
     hidden_size: 50
     num_layers: 1

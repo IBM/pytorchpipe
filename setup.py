@@ -1,4 +1,4 @@
-# Copyright (C) IBM Corporation 2018-2019
+# Copyright (C) IBM Corporation 2019-2019
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -136,7 +136,7 @@ setup(
     # project page. What does your project relate to?
     #
     # Note that this is a string of words separated by whitespace, not a list.
-    keywords='machine learning neural nets pytorch pipeline component problem model',  # Optional
+    keywords='machine learning neural nets pytorch pipeline component task model',  # Optional
 
     # You can just specify package directories manually here if your project is
     # simple. Or you can use find_packages().

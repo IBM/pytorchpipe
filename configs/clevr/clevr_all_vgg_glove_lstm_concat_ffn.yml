@@ -1,19 +1,19 @@
-# Load config defining CLEVR problems for training, validation and testing.
+# Load config defining CLEVR tasks for training, validation and testing.
 default_configs: clevr/default_clevr.yml
 
 # Resize and normalize images - in all sets.
 training:
-  problem: 
+  task: 
     resize_image: [224, 224]
     image_preprocessing: normalize
 
 validation:
-  problem: 
+  task: 
     resize_image: [224, 224]
     image_preprocessing: normalize
 
 test:
-  problem: 
+  task: 
     resize_image: [224, 224]
     image_preprocessing: normalize
 
@@ -76,7 +76,7 @@ pipeline:
   # Image encoder.
   image_encoder:
     priority: 2.1
-    type: TorchVisionWrapper
+    type: GenericImageEncoder
     model_type: vgg16
     streams:
       inputs: images
@@ -87,7 +87,7 @@ pipeline:
   ##################################################################
   # 3rd subpipeline: concatenation + FF.
   concat:
-    type: Concatenation
+    type: ConcatenateTensor
     priority: 3.1
     input_streams: [question_activations,image_activations]
     dim: 1 # default

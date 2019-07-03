@@ -52,7 +52,7 @@ class OfflineTrainer(Trainer):
             - Sets up the terminal conditions (loss threshold, episodes & epochs (optional) limits).
 
         """
-        # Call base method to parse all command line arguments, load configuration, create problems and model etc.
+        # Call base method to parse all command line arguments, load configuration, create tasks and model etc.
         super(OfflineTrainer, self).setup_experiment()
 
         # In this trainer Partial Validation is mandatory, hence interval must be > 0.
@@ -163,12 +163,12 @@ class OfflineTrainer(Trainer):
                 self.app_state.epoch += 1
                 self.logger.info('Starting next epoch: {}\n{}'.format(self.app_state.epoch, '='*80))
 
-                # Inform the problem managers that epoch has started.
+                # Inform the task managers that epoch has started.
                 self.training.initialize_epoch()
                 self.validation.initialize_epoch()
 
-                # Apply curriculum learning - change Problem parameters.
-                self.curric_done = self.training.problem.curriculum_learning_update_params(
+                # Apply curriculum learning - change Task parameters.
+                self.curric_done = self.training.task.curriculum_learning_update_params(
                     0 if self.app_state.episode < 0 else self.app_state.episode,
                     self.app_state.epoch)
                     
@@ -245,8 +245,8 @@ class OfflineTrainer(Trainer):
 
                     #  6. Validate and (optionally) save the model.
                     if self.partial_validation_interval > 0 and (self.app_state.episode % self.partial_validation_interval) == 0:
-                        # Clear the validation batch from all items aside of the ones originally returned by the problem.
-                        self.validation.batch.reinitialize(self.validation.problem.output_data_definitions())
+                        # Clear the validation batch from all items aside of the ones originally returned by the task.
+                        self.validation.batch.reinitialize(self.validation.task.output_data_definitions())
                         # Perform validation.
                         self.validate_on_batch(self.validation.batch)
                         # Do not save the model: OfflineTrainer uses the full set to determine whether to save or not.
@@ -269,7 +269,7 @@ class OfflineTrainer(Trainer):
                 self.aggregate_all_statistics(self.training, self.pipeline, self.training_stat_col, self.training_stat_agg)
                 self.export_all_statistics( self.training_stat_agg,  '[Full Training]')
 
-                # Inform the training problem manager that the epoch has ended.
+                # Inform the training task manager that the epoch has ended.
                 self.training.finalize_epoch()
 
                 # Validate over the entire validation set.
@@ -281,7 +281,7 @@ class OfflineTrainer(Trainer):
                 # Save the pipeline using the latest validation statistics.
                 self.pipeline.save(self.checkpoint_dir, training_status, validation_set_loss)
 
-                # Inform the validation problem manager that the epoch has ended.
+                # Inform the validation task manager that the epoch has ended.
                 self.validation.finalize_epoch()
 
                 # Terminal conditions.

@@ -15,9 +15,7 @@
 __author__ = "Tomasz Kornuta"
 
 import os
-
-import ptp.components.utils.word_mappings as wm
-
+import csv
 
 class WordMappings(object):
     """
@@ -60,15 +58,15 @@ class WordMappings(object):
                 exit(-1)
 
             # Try to load the preprocessed word mappings.
-            self.word_to_ix = wm.load_word_mappings_from_csv_file(self.logger, self.data_folder, self.word_mappings_file)
+            self.word_to_ix = load_word_mappings_from_csv_file(self.logger, self.data_folder, self.word_mappings_file)
             assert (len(self.word_to_ix) > 0), "The word mappings loaded from file are empty!"
 
         else:
             # Try to generate new word mappings from source files.
-            self.word_to_ix = wm.generate_word_mappings_from_source_files(self.logger, self.data_folder, self.source_vocabulary_files)
+            self.word_to_ix = generate_word_mappings_from_source_files(self.logger, self.data_folder, self.source_vocabulary_files)
             assert (len(self.word_to_ix) > 0), "The word mappings generated from sources are empty!"
             # Ok, save mappings, so next time we will simply load them.
-            wm.save_word_mappings_to_csv_file(self.logger, self.data_folder, self.word_mappings_file, self.word_to_ix)
+            save_word_mappings_to_csv_file(self.logger, self.data_folder, self.word_mappings_file, self.word_to_ix)
 
         # Check if additional tokens are present.
         self.additional_tokens = self.config["additional_tokens"].split(',')
@@ -90,3 +88,99 @@ class WordMappings(object):
 
 
 
+def load_word_mappings_from_csv_file(logger, folder, filename):
+    """
+    Loads (word:index) mappings from csv file.
+
+    .. warning::
+            There is an assumption that file will contain key:value pairs (no content checking for now!)
+
+    :param logger: Logger object.
+
+    :param folder: Relative path to to the folder.
+    :type folder: str
+
+    :param filename: File with encodings (absolute path + filename).
+
+    :return: dictionary with word:index keys
+    """        
+    file_path = os.path.join(os.path.expanduser(folder), filename)
+
+    if not os.path.exists(file_path):
+        logger.warning("Cannot load word mappings from '{}' because the file does not exist".format(file_path))
+
+    with open(file_path, mode='rt') as csvfile:
+        # Check the presence of the header.
+        sniffer = csv.Sniffer()
+        first_bytes = str(csvfile.read(256))
+        has_header = sniffer.has_header(first_bytes)
+        # Rewind.
+        csvfile.seek(0)  
+        reader = csv.reader(csvfile)
+        # Skip the header row.
+        if has_header:
+            next(reader)  
+        # Read the remaining rows.
+        word_to_ix = {rows[0]:int(rows[1]) for rows in reader}
+
+    logger.info("Loaded mappings of size {}".format(len(word_to_ix)))
+    return word_to_ix
+
+
+def save_word_mappings_to_csv_file(logger, folder, filename, word_to_ix, fieldnames = ["word","index"]):
+    """
+    Saves (word:index) mappings dictionary to a file.
+
+    :param logger: Logger object.
+
+    :param folder: Relative path to to the folder.
+    :type folder: str
+
+    :param filename: Name of file with encodings.
+    
+    :param word_to_ix: Dictionary with word:index mappings to be saved.
+    
+    """
+    # Expand path.
+    folder = os.path.expanduser(folder)
+    # Make sure directory exists.
+    os.makedirs(os.path.dirname(folder +'/'), exist_ok=True)
+
+    file_path = os.path.join(folder, filename)
+
+    with open(file_path, mode='w+') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        # Create header.
+        writer.writeheader()
+
+        # Write word-index pairs.
+        for (k,v) in word_to_ix.items():
+            #print("{} : {}".format(k,v))
+            writer.writerow({fieldnames[0]:k, fieldnames[1]: v})
+
+    logger.info("Saved mappings of size {} to file '{}'".format(len(word_to_ix), file_path))
+
+def pad_trunc_list(l: list, length: int, padding_value = 0, eos_value = None):
+    """
+    Will apply padding / clipping to list to meet requested length.
+    Works on the list in-place.
+
+    :param l: List to manipulate
+
+    :param length: Target length
+
+    :param padding_value: Value to fill when padding. Default is int(0).
+
+    :return: None
+    """
+    if len(l) < length:
+        if eos_value is not None:
+            l.append(eos_value)
+        l.extend([padding_value]*(length-len(l)))
+        
+    elif len(l) > length:
+        #print("pad_trunc_list to cat!: {}".format(len(l)))
+        #exit(1)
+        del l[length:]
+        if eos_value is not None:
+            l[length-1] = eos_value

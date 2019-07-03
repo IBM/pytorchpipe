@@ -79,11 +79,11 @@ class GlobalVariablePublisher(Component):
         return { }
 
 
-    def __call__(self, data_dict):
+    def __call__(self, data_streams):
         """
         Empty method.
 
-        :param data_dict: :py:class:`ptp.utils.DataDict` object.
+        :param data_streams: :py:class:`ptp.utils.DataStreams` object.
 
         """
         pass

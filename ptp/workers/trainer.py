@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) IBM Corporation 2018
+# Copyright (C) IBM Corporation 2019
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import ptp.utils.logger as logging
 
 from ptp.workers.worker import Worker
 
-from ptp.application.problem_manager import ProblemManager
+from ptp.application.task_manager import TaskManager
 from ptp.application.pipeline_manager import PipelineManager
 
 from ptp.utils.statistics_collector import StatisticsCollector
@@ -110,15 +110,15 @@ class Trainer(Worker):
 
         - Creates the pipeline consisting of many components
 
-        - Creates training problem manager
+        - Creates training task manager
 
         - Handles curriculum learning if indicated
 
-        - Creates validation problem manager
+        - Creates validation task manager
 
         - Set optimizer
 
-        - Performs testing of compatibility of both training and validation problems and created pipeline.
+        - Performs testing of compatibility of both training and validation tasks and created pipeline.
 
         """
         # Call base method to parse all command line arguments and add default sections.
@@ -173,11 +173,11 @@ class Trainer(Worker):
             print("Error: Couldn't retrieve the training section '{}' from the loaded configuration".format(tsn))
             exit(-1)
 
-        # Get training problem type.
+        # Get training task type.
         try:
-            training_problem_type = self.config_training['problem']['type']
+            training_task_type = self.config_training['task']['type']
         except KeyError:
-            print("Error: Couldn't retrieve the problem 'type' from the training section '{}' in the loaded configuration".format(tsn))
+            print("Error: Couldn't retrieve the task 'type' from the training section '{}' in the loaded configuration".format(tsn))
             exit(-1)
 
         # Get validation section.
@@ -190,11 +190,11 @@ class Trainer(Worker):
             print("Error: Couldn't retrieve the validation section '{}' from the loaded configuration".format(vsn))
             exit(-1)
 
-        # Get validation problem type.
+        # Get validation task type.
         try:
-            _ = self.config_validation['problem']['type']
+            _ = self.config_validation['task']['type']
         except KeyError:
-            print("Error: Couldn't retrieve the problem 'type' from the validation section '{}' in the loaded configuration".format(vsn))
+            print("Error: Couldn't retrieve the task 'type' from the validation section '{}' in the loaded configuration".format(vsn))
             exit(-1)
 
         # Get pipeline section.
@@ -224,7 +224,7 @@ class Trainer(Worker):
                 time_str = '{0:%Y%m%d_%H%M%S}'.format(datetime.now())
                 if self.app_state.args.exptag != '':
                     time_str = time_str + "_" + self.app_state.args.exptag
-                self.app_state.log_dir = path.expanduser(self.app_state.args.expdir) + '/' + training_problem_type + '/' + pipeline_name + '/' + time_str + '/'
+                self.app_state.log_dir = path.expanduser(self.app_state.args.expdir) + '/' + training_task_type + '/' + pipeline_name + '/' + time_str + '/'
                 # Lowercase dir.
                 self.app_state.log_dir = self.app_state.log_dir.lower()
                 makedirs(self.app_state.log_dir, exist_ok=False)
@@ -256,15 +256,15 @@ class Trainer(Worker):
 
         ################# TRAINING PROBLEM ################# 
 
-        # Build training problem manager.
-        self.training = ProblemManager('training', self.config_training) 
+        # Build training task manager.
+        self.training = TaskManager('training', self.config_training) 
         errors += self.training.build()
         
         # parse the curriculum learning section in the loaded configuration.
         if 'curriculum_learning' in self.config_training:
 
             # Initialize curriculum learning - with values from loaded configuration.
-            self.training.problem.curriculum_learning_initialize(self.config_training['curriculum_learning'])
+            self.training.task.curriculum_learning_initialize(self.config_training['curriculum_learning'])
 
             # If the 'must_finish' key is not present in config then then it will be finished by default
             self.config_training['curriculum_learning'].add_default_params({'must_finish': True})
@@ -279,8 +279,8 @@ class Trainer(Worker):
 
         ################# VALIDATION PROBLEM ################# 
         
-        # Build validation problem manager.
-        self.validation = ProblemManager('validation', self.config_validation)
+        # Build validation task manager.
+        self.validation = TaskManager('validation', self.config_validation)
         errors += self.validation.build()
 
         ###################### PIPELINE ######################
@@ -296,18 +296,18 @@ class Trainer(Worker):
 
         # Show pipeline.
         summary_str = self.pipeline.summarize_all_components_header()
-        summary_str += self.training.problem.summarize_io("training")
-        summary_str += self.validation.problem.summarize_io("validation")
+        summary_str += self.training.task.summarize_io("training")
+        summary_str += self.validation.task.summarize_io("validation")
         summary_str += self.pipeline.summarize_all_components()
         self.logger.info(summary_str)
         
         # Handshake definitions.
         self.logger.info("Handshaking training pipeline")
-        defs_training = self.training.problem.output_data_definitions()
+        defs_training = self.training.task.output_data_definitions()
         errors += self.pipeline.handshake(defs_training)
 
         self.logger.info("Handshaking validation pipeline")
-        defs_valid = self.validation.problem.output_data_definitions()
+        defs_valid = self.validation.task.output_data_definitions()
         errors += self.pipeline.handshake(defs_valid)
 
         # Check errors.
@@ -414,8 +414,8 @@ class Trainer(Worker):
         """
         - Initializes all ``StatisticsCollectors`` and ``StatisticsAggregators`` used by a given worker: \
 
-            - For training statistics (adds the statistics of the model & problem),
-            - For validation statistics (adds the statistics of the model & problem).
+            - For training statistics (adds the statistics of the model & task),
+            - For validation statistics (adds the statistics of the model & task).
 
         - Creates the output files (csv).
 
@@ -424,7 +424,7 @@ class Trainer(Worker):
         # Create statistics collector for training.
         self.training_stat_col = StatisticsCollector()
         self.add_statistics(self.training_stat_col)
-        self.training.problem.add_statistics(self.training_stat_col)
+        self.training.task.add_statistics(self.training_stat_col)
         self.pipeline.add_statistics(self.training_stat_col)
         # Create the csv file to store the training statistics.
         self.training_batch_stats_file = self.training_stat_col.initialize_csv_file(self.app_state.log_dir, 'training_statistics.csv')
@@ -432,7 +432,7 @@ class Trainer(Worker):
         # Create statistics aggregator for training.
         self.training_stat_agg = StatisticsAggregator()
         self.add_aggregators(self.training_stat_agg)
-        self.training.problem.add_aggregators(self.training_stat_agg)
+        self.training.task.add_aggregators(self.training_stat_agg)
         self.pipeline.add_aggregators(self.training_stat_agg)
         # Create the csv file to store the training statistic aggregations.
         self.training_set_stats_file = self.training_stat_agg.initialize_csv_file(self.app_state.log_dir, 'training_set_agg_statistics.csv')
@@ -441,7 +441,7 @@ class Trainer(Worker):
         # Create statistics collector for validation.
         self.validation_stat_col = StatisticsCollector()
         self.add_statistics(self.validation_stat_col)
-        self.validation.problem.add_statistics(self.validation_stat_col)
+        self.validation.task.add_statistics(self.validation_stat_col)
         self.pipeline.add_statistics(self.validation_stat_col)
         # Create the csv file to store the validation statistics.
         self.validation_batch_stats_file = self.validation_stat_col.initialize_csv_file(self.app_state.log_dir, 'validation_statistics.csv')
@@ -449,7 +449,7 @@ class Trainer(Worker):
         # Create statistics aggregator for validation.
         self.validation_stat_agg = StatisticsAggregator()
         self.add_aggregators(self.validation_stat_agg)
-        self.validation.problem.add_aggregators(self.validation_stat_agg)
+        self.validation.task.add_aggregators(self.validation_stat_agg)
         self.pipeline.add_aggregators(self.validation_stat_agg)
         # Create the csv file to store the validation statistic aggregations.
         self.validation_set_stats_file = self.validation_stat_agg.initialize_csv_file(self.app_state.log_dir, 'validation_set_agg_statistics.csv')
@@ -512,8 +512,8 @@ class Trainer(Worker):
 
         Additionally logs results (to files, TensorBoard) and handles visualization.
 
-        :param valid_batch: data batch generated by the problem and used as input to the model.
-        :type valid_batch: ``DataDict``
+        :param valid_batch: data batch generated by the task and used as input to the model.
+        :type valid_batch: ``DataStreams``
 
         :return: Validation loss.
 

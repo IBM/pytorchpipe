@@ -86,20 +86,20 @@ class StreamFileExporter(Component):
         return {
             }
 
-    def __call__(self, data_dict):
+    def __call__(self, data_streams):
         """
         Exports values from the indicated streams to file.
-        :param data_dict: :py:class:`ptp.utils.DataDict` object containing "indices" and other streams that will be exported to file.
+        :param data_streams: :py:class:`ptp.utils.DataStreams` object containing "indices" and other streams that will be exported to file.
         """
         # Get batch size.
-        indices = data_dict[self.key_indices]
+        indices = data_streams[self.key_indices]
         batch_size = len(indices)
 
         # Check present streams.
         absent_streams = []
         present_streams = []
         for stream_key in self.input_stream_keys:
-            if stream_key in data_dict.keys():
+            if stream_key in data_streams.keys():
                 present_streams.append(stream_key)
             else:
                 absent_streams.append(stream_key)
@@ -122,7 +122,7 @@ class StreamFileExporter(Component):
             val_str = ''
             for stream_key in self.input_stream_keys:
                 if stream_key in present_streams:
-                    value = data_dict[stream_key][i]
+                    value = data_streams[stream_key][i]
                     # Add value changed to string along with separator.
                     val_str = val_str + '{}'.format(value) + self.separator
             # Remove the last separator.

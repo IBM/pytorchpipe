@@ -1,8 +1,8 @@
-# Load config defining problems for training, validation and testing.
+# Load config defining tasks for training, validation and testing.
 default_configs: vqa_med_2019/c2_classification/default_c2_classification.yml
 
 training:
-  problem:
+  task:
     batch_size: 32
     # Appy all preprocessing/data augmentations.
     image_preprocessing: normalize
@@ -10,16 +10,16 @@ training:
     question_preprocessing: lowercase,remove_punctuation,tokenize
     # none | lowercase | remove_punctuation | tokenize | random_remove_stop_words | random_shuffle_words | all
     streams: 
-      # Problem is returning tokenized questions.
+      # Task is returning tokenized questions.
       questions: tokenized_questions
 
 validation:
-  problem:
+  task:
     batch_size: 32
     question_preprocessing: lowercase,remove_punctuation,tokenize
     # none | lowercase | remove_punctuation | tokenize | random_remove_stop_words | random_shuffle_words | all
     streams: 
-      # Problem is returning tokenized questions.
+      # Task is returning tokenized questions.
       questions: tokenized_questions
 
 
@@ -67,7 +67,7 @@ pipeline:
   # Image encoder.
   image_encoder:
     priority: 3.1
-    type: TorchVisionWrapper
+    type: GenericImageEncoder
     model_type: resnet152
     return_feature_maps: True
     streams:
@@ -116,9 +116,9 @@ pipeline:
   # 6th subpipeline: concatenation + FF.
   concat:
     priority: 5.2
-    type: Concatenation
+    type: ConcatenateTensor
     input_streams: [rn_activation,image_size_activations]
-    # Concatenation 
+    # ConcatenateTensor 
     dim: 1 # default
     input_dims: [[-1,100],[-1,10]]
     output_dims: [-1,110]

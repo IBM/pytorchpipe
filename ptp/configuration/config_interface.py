@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) IBM Corporation 2018
+# Copyright (C) IBM Corporation 2019
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -223,7 +223,7 @@ class ConfigInterface(Mapping):
         .. note::
 
             This method should be used by the objects necessitating default values \
-            (problems, models, workers etc.).
+            (tasks, models, workers etc.).
 
         :param default_params: Dictionary containing `default` values.
         :type default_params: dict

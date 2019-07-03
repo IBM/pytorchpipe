@@ -2,7 +2,7 @@
 # It adds new sections (sets) without samplers and components for saving answers that we can use for getting final answers.
 
 training_answers:
-  problem:
+  task:
     type: &p_type VQAMED2019
     data_folder: &data_folder ~/data/vqa-med
     split: training
@@ -20,7 +20,7 @@ training_answers:
     num_workers: 1
 
 validation_answers:
-  problem:
+  task:
     type: *p_type
     data_folder: *data_folder
     split: validation

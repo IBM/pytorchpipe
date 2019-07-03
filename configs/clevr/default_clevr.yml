@@ -1,6 +1,6 @@
 # Training parameters:
 training:
-  problem: 
+  task: 
     type: CLEVR
     batch_size: &b 64
     split: training
@@ -18,7 +18,7 @@ training:
 
 # Validation parameters:
 validation:
-  problem:
+  task:
     type: CLEVR
     batch_size: *b
     split: validation
@@ -26,7 +26,7 @@ validation:
 
 # Testing parameters:
 test:
-  problem:
+  task:
     type: CLEVR
     batch_size: *b
     split: test
@@ -96,7 +96,7 @@ pipeline:
 
   #image_viewer:
   #  priority: 100.5
-  #  type: ImageToClassViewer
+  #  type: ImageViewer
   #  streams:
   #    images: inputs
   #    labels: labels

@@ -1,0 +1,44 @@
+# This file defines the default values for the dummy language identification task.
+
+####################################################################
+# 1. CONFIGURATION PARAMETERS that will be LOADED by the component.
+####################################################################
+
+# Folder where task will store data (LOADED)
+data_folder: '~/data/language_identification/dummy'
+
+# Defines the set that will be used used (LOADED)
+# True: training set | False: test set.
+use_train_data: True
+
+# If set, task will always (re)generate data (LOADED)
+regenerate: False
+
+streams: 
+  ####################################################################
+  # 2. Keymappings associated with INPUT and OUTPUT streams.
+  ####################################################################
+
+  # Stream containing batch of indices (OUTPUT)
+  # Every task MUST return that stream.
+  indices: indices
+
+  # Stream containing batch of images (OUTPUT)
+  inputs: inputs
+
+  # Stream containing targets (label ids) (OUTPUT)
+  targets: targets
+
+globals:
+  ####################################################################
+  # 3. Keymappings of variables that will be RETRIEVED from GLOBALS.
+  ####################################################################
+
+  ####################################################################
+  # 4. Keymappings associated with GLOBAL variables that will be SET.
+  ####################################################################
+
+  ####################################################################
+  # 5. Keymappings associated with statistics that will be ADDED.
+  ####################################################################
+

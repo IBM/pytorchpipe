@@ -11,17 +11,17 @@ default_training:
   # Default batch size.
   batch_size: 64
 
-  # Definition of the problem (Mandatory!)
-  #problem:
+  # Definition of the task (Mandatory!)
+  #task:
   #  One must define its type (Mandatory!)
   #  type: ?
-  #  The rest of the content of that section is problem-specific...
+  #  The rest of the content of that section is task-specific...
   
   # Section describing curriculum learning (Optional)
   #curriculum_learning: 
   #  # Flag indicating whether curriculum learning has to finish before (eventual) termination of the training.
   #  must_finish: True
-  #  The rest of the content of that section is problem-specific...
+  #  The rest of the content of that section is task-specific...
 
   # Definition of optimizer (Mandatory!)
   #optimizer:
@@ -74,11 +74,11 @@ default_validation:
   # In this trainer Partial Validation is mandatory, hence interval must be > 0.
   partial_validation_interval: 100
 
-  # Definition of the problem (mandatory!)
-  #problem:
+  # Definition of the task (mandatory!)
+  #task:
   #  One must define its type (Mandatory!)
   #  type: ?
-  #  The rest of the content of that section is problem-specific...
+  #  The rest of the content of that section is task-specific...
 
   # Set a default configuration section for data loader.
   dataloader:
