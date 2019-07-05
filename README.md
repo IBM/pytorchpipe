@@ -115,7 +115,7 @@ More in that subject can be found in the following blog post on [dev_mode](https
 
 Please consider a simple ConvNet model consisting of two parts: 
   * few convolutional layers returning _feature maps_ being, in general, a 4D tensor (first dimension being associated with the batch size),
-  * one (or more) dense layers that accepts the flattened feature maps and return _predictions_ as probability distributions (Sofmax as last non-linearity).
+  * one (or more) dense layers that accepts the (flattened) feature maps and return _predictions_ as logarithm of probability distributions (LogSoftmax as last non-linearity).
 
 ### Training the model
 
@@ -158,12 +158,6 @@ Please note that whenever the validation loss goes down, the trainer automatical
 After the training will be finished the trainer will inform about the termination reason and indicate where the experiment files (model checkpoint, log files, statistics etc.) can be found:
 
 ```console
-[2019-07-05 13:32:33] - INFO - OfflineTrainer >>> episode 006879; episodes_aggregated 000079; epoch 07; loss 0.1416896731; loss_min 0.0171624869; loss_max 0.4912818968; loss_std 0.0911608562; accuracy 0.96000; accuracy_std 0.02264 [Full Validation]
-[2019-07-05 13:32:33] - INFO - mnist_classification_convnet_softmax >>> Exporting pipeline 'mnist_classification_convnet_softmax' parameters to checkpoint:
- /users/tomaszkornuta/experiments/mnist/mnist_classification_convnet_softmax/20190705_132624/checkpoints/mnist_classification_convnet_softmax_best.pt
-  + Model 'image_encoder' [ConvNetEncoder] params saved
-  + Model 'classifier' [FeedForwardNetwork] params saved
-
 [2019-07-05 13:32:33] - INFO - mnist_classification_convnet_softmax >>> Updated training status in checkpoint:
  /users/tomaszkornuta/experiments/mnist/mnist_classification_convnet_softmax/20190705_132624/checkpoints/mnist_classification_convnet_softmax_best.pt
 [2019-07-05 13:32:33] - INFO - OfflineTrainer >>>
@@ -186,7 +180,7 @@ In order to test the model generalization we will use _ptp-processor_, yet anoth
 ptp-processor --load /users/tomaszkornuta/experiments/mnist/mnist_classification_convnet_softmax/20190705_132624/checkpoints/mnist_classification_convnet_softmax_best.pt
 ```
 
-__Note__: _ptp-processor_ uses content of _test_ section as default, but it can be changed at run-time. Please call ```ptp-processor --h``` to learn about the options.
+__Note__: _ptp-processor_ uses content of _test_ section as default, but it can be changed at run-time. Please call ```ptp-processor --h``` to learn about the available run-time arguments.
 
 
 ```console
