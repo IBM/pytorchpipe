@@ -121,7 +121,7 @@ Please consider a simple ConvNet model consisting of two parts:
 
 Assume that we will use ```NLL Loss``` function, and, besides, want to monitor the ```Accuracy``` statistics.
 The resulting pipeline is presented below.
-The additional ```Answer Decoder``` component translates the predictions into class names, whereas ```Stream Viewer``` displays content of the indicated data streams for a sample randomply picked from batch, e.g.:
+The additional ```Answer Decoder``` component translates the predictions into class names, whereas ```Stream Viewer``` displays content of the indicated data streams for a single sample randomly picked from the batch, e.g.:
 The associated configuration file can be found in ```mnist_classification_convnet_softmax.yml``` in ```configs/tutorials``` folder.
 
 
