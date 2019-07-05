@@ -27,16 +27,14 @@ In its core, to _accelerate the computations_ on their own, PTP relies on PyTorc
 The models are _agnostic_ to those operations and one indicates whether to use them in configuration files (data loaders) or by passing adequate run-time arguments (--gpu).
 
 **Datasets:**
-PTP focuses on multi-modal reasoning combining vision and language. Currently it offers the following _Tasks_ from the following task domains:
+PTP focuses on multi-modal reasoning combining vision and language. Currently it offers the following _Tasks_ from the following task, categorized into three domains:
 
-  * CLEVR, GQA, ImageCLEF VQA-Med 2019 (Visual Question Answering)
-  * MNIST, CIFAR-100 (Image Classification)
-  * WiLY (Language Identification)
-  * WikiText-2 / WikiText-103 (Language Modelling)
-  * ANKI (Machine Translation)
+![Alt text](docs/source/img/components/ptp_tasks.png?raw=true)
+
 
 Aside of providing batches of samples, the Task class will automatically download the files associated with a given dataset (as long as the dataset is publicly available).
-The diversity of those tasks (and associated models) proves the flexibility of the framework, we are working on incorporation of new ones into PTP.
+The diversity of those tasks (and the associated models) proves the flexibility of the framework.
+We are working on incorporation of new Tasks into PTP.
 
 **Pipelines:**
 What people typically define as a _model_ in PTP is framed as a _pipeline_, consisting of many inter-connected components, with one or more _Models_ containing trainable elements.
@@ -114,8 +112,8 @@ More in that subject can be found in the following blog post on [dev_mode](https
 ## Quick start: MNIST image classification with a simple ConvNet model
 
 Please consider a simple ConvNet model consisting of two parts: 
-  * few convolutional layers returning _feature maps_ being, in general, a 4D tensor (first dimension being associated with the batch size),
-  * one (or more) dense layers that accepts the (flattened) feature maps and return _predictions_ as logarithm of probability distributions (LogSoftmax as last non-linearity).
+  * few convolutional layers accepting the MNIST images and returning _feature maps_ being, in general, a 4D tensor (first dimension being the batch size, a rule of thumb in PTP),
+  * one (or more) dense layers that accept the (flattened) feature maps and return _predictions_ as logarithm of probability distributions (LogSoftmax as last non-linearity).
 
 ### Training the model
 
