@@ -173,7 +173,7 @@ After the training will be finished the trainer will inform about the terminatio
 In order to test the model generalization we will use _ptp-processor_, yet another worker that performs a single pass over the indicated set.
 
 
-![Alt text](docs/source/img/1_tutorials/data_flow_tutorial_mnist_1_training.png?raw=true "Test of the pretrained model on MNIST dataset test split")
+![Alt text](docs/source/img/1_tutorials/data_flow_tutorial_mnist_2_test.png?raw=true "Test of the pretrained model on test split of the MNIST dataset ")
 
 
 ```console
@@ -187,6 +187,10 @@ __Note__: _ptp-processor_ uses content of _test_ section as default, but it can 
 [2019-07-05 13:34:41] - INFO - Processor >>> episode 000313; episodes_aggregated 000157; loss 0.1464060694; loss_min 0.0352710858; loss_max 0.3801054060; loss_std 0.0669835582; accuracy 0.95770; accuracy_std 0.02471 [Full Set]
 [2019-07-05 13:34:41] - INFO - Processor >>> Experiment logged to: /users/tomaszkornuta/experiments/mnist/mnist_classification_convnet_softmax/20190705_132624/test_20190705_133436/
 ```
+
+__Note__: Please analyse the ```mnist_classification_convnet_softmax.yml``` configuration file (in ```configs/tutorials``` directory). Keep in mind that:
+  * all components come with default configuration files, located in ```configs/default/components``` folders,
+  * all workers come with default configuration files, located in ```configs/default/workers``` folders.
 
 
 ## Maintainers
