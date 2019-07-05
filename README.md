@@ -17,6 +17,9 @@ PyTorchPipe (PTP) is a component-oriented framework that facilitates development
 PTP frames training and testing procedures as _pipelines_ consisting of many components communicating through data streams.
 Each such a stream can consist of several components, including one task instance (providing batches of data), any number of trainable components (models) and additional components providing required transformations and computations.
 
+
+![Alt text](docs/source/img/data_flow_vqa_5_attention_gpu_loaders.png?raw=true "Exemplary multi-modal data flow diagram")
+
 As a result, the training & testing procedures are no longer pinned to a specific task or model, and built-in mechanisms for compatibility checking (handshaking), configuration and global variables management & statistics collection facilitate rapid development of complex pipelines and running diverse experiments.
 
 In its core, to _accelerate the computations_ on their own, PTP relies on PyTorch and extensively uses its mechanisms for distribution of computations on CPUs/GPUs, including multi-process data loaders and multi-GPU data parallelism.
@@ -105,6 +108,16 @@ Next, install the dependencies by running:
 
 This command will install all dependencies via pip_, while still enabling you to change the code of the existing components/workers and running them by calling the associated ``ptp-*`` commands.
 More in that subject can be found in the following blog post on [dev_mode](https://setuptools.readthedocs.io/en/latest/setuptools.html#development-mode).
+
+
+## Quick start
+
+Please consider the following pipeline
+
+```console
+git clone git@github.com:IBM/pytorchpipe.git
+cd pytorchpipe/
+```
 
 
 ## Maintainers
