@@ -189,7 +189,7 @@ In order to test the model generalization we will use _ptp-processor_, yet anoth
 ptp-processor --load /users/tomaszkornuta/experiments/mnist/mnist_classification_convnet_softmax/20190705_132624/checkpoints/mnist_classification_convnet_softmax_best.pt
 ```
 
-__Note__: _ptp-processor_ uses content of _test_ section as default, but it can be changed at run-time. Please call ```ptp-processor --h``` to learn about the available run-time arguments.
+__Note__: _ptp-processor_ uses the content of _test_ section as default, but it can be changed at run-time. Please call ```ptp-processor --h``` to learn about the available run-time arguments.
 
 
 ```console
@@ -197,7 +197,7 @@ __Note__: _ptp-processor_ uses content of _test_ section as default, but it can 
 [2019-07-05 13:34:41] - INFO - Processor >>> Experiment logged to: /users/tomaszkornuta/experiments/mnist/mnist_classification_convnet_softmax/20190705_132624/test_20190705_133436/
 ```
 
-__Note__: Please analyse the ```mnist_classification_convnet_softmax.yml``` configuration file (in ```configs/tutorials``` directory). Keep in mind that:
+__Note__: Please analyse the ```mnist_classification_convnet_softmax.yml``` configuration file (located in ```configs/tutorials``` directory). Keep in mind that:
   * all components come with default configuration files, located in ```configs/default/components``` folders,
   * all workers come with default configuration files, located in ```configs/default/workers``` folders.
 
