@@ -127,7 +127,7 @@ The additional AnswerPrediction component translates the predictions into class 
 ![Alt text](docs/source/img/1_tutorials/data_flow_tutorial_mnist_1_training.png?raw=true "Trainining of a simple ConvNet model on MNIST dataset")
 
 
-Let's run the associated configuration file by calling _ptp-offline-trainer_, a general _worker_ script that will train the model in epochs, following the classical training-validation methodology:
+Let's run the associated configuration file (```mnist_classification_convnet_softmax.yml``` in ```configs/tutorials``` directory) by calling _ptp-offline-trainer_, a general _worker_ script that will train the model in epochs, following the classical training-validation methodology:
 
 ```console
 ptp-offline-trainer --c configs/tutorials/mnist_classification_convnet_softmax.yml
@@ -145,7 +145,7 @@ __Note__: Please call ```offline-trainer --h``` to learn more about the run-time
  'predicted_answers': Five
 ```
 
-Please note that whenever the validation loss goes down, the trainer automatically saves the pipeline to the file:
+Please note that whenever the validation loss goes down, the trainer automatically will save the pipeline to the checkpoint file:
 
 ```console
 [2019-07-05 13:27:57] - INFO - OfflineTrainer >>> episode 001719; episodes_aggregated 000079; epoch 01; loss 0.2815686762; loss_min 0.1017002687; loss_max 0.6083457470; loss_std 0.0969817117; accuracy 0.92200; accuracy_std 0.03567 [Full Validation]
