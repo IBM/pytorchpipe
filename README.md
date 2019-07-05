@@ -164,7 +164,7 @@ Please note that whenever the validation loss goes down, the trainer automatical
   + Model 'classifier' [FeedForwardNetwork] params saved
 ```
 
-After the training will be finished the trainer will inform about the termination reason and indicate where the experiment files (model checkpoint, log files, statistics etc.) can be found:
+After the training finsh the trainer will inform about the termination reason and indicate where the experiment files (model checkpoint, log files, statistics etc.) can be found:
 
 ```console
 [2019-07-05 13:32:33] - INFO - mnist_classification_convnet_softmax >>> Updated training status in checkpoint:
@@ -179,7 +179,7 @@ After the training will be finished the trainer will inform about the terminatio
 
 ### Testing the model
 
-In order to test the model generalization we will use _ptp-processor_, yet another worker that performs a single pass over the indicated set.
+In order to test the model generalization we will use _ptp-processor_, yet another general _worker_ script that performs a single pass over the indicated set.
 
 
 ![Alt text](docs/source/img/1_tutorials/data_flow_tutorial_mnist_2_test.png?raw=true "Test of the pretrained model on test split of the MNIST dataset ")
