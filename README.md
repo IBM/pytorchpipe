@@ -103,8 +103,8 @@ More in that subject can be found in the following blog post on [dev_mode](https
 ## Quick start: MNIST image classification with a simple ConvNet model
 
 Please consider a simple ConvNet model consisting of two parts: 
-  * few convolutional layers accepting the MNIST images and returning _feature maps_ being, in general, a 4D tensor (first dimension being the batch size, a rule of thumb in PTP),
-  * one (or more) dense layers that accept the (flattened) feature maps and return _predictions_ as logarithm of probability distributions (LogSoftmax as last non-linearity).
+  * few convolutional layers accepting the MNIST images and returning feature maps being, in general, a 4D tensor (first dimension being the batch size, a rule of thumb in PTP),
+  * one (or more) dense layers that accept the (flattened) feature maps and return predictions in the form of logarithm of probability distributions (LogSoftmax as last non-linearity).
 
 ### Training the model
 
