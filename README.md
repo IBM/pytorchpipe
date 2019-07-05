@@ -53,8 +53,8 @@ The model zoo includes several general usage components, such as:
 
 There are some models specific to diven domain, but still quite general:
   * Convnet Encoder (CNNs with ReLU and MaxPooling, can work with different sizes of images)
-  * General Image Encoder (wrapping several models from Torch Vision, e.g. VGG-16, ResNet-50, ResNet-152, DenseNet-121)
-  * Sencence Embeddings (encodes words using the embedding layer)
+  * General Image Encoder (wrapping several models from Torch Vision)
+  * Sentence Embeddings (encoding words using the embedding layer)
 
 There are also some classical baselines both for vision like LeNet-5 or language domains, e.g. Seq2Seq (Sequence to Sequence model) or Attention Decoder (RNN-based decoder implementing Bahdanau-style attention).
 PTP also offers the several models useful for multi-modal fusion and reasoning.
