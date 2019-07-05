@@ -31,10 +31,9 @@ PTP focuses on multi-modal reasoning combining vision and language. Currently it
 
 ![Alt text](docs/source/img/components/ptp_tasks.png?raw=true)
 
-
 Aside of providing batches of samples, the Task class will automatically download the files associated with a given dataset (as long as the dataset is publicly available).
 The diversity of those tasks (and the associated models) proves the flexibility of the framework.
-We are working on incorporation of new Tasks into PTP.
+We are constantly working on incorporation of new Tasks into PTP.
 
 **Pipelines:**
 What people typically define as a _model_ in PTP is framed as a _pipeline_, consisting of many inter-connected components, with one or more _Models_ containing trainable elements.
@@ -43,35 +42,27 @@ The framework offers full flexibility and it is up to the programmer to choose t
 Such a decomposition enables one to easily combine many components and models into pipelines, whereas the framework supports loading of pretrained models, freezing during training, saving them to checkpoints etc.
 
 **Model/Component Zoo:**
-PTP provides several ready to use, out of the box components, from ones of general usage to very specialized ones:
+PTP provides several ready to use, out of the box models and other, non-trainable (but parametrizable) components.
 
-  * Feed Forward Network (Fully Connected layers with activation functions and dropout, variable number of hidden layers, general usage)
-  * Torch Vision Wrapper (wrapping several models from Torch Vision, e.g. VGG-16, ResNet-50, ResNet-152, DenseNet-121, general usage)
+
+![Alt text](docs/source/img/components/ptp_models.png?raw=true)
+
+The model zoo includes several general usage components, such as:
+  * Feed Forward Network (Fully Connected layers with activation functions and dropout, variable number of hidden layers)
+  * Recurrent Neural Network (different kernels with activation functions and dropout, a single model can work both as encoder or decoder)
+
+There are some models specific to diven domain, but still quite general:
   * Convnet Encoder (CNNs with ReLU and MaxPooling, can work with different sizes of images)
-  * LeNet-5 (classical baseline)
-  * Recurrent Neural Network (different kernels with activation functions and dropout, a single model can work both as encoder or decoder, general usage)
-  * Seq2Seq (Sequence to Sequence model, classical baseline)
-  * Attention Decoder (RNN-based decoder implementing Bahdanau-style attention, classical baseline)
-  * Sencence Embeddings (encodes words using embedding layer, general usage)
+  * General Image Encoder (wrapping several models from Torch Vision, e.g. VGG-16, ResNet-50, ResNet-152, DenseNet-121)
+  * Sencence Embeddings (encodes words using the embedding layer)
 
-Currently PTP offers the following models useful for multi-modal fusion and reasoning:
+There are also some classical baselines both for vision like LeNet-5 or language domains, e.g. Seq2Seq (Sequence to Sequence model) or Attention Decoder (RNN-based decoder implementing Bahdanau-style attention).
+PTP also offers the several models useful for multi-modal fusion and reasoning.
 
-  * VQA Attention (simple question-driven attention over the image)
-  * Element Wise Multiplication (Multi-modal Low-rank Bilinear pooling, MLB)
-  * Multimodel Compact Bilinear Pooling (MCB)
-  * Miltimodal Factorized Bilinear Pooling
-  * Relational Networks
+![Alt text](docs/source/img/components/ptp_components_others.png?raw=true)
 
-The framework also offers several components useful when working with text:
-
-  * Sentence Tokenizer
-  * Sentence Indexer
-  * Sentence One Hot Encoder
-  * Label Indexer
-  * BoW Encoder
-  * Word Decoder
-
-and several general-purpose components, from tensor transformations (List to Tensor, Reshape Tensor, Reduce Tensor, Concatenate Tensor), to components calculating losses (NLL Loss) and statistics (Accuracy Statistics, Precision/Recall Statistics, BLEU Statistics etc.) to viewers (Stream Viewer, Stream File Exporter etc.).
+The framework also offers components useful when working with language, vision or other types of streams (e.g. tensor transformations).
+There are also several general-purpose components, from components calculating losses (NLL Loss) and statistics (Accuracy Statistics, Precision/Recall Statistics, BLEU Statistics etc.) to viewers (Stream Viewer, Stream File Exporter etc.).
 
 **Workers:**
 PTP workers are python scripts that are _agnostic_ to the tasks/models/pipelines that they are supposed to work with.
@@ -202,7 +193,7 @@ __Note__: Please analyse the ```mnist_classification_convnet_softmax.yml``` conf
 
 ## Maintainers
 
-A project of the Machine Intelligence team, IBM Research, Almaden.
+A project of the Machine Intelligence team, IBM Research AI, Almaden Research Center.
 
 * Tomasz Kornuta (tkornut@us.ibm.com)
 
