@@ -193,10 +193,11 @@ __Note__: Please analyze the ```mnist_classification_convnet_softmax.yml``` conf
 
 ## Contributions
 
-PTP is opened for external contributions.
+PTP is open for external contributions.
 We follow the [Git Branching Model](https://nvie.com/posts/a-successful-git-branching-model/), in short:
   * ```develop``` branch is the main branch, ```master``` branch is for used for releases only
   * all changes are integrated by merging pull requests from feat/fix/other branches
+  * PTP is integrated with several DevOps monitoring the quality of code/pull requrests
   * we use projects and kanban to monitor issues/progress/etc.
 
 
