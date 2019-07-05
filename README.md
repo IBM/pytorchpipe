@@ -48,8 +48,8 @@ PTP provides several ready to use, out of the box models and other, non-trainabl
 ![Alt text](docs/source/img/components/ptp_models.png?raw=true)
 
 The model zoo includes several general usage components, such as:
-  * Feed Forward Network (Fully Connected layers with activation functions and dropout, variable number of hidden layers)
-  * Recurrent Neural Network (different kernels with activation functions and dropout, a single model can work both as encoder or decoder)
+  * Feed Forward Network (variable number of Fully Connected layers with activation functions and dropout)
+  * Recurrent Neural Network (different cell types with activation functions and dropout, a single model can work both as encoder or decoder)
 
 There are some models specific to diven domain, but still quite general:
   * Convnet Encoder (CNNs with ReLU and MaxPooling, can work with different sizes of images)
