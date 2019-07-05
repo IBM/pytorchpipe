@@ -20,6 +20,7 @@ Each such a stream can consist of several components, including one task instanc
 
 ![Alt text](docs/source/img/data_flow_vqa_5_attention_gpu_loaders.png?raw=true "Exemplary multi-modal data flow diagram")
 
+
 As a result, the training & testing procedures are no longer pinned to a specific task or model, and built-in mechanisms for compatibility checking (handshaking), configuration and global variables management & statistics collection facilitate rapid development of complex pipelines and running diverse experiments.
 
 In its core, to _accelerate the computations_ on their own, PTP relies on PyTorch and extensively uses its mechanisms for distribution of computations on CPUs/GPUs, including multi-process data loaders and multi-GPU data parallelism.
@@ -110,13 +111,87 @@ This command will install all dependencies via pip_, while still enabling you to
 More in that subject can be found in the following blog post on [dev_mode](https://setuptools.readthedocs.io/en/latest/setuptools.html#development-mode).
 
 
-## Quick start
+## Quick start: MNIST image classification with a simple ConvNet model
 
-Please consider the following pipeline
+Please consider a simple ConvNet model consisting of two parts: 
+  * few convolutional layers returning _feature maps_ being, in general, a 3D tensor when ommiting the batch dimension,
+  * one (or more) dense layers that accepts the flattened feature maps and return _predictions_ as probability distributions (Sofmax as last non-linearity).
+
+### Training the model
+
+Assume that we use NLL loss function, and, besides, will want to monitor the accuracy.
+The resulting pipeline is presented below.
+
+
+![Alt text](docs/source/img/1_tutorials/data_flow_tutorial_mnist_1_training.png?raw=true "Trainining of a simple ConvNet model on MNIST dataset")
+
+
+Let's run the associated configuration file by calling _ptp-offline-trainer_, a general _worker_ script that will train the model in epochs, following the classical training-validation methodology:
 
 ```console
-git clone git@github.com:IBM/pytorchpipe.git
-cd pytorchpipe/
+ptp-offline-trainer --c configs/tutorials/mnist_classification_convnet_softmax.yml
+```
+
+__Note__: Please call ```offline-trainer --h``` to learn more about the run-time arguments.
+
+The additional AnswerPrediction component translates the predictions into string, whereas StreamViewer displays content of the indicated data streams, e.g.:
+
+```console
+[2019-07-05 13:27:10] - INFO - stream_viewer >>> Showing selected streams for sample 42 (index: 25529):
+ 'labels': Zero
+ 'targets': 0
+ 'predictions': tensor([-2.4456, -2.4142, -2.1902, -2.4897, -2.4329, -2.0279, -2.5951, -2.0348,
+        -2.0836, -2.5279], grad_fn=<SelectBackward>)
+ 'predicted_answers': Five
+```
+
+Please note that whenever the validation loss goes down, the trainer automatically saves the pipeline to the file:
+
+```console
+[2019-07-05 13:27:57] - INFO - OfflineTrainer >>> episode 001719; episodes_aggregated 000079; epoch 01; loss 0.2815686762; loss_min 0.1017002687; loss_max 0.6083457470; loss_std 0.0969817117; accuracy 0.92200; accuracy_std 0.03567 [Full Validation]
+[2019-07-05 13:27:57] - INFO - mnist_classification_convnet_softmax >>> Exporting pipeline 'mnist_classification_convnet_softmax' parameters to checkpoint:
+ /users/tomaszkornuta/experiments/mnist/mnist_classification_convnet_softmax/20190705_132624/checkpoints/mnist_classification_convnet_softmax_best.pt
+  + Model 'image_encoder' [ConvNetEncoder] params saved
+  + Model 'classifier' [FeedForwardNetwork] params saved
+```
+
+After the training will be finished the trainer will inform about the termination reason and indicate where the experiment files (model checkpoint, log files, statistics etc.) can be found:
+
+```console
+[2019-07-05 13:32:33] - INFO - OfflineTrainer >>> episode 006879; episodes_aggregated 000079; epoch 07; loss 0.1416896731; loss_min 0.0171624869; loss_max 0.4912818968; loss_std 0.0911608562; accuracy 0.96000; accuracy_std 0.02264 [Full Validation]
+[2019-07-05 13:32:33] - INFO - mnist_classification_convnet_softmax >>> Exporting pipeline 'mnist_classification_convnet_softmax' parameters to checkpoint:
+ /users/tomaszkornuta/experiments/mnist/mnist_classification_convnet_softmax/20190705_132624/checkpoints/mnist_classification_convnet_softmax_best.pt
+  + Model 'image_encoder' [ConvNetEncoder] params saved
+  + Model 'classifier' [FeedForwardNetwork] params saved
+
+[2019-07-05 13:32:33] - INFO - mnist_classification_convnet_softmax >>> Updated training status in checkpoint:
+ /users/tomaszkornuta/experiments/mnist/mnist_classification_convnet_softmax/20190705_132624/checkpoints/mnist_classification_convnet_softmax_best.pt
+[2019-07-05 13:32:33] - INFO - OfflineTrainer >>>
+================================================================================
+[2019-07-05 13:32:33] - INFO - OfflineTrainer >>> Training finished because Converged (Full Validation Loss went below Loss Stop threshold of 0.15)
+[2019-07-05 13:32:33] - INFO - OfflineTrainer >>> Experiment finished!
+[2019-07-05 13:32:33] - INFO - OfflineTrainer >>> Experiment logged to: /users/tomaszkornuta/experiments/mnist/mnist_classification_convnet_softmax/20190705_132624/
+```
+
+
+### Testing the model
+
+In order to test the model generalization we will use _ptp-processor_, yet another worker that performs a single pass over the indicated set.
+
+
+![Alt text](docs/source/img/1_tutorials/data_flow_tutorial_mnist_1_training.png?raw=true "Test of the pretrained model on MNIST dataset test split")
+
+
+```console
+ptp-processor --load /users/tomaszkornuta/experiments/mnist/mnist_classification_convnet_softmax/20190705_132624/checkpoints/mnist_classification_convnet_softmax_best.pt
+```
+
+__Note__: _ptp-processor_ uses content of _test_ section as default, but it can be changed at run-time. Please call ```ptp-processor --h``` to learn about the options.
+
+
+```console
+[2019-07-05 13:34:41] - INFO - Processor >>> episode 000313; episodes_aggregated 000157; loss 0.1464060694; loss_min 0.0352710858; loss_max 0.3801054060; loss_std 0.0669835582; accuracy 0.95770; accuracy_std 0.02471 [Full Set]
+[2019-07-05 13:34:41] - INFO - Processor >>> Experiment logged to: /users/tomaszkornuta/experiments/mnist/mnist_classification_convnet_softmax/20190705_132624/test_20190705_133436/
 ```
 
 

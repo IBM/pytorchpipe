@@ -14,7 +14,7 @@ training:
     lr: 0.0001
   # settings parameters
   terminal_conditions:
-    loss_stop_threshold: 0.05
+    loss_stop_threshold: 0.15
     early_stop_validations: -1
     episode_limit: 10000
     epoch_limit: 10
