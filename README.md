@@ -129,8 +129,8 @@ The associated ```mnist_classification_convnet_softmax.yml``` configuration file
 
 
 We will train the model with _ptp-offline-trainer_, a general _worker_ script that follows the classical training-validation, epoch-based methodology.
-This means, that despite presence of three section (associated with training, validation and test splits of the MNIST dataset) trainer will consider only the content of ``training`` and ```validation``` sections.
-Let's run the training by  calling the following command from the command line:
+This means, that despite the presence of three section (associated with training, validation and test splits of the MNIST dataset) the trainer will consider only the content of ``training`` and ```validation``` sections (plus ```pipeline```, containing the definition of the whole pipeline).
+Let's run the training by calling the following from the command line:
 
 ```console
 ptp-offline-trainer --c configs/tutorials/mnist_classification_convnet_softmax.yml
@@ -138,21 +138,27 @@ ptp-offline-trainer --c configs/tutorials/mnist_classification_convnet_softmax.y
 
 __Note__: Please call ```offline-trainer --h``` to learn more about the run-time arguments. In order to understand the structure of the main configuration file please look at the default configuration file of the trainer located in ```configs/default/workers``` folder.
 
+The trainer will log on the console training and validation statistis, along with additional information logged by the components, e.g. contents of the streams:
 
 ```console
-[2019-07-05 13:27:10] - INFO - stream_viewer >>> Showing selected streams for sample 42 (index: 25529):
- 'labels': Zero
- 'targets': 0
- 'predictions': tensor([-2.4456, -2.4142, -2.1902, -2.4897, -2.4329, -2.0279, -2.5951, -2.0348,
-        -2.0836, -2.5279], grad_fn=<SelectBackward>)
- 'predicted_answers': Five
+[2019-07-05 13:31:44] - INFO - OfflineTrainer >>> episode 006000; epoch 06; loss 0.1968410313; accuracy 0.9219
+[2019-07-05 13:31:45] - INFO - OfflineTrainer >>> End of epoch: 6
+================================================================================
+[2019-07-05 13:31:45] - INFO - OfflineTrainer >>> episode 006019; episodes_aggregated 000860; epoch 06; loss 0.1799264401; loss_min 0.0302138925; loss_max 0.5467863679; loss_std 0.0761705562; accuracy 0.94593; accuracy_std 0.02871 [Full Training]
+[2019-07-05 13:31:45] - INFO - OfflineTrainer >>> Validating over the entire validation set (5000 samples in 79 episodes)
+[2019-07-05 13:31:45] - INFO - stream_viewer >>> Showing selected streams for sample 20 (index: 55358):
+ 'labels': One
+ 'targets': 1
+ 'predictions': tensor([-1.1452e+01, -1.6804e-03, -1.1357e+01, -1.1923e+01, -6.6160e+00,
+        -1.4658e+01, -9.6191e+00, -8.6472e+00, -9.6082e+00, -1.3505e+01])
+ 'predicted_answers': One
 ```
 
 Please note that whenever the validation loss goes down, the trainer automatically will save the pipeline to the checkpoint file:
 
 ```console
-[2019-07-05 13:27:57] - INFO - OfflineTrainer >>> episode 001719; episodes_aggregated 000079; epoch 01; loss 0.2815686762; loss_min 0.1017002687; loss_max 0.6083457470; loss_std 0.0969817117; accuracy 0.92200; accuracy_std 0.03567 [Full Validation]
-[2019-07-05 13:27:57] - INFO - mnist_classification_convnet_softmax >>> Exporting pipeline 'mnist_classification_convnet_softmax' parameters to checkpoint:
+[2019-07-05 13:31:47] - INFO - OfflineTrainer >>> episode 006019; episodes_aggregated 000079; epoch 06; loss 0.1563445479; loss_min 0.0299939774; loss_max 0.5055227876; loss_std 0.0854654983; accuracy 0.95740; accuracy_std 0.02495 [Full Validation]
+[2019-07-05 13:31:47] - INFO - mnist_classification_convnet_softmax >>> Exporting pipeline 'mnist_classification_convnet_softmax' parameters to checkpoint:
  /users/tomaszkornuta/experiments/mnist/mnist_classification_convnet_softmax/20190705_132624/checkpoints/mnist_classification_convnet_softmax_best.pt
   + Model 'image_encoder' [ConvNetEncoder] params saved
   + Model 'classifier' [FeedForwardNetwork] params saved
