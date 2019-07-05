@@ -62,7 +62,7 @@ PTP also offers the several models useful for multi-modal fusion and reasoning.
 ![Alt text](docs/source/img/components/ptp_components_others.png?raw=true)
 
 The framework also offers components useful when working with language, vision or other types of streams (e.g. tensor transformations).
-There are also several general-purpose components, from components calculating losses (NLL Loss) and statistics (Accuracy Statistics, Precision/Recall Statistics, BLEU Statistics etc.) to viewers (Stream Viewer, Stream File Exporter etc.).
+There are also several general-purpose components, from components calculating losses and statistics to publishers and viewers.
 
 **Workers:**
 PTP workers are python scripts that are _agnostic_ to the tasks/models/pipelines that they are supposed to work with.
