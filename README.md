@@ -12,7 +12,7 @@
 
 ## Description
 
-PyTorchPipe (PTP) is a component-oriented framework that facilitates development of computational _multi-modal pipelines_ and comparison of diverse neural network-based models. 
+PyTorchPipe (PTP) is a component-oriented framework that facilitates development of computational _multi-modal pipelines_ and comparison of diverse neural network-based models.
 
 PTP frames training and testing procedures as _pipelines_ consisting of many components communicating through data streams.
 Each such a stream can consist of several components, including one task instance (providing batches of data), any number of trainable components (models) and additional components providing required transformations and computations.
@@ -51,7 +51,7 @@ The model zoo includes several general usage components, such as:
   * Feed Forward Network (variable number of Fully Connected layers with activation functions and dropout)
   * Recurrent Neural Network (different cell types with activation functions and dropout, a single model can work both as encoder or decoder)
 
-There are some models specific to diven domain, but still quite general:
+It also inludes few models specific for a given domain, but still quite general:
   * Convnet Encoder (CNNs with ReLU and MaxPooling, can work with different sizes of images)
   * General Image Encoder (wrapping several models from Torch Vision)
   * Sentence Embeddings (encoding words using the embedding layer)
@@ -67,11 +67,11 @@ There are also several general-purpose components, from components calculating l
 **Workers:**
 PTP workers are python scripts that are _agnostic_ to the tasks/models/pipelines that they are supposed to work with.
 Currently framework offers three workers:
-  
+
   * ptp-offline-trainer (a trainer relying on classical methodology interlacing training and validation at the end of every epoch, creates separate instances of training and validation tasks and trains the models by feeding the created pipeline with batches of data, relying on the notion of an _epoch_)
-  
+
   * ptp-online-trainer (a flexible trainer creating separate instances of training and validation tasks and training the models by feeding the created pipeline with batches of data, relying on the notion of an _episode_)
-  
+
   * ptp-processor (performing one pass over the all samples returned by a given task instance, useful for collecting scores on test set, answers for submissions to competitions etc.)
 
 
