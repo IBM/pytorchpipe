@@ -114,13 +114,14 @@ More in that subject can be found in the following blog post on [dev_mode](https
 ## Quick start: MNIST image classification with a simple ConvNet model
 
 Please consider a simple ConvNet model consisting of two parts: 
-  * few convolutional layers returning _feature maps_ being, in general, a 3D tensor when ommiting the batch dimension,
+  * few convolutional layers returning _feature maps_ being, in general, a 4D tensor (first dimension being associated with the batch size),
   * one (or more) dense layers that accepts the flattened feature maps and return _predictions_ as probability distributions (Sofmax as last non-linearity).
 
 ### Training the model
 
-Assume that we use NLL loss function, and, besides, will want to monitor the accuracy.
+Assume that we use NLL loss function, and, besides, will monitor the accuracy statistics.
 The resulting pipeline is presented below.
+The additional AnswerPrediction component translates the predictions into class names, whereas StreamViewer displays content of the indicated data streams for a sample randomply picked from batch, e.g.:
 
 
 ![Alt text](docs/source/img/1_tutorials/data_flow_tutorial_mnist_1_training.png?raw=true "Trainining of a simple ConvNet model on MNIST dataset")
@@ -134,7 +135,6 @@ ptp-offline-trainer --c configs/tutorials/mnist_classification_convnet_softmax.y
 
 __Note__: Please call ```offline-trainer --h``` to learn more about the run-time arguments.
 
-The additional AnswerPrediction component translates the predictions into string, whereas StreamViewer displays content of the indicated data streams, e.g.:
 
 ```console
 [2019-07-05 13:27:10] - INFO - stream_viewer >>> Showing selected streams for sample 42 (index: 25529):
