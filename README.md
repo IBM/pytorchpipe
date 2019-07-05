@@ -24,7 +24,7 @@ Each such a stream can consist of several components, including one task instanc
 As a result, the training & testing procedures are no longer pinned to a specific task or model, and built-in mechanisms for compatibility checking (handshaking), configuration and global variables management & statistics collection facilitate rapid development of complex pipelines and running diverse experiments.
 
 In its core, to _accelerate the computations_ on their own, PTP relies on PyTorch and extensively uses its mechanisms for distribution of computations on CPUs/GPUs, including multi-process data loaders and multi-GPU data parallelism.
-The models are _agnostic_ to those operations and one indicates whether to use them in configuration files (data loaders) or by passing adequate run-time arguments (--gpu).
+The models are _agnostic_ to those operations and one indicates whether to use them in configuration files (data loaders) or by passing adequate argument (--gpu) at run-time.
 
 **Datasets:**
 PTP focuses on multi-modal reasoning combining vision and language. Currently it offers the following _Tasks_ from the following task, categorized into three domains:
@@ -198,6 +198,7 @@ We follow the [Git Branching Model](https://nvie.com/posts/a-successful-git-bran
   * ```develop``` branch is the main branch, ```master``` branch is for used for releases only
   * all changes are integrated by merging pull requests from feat/fix/other branches
   * PTP is integrated with several DevOps monitoring the quality of code/pull requrests
+  * we strongly encourage unit testing and Test-Driven Development
   * we use projects and kanban to monitor issues/progress/etc.
 
 
