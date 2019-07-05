@@ -186,9 +186,18 @@ __Note__: _ptp-processor_ uses the content of _test_ section as default, but it 
 [2019-07-05 13:34:41] - INFO - Processor >>> Experiment logged to: /users/tomaszkornuta/experiments/mnist/mnist_classification_convnet_softmax/20190705_132624/test_20190705_133436/
 ```
 
-__Note__: Please analyse the ```mnist_classification_convnet_softmax.yml``` configuration file (located in ```configs/tutorials``` directory). Keep in mind that:
+__Note__: Please analyze the ```mnist_classification_convnet_softmax.yml``` configuration file (located in ```configs/tutorials``` directory). Keep in mind that:
   * all components come with default configuration files, located in ```configs/default/components``` folders,
   * all workers come with default configuration files, located in ```configs/default/workers``` folders.
+
+
+## Contributions
+
+PTP is opened for external contributions.
+We follow the [Git Branching Model](https://nvie.com/posts/a-successful-git-branching-model/), in short:
+  * ```develop``` branch is the main branch, ```master``` branch is for used for releases only
+  * all changes are integrated by merging pull requests from feat/fix/other branches
+  * we use projects and kanban to monitor issues/progress/etc.
 
 
 ## Maintainers
