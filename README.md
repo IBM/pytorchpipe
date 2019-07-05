@@ -119,16 +119,16 @@ Please consider a simple ConvNet model consisting of two parts:
 
 ### Training the model
 
-Assume that we use NLL loss function, and, besides, will monitor the accuracy statistics.
+Assume that we will use ```NLL Loss``` function, and, besides, want to monitor the ```Accuracy``` statistics.
 The resulting pipeline is presented below.
-The additional AnswerPrediction component translates the predictions into class names, whereas StreamViewer displays content of the indicated data streams for a sample randomply picked from batch, e.g.:
+The additional ```Answer Decoder``` component translates the predictions into class names, whereas ```Stream Viewer``` displays content of the indicated data streams for a sample randomply picked from batch, e.g.:
 The associated configuration file can be found in ```mnist_classification_convnet_softmax.yml``` in ```configs/tutorials``` folder.
 
 
 ![Alt text](docs/source/img/1_tutorials/data_flow_tutorial_mnist_1_training.png?raw=true "Trainining of a simple ConvNet model on MNIST dataset")
 
 
-We will train the model with _ptp-offline-trainer_, a general _worker_ script that will train the model in epochs, following the classical training-validation methodology.
+We will train the model with _ptp-offline-trainer_, a general _worker_ script that follows the classical training-validation, epoch-based methodology.
 This means, that despite presence of three section (associated with training, validation and test splits of the MNIST dataset) trainer will consider only the content of ``training`` and ```validation``` sections.
 Let's run the training by  calling the following command from the command line:
 
