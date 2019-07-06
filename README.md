@@ -113,14 +113,14 @@ Please consider a simple ConvNet model consisting of two parts:
 Assume that we will use ```NLL Loss``` function, and, besides, want to monitor the ```Accuracy``` statistics.
 The resulting pipeline is presented below.
 The additional ```Answer Decoder``` component translates the predictions into class names, whereas ```Stream Viewer``` displays content of the indicated data streams for a single sample randomly picked from the batch.
-The associated ```mnist_classification_convnet_softmax.yml``` configuration file can be found in ```configs/tutorials``` folder.
 
 
 ![Alt text](docs/source/img/1_tutorials/data_flow_tutorial_mnist_1_training.png?raw=true "Trainining of a simple ConvNet model on MNIST dataset")
 
+__Note__: The associated ```mnist_classification_convnet_softmax.yml``` configuration file can be found in ```configs/tutorials``` folder.
 
 We will train the model with _ptp-offline-trainer_, a general _worker_ script that follows the classical training-validation, epoch-based methodology.
-This means, that despite the presence of three section (associated with training, validation and test splits of the MNIST dataset) the trainer will consider only the content of ``training`` and ```validation``` sections (plus ```pipeline```, containing the definition of the whole pipeline).
+This means, that despite the presence of three sections (associated with training, validation and test splits of the MNIST dataset) the trainer will consider only the content of ``training`` and ```validation``` sections (plus ```pipeline```, containing the definition of the whole pipeline).
 Let's run the training by calling the following from the command line:
 
 ```console
