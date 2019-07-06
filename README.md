@@ -26,6 +26,8 @@ As a result, the training & testing procedures are no longer pinned to a specifi
 In its core, to _accelerate the computations_ on their own, PTP relies on PyTorch and extensively uses its mechanisms for distribution of computations on CPUs/GPUs, including multi-process data loaders and multi-GPU data parallelism.
 The models are _agnostic_ to those operations and one indicates whether to use them in configuration files (data loaders) or by passing adequate argument (--gpu) at run-time.
 
+Please refer to the  [tutorial presentation](https://zenodo.org/record/3269928) for more details.
+
 **Datasets:**
 PTP focuses on multi-modal reasoning combining vision and language. Currently it offers the following _Tasks_ from the following task, categorized into three domains:
 
@@ -189,6 +191,11 @@ __Note__: _ptp-processor_ uses the content of _test_ section as default, but it 
 __Note__: Please analyze the ```mnist_classification_convnet_softmax.yml``` configuration file (located in ```configs/tutorials``` directory). Keep in mind that:
   * all components come with default configuration files, located in ```configs/default/components``` folders,
   * all workers come with default configuration files, located in ```configs/default/workers``` folders.
+## Documentation
+
+Currently PTP does not have an on-line documentation.
+However, there are high-quality comments in all source/configuration files, that will be used for automatic generation of documentation (Sphinx + ReadTheDocs).
+Besides, we have shared a [tutorial presentation](https://zenodo.org/record/3269928) explaining motivations and core concepts as well as providing hints how to use the tool and develop your own solutions.
 
 
 ## Contributions
