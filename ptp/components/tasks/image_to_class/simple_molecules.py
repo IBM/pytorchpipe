@@ -108,8 +108,19 @@ class SimpleMolecules(Task):
         # Set split-dependent data.
         if split == 'training':
             # Training split folder and file with data question.
-            data_file = os.path.join(self.data_folder, 'ChemDATA_A_Dist_Labels.tsv')
+            data_file = os.path.join(self.data_folder, 'ChemDATA_A_Dist_Labels_Set0.tsv')
             self.image_folder = os.path.join(self.data_folder, "ChemDATA_A_Dist")
+
+        elif split == 'validation':
+            # Training split folder and file with data question.
+            data_file = os.path.join(self.data_folder, 'ChemDATA_A_Dist_Labels_Set1.tsv')
+            self.image_folder = os.path.join(self.data_folder, "ChemDATA_A_Dist")
+
+        elif split == 'test':
+            # Training split folder and file with data question.
+            data_file = os.path.join(self.data_folder, 'ChemDATA_A_Test2_Labels.tsv')
+            self.image_folder = os.path.join(self.data_folder, "ChemDATA_A_Test2")
+
         else: 
             raise ConfigurationError("Split {} not supported yet".format(split))
 
