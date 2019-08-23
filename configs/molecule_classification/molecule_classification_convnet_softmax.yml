@@ -1,6 +1,7 @@
 # Load config defining MNIST tasks for training, validation and testing.
 default_configs: molecule_classification/default_molecule_classification.yml
 
+# Pipeline - only the model-related components.
 pipeline:
   # Model 1: 3 CNN layers.
   image_encoder:
@@ -37,6 +38,5 @@ pipeline:
     globals:
       input_size: reshaped_maps_size
       prediction_size: num_classes
-
 
 #: pipeline

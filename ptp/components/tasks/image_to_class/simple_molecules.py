@@ -85,11 +85,14 @@ class SimpleMolecules(Task):
             # Simply turn to tensor.
             self.image_transforms = transforms.Compose([transforms.ToTensor()])
 
+        # Get image depth.
+        self.image_depth = self.config["image_depth"]
+
         # Set global variables - all dimensions ASIDE OF BATCH.
         self.globals["num_classes"] = 10
         self.globals["image_width"] = self.width
         self.globals["image_height"] = self.height
-        self.globals["image_depth"] = 1
+        self.globals["image_depth"] = self.image_depth
 
         # Class names.
         labels = 'Zero One Two Three Four Five Six Seven Eight Nine'.split(' ')
@@ -188,7 +191,7 @@ class SimpleMolecules(Task):
         """
         return {
             self.key_indices: DataDefinition([-1, 1], [list, int], "Batch of sample indices [BATCH_SIZE] x [1]"),
-            self.key_images: DataDefinition([-1, 1, self.height, self.width], [torch.Tensor], "Batch of images [BATCH_SIZE x IMAGE_DEPTH x IMAGE_HEIGHT x IMAGE_WIDTH]"),
+            self.key_images: DataDefinition([-1, self.image_depth, self.height, self.width], [torch.Tensor], "Batch of images [BATCH_SIZE x IMAGE_DEPTH x IMAGE_HEIGHT x IMAGE_WIDTH]"),
             self.key_targets: DataDefinition([-1], [torch.Tensor], "Batch of targets, each being a single index [BATCH_SIZE]"),
             self.key_labels: DataDefinition([-1, 1], [list, str], "Batch of targets, each being a single word [BATCH_SIZE] x [STRING]")
             }
@@ -205,7 +208,11 @@ class SimpleMolecules(Task):
         """
 
         # Load the image.
-        img = Image.open(os.path.join(self.image_folder, img_id + '.png')) #.convert('RGB')
+        img = Image.open(os.path.join(self.image_folder, img_id + '.png'))
+        
+        # This may be required by some models e.g. the ones pretrained on ImageNet.
+        if self.image_depth == 3:
+            img = img.convert('RGB')
 
         # Apply transformations.
         img = self.image_transforms(img)
