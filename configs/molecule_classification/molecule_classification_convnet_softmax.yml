@@ -69,6 +69,8 @@ pipeline:
     streams:
       inputs: feature_maps
       outputs: reshaped_maps
+    globals:
+      output_size: reshaped_maps_size
 
   # Model 2: 1 Fully connected layer with softmax acitvation.
   classifier:
