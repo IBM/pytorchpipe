@@ -1,51 +1,5 @@
-# Training parameters:
-training:
-  task: 
-    type: SimpleMolecules
-    batch_size: &b 64
-    split: training
-    # TODO: change!
-    resize_image: [87, 87]
-  # TODO: change!
-  # Use sampler that operates on a subset.
-  #sampler:
-  #  type: SubsetRandomSampler
-  #  indices: [0, 50000]
-  # optimizer parameters:
-  optimizer:
-    type: Adam
-    lr: 0.0001
-  # settings parameters
-  terminal_conditions:
-    loss_stop_threshold: 0.15
-    early_stop_validations: -1
-    episode_limit: 10000
-    epoch_limit: 10
-
-# Validation parameters:
-validation:
-  task:
-    type: SimpleMolecules
-    batch_size: *b
-    # TODO: change!
-    split: validation
-    # TODO: change!
-    resize_image: [87, 87]
-  # TODO: change!
-  # Use sampler that operates on a subset.
-  #sampler:
-  #  type: SubsetRandomSampler
-  #  indices: [50000, 50400]
-
-# Testing parameters:
-test:
-  task:
-    type: SimpleMolecules
-    batch_size: *b
-    # TODO: change!
-    split: test
-    # TODO: change!
-    resize_image: [87, 87]
+# Load config defining MNIST tasks for training, validation and testing.
+default_configs: molecule_classification/default_molecule_classification.yml
 
 pipeline:
   # Model 1: 3 CNN layers.
@@ -83,38 +37,6 @@ pipeline:
     globals:
       input_size: reshaped_maps_size
       prediction_size: num_classes
-
-  # Loss
-  nllloss:
-    type: NLLLoss
-    priority: 4
-    # Using default stream names, so the following could be removed (leaving it just for the clarity though).
-    streams:
-      targets: targets
-      predictions: predictions
-
-  accuracy:
-    priority: 5
-    type: AccuracyStatistics
-    # Using default stream names, so the following could be removed (leaving it just for the clarity though).
-    streams:
-      targets: targets
-      predictions: predictions
-
-  answer_decoder:
-    priority: 6
-    type: WordDecoder
-    import_word_mappings_from_globals: True
-    globals:
-      word_mappings: label_word_mappings
-    streams:
-      inputs: predictions
-      outputs: predicted_answers
-
-  stream_viewer:
-    priority: 7
-    type: StreamViewer
-    input_streams: labels, targets, predictions, predicted_answers
 
 
 #: pipeline

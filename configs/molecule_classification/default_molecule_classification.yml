@@ -1,0 +1,111 @@
+# Training parameters:
+training:
+  task: 
+    type: SimpleMolecules
+    batch_size: &b 64
+    split: training
+    resize_image: [87, 87]
+  # Resizing slows down the batch generation, so let's use many dataloaders.
+  dataloader:
+    num_workers: 4
+
+  optimizer:
+    type: Adam
+    lr: 0.0001
+  # settings parameters
+  terminal_conditions:
+    loss_stop_threshold: 0.15
+    early_stop_validations: -1
+    episode_limit: 10000
+    epoch_limit: 10
+
+# Validation parameters:
+validation:
+  task:
+    type: SimpleMolecules
+    batch_size: *b
+    split: validation
+    resize_image: [87, 87]
+  dataloader:
+    num_workers: 4
+
+# Testing parameters:
+test:
+  task:
+    type: SimpleMolecules
+    batch_size: *b
+    split: test
+    resize_image: [87, 87]
+  dataloader:
+    num_workers: 4
+
+test_mirror_blur:
+  task:
+    type: SimpleMolecules
+    batch_size: *b
+    split: test_mirror_blur
+    resize_image: [87, 87]
+  dataloader:
+    num_workers: 4
+
+test_on_grid:
+  task:
+    type: SimpleMolecules
+    batch_size: *b
+    split: test_on_grid
+    resize_image: [87, 87]
+  dataloader:
+    num_workers: 4
+
+test_handwritten:
+  task:
+    type: SimpleMolecules
+    batch_size: *b
+    split: test_handwritten
+    resize_image: [87, 87]
+  dataloader:
+    num_workers: 4
+
+
+# Default components shared between all molecule classification pipelines.
+pipeline:
+  #disable: image_viewer
+
+  # Loss
+  nllloss:
+    type: NLLLoss
+    priority: 4
+    streams:
+      targets: targets
+      predictions: predictions
+
+  accuracy:
+    priority: 5
+    type: AccuracyStatistics
+    streams:
+      targets: targets
+      predictions: predictions
+
+  answer_decoder:
+    priority: 6
+    type: WordDecoder
+    import_word_mappings_from_globals: True
+    globals:
+      word_mappings: label_word_mappings
+    streams:
+      inputs: predictions
+      outputs: predicted_answers
+
+  stream_viewer:
+    priority: 7
+    type: StreamViewer
+    input_streams: labels, targets, predictions, predicted_answers
+
+  image_viewer:
+    priority: 100.5
+    type: ImageViewer
+    streams:
+      images: images
+      labels: labels
+      answers: predicted_answers
+

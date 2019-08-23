@@ -103,7 +103,7 @@ class SimpleMolecules(Task):
         self.data_folder = os.path.expanduser(self.config['data_folder'])
 
         # Get the split.
-        split = get_value_from_dictionary('split', self.config, "training | validation | test".split(" | "))
+        split = get_value_from_dictionary('split', self.config, "training | validation | test | test_mirror_blur | test_on_grid | test_handwritten".split(" | "))
 
         # Set split-dependent data.
         if split == 'training':
@@ -120,6 +120,21 @@ class SimpleMolecules(Task):
             # Training split folder and file with data question.
             data_file = os.path.join(self.data_folder, 'ChemDATA_A_Dist_Labels_Set2.tsv')
             self.image_folder = os.path.join(self.data_folder, "ChemDATA_A_Dist")
+
+        elif split == 'test_mirror_blur':
+            # Training split folder and file with data question.
+            data_file = os.path.join(self.data_folder, 'ChemDATA_A_Test1_Labels.tsv')
+            self.image_folder = os.path.join(self.data_folder, "ChemDATA_A_Test1")
+
+        elif split == 'test_on_grid':
+            # Training split folder and file with data question.
+            data_file = os.path.join(self.data_folder, 'ChemDATA_A_Test2_Labels.tsv')
+            self.image_folder = os.path.join(self.data_folder, "ChemDATA_A_Test2")
+
+        elif split == 'test_handwritten':
+            # Training split folder and file with data question.
+            data_file = os.path.join(self.data_folder, 'ChemDATA_A_Test3_Labels.tsv')
+            self.image_folder = os.path.join(self.data_folder, "ChemDATA_A_Test3")
 
         else: 
             raise ConfigurationError("Split {} not supported yet".format(split))

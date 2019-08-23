@@ -8,7 +8,7 @@
 data_folder: '~/data/simple-molecules'
 
 # Defines the split that will be used used (LOADED)
-# Options: training | validation | test
+# Options: training | validation | test | test_mirror_blur | test_on_grid | test_handwritten
 split: training
 
 # Optional parameter (LOADED)
