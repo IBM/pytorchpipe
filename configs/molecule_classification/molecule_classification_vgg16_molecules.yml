@@ -1,0 +1,66 @@
+# Load config defining MNIST tasks for training, validation and testing.
+default_configs: molecule_classification/default_molecule_classification.yml
+
+# Overrride some training parameters:
+training:
+  task: 
+    resize_image: [224, 224]
+    image_depth: 3
+
+# Override some validation parameters:
+validation:
+  task:
+    resize_image: [224, 224]
+    image_depth: 3
+
+# Override some test parameters:
+test:
+  task:
+    resize_image: [224, 224]
+    image_depth: 3
+
+test_mirror_blur:
+  task:
+    resize_image: [224, 224]
+    image_depth: 3
+
+test_on_grid:
+  task:
+    resize_image: [224, 224]
+    image_depth: 3
+
+test_handwritten:
+  task:
+    resize_image: [224, 224]
+    image_depth: 3
+
+
+# Pipeline - only the model-related components.
+pipeline:
+
+  # Model 1: VGG
+  image_encoder:
+    type: GenericImageEncoder
+    pretrained: False
+    priority: 1
+    # Using default stream names, so the following could be removed (leaving it just for the clarity though).
+    streams:
+      inputs: images
+      outputs: vgg_images
+    globals:
+      output_size: num_classes
+
+
+  # Model 2: 1 Fully connected layer with softmax acitvation.
+  classifier:
+    type: FeedForwardNetwork 
+    priority: 3
+    streams:
+      inputs: vgg_images
+      # Using default stream name, so the following could be removed (leaving it just for the clarity though).
+      predictions: predictions
+    globals:
+      input_size: num_classes
+      prediction_size: num_classes
+
+#: pipeline
